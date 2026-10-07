@@ -5,6 +5,7 @@ import { useBoard } from '../board/store'
 import { linkAt } from './link'
 import { loadOutbox, syncNow, type Outbox } from './outbox'
 import { useSync } from './store'
+import { getTransport } from './transport'
 import { SyncView } from './SyncView'
 
 export default function SyncPage() {
@@ -42,7 +43,7 @@ export default function SyncPage() {
   }
   return (
     <SyncView
-      now={snap.now} link={linkAt(snap.now, blackout)} pending={box.pending} synced={box.synced} lastSyncedAt={lastSyncedAt}
+      now={snap.now} link={linkAt(snap.now, blackout)} pending={box.pending} synced={box.synced} lastSyncedAt={lastSyncedAt} station={getTransport().name}
       blackout={blackout} auto={auto} busy={busy} message={message} error={error}
       onSync={() => void sync()} onBlackout={setBlackout} onAuto={setAuto}
     />

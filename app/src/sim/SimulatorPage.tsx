@@ -25,7 +25,14 @@ export default function SimulatorPage() {
     const res = await advance(hours, list)
     prune(res.to)
     const { auto, blackout } = useSync.getState()
-    if (auto) await autoSync(res.from, res.to, blackout)
+    if (auto) {
+      try {
+        await autoSync(res.from, res.to, blackout)
+      } catch (e) {
+        // Time still moved; only the upload failed, so the entries wait for the next window.
+        setError(`Ground upload failed, entries stay queued. ${e instanceof Error ? e.message : String(e)}`)
+      }
+    }
     setLast(res)
   }
 

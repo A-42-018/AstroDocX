@@ -11,7 +11,7 @@ afterEach(cleanup)
 const e = (id: number, over: Partial<ActionLogEntry> = {}): ActionLogEntry => ({ id, crewId: 'cmdr', kind: 'note', text: `entry ${id}`, ts: MISSION_START, sync: 'pending', ...over })
 const now = MISSION_START + 3 * DAY
 const props = (over = {}) => ({
-  now, link: linkAt(now + HOUR), pending: [e(1), e(2)], synced: [e(3, { sync: 'synced' as const, syncedAt: now })], lastSyncedAt: now,
+  now, link: linkAt(now + HOUR), pending: [e(1), e(2)], synced: [e(3, { sync: 'synced' as const, syncedAt: now })], lastSyncedAt: now, station: 'Simulated ground station (on this device)',
   blackout: false, auto: true, busy: false, message: '', error: '', onSync: vi.fn(), onBlackout: vi.fn(), onAuto: vi.fn(), ...over,
 })
 

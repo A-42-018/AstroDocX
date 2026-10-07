@@ -17,11 +17,17 @@ function AlertRow({ a }: { a: GroundAlert }) {
 interface Props {
   now: number
   lastSyncedAt: number | null
-  pending: number
+  /** Entries still on the crew's device; null when reading from a server, which cannot know. */
+  pending: number | null
   crew: GroundCrew[]
+  /** Where this view's data comes from. */
+  source?: string
+  sourceError?: string
+  onRefresh?: () => void
+  refreshing?: boolean
 }
 
-export function GroundView({ now, lastSyncedAt, pending, crew }: Props) {
+export function GroundView({ now, lastSyncedAt, pending, crew, source, sourceError, onRefresh, refreshing }: Props) {
   const open = crew.reduce((n, c) => n + c.open.length, 0)
   return (
     <div className="board">
@@ -31,8 +37,11 @@ export function GroundView({ now, lastSyncedAt, pending, crew }: Props) {
           What Earth can see. Everything here is rebuilt from log entries the crew has already synced, about {ONE_WAY_DELAY_MIN} min after each contact. The crew's own console is always ahead of this page.
         </p>
         <p className="mono">
-          Mission {met(now)} · data current to {lastSyncedAt === null ? 'nothing yet' : met(lastSyncedAt)} · {pending} entr{pending === 1 ? 'y' : 'ies'} still on board
+          Mission {met(now)} · data current to {lastSyncedAt === null ? 'nothing yet' : met(lastSyncedAt)} {pending !== null && `· ${pending} entr${pending === 1 ? 'y' : 'ies'} still on board`}
         </p>
+        {source && <p className="mono muted">Source: {source}</p>}
+        {sourceError && <p role="alert" className="form-error">Could not reach the ground server ({sourceError}). Showing this device's synced entries instead.</p>}
+        {onRefresh && <button type="button" className="btn ghost" onClick={onRefresh} disabled={refreshing}>{refreshing ? 'Refreshing…' : 'Refresh from server'}</button>}
         <p className="mono muted">{open === 0 ? 'No open alerts known to the ground.' : `${open} open alert${open === 1 ? '' : 's'} known to the ground.`}</p>
       </section>
 

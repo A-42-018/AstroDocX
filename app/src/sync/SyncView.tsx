@@ -15,6 +15,8 @@ interface Props {
   pending: ActionLogEntry[]
   synced: ActionLogEntry[]
   lastSyncedAt: number | null
+  /** Where uploads go (simulated, or a real ground server). */
+  station: string
   blackout: boolean
   auto: boolean
   busy: boolean
@@ -37,7 +39,7 @@ function Entry({ e, sent }: { e: ActionLogEntry; sent?: boolean }) {
   )
 }
 
-export function SyncView({ now, link, pending, synced, lastSyncedAt, blackout, auto, busy, message, error, onSync, onBlackout, onAuto }: Props) {
+export function SyncView({ now, link, pending, synced, lastSyncedAt, station, blackout, auto, busy, message, error, onSync, onBlackout, onAuto }: Props) {
   const s = STATE[link.state]
   return (
     <div className="board">
@@ -52,6 +54,7 @@ export function SyncView({ now, link, pending, synced, lastSyncedAt, blackout, a
         <p className="mono muted">
           {met(now)} · {pending.length} queued · {lastSyncedAt === null ? 'never synced' : `last sync ${met(lastSyncedAt)}`} · one-way delay ~{ONE_WAY_DELAY_MIN} min
         </p>
+        <p className="mono muted">Ground station: {station}</p>
         <div className="sim-steps">
           <button type="button" className="btn" disabled={busy || link.state !== 'open' || pending.length === 0} onClick={onSync}>
             Sync {pending.length} entr{pending.length === 1 ? 'y' : 'ies'} now

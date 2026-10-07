@@ -20,7 +20,7 @@ export async function seedDemo(onProgress?: (done: number, total: number) => voi
     await d.crew.bulkAdd(opts.crew ?? CREW)
     await processAll(readings, d, onProgress)
     // Replay the simulated link windows (C10), so history was synced in earlier windows and only recent entries are still queued.
-    await autoSync(MISSION_START - 1, now, false, d)
+    await autoSync(MISSION_START - 1, now, false, d, null)
   })
   return readings.length
 }
