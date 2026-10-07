@@ -166,12 +166,48 @@ The video itself is recorded after L3.
 
 ---
 
-## 9. Later Phases — Crew Console (after submission)
-- **C1 Data:** types, cited thresholds, Dexie, synthetic generator, 4 scenarios
-- **C2 Engine:** baseline, z-score/EWMA anomalies, rules → alerts, action-card library, tests
-- **C3 Console UI** (React + TS PWA, same theme): Status Board, alerts → action cards, trends, check-in + reaction test, simulator panel
-- **C4 Stretch:** Supabase delayed ground sync, flight-surgeon view, crew view, AI weekly summary
-- **C5 QA:** offline PWA test, Lighthouse; link the console from the landing CTA "Launch Crew Console"
+## 9. Crew Console — the real system (3-day build, small phases)
+
+### 9.1 How the finished system works
+**Sensors + check-ins → personal baseline → explained alert → action card → on-board log → delayed ground sync.** Fully offline (PWA + IndexedDB); Earth is optional.
+
+1. **Inputs:** wearables/sensors (simulated) every hour: HR, HRV, SpO₂, sleep, exercise · cabin: CO₂, temperature, noise, radiation dose · daily check-in: mood, sleep quality, symptoms, reaction-time test. Each value is stored as a `Reading {crewId, metric, value, ts, source}`.
+2. **Engine (per new reading):** personal 7-day baseline (Welford mean/sd) → EWMA-smoothed z-score → status Nominal / Watch (≥1.8σ) / Act (≥3σ) with hysteresis · hard absolute limits for CO₂ and dose · two-signal rules (poor sleep + slow reaction → behavioral Watch) · readiness % from all 5 RIDGE hazards.
+3. **Status Board:** per-crew 5 hazard tiles, readiness ring, mission clock, link status.
+4. **Explain → Act:** each alert states what changed, by how much, vs whose baseline, since when; an action card gives concrete steps; the crew ticks them and presses Done. The engine keeps watching: clears when values recover, escalates if they worsen.
+5. **Log:** every alert, step, check-in and resolution goes to the on-board log, marked pending sync.
+6. **Ground sync:** outbox queue that syncs in link windows; blackouts just queue; flight surgeons review afterwards (optional view).
+7. **Trends:** each metric vs the personal band, alert markers, 24h / 7d / 30d, to catch slow drift.
+8. **Demo mode:** simulator panel injects scenarios (solar event, CO₂ fault, insomnia, deconditioning) and fast-forwards time.
+
+**Stack:** React + TypeScript + Vite · vite-plugin-pwa · Dexie (IndexedDB) · Zustand · Recharts · Vitest · Netlify (Supabase only as stretch). Lives in `app/`.
+
+### 9.2 Phases (each sized for one Sonnet session window)
+| # | Phase | Output | Done when |
+|---|---|---|---|
+| C0 | Scaffold | `app/`: Vite + React + TS, PWA plugin, router shell, theme tokens | `npm run dev` runs, app installs as PWA |
+| C1 | Data model | `types.ts`, Dexie schema (crew, readings, baselines, alerts, actionLog, checkIns) | DB opens; typed read/write works |
+| C2 | Synthetic data | Seeded generator: 4 crew × 30 days + 4 scenarios | Same seed → same data, loaded into Dexie |
+| C3 | Engine core | Welford baseline, EWMA z, status + hysteresis (port of `sim.js`), tests | Tests pass |
+| C4 | Rules + actions | Absolute limits, two-signal rule, explanation text, action-card JSON, alert lifecycle, tests | Each scenario raises the right alert |
+| C5 | Status Board UI | Crew switcher, 5 tiles, readiness, mission clock | Board shows live engine output |
+| C6 | Alerts + Action card | Alert list, explanation, checkable steps, Done → log | Full alert → logged action flow |
+| C7 | Trends | Recharts with baseline band + alert markers, 24h/7d/30d | Charts for every metric |
+| C8 | Check-in | Mood/sleep/symptoms + tap reaction test → readings | Check-in feeds the engine |
+| C9 | Simulator panel | Inject scenarios, time speed-up, reset | Demo triggers every alert |
+| C10 | Ground sync | Outbox, link windows, blackout, status (simulated) | Logs go pending → synced |
+| C11 | Ship | Offline test, Lighthouse, Netlify deploy, landing "Launch Crew Console" CTA, README | Live URL works offline |
+| C12 | Stretch | Supabase real sync and/or flight-surgeon view | Only if time is left |
+
+**Pace:** Day 1 C0–C3 · Day 2 C4–C7 · Day 3 C8–C11. **Cut order if behind:** C12 → 30-day trend range → two-signal rule. Never cut scenarios, engine tests or offline support.
+
+### 9.3 Phase workflow rules (every phase, no exceptions)
+1. Start a session: upload the latest zip (or use the repo at `~/Developed by Alif/AstroDocX`) and say "do phase Cn from plan.md". Do only that phase.
+2. No screenshot/browser QA before C11; use unit tests and `npm run build`.
+3. Finish the phase: update this `plan.md` (implementation log, **Current Phase**, **Next Roadmap**) and deliver the full project as one zip.
+4. **Commit and push after every completed phase:** detailed commit message(s) such as `feat(console): C3 engine core …`, author **Alif Mahmud <dev.alif8531@gmail.com>**, **no Claude co-author line**, then push to `origin main` (`A-42-018/AstroDocX`). Never force-push unless explicitly asked.
+5. If the session window runs out mid-phase, continue with "continue Cn" next time.
+6. Cite thresholds (NASA CO₂ limits, mission dose limits, PVT reaction test); anything uncited is labelled illustrative. Every screen says "Concept prototype, not a medical device".
 
 ---
 
@@ -247,11 +283,10 @@ The video itself is recorded after L3.
 - **Nav fix:** with 8 links, "Health Twin / Live Demo / How It Works" wrapped onto two lines at ~1100–1500 px. Links are now `white-space:nowrap`, nav container widened to 1240px, tighter padding at 1101–1280px, and the hamburger menu now starts at ≤1100px (was 680px). Verified single-line links at 1920/1440/1280/1180/1101 and the dropdown at 1100/1024/768/390.
 
 ## Current Phase
-**Landing Page Sprint — L1, L2, L2.5 and L3 complete** (video/tour deferred). The page is feature-complete: Hero, Problem, Hazards, Features, Health Twin, Live Mission Simulator, How It Works, Built On, Team. What is left is content (placeholders) and deployment.
+**Landing page complete and pushed** (L1–L3 + nav fix, `main` @ GitHub). **Crew Console plan locked** (§9): workflow, phases C0–C12, and the commit-and-push-per-phase rule.
 
 ## Next Roadmap
-1. **Fill the placeholders:** team cards 2–4 (names, roles, GitHub/LinkedIn), README live + video URLs, cite the About counters (Mars signal delay ~3–22 min; ~3-year round trip).
-2. **Deploy:** push to `A-42-018/AstroDocX`, connect Netlify (publish `landing/`), then switch `og:image` / `twitter:image` to the absolute URL (`https://<site>/assets/og-image.png`) and check the preview in a link debugger.
-3. **Real-device check:** Health Twin pin length (`end: '+=150%'` in `twin.js`), simulator on a phone, Safari/Firefox.
-4. **Video (when ready):** check the Space Apps video rules, add `tour.js` (`?tour=1`, include stops for `#twin` and `#sim` with *Play scenario*), record with OBS 1920×1080 60 fps.
-5. **After submission:** Crew Console C1–C5 (§9), reusing the `sim.js` engine as the baseline/anomaly core.
+1. **C0 Scaffold** (`app/`: Vite + React + TS, PWA, router shell, theme tokens), then commit + push.
+2. C1 → C11 in order (§9.2), one phase per session, commit + push after each.
+3. Content still open on the landing page: team cards 2–4, About counter citations, README live/video URLs, absolute `og:image` after deploy.
+4. Video (`tour.js` + recording) after C11.
