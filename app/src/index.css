@@ -1,0 +1,40 @@
+/* Theme tokens: same palette as landing/styles.css */
+:root {
+  --void: #0c0a1e; --void-mid: #1a1740; --indigo: #4f46e5; --violet: #818cf8;
+  --ice: #f8fafc; --text-hi: #f1f5f9; --text-mid: #94a3b8; --text-lo: #64748b;
+  --holo: #22d3ee; --holo-glow: rgba(34, 211, 238, 0.35);
+  --ok: #34d399; --watch: #f59e0b; --act: #f43f5e; --pulse: #ec4899;
+  --glass-bg: rgba(255, 255, 255, 0.05); --glass-border: rgba(255, 255, 255, 0.12);
+  --r-sm: 6px; --r-md: 12px; --nav-h: 56px;
+  --font-display: 'Pulchella', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  font-family: var(--font-display); background: var(--void); color: var(--text-hi);
+  line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+a { color: var(--holo); text-decoration: none; }
+.shell { min-height: 100%; display: flex; flex-direction: column; }
+.topbar {
+  height: var(--nav-h); display: flex; align-items: center; gap: 24px; padding: 0 20px;
+  background: var(--void-mid); border-bottom: 1px solid var(--glass-border);
+}
+.brand { font-family: var(--font-mono); font-weight: 700; color: var(--holo); letter-spacing: 0.04em; }
+.topbar nav { display: flex; gap: 4px; flex-wrap: wrap; }
+.topbar nav a {
+  padding: 8px 12px; border-radius: var(--r-sm); font-weight: 600; font-size: 0.9rem; color: var(--text-mid);
+}
+.topbar nav a.active { color: var(--holo); background: var(--holo-glow); }
+main { flex: 1; padding: 24px 20px; max-width: 1100px; width: 100%; margin: 0 auto; }
+.glass {
+  background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--r-md);
+  padding: 20px; backdrop-filter: blur(16px);
+}
+.muted { color: var(--text-mid); }
+.mono { font-family: var(--font-mono); }
+.disclaimer {
+  padding: 10px 20px; text-align: center; font-size: 0.78rem; color: var(--text-lo);
+  border-top: 1px solid var(--glass-border);
+}

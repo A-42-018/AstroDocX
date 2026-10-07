@@ -1,0 +1,29 @@
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
+
+export default defineConfig({
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg'],
+      manifest: {
+        name: 'AstroDocX Crew Console',
+        short_name: 'AstroDocX',
+        description:
+          'Offline-first astronaut health co-pilot: detect, explain, act, log, sync later. Concept prototype, not a medical device.',
+        theme_color: '#0C0A1E',
+        background_color: '#0C0A1E',
+        display: 'standalone',
+        start_url: '/',
+        icons: [
+          { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+        ],
+      },
+      workbox: { navigateFallback: '/index.html' },
+    }),
+  ],
+})

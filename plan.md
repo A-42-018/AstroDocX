@@ -282,11 +282,18 @@ The video itself is recorded after L3.
 - **Deferred:** `tour.js` + video recording (user decision).
 - **Nav fix:** with 8 links, "Health Twin / Live Demo / How It Works" wrapped onto two lines at ~1100–1500 px. Links are now `white-space:nowrap`, nav container widened to 1240px, tighter padding at 1101–1280px, and the hamburger menu now starts at ≤1100px (was 680px). Verified single-line links at 1920/1440/1280/1180/1101 and the dropdown at 1100/1024/768/390.
 
+## C0 Implementation Log (done)
+- **`app/`:** Vite 8 + React 19 + TypeScript, `react-router-dom` (shell with topbar nav and placeholder routes for Board, Alerts, Trends, Check-in, Simulator, Ground Sync; `/` redirects to `/board`), `vite-plugin-pwa` (autoUpdate, manifest, `navigateFallback`, service worker generated on build).
+- **Theme:** `src/index.css` carries the landing palette tokens (void/indigo/violet/holo, ok/watch/act/pulse, glass card, Pulchella + JetBrains Mono stack). Every screen footer says "Concept prototype, not a medical device".
+- **Icons:** `pwa-192.png` / `pwa-512.png` are upscaled from the 64px landing favicon (soft); the SVG icon is also listed. Replace with a proper 512px render later (C11).
+- **Checks:** `npm run build` (tsc + vite + SW) passes, `oxlint` clean, `vite preview` serves `manifest.webmanifest` and `sw.js`. Install prompt and offline behaviour not yet tested in a browser (deferred to C11 per the QA rule).
+- Package name `astrodocx-console`. `npm run dev` starts the dev server on port 5173.
+
 ## Current Phase
-**Landing page complete and pushed** (L1–L3 + nav fix, `main` @ GitHub). **Crew Console plan locked** (§9): workflow, phases C0–C12, and the commit-and-push-per-phase rule.
+**C0 Scaffold done** (`app/`). Landing page complete (L1–L3). 
 
 ## Next Roadmap
-1. **C0 Scaffold** (`app/`: Vite + React + TS, PWA, router shell, theme tokens), then commit + push.
-2. C1 → C11 in order (§9.2), one phase per session, commit + push after each.
+1. **C1 Data model** (`types.ts`, Dexie schema: crew, readings, baselines, alerts, actionLog, checkIns; typed read/write), then commit + push.
+2. C2 → C11 in order (§9.2), one phase per session, commit + push after each.
 3. Content still open on the landing page: team cards 2–4, About counter citations, README live/video URLs, absolute `og:image` after deploy.
 4. Video (`tour.js` + recording) after C11.
