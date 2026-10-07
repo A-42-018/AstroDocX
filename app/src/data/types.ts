@@ -57,6 +57,8 @@ export interface Baseline {
   m2: number
   /** EWMA-smoothed z-score carried between readings. */
   ewma: number
+  /** Last classified status (kept for hysteresis). */
+  status: Status
   updatedAt: Timestamp
 }
 

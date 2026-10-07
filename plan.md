@@ -303,11 +303,20 @@ The video itself is recorded after L3.
 - **Tests (9 new, 14 total, all pass):** same seed identical / different seed differs, counts and time bounds, value validity (mood 1-5, SpO2 <= 100), per-crew personalization, each scenario shifts only its metrics, crew and window, `seedDb` loads Dexie and re-seeding keeps counts. `npm run build` and `oxlint` clean.
 - Normal means/sds are illustrative; citations come with the C4 thresholds.
 
+## C3 Implementation Log (done)
+- **`app/src/engine/baseline.ts` (pure):** `welfordUpdate` (cumulative Welford up to a window cap, then exponentially weighted mean/variance so the baseline follows slow healthy change), `sdOf` (with a floor of 2% of the mean), `rawZ` (signed by the metric's bad direction, absolute value for two-sided metrics such as HR and temperature), `ewma` (alpha 0.5), `classify` (WATCH >= 1.8σ, ACT >= 3.0σ, 0.4σ hysteresis on the way down; same constants as `landing/sim.js`) and `step`, which processes one reading.
+- **Behaviour of `step`:** nominal and unscored during warm-up (48 samples for hourly metrics, 14 for daily); afterwards the value is scored against the baseline *before* it is learned, and it is only learned while the smoothed status is nominal, so a developing problem cannot drag the baseline toward itself. Windows: 168 samples hourly (7 days), 21 daily.
+- **`app/src/engine/replay.ts`:** `replay(readings)` runs a stream in memory (for tests and the simulator later), `ingest(reading, db)` scores one new reading and persists it with the updated baseline in one transaction.
+- **Data model change:** `Baseline` gained `status` (needed for hysteresis between readings); no Dexie schema change, it is not indexed.
+- **Tests (17 new, 31 total, all pass):** Welford equals batch mean/sd, window cap tracks a level shift, z sign per bad direction, thresholds, hysteresis both ways, warm-up, baseline freeze during an alert, recovery, `ingest` persistence, and the scenarios replayed: solar, CO2, insomnia and deconditioning each reach ACT on their key metric inside their window; solar and CO2 return to nominal afterwards. `npm run build` and `oxlint` clean.
+- **Tuning found by the tests:** learning only readings below 1.8σ truncated the sd and gave false Acts, so learning now depends on the smoothed status; a 7-sample daily warm-up was too noisy, so it is 14.
+- **Known limit:** on clean data over 30 seeds, 28 give no false Act and 2 give one Act in 20,640 readings; Watch is about 0.8% of scored readings. The fixed-seed tests use seeds 42 and 99. C4 adds a persistence rule for Act (and absolute limits) to cut this further.
+
 ## Current Phase
-**C2 Synthetic data done.** C0 scaffold, C1 data model and the landing page are done.
+**C3 Engine core done.** C0 scaffold, C1 data model, C2 synthetic data and the landing page are done.
 
 ## Next Roadmap
-1. **C3 Engine core:** Welford baseline, EWMA z-score, status + hysteresis (port of `landing/sim.js`: WATCH >= 1.8σ, ACT >= 3σ, 0.4 hysteresis), unit tests. Then commit + push.
-2. C4 → C11 in order (§9.2), one phase per session, commit + push after each.
+1. **C4 Rules + actions:** absolute limits (CO2, dose) with citations, two-signal rule (poor sleep + slow reaction -> behavioral Watch), explanation text, action-card JSON, alert lifecycle (open/ack/resolve, escalate/clear), tests that each scenario raises the right alert. Then commit + push.
+2. C5 → C11 in order (§9.2), one phase per session, commit + push after each.
 3. Content still open on the landing page: team cards 2–4, About counter citations, README live/video URLs, absolute `og:image` after deploy.
 4. Video (`tour.js` + recording) after C11.

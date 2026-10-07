@@ -26,7 +26,7 @@ describe('ConsoleDB', () => {
   })
 
   it('stores baselines keyed by crew + metric (upsert)', async () => {
-    const b = { crewId: 'c1', metric: 'hr' as const, n: 1, mean: 60, m2: 0, ewma: 0, updatedAt: 1 }
+    const b = { crewId: 'c1', metric: 'hr' as const, n: 1, mean: 60, m2: 0, ewma: 0, status: 'nominal' as const, updatedAt: 1 }
     await d.baselines.put(b)
     await d.baselines.put({ ...b, n: 2, mean: 61 })
     expect(await d.baselines.count()).toBe(1)
