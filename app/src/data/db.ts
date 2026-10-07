@@ -1,10 +1,10 @@
-import Dexie, { type EntityTable } from 'dexie'
+import Dexie, { type EntityTable, type Table } from 'dexie'
 import type { ActionLogEntry, Alert, Baseline, CheckIn, CrewMember, MetricId, Reading, Timestamp } from './types'
 
 export class ConsoleDB extends Dexie {
   crew!: EntityTable<CrewMember, 'id'>
   readings!: EntityTable<Reading, 'id'>
-  baselines!: EntityTable<Baseline, never>
+  baselines!: Table<Baseline, [string, string]>
   alerts!: EntityTable<Alert, 'id'>
   actionLog!: EntityTable<ActionLogEntry, 'id'>
   checkIns!: EntityTable<CheckIn, 'id'>
