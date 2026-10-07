@@ -244,6 +244,7 @@ The video itself is recorded after L3.
 - **README:** screenshots table (`docs/screenshots/hero.jpg`, `health-twin.jpg`, `mission-simulator.jpg`), "Try it" guide, linked data sources, updated tech + structure.
 - **Final QA (headless Chromium, 1440×900 / 1024×768 / 390×844):** full-page scroll with no console/page errors and no failed local requests, no horizontal overflow, section order About → Hazards/Features → Twin → Live Demo → How It Works → Built On → Team, nav highlights every section in turn, nebula renders behind Built On and Team.
 - **Deferred:** `tour.js` + video recording (user decision).
+- **Nav fix:** with 8 links, "Health Twin / Live Demo / How It Works" wrapped onto two lines at ~1100–1500 px. Links are now `white-space:nowrap`, nav container widened to 1240px, tighter padding at 1101–1280px, and the hamburger menu now starts at ≤1100px (was 680px). Verified single-line links at 1920/1440/1280/1180/1101 and the dropdown at 1100/1024/768/390.
 
 ## Current Phase
 **Landing Page Sprint — L1, L2, L2.5 and L3 complete** (video/tour deferred). The page is feature-complete: Hero, Problem, Hazards, Features, Health Twin, Live Mission Simulator, How It Works, Built On, Team. What is left is content (placeholders) and deployment.
