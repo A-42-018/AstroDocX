@@ -1,18 +1,20 @@
-import { Suspense, lazy, useEffect, useRef } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import BoardPage from './board/BoardPage'
 import { seedDemo } from './data/demo'
 import { ErrorBoundary } from './shell/ErrorBoundary'
 import { useInstallPrompt } from './shell/install'
+import { lazyPage } from './shell/lazyPage'
 
 // The board is the landing screen and loads eagerly; every other screen (Trends carries the chart
-// library) is its own chunk. The service worker precaches all chunks, so they still work offline.
-const AlertsPage = lazy(() => import('./alerts/AlertsPage'))
-const TrendsPage = lazy(() => import('./trends/TrendsPage'))
-const CheckInPage = lazy(() => import('./checkin/CheckInPage'))
-const SimulatorPage = lazy(() => import('./sim/SimulatorPage'))
-const SyncPage = lazy(() => import('./sync/SyncPage'))
-const GroundPage = lazy(() => import('./ground/GroundPage'))
+// library) is its own chunk. The service worker precaches all chunks, so they still work offline;
+// lazyPage reloads once if a chunk is gone after a redeploy.
+const AlertsPage = lazyPage(() => import('./alerts/AlertsPage'))
+const TrendsPage = lazyPage(() => import('./trends/TrendsPage'))
+const CheckInPage = lazyPage(() => import('./checkin/CheckInPage'))
+const SimulatorPage = lazyPage(() => import('./sim/SimulatorPage'))
+const SyncPage = lazyPage(() => import('./sync/SyncPage'))
+const GroundPage = lazyPage(() => import('./ground/GroundPage'))
 import { useBootDemo } from './board/hooks'
 
 const ROUTES = [
