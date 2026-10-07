@@ -8,7 +8,7 @@ import { useInstallPrompt } from './shell/install'
 import { lazyPage } from './shell/lazyPage'
 import { BottomTabs, Rail, TopBar } from './shell/Chrome'
 import { ROUTES } from './shell/nav'
-import { useShellData } from './shell/useShellData'
+import { ShellDataContext, useShellData } from './shell/useShellData'
 
 // The board is the landing screen and loads eagerly; every other screen (Trends carries the chart
 // library) is its own chunk. The service worker precaches all chunks, so they still work offline;
@@ -41,6 +41,7 @@ export default function App() {
   const shell = useShellData()
   const { pathname } = useLocation()
   return (
+    <ShellDataContext.Provider value={shell}>
     <div className="shell">
       <Backdrop />
       <a href="#main" className="skip-link">Skip to content</a>
@@ -69,5 +70,6 @@ export default function App() {
       </div>
       <BottomTabs />
     </div>
+    </ShellDataContext.Provider>
   )
 }

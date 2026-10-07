@@ -1,6 +1,7 @@
 import { ConsoleDB, db } from '../data/db'
 import { METRICS, type Alert, type Baseline, type CrewMember, type Hazard, type MetricId, type Status } from '../data/types'
 import { HOUR, MISSION_START } from '../data/synthetic'
+import { sdOf } from '../engine/baseline'
 
 export interface HazardMeta {
   id: Hazard
@@ -30,6 +31,8 @@ export interface Snapshot {
   pendingSync: number
   /** Hours since the last ground sync, or null if there has never been one. */
   sinceSyncH: number | null
+  /** Hours since the oldest log entry that has not reached the ground, or null when nothing is waiting. */
+  oldestPendingH?: number | null
 }
 
 export interface HazardTile {
@@ -41,6 +44,8 @@ export interface HazardTile {
   /** Formatted headline value, e.g. "6.9". */
   value: string
   unit: string
+  /** Headline value against the personal baseline, in signed sd units (not defined for Distance). */
+  sigma?: number
   /** 0-100 health score for this hazard (feeds readiness). */
   score: number
   alerts: Alert[]
@@ -79,11 +84,16 @@ export function buildTiles(input: {
     let status: Status = alerts.reduce<Status>((s, a) => worst(s, a.status), 'nominal')
     let worstZ = Math.max(0, ...input.baselines.filter((b) => METRICS[b.metric].hazard === h.id).map((b) => b.ewma))
     let value = '--'
+    let sigma: number | undefined
     let unit = ''
     let label = h.headline ? METRICS[h.headline].label : 'Since ground sync'
     if (h.headline) {
       const v = input.latest[h.headline]
-      if (v !== undefined) value = v.toFixed(decimals(h.headline))
+      if (v !== undefined) {
+        value = v.toFixed(decimals(h.headline))
+        const b = input.baselines.find((x) => x.metric === h.headline)
+        if (b && b.n > 1) sigma = (v - b.mean) / sdOf(b)
+      }
       unit = METRICS[h.headline].unit
     } else {
       const link = linkStatus(input.oldestPendingAgeH)
@@ -93,7 +103,7 @@ export function buildTiles(input: {
       unit = input.sinceSyncH === null ? '' : 'h'
       label = `Since ground sync · ${input.pendingSync} pending`
     }
-    return { hazard: h.id, name: h.name, tracks: h.tracks, status, label, value, unit, score: hazardScore(status, worstZ), alerts }
+    return { hazard: h.id, name: h.name, tracks: h.tracks, status, label, value, unit, sigma, score: hazardScore(status, worstZ), alerts }
   })
 }
 
@@ -129,5 +139,5 @@ export async function loadSnapshot(crewId: string | undefined, d: ConsoleDB = db
     oldestPendingAgeH: oldest === null ? null : Math.max(0, (now - oldest) / HOUR),
   })
   alerts.sort((a, b) => (RANK[b.status] - RANK[a.status]) || b.openedAt - a.openedAt)
-  return { crew, crewId: id, now, tiles, alerts, readiness: readinessOf(tiles), overall: overallOf(tiles), pendingSync: pending.length, sinceSyncH }
+  return { crew, crewId: id, now, tiles, alerts, readiness: readinessOf(tiles), overall: overallOf(tiles), pendingSync: pending.length, sinceSyncH, oldestPendingH: oldest === null ? null : Math.max(0, (now - oldest) / HOUR) }
 }

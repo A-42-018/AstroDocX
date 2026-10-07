@@ -1,10 +1,14 @@
 import { StatusBoard } from './StatusBoard'
 import { useBoard } from './store'
-import { useSnapshot } from './hooks'
+import { useMini, useSnapshot } from './hooks'
+import { useShellContext } from '../shell/useShellData'
 
 export default function BoardPage() {
   const snap = useSnapshot()
   const boot = useBoard((s) => s.boot)
+  const select = useBoard((s) => s.selectCrew)
+  const shell = useShellContext()
+  const mini = useMini(snap?.crewId, snap?.now)
   if (boot.state === 'error') return <p role="alert" className="glass">Could not open the local database: {boot.error}</p>
   if (boot.state !== 'ready' || snap === undefined) {
     const pct = boot.total > 0 ? Math.round((boot.done / boot.total) * 100) : 0
@@ -15,5 +19,5 @@ export default function BoardPage() {
     )
   }
   if (snap === null) return <p className="glass muted">No crew data yet.</p>
-  return <StatusBoard snap={snap} />
+  return <StatusBoard snap={snap} mini={mini} crew={shell?.crew} onSelectCrew={select} />
 }

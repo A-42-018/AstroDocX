@@ -268,18 +268,6 @@ main > p.glass[role='status'] { font-size: 0.9rem; color: var(--text-mid); }
   .ring figcaption b { font-size: 1.9rem; }
   .readiness > div { min-width: 0; flex-basis: 100%; }
 }
-/* Wide screens: a dashboard, not a stack. Readiness on the left; hazard cards 3 + 2 beside it, same heights. */
-@media (min-width: 1180px) {
-  .board-home { grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); align-items: stretch; }
-  .board-home .board-head { grid-column: 1 / -1; }
-  .board-home .readiness { flex-direction: column; align-items: stretch; justify-content: center; gap: 22px; padding: 28px; }
-  .board-home .readiness .ring { width: 190px; height: 190px; align-self: center; }
-  .board-home .readiness .ring figcaption b { font-size: 2.9rem; }
-  .board-home .readiness > div { flex: 0 0 auto; min-width: 0; }
-  .board-home .tiles { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-  .board-home .tiles > li:nth-child(-n + 3) { grid-column: span 2; }
-  .board-home .tiles > li:nth-child(n + 4) { grid-column: span 3; }
-}
 @media (prefers-reduced-motion: reduce) { .ring-fill { transition: none; } main > * { animation: none; } }
 
 /* ---- Alerts + Action card (C6) ---- */
@@ -425,3 +413,96 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .live-wave { width: 100%; display: block; --data: #2dd4e8; }
 .live-num { font-variant-numeric: tabular-nums; }
 .vitals-note { grid-column: 1 / -1; margin: 0; font-size: 0.74rem; }
+
+/* ---- Mission Health (U3) ---- */
+.board-top { display: grid; gap: 18px; grid-template-columns: 1fr; }
+@media (min-width: 820px) { .board-top { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .twin-card { grid-row: span 2; order: -1; } }
+@media (min-width: 1180px) {
+  .board-top { grid-template-columns: minmax(280px, 340px) minmax(380px, 1fr) minmax(280px, 340px); }
+  .twin-card { grid-row: auto; order: 0; }
+}
+.readiness { flex-direction: column; align-items: stretch; justify-content: center; gap: 14px; padding: 24px; }
+.readiness > div { flex: 0 0 auto; min-width: 0; }
+.readiness .ring { align-self: center; }
+.ring.dial { width: 230px; height: auto; aspect-ratio: 6 / 5; }
+.ring.dial svg { height: 100%; }
+.ring.dial .ring-track, .ring.dial .ring-fill { stroke-width: 9; }
+.ring.dial figcaption { inset: auto 0 0 0; top: 68%; align-content: start; gap: 4px; }
+.ring.dial figcaption b { font-size: 2rem; }
+.dial-tick { stroke: var(--text-lo); stroke-width: 1.2; stroke-linecap: round; }
+.dial-needle { transition: transform 0.9s var(--ease); }
+.dial-needle line { stroke: var(--text-hi); stroke-width: 2.4; stroke-linecap: round; }
+.dial-hub { fill: var(--text-hi); stroke: var(--bg); stroke-width: 2; }
+
+.twin-card { display: grid; place-items: center; padding: 18px 12px; min-height: 420px; }
+.twin { width: 100%; display: grid; place-items: center; }
+.twin-fig { position: relative; width: min(44%, 210px); aspect-ratio: 300 / 660; --st: var(--ok); }
+.twin-fig > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.twin-body { stroke: rgba(45, 212, 232, 0.55); stroke-width: 1.4; }
+.twin-aura { fill: none; stroke: var(--st); stroke-width: 3; opacity: 0.55; filter: blur(7px); }
+.twin-aura.st-nominal { opacity: 0.18; }
+.twin-scan { fill: url(#twin-scan); fill: rgba(45, 212, 232, 0.16); animation: scan 6s linear infinite; }
+@keyframes scan { from { transform: translateY(-60px); } to { transform: translateY(680px); } }
+.twin-leader { stroke: var(--st); stroke-width: 1; stroke-dasharray: 3 4; opacity: 0.6; }
+.twin-dot { fill: var(--st); }
+.twin-halo { fill: color-mix(in srgb, var(--st) 20%, transparent); stroke: var(--st); stroke-width: 1; }
+.twin-spot.st-watch .twin-halo, .twin-spot.st-act .twin-halo { animation: halo 1.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes halo { 50% { transform: scale(1.5); opacity: 0.35; } }
+.twin-chip {
+  position: absolute; transform: translateY(-50%); display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 10px 4px 5px; width: max-content;
+  border-radius: 999px; background: var(--glass-1); border: 1px solid color-mix(in srgb, var(--st) 40%, transparent); color: var(--text-hi);
+  backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); transition: border-color 0.18s, background 0.18s;
+}
+.twin-chip:hover { background: rgba(255, 255, 255, 0.09); border-color: var(--st); }
+.twin-chip.l { right: calc(100% + 14px); flex-direction: row-reverse; padding: 4px 5px 4px 10px; }
+.twin-chip.r { left: calc(100% + 14px); }
+.twin-chip-text { display: grid; gap: 3px; justify-items: start; font-size: 0.74rem; line-height: 1.1; }
+.twin-chip.l .twin-chip-text { justify-items: end; }
+.twin-chip-text .badge { font-size: 0.56rem; padding: 2px 7px 2px 5px; }
+@media (max-width: 520px) {
+  .twin-card { overflow: hidden; }
+  .twin-fig { width: 30%; }
+  .twin-chip { gap: 5px; min-height: 40px; }
+  .twin-chip.l { right: calc(100% + 10px); } .twin-chip.r { left: calc(100% + 10px); }
+  .twin-chip-text b { font-size: 0.66rem; }
+  .twin-chip-text .badge { font-size: 0; gap: 0; padding: 3px; } /* icon only; the word is in the link's accessible name */
+  .twin-chip .hz { width: 26px; height: 26px; }
+}
+
+.next { display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 24px; }
+.next .sec-title { margin: 0; }
+.next-title { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em; }
+.next-step { margin: 0; font-size: 1.02rem; line-height: 1.45; }
+.next-meta { margin: 0; font-size: 0.8rem; }
+.next .btn { align-self: flex-start; margin-top: 4px; }
+
+.vitals { margin: 0; }
+@media (min-width: 900px) { .vitals { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.delta { margin-left: 8px; font-size: 0.78rem; font-weight: 600; color: var(--text-mid); font-family: var(--font-mono); }
+.mini-box { display: grid; gap: 4px; margin: 10px 0 2px; }
+.mini { width: 100%; height: 44px; display: block; overflow: visible; }
+.mini-line { fill: none; stroke: var(--data); stroke-width: 1.8; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.mini-area { fill: var(--data-soft); }
+.mini-bar { fill: rgba(45, 212, 232, 0.55); }
+.mini-rule { stroke: var(--text-lo); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+.mini-limit { stroke: var(--watch); stroke-width: 1.2; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
+.mini-cap { font-size: 0.7rem; color: var(--text-lo); }
+.backlog { position: relative; height: 10px; margin: 17px 0 17px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); }
+.backlog-fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--st, var(--data)); }
+.backlog i { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--text-mid); border-radius: 1px; }
+
+.crew-ov { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+.crew-ov button {
+  width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 16px; text-align: left; font: inherit; color: var(--text-hi); cursor: pointer;
+  transition: transform 0.25s var(--ease), border-color 0.25s;
+}
+.crew-ov button:hover { transform: translateY(-2px); border-color: var(--line-hi); }
+.crew-ov button.on { border-color: var(--text-mid); }
+.ov-ring { position: relative; width: 46px; height: 46px; flex-shrink: 0; }
+.ov-ring svg { width: 100%; height: 100%; }
+.ov-ring .ring-track, .ov-ring .ring-fill { stroke-width: 4; }
+.ov-ring b { position: absolute; inset: 0; display: grid; place-content: center; font-size: 0.74rem; }
+.ov-text { display: grid; flex: 1; min-width: 0; font-size: 0.9rem; }
+.ov-text .mono { font-size: 0.74rem; color: var(--text-mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (prefers-reduced-motion: reduce) { .twin-scan, .twin-spot .twin-halo, .dial-needle { animation: none; transition: none; } }

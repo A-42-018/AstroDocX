@@ -501,8 +501,17 @@ Text on photo always on a scrim (≥ 4.5:1), status never by colour alone (icon 
 - **Components:** `<LiveWave>` (canvas, 30 fps, device-pixel aware, pauses offscreen and when hidden, glowing leading dot, aria-hidden), `<LiveNumber>` (glides to new values), `<LiveVitals>` (heart pulse ring on each beat, screen-reader summary at most every 30 s, "Simulated live telemetry" label). Placed on the Status Board as a first strip; U3 arranges it in the final layout.
 - **Checked:** generator unit tests (beats per minute match HR for 48–130 bpm, seeded, eases, follows CO₂); 165 tests, `tsc`, `oxlint`, build clean; strip seen in the browser. Not yet measured: CPU budget and Lighthouse (the browser pane was hidden, so animation frames did not run).
 
+## U3 Implementation Log (done)
+- **Board layout** (`app/src/board/`): top row of readiness dial, Health Twin and Next-action card (three columns ≥ 1180 px, two at tablet, stacked on phones); live vitals strip; five hazard cards; crew overview.
+- **Readiness dial** (`Dial.tsx`): 240° arc with ticks and an animated needle; same accessible name as before.
+- **Health Twin** (`Twin.tsx`): body outline from the landing page, one hotspot per RIDGE hazard coloured by status with a leader line to a label chip that jumps to the hazard card (`#hz-X`). Radiation is a whole-body aura (the outline glows by its status). Chips show icon + word; on phones icon only, with the word in the link name. A slow scan line plays unless motion is reduced.
+- **Next action** (`NextAction.tsx`): the most urgent alert, its first open step, progress and a button to the Alerts screen; an all-clear state links to the check-in.
+- **Hazard cards:** each has its own mini chart (`MiniCharts.tsx`, plain SVG, no chart library): dose as cumulative area, sleep as a step line, exercise as bars by day, CO₂ against its limit, and for Distance a backlog bar with the 24 h / 72 h marks. A signed σ against the personal baseline shows next to each value.
+- **Crew overview** (`CrewOverview.tsx`): four cards with readiness ring and worst hazard, fed by the shell data (now shared through a context); click to switch.
+- **Checked:** 168 tests, `tsc`, `oxlint`, build clean; seen at 1440 and 375 px (no horizontal overflow). Not measured: the "Act is obvious in < 2 s" test with real viewers.
+
 ## Current Phase
-**C0–C12 done and deployed. Console v2: U0, U1 and U2 done.** Next: U3 (Mission Health).
+**C0–C12 done and deployed. Console v2: U0 to U3 done.** Next: U4 (Alerts + Trends).
 
 ## Next Roadmap
 1. **Deploy:** live at https://astrodocx.netlify.app (console at `/app/`), auto-deploys from `main`. README, `og:url`, absolute `og:image` / `twitter:image` and canonical tag updated. Still to do: turn off Netlify site protection (visitor access) so the public can open it, re-run Lighthouse on the live URL, check install-to-home-screen on a phone.

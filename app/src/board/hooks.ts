@@ -1,6 +1,7 @@
 import { liveQuery } from 'dexie'
 import { useEffect, useState } from 'react'
 import { demoLoaded, seedDemo } from '../data/demo'
+import { loadMini, type MiniData } from './mini'
 import { loadSnapshot, type Snapshot } from './snapshot'
 import { useBoard } from './store'
 
@@ -34,4 +35,16 @@ export function useSnapshot(): Snapshot | null | undefined {
     return () => sub.unsubscribe()
   }, [crewId, ready])
   return snap
+}
+
+/** Chart data for the hazard cards; follows the database like the snapshot does. */
+export function useMini(crewId: string | undefined, now: number | undefined): MiniData | undefined {
+  const [mini, setMini] = useState<{ key: string; data: MiniData } | undefined>(undefined)
+  const key = `${crewId}@${now}`
+  useEffect(() => {
+    if (!crewId || now === undefined) return
+    const sub = liveQuery(() => loadMini(crewId, now)).subscribe({ next: (data) => setMini({ key, data }), error: () => setMini(undefined) })
+    return () => sub.unsubscribe()
+  }, [crewId, now, key])
+  return mini?.key === key ? mini.data : undefined
 }
