@@ -85,7 +85,8 @@ main, .disclaimer { position: relative; z-index: 1; }
   .topbar nav a { flex-shrink: 0; padding: 0 12px; }
 }
 
-main { flex: 1; padding: 28px 24px 40px; max-width: 1240px; width: 100%; margin: 0 auto; }
+/* Fluid width: uses wide screens instead of a narrow centre column, with padding that scales with the window */
+main { flex: 1; padding: clamp(18px, 2.2vw, 36px) clamp(16px, 3vw, 56px) 48px; max-width: 1760px; width: 100%; margin: 0 auto; }
 main > * { animation: rise 0.4s var(--ease) both; }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
@@ -177,10 +178,23 @@ main > p.glass[role='status'] { font-size: 0.9rem; color: var(--text-mid); }
   .ring figcaption b { font-size: 1.9rem; }
   .readiness > div { min-width: 0; flex-basis: 100%; }
 }
+/* Wide screens: a dashboard, not a stack. Readiness on the left; hazard cards 3 + 2 beside it, same heights. */
+@media (min-width: 1180px) {
+  .board-home { grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); align-items: stretch; }
+  .board-home .board-head { grid-column: 1 / -1; }
+  .board-home .readiness { flex-direction: column; align-items: stretch; justify-content: center; gap: 22px; padding: 28px; }
+  .board-home .readiness .ring { width: 190px; height: 190px; align-self: center; }
+  .board-home .readiness .ring figcaption b { font-size: 2.9rem; }
+  .board-home .readiness > div { flex: 0 0 auto; min-width: 0; }
+  .board-home .tiles { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .board-home .tiles > li:nth-child(-n + 3) { grid-column: span 2; }
+  .board-home .tiles > li:nth-child(n + 4) { grid-column: span 3; }
+}
 @media (prefers-reduced-motion: reduce) { .ring-fill { transition: none; } main > * { animation: none; } }
 
 /* ---- Alerts + Action card (C6) ---- */
 .alert-list, .resolved-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.alert-list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 560px), 1fr)); align-items: start; }
 .alert { padding: 22px 24px; }
 .alert header { display: flex; align-items: center; gap: 12px; }
 .alert h2 { margin: 0; font-size: 1.1rem; font-weight: 600; flex: 1; }
@@ -285,7 +299,7 @@ main h1 { font-size: clamp(1.45rem, 2.6vw, 1.85rem); font-weight: 700; letter-sp
 @media (max-width: 600px) { .log-entry { grid-template-columns: 1fr; } }
 
 /* ---- Ground view (C12 stretch) ---- */
-.ground-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+.ground-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); align-items: start; }
 .ground-card header { display: flex; align-items: center; gap: 10px; }
 .ground-card h2 { margin: 0; font-size: 1.05rem; font-weight: 600; flex: 1; }
 .ground-role { margin: 0 0 10px; font-size: 0.8rem; }
@@ -307,3 +321,6 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .install-btn { margin-left: auto; min-height: 38px; padding: 0 16px; font-size: 0.84rem; }
 
 * { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.2) transparent; }
+
+/* A form reads best at a comfortable line length, even on very wide screens */
+.board-form { max-width: 1080px; margin: 0 auto; }

@@ -484,6 +484,11 @@ Text on photo always on a scrim (≥ 4.5:1), status never by colour alone (icon 
 - **Fixed during QA:** the sky was black when the tab started hidden, and again after a resize cleared the canvas; the first frame and every resize now draw straight away.
 - **Checked:** board (nominal + Act), alerts, trends, simulator and sync at 1280 px, board at 375 px (no overflow); 149 tests, `tsc`, `oxlint`, build clean.
 
+## U0.1 Owner feedback pass (done)
+- **4K sky:** the backdrop is now two passes (`app/src/shell/backdropShaders.ts`). The soft surface (oceans, land, clouds) renders to a half-resolution texture. The sharp composite renders at device pixels up to 3840 × 2160: anti-aliased limb, a crisp atmosphere line, round stars in three depth layers with a faint shimmer (no on/off blinking), a Milky Way band, and dithering against banding.
+- **Sun flare:** core, halo, six/ten-point starburst, anamorphic streak and five lens ghosts along the sun–centre axis, with a gentle shimmer. Strength follows how high the sun is.
+- **Layout:** the content area is fluid (up to 1760 px, padding scales with the window). The Status Board on ≥ 1180 px is a dashboard: readiness column on the left, hazard cards 3 + 2 beside it. Alerts go two per row and Ground View shows all four crew in a row; the check-in form is capped at 1080 px.
+
 ## Current Phase
 **C0–C12 done and deployed. Console v2: U0 done.** Next: U1 (app shell).
 

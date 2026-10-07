@@ -67,7 +67,7 @@ export function CheckInForm({ crew, crewId, now, onSelectCrew, onSubmit, reactio
   }
 
   return (
-    <div className="board">
+    <div className="board board-form">
       <div className="board-head"><CrewTabs crew={crew} crewId={crewId} onSelect={(id) => { setResult(null); reset(); onSelectCrew(id) }} /></div>
       <section className="glass">
         <h1 style={{ margin: 0 }}>Daily check-in · {who?.name}</h1>

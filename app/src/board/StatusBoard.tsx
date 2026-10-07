@@ -28,7 +28,7 @@ export function StatusBoard({ snap, onSelectCrew }: { snap: Snapshot; onSelectCr
   const who = snap.crew.find((c) => c.id === snap.crewId)
   const linkLabel = snap.sinceSyncH === null ? 'No ground sync yet' : `Last ground sync ${snap.sinceSyncH.toFixed(1)} h ago`
   return (
-    <div className="board">
+    <div className="board board-home">
       <div className="board-head">
         <CrewTabs crew={snap.crew} crewId={snap.crewId} onSelect={onSelectCrew} />
         <div className="meta mono">
