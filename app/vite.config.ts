@@ -28,7 +28,8 @@ export default defineConfig({
           { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
         ],
       },
-      workbox: { navigateFallback: '/app/index.html' },
+      // Fonts are bundled (not Google Fonts) and precached so the console looks the same offline.
+      workbox: { navigateFallback: '/app/index.html', globPatterns: ['**/*.{js,css,html,svg,png,woff2}'] },
     }),
   ],
 })

@@ -14,7 +14,7 @@ export function TrendChart({ series, rangeMs }: { series: TrendSeries; rangeMs: 
   return (
     <li className="glass trend" aria-label={def.label}>
       <header>
-        <span className="hz mono" style={{ background: 'var(--holo)' }}>{def.hazard}</span>
+        <span className="hz hz-holo mono">{def.hazard}</span>
         <h2>{def.label}</h2>
         <span className="mono val-now">{latest}</span>
       </header>
@@ -25,12 +25,20 @@ export function TrendChart({ series, rangeMs }: { series: TrendSeries; rangeMs: 
             <XAxis dataKey="ts" type="number" scale="time" domain={['dataMin', 'dataMax']} tickFormatter={(t: number) => tickLabel(t, rangeMs, MISSION_START)} tick={{ fill: 'var(--text-mid)', fontSize: 11 }} stroke="var(--glass-border)" minTickGap={28} />
             <YAxis domain={['auto', 'auto']} tick={{ fill: 'var(--text-mid)', fontSize: 11 }} stroke="var(--glass-border)" width={44} tickFormatter={(v: number) => v.toFixed(d)} />
             <Tooltip
-              contentStyle={{ background: 'var(--void-mid)', border: '1px solid var(--glass-border)', borderRadius: 6 }}
+              contentStyle={{ background: 'rgba(12, 10, 32, 0.92)', border: '1px solid rgba(34, 211, 238, 0.35)', borderRadius: 8, fontFamily: 'var(--font-mono)', fontSize: 12, boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)' }}
+              labelStyle={{ color: 'var(--holo-hi)' }}
+              cursor={{ stroke: 'rgba(34, 211, 238, 0.4)', strokeDasharray: '3 3' }}
               labelFormatter={(t) => tickLabel(Number(t), 0, MISSION_START)}
               formatter={(v) => (Array.isArray(v) ? `${Number(v[0]).toFixed(d)} to ${Number(v[1]).toFixed(d)} (band)` : `${Number(v).toFixed(d)} ${def.unit}`)}
             />
-            <Area dataKey="band" stroke="none" fill="var(--violet)" fillOpacity={0.18} isAnimationActive={false} connectNulls={false} />
-            <Line dataKey="value" stroke="var(--holo)" strokeWidth={1.8} dot={false} isAnimationActive={false} />
+            <defs>
+              <linearGradient id={`band-${series.metric}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--violet)" stopOpacity={0.32} />
+                <stop offset="100%" stopColor="var(--violet)" stopOpacity={0.08} />
+              </linearGradient>
+            </defs>
+            <Area dataKey="band" stroke="var(--violet)" strokeOpacity={0.35} strokeWidth={0.8} fill={`url(#band-${series.metric})`} fillOpacity={1} isAnimationActive={false} connectNulls={false} />
+            <Line dataKey="value" stroke="var(--holo)" strokeWidth={2} dot={false} isAnimationActive={false} />
             {series.metric === 'co2' && <ReferenceLine y={CO2_LIMIT_MMHG} stroke="var(--act)" strokeDasharray="4 3" label={{ value: 'NASA limit 3.0', fill: 'var(--act)', fontSize: 10, position: 'insideTopRight' }} />}
             {series.markers.map((m, i) => (
               <ReferenceDot key={i} x={m.ts} y={m.value} r={5} fill={COLOR[m.status]} stroke="var(--void)" ifOverflow="visible" />

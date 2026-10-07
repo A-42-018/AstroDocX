@@ -12,6 +12,7 @@ export function ReadinessRing({ value, status }: { value: number; status: Status
   return (
     <figure className={`ring st-${status}`} aria-label={`Crew readiness ${value} percent, ${LABEL[status]}`}>
       <svg viewBox="0 0 120 120" role="img" aria-hidden="true">
+        <circle cx="60" cy="60" r={r + 9} className="ring-ticks" />
         <circle cx="60" cy="60" r={r} className="ring-track" />
         <circle cx="60" cy="60" r={r} className="ring-fill" strokeDasharray={c} strokeDashoffset={c * (1 - value / 100)} transform="rotate(-90 60 60)" />
       </svg>

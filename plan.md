@@ -404,11 +404,16 @@ The video itself is recorded after L3.
 - **I. Safe redeploys:** with code splitting, a console left open across a deploy would ask for chunk files the new service worker had replaced, and that screen would fail. `shell/lazyPage.ts` wraps `React.lazy`: on a failed chunk import it reloads once into the new version (sessionStorage guard, so a truly broken chunk shows the error screen instead of looping). **Reproduced and verified in headless Chrome:** v1 open and controlled by its service worker, v2 built with new chunk hashes and activated, then navigating to Trends in the old page reloaded exactly once and opened Trends on v2 with no error.
 - **Tests: 149.** `tsc`, `oxlint`, `npm run build` clean.
 
+## Console visual refresh (done)
+- **Why it looked dated:** the console never loaded its fonts, so all mono text fell back to Courier New; the background was one flat colour, so the glass cards had nothing to blur and read as grey boxes; status was only a 4 px left border.
+- **Fix:** Inter + JetBrains Mono (latin variable subsets) bundled in `app/public/fonts` and precached, so offline looks the same; deep-space backdrop (nebula glows, stars, faint HUD grid); glass panels with HUD corner ticks and a status-tinted glow edge; hazard chips and status pills (ACT pulses, reduced-motion respected); larger glowing readiness ring with tick ring; segmented crew switcher; sticky blurred top bar with a glowing active tab (one swipeable row on phones); gradient buttons; chart band gradient, glowing line, mono axes and a glass tooltip.
+- **Checked:** all seven screens at 1280 px and 375 px (no horizontal overflow), fonts load, 149 tests, `tsc`, `oxlint`, build clean.
+
 ## Current Phase
 **C12 stretch (Ground View) done; C11 Ship done except the live deploy.** C0-C10 and the landing page are done.
 
 ## Next Roadmap
-1. **Deploy (owner):** connect the repo to Netlify (config is in `netlify.toml`), then put the live URL in README, the landing `og:image` / canonical tags, and re-run Lighthouse on the live URL. Check install-to-home-screen on a phone.
+1. **Deploy:** live at https://astrodocx.netlify.app (console at `/app/`), auto-deploys from `main`. README, `og:url`, absolute `og:image` / `twitter:image` and canonical tag updated. Still to do: turn off Netlify site protection (visitor access) so the public can open it, re-run Lighthouse on the live URL, check install-to-home-screen on a phone.
 2. Optional: create the Supabase project, run `docs/supabase.sql`, set the two `VITE_SUPABASE_*` variables in Netlify, and test a real upload; move to authenticated policies before any real data.
-3. Content still open on the landing page: team cards 2–4, README live/video URLs, absolute `og:image` after deploy.
+3. Content still open on the landing page: team cards 2–4, README video URL.
 4. Record the video (tour mode is ready; see README), after the deploy.
