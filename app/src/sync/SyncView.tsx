@@ -25,6 +25,8 @@ interface Props {
   onSync: () => void
   onBlackout: (b: boolean) => void
   onAuto: (b: boolean) => void
+  /** Download the whole on-board log as CSV. */
+  onExport?: () => void
 }
 
 const hoursUntil = (t: number, now: number) => Math.max(0, (t - now) / HOUR)
@@ -39,7 +41,7 @@ function Entry({ e, sent }: { e: ActionLogEntry; sent?: boolean }) {
   )
 }
 
-export function SyncView({ now, link, pending, synced, lastSyncedAt, station, blackout, auto, busy, message, error, onSync, onBlackout, onAuto }: Props) {
+export function SyncView({ now, link, pending, synced, lastSyncedAt, station, blackout, auto, busy, message, error, onSync, onBlackout, onAuto, onExport }: Props) {
   const s = STATE[link.state]
   return (
     <div className="board">
@@ -60,6 +62,7 @@ export function SyncView({ now, link, pending, synced, lastSyncedAt, station, bl
             Sync {pending.length} entr{pending.length === 1 ? 'y' : 'ies'} now
           </button>
           <label className="check"><input type="checkbox" checked={blackout} onChange={(e) => onBlackout(e.target.checked)} /> Simulate comms blackout</label>
+          {onExport && <button type="button" className="btn ghost" onClick={onExport}>Download log (CSV)</button>}
           <label className="check"><input type="checkbox" checked={auto} onChange={(e) => onAuto(e.target.checked)} /> Auto-sync in windows (simulator)</label>
         </div>
         {message && <p role="status" className="sync-ok">{message}</p>}

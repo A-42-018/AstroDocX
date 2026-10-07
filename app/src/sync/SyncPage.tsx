@@ -3,6 +3,9 @@ import { useEffect, useState } from 'react'
 import { useSnapshot } from '../board/hooks'
 import { useBoard } from '../board/store'
 import { linkAt } from './link'
+import { db } from '../data/db'
+import { met } from '../engine/actions'
+import { downloadCsv, logToCsv } from './exportLog'
 import { loadOutbox, syncNow, type Outbox } from './outbox'
 import { useSync } from './store'
 import { getTransport } from './transport'
@@ -46,6 +49,7 @@ export default function SyncPage() {
       now={snap.now} link={linkAt(snap.now, blackout)} pending={box.pending} synced={box.synced} lastSyncedAt={lastSyncedAt} station={getTransport().name}
       blackout={blackout} auto={auto} busy={busy} message={message} error={error}
       onSync={() => void sync()} onBlackout={setBlackout} onAuto={setAuto}
+      onExport={() => void db.actionLog.toArray().then((all) => downloadCsv(logToCsv(all, snap.crew), `astrodocx-log-${met(snap.now).replace(/[ :]/g, '-')}.csv`))}
     />
   )
 }
