@@ -45,8 +45,8 @@ AstroDocX learns each astronaut's **personal baseline**, spots drift early, and 
 - **Mission Simulator (Live Demo):** inject a fault (CO₂ scrubber, solar event, poor sleep, skipped workout, comms blackout) or press *Play scenario*. Tick the action-card steps, press *Carry out & log*, then open the ground link window to sync the log.
 
 ## Links
-- **Landing page:** _add Netlify URL_
-- **Crew Console:** _add Netlify URL_`/app/`
+- **Landing page:** https://astrodocx.netlify.app
+- **Crew Console:** https://astrodocx.netlify.app/app/
 - **Video:** _add video URL_
 - **Repo:** https://github.com/A-42-018/AstroDocX
 
