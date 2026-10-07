@@ -1,4 +1,4 @@
-import { METRICS, type MetricId, type Status, type Timestamp } from '../data/types'
+import { METRICS, type Alert, type MetricId, type Status, type Timestamp } from '../data/types'
 import { MISSION_START } from '../data/synthetic'
 import { sdOf } from './baseline'
 import type { Baseline } from '../data/types'
@@ -49,10 +49,28 @@ const BEHAVIORAL: Record<AlertLevel, string[]> = {
   act: GENERIC.act,
 }
 
-export function stepsFor(metric: MetricId | 'sleep+reaction', level: AlertLevel) {
-  const list = metric === 'sleep+reaction' ? BEHAVIORAL[level] : (STEPS[metric]?.[level] ?? GENERIC[level])
+const SYMPTOMS: Record<AlertLevel, string[]> = {
+  watch: ['Rate each symptom (mild / moderate / severe) in the log', 'If headache or congestion: check cabin CO₂', 'Rest and hydrate; repeat the check-in tomorrow', 'Tell the commander if it gets worse'],
+  act: ['Do the on-board vision check (acuity and Amsler grid) and log the result', 'Stop tasks that need fine visual work until reviewed', 'Notify the commander and the flight surgeon at the next link window'],
+}
+
+/** Rules that are not a single metric have their own step lists. */
+const RULE_STEPS: Record<string, Record<AlertLevel, string[]>> = {
+  'sleep+reaction': BEHAVIORAL,
+  symptoms: SYMPTOMS,
+  'sleep-quality': STEPS.sleep!,
+}
+
+/** Steps for an alert: by rule id when the rule has its own list, otherwise by metric. */
+export function stepsFor(rule: MetricId | string, level: AlertLevel) {
+  const list = RULE_STEPS[rule]?.[level] ?? STEPS[rule as MetricId]?.[level] ?? GENERIC[level]
   return list.map((text) => ({ text, done: false }))
 }
+
+const RULE_TITLE: Record<string, string> = { 'sleep+reaction': 'Sleep and reaction time', symptoms: 'Reported symptoms', 'sleep-quality': 'Self-reported sleep quality' }
+
+/** Display name of an alert, used by every screen. */
+export const alertTitle = (a: Pick<Alert, 'ruleId' | 'metric'>) => RULE_TITLE[a.ruleId] ?? METRICS[a.metric].label
 
 /** "D3 07:00 MET": mission elapsed time from the mission start. */
 export function met(ts: Timestamp, start: Timestamp = MISSION_START): string {

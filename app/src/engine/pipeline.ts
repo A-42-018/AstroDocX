@@ -1,6 +1,6 @@
 import { ConsoleDB, db } from '../data/db'
-import { METRICS, type ActionLogEntry, type Alert, type AlertKind, type Baseline, type MetricId, type Reading, type Status, type Timestamp } from '../data/types'
-import { explainBaseline, explainCombined, met, stepsFor, type AlertLevel } from './actions'
+import { METRICS, type ActionLogEntry, type Alert, type AlertKind, type Baseline, type Hazard, type MetricId, type Reading, type Status, type Timestamp } from '../data/types'
+import { alertTitle, explainBaseline, explainCombined, met, stepsFor, type AlertLevel } from './actions'
 import { newBaseline, persistFor, step } from './baseline'
 import { CAREER_DOSE_MSV, CO2_LIMIT_MMHG, co2Limit, eventDoseLimit, type LimitResult } from './limits'
 
@@ -39,10 +39,12 @@ async function log(d: ConsoleDB, e: Omit<ActionLogEntry, 'sync'>) {
   await d.actionLog.add({ ...e, sync: 'pending' })
 }
 
-interface Desired {
+export interface Desired {
   status: Status
   kind: AlertKind
   metric: MetricId
+  /** Defaults to the metric's hazard. */
+  hazard?: Hazard
   z: number
   value: number
   baselineMean: number
@@ -50,19 +52,19 @@ interface Desired {
 }
 
 /** Create, update, escalate, ease or resolve the single alert for (crew, ruleId). */
-async function apply(d: ConsoleDB, crewId: string, ruleId: string, want: Desired, ts: Timestamp): Promise<ProcessResult> {
+export async function applyRule(d: ConsoleDB, crewId: string, ruleId: string, want: Desired, ts: Timestamp): Promise<ProcessResult> {
   const existing = await d.alerts.where('[crewId+state]').anyOf([crewId, 'open'], [crewId, 'acknowledged']).filter((a) => a.ruleId === ruleId).first()
   if (want.status === 'nominal') {
     if (!existing) return { status: 'nominal' }
     const resolved: Alert = { ...existing, state: 'resolved', resolvedAt: ts }
     await d.alerts.put(resolved)
-    await log(d, { crewId, kind: 'alert-resolved', alertId: existing.id, ts, text: `${METRICS[existing.metric].label} back within range (${met(ts)}).` })
+    await log(d, { crewId, kind: 'alert-resolved', alertId: existing.id, ts, text: `${alertTitle(existing)} ${existing.kind === 'checkin' ? 'cleared on the latest check-in' : 'back within range'} (${met(ts)}).` })
     return { status: 'nominal', alert: resolved, change: 'resolved' }
   }
   const level = want.status as AlertLevel
-  const base = { hazard: METRICS[want.metric].hazard, status: level, z: want.z, value: want.value, baselineMean: want.baselineMean, explanation: want.explanation }
+  const base = { hazard: want.hazard ?? METRICS[want.metric].hazard, status: level, z: want.z, value: want.value, baselineMean: want.baselineMean, explanation: want.explanation }
   if (!existing) {
-    const alert: Alert = { crewId, ruleId, kind: want.kind, metric: want.metric, ...base, peakStatus: level, state: 'open', steps: stepsFor(ruleId === COMBINED ? COMBINED : want.metric, level), openedAt: ts }
+    const alert: Alert = { crewId, ruleId, kind: want.kind, metric: want.metric, ...base, peakStatus: level, state: 'open', steps: stepsFor(ruleId, level), openedAt: ts }
     alert.id = (await d.alerts.add(alert)) as number
     await log(d, { crewId, kind: 'alert-opened', alertId: alert.id, ts, text: `${level.toUpperCase()}: ${want.explanation}` })
     return { status: want.status, alert, change: 'opened' }
@@ -74,7 +76,7 @@ async function apply(d: ConsoleDB, crewId: string, ruleId: string, want: Desired
   }
   const up = RANK[level] > RANK[existing.status]
   const alert: Alert = up
-    ? { ...existing, ...base, kind: want.kind, peakStatus: level, state: 'open', steps: stepsFor(ruleId === COMBINED ? COMBINED : want.metric, level) }
+    ? { ...existing, ...base, kind: want.kind, peakStatus: level, state: 'open', steps: stepsFor(ruleId, level) }
     : { ...existing, ...base, kind: want.kind }
   await d.alerts.put(alert)
   await log(d, { crewId, kind: up ? 'alert-opened' : 'note', alertId: existing.id, ts, text: `${up ? 'Escalated' : 'Eased'} to ${level.toUpperCase()}: ${want.explanation}` })
@@ -115,7 +117,7 @@ export async function processReading(r: Reading, d: ConsoleDB = db): Promise<Pro
     if (r.metric === 'dose' && status !== 'nominal') {
       explanation += ` Cumulative mission dose: ${(((prior.total + r.value) / 1000)).toFixed(2)} mSv of the ${CAREER_DOSE_MSV} mSv career limit (NASA-STD-3001 Vol. 1).`
     }
-    const out = await apply(d, r.crewId, r.metric, { status, kind: limit.status !== 'nominal' && RANK[limit.status] >= RANK[stat] ? 'limit' : 'baseline', metric: r.metric, z: res.z, value: r.value, baselineMean: res.baseline.mean, explanation }, r.ts)
+    const out = await applyRule(d, r.crewId, r.metric, { status, kind: limit.status !== 'nominal' && RANK[limit.status] >= RANK[stat] ? 'limit' : 'baseline', metric: r.metric, z: res.z, value: r.value, baselineMean: res.baseline.mean, explanation }, r.ts)
 
     if (r.metric === 'sleep' || r.metric === 'reaction') await combined(d, r, who)
     return out
@@ -126,10 +128,10 @@ export async function processReading(r: Reading, d: ConsoleDB = db): Promise<Pro
 async function combined(d: ConsoleDB, r: Reading, who: string) {
   const [sb, rb] = await Promise.all([d.baselines.get([r.crewId, 'sleep']), d.baselines.get([r.crewId, 'reaction'])])
   const both = !!sb && !!rb && sb.status !== 'nominal' && rb.status !== 'nominal'
-  if (!both) return apply(d, r.crewId, COMBINED, { status: 'nominal', kind: 'combined', metric: 'reaction', z: 0, value: 0, baselineMean: 0, explanation: '' }, r.ts)
+  if (!both) return applyRule(d, r.crewId, COMBINED, { status: 'nominal', kind: 'combined', metric: 'reaction', z: 0, value: 0, baselineMean: 0, explanation: '' }, r.ts)
   const [sl, re] = await Promise.all([latest(d, r.crewId, 'sleep'), latest(d, r.crewId, 'reaction')])
   const text = explainCombined(who, { value: sl?.value ?? sb.mean, z: sb.ewma }, { value: re?.value ?? rb.mean, z: rb.ewma }, await alertSince(d, r.crewId, COMBINED, r.ts))
-  return apply(d, r.crewId, COMBINED, { status: 'watch', kind: 'combined', metric: 'reaction', z: Math.max(sb.ewma, rb.ewma), value: re?.value ?? 0, baselineMean: rb.mean, explanation: text }, r.ts)
+  return applyRule(d, r.crewId, COMBINED, { status: 'watch', kind: 'combined', metric: 'reaction', z: Math.max(sb.ewma, rb.ewma), value: re?.value ?? 0, baselineMean: rb.mean, explanation: text }, r.ts)
 }
 
 /** Crew presses Done on an action card: records completion; the engine still resolves the alert when values recover. */

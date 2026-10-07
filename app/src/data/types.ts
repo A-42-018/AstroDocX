@@ -72,7 +72,7 @@ export interface Baseline {
 
 export type AlertState = 'open' | 'acknowledged' | 'resolved'
 
-export type AlertKind = 'baseline' | 'limit' | 'combined'
+export type AlertKind = 'baseline' | 'limit' | 'combined' | 'checkin'
 
 export interface Alert {
   id?: number

@@ -1,5 +1,6 @@
 import { ConsoleDB, db } from '../data/db'
 import type { Alert, CheckIn, MetricId, Reading, Timestamp } from '../data/types'
+import { processCheckInRules } from '../engine/checkinRules'
 import { processReading, type ProcessResult } from '../engine/pipeline'
 
 export const SYMPTOMS = ['Headache', 'Nausea', 'Dizziness', 'Congestion', 'Back pain', 'Blurred vision', 'Skin rash', 'Fatigue'] as const
@@ -53,6 +54,7 @@ export async function submitCheckIn(input: CheckInInput, d: ConsoleDB = db): Pro
     checkIn.id = (await d.checkIns.add(checkIn)) as number
     const results: ProcessResult[] = []
     for (const r of readings) results.push(await processReading(r, d))
+    results.push(...(await processCheckInRules(input.crewId, input.ts, d)))
     const parts = [
       `mood ${input.mood}/5`, `sleep quality ${input.sleepQuality}/5`,
       ...(input.sleepHours !== undefined ? [`${input.sleepHours} h slept`] : []),

@@ -1,6 +1,6 @@
 import { CrewTabs } from '../board/CrewTabs'
-import { met } from '../engine/actions'
-import { METRICS, type Alert, type CrewMember } from '../data/types'
+import { alertTitle, met } from '../engine/actions'
+import type { Alert, CrewMember } from '../data/types'
 import { AlertCard } from './AlertCard'
 
 interface Props {
@@ -41,7 +41,7 @@ export function AlertsView({ crew, crewId, active, resolved, onSelectCrew, onSte
           <ul className="resolved-list">
             {resolved.map((a) => (
               <li key={a.id} className="glass">
-                <b>{a.kind === 'combined' ? 'Sleep and reaction time' : METRICS[a.metric].label}</b>
+                <b>{alertTitle(a)}</b>
                 <span className="mono muted"> · peak {a.peakStatus.toUpperCase()} · {met(a.openedAt)} to {a.resolvedAt ? met(a.resolvedAt) : '?'}</span>
               </li>
             ))}

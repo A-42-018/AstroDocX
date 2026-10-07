@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CrewTabs } from '../board/CrewTabs'
+import { alertTitle } from '../engine/actions'
 import type { CrewMember } from '../data/types'
 import type { PvtSummary } from './pvt'
 import { ReactionTest } from './ReactionTest'
@@ -80,7 +81,7 @@ export function CheckInForm({ crew, crewId, now, onSelectCrew, onSubmit, reactio
           <h2>Check-in saved and logged</h2>
           {result.raised.length === 0 && result.resolved.length === 0 && <p className="muted">Nothing new for the engine to flag.</p>}
           {result.raised.map((a) => <p key={a.id}><b className="mono">{a.status.toUpperCase()}</b> {a.explanation} See the Alerts tab.</p>)}
-          {result.resolved.map((a) => <p key={a.id} className="muted">An earlier alert cleared: {a.metric}.</p>)}
+          {result.resolved.map((a) => <p key={a.id} className="muted">An earlier alert cleared: {alertTitle(a)}.</p>)}
         </section>
       )}
 
@@ -101,7 +102,7 @@ export function CheckInForm({ crew, crewId, now, onSelectCrew, onSubmit, reactio
               </label>
             ))}
           </div>
-          <p className="muted note">Symptoms go to the on-board log for review; they do not trigger alerts yet.</p>
+          <p className="muted note">A symptom on three check-ins in a row, three or more symptoms at once, or blurred vision twice in a row raises an alert (illustrative rules).</p>
         </fieldset>
         <Reaction onResult={setPvt} />
         {error && <p role="alert" className="form-error">{error}</p>}

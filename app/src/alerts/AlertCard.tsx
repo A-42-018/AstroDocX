@@ -1,5 +1,5 @@
-import { met } from '../engine/actions'
-import { METRICS, type Alert } from '../data/types'
+import { alertTitle, met } from '../engine/actions'
+import type { Alert } from '../data/types'
 
 const LABEL = { watch: 'WATCH', act: 'ACT' } as const
 const ICON = { watch: '▲', act: '◆' } as const
@@ -15,7 +15,7 @@ export function AlertCard({ alert: a, onStep, onDone }: Props) {
   const id = a.id!
   const doneCount = a.steps.filter((s) => s.done).length
   const acknowledged = a.state === 'acknowledged'
-  const title = a.kind === 'combined' ? 'Sleep and reaction time' : METRICS[a.metric].label
+  const title = alertTitle(a)
   return (
     <li className={`glass alert st-${a.status}`} aria-label={`${title}: ${LABEL[a.status]}`}>
       <header>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { met } from '../engine/actions'
+import { alertTitle, met } from '../engine/actions'
 import { SCENARIOS, type ScenarioId } from '../data/synthetic'
 import { METRICS, type Alert, type CrewMember } from '../data/types'
 import type { AdvanceResult, Injection } from './advance'
@@ -12,7 +12,7 @@ const STEPS = [
 ]
 
 const title = (a: Alert, crew: CrewMember[]) =>
-  `${crew.find((c) => c.id === a.crewId)?.name ?? a.crewId}: ${a.kind === 'combined' ? 'sleep and reaction time' : METRICS[a.metric].label} (${a.status.toUpperCase()})`
+  `${crew.find((c) => c.id === a.crewId)?.name ?? a.crewId}: ${alertTitle(a)} (${a.status.toUpperCase()})`
 
 interface Props {
   crew: CrewMember[]
