@@ -70,7 +70,8 @@ export function Twin({ tiles, overall }: { tiles: HazardTile[]; overall: Status 
           const t = by.get(s.id)
           if (!t) return null
           return (
-            <a key={s.id} href={`#hz-${s.id}`} className={`twin-chip ${s.side} st-${t.status}`} style={{ top: `${(s.y / VB_H) * 100}%` }} aria-label={`Jump to ${t.name} card, ${WORD[t.status]}`}>
+            <a key={s.id} href={`#hz-${s.id}`} className={`twin-chip ${s.side} st-${t.status}`} style={{ top: `${(s.y / VB_H) * 100}%` }}>
+              <span className="sr-only">{`Jump to ${t.name} card, ${WORD[t.status]}`}</span>
               <HazardIcon hazard={s.id} status={t.status} />
               <span className="twin-chip-text" aria-hidden="true"><b>{t.name}</b><StatusPill status={t.status} /></span>
             </a>

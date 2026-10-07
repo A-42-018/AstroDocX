@@ -527,8 +527,18 @@ Text on photo always on a scrim (≥ 4.5:1), status never by colour alone (icon 
 - **Ground View:** an "Earth is N behind the crew" banner (time since the last sync plus the one-way delay), four crew columns on wide screens, and a mini twin per person whose glow is the worst status the ground knows about, plus the known alerts and the "on board, not yet downlinked" count.
 - **Checked:** 183 tests, `tsc`, `oxlint`, build clean; closed and open windows, the delivery burst (8 packets) and the Ground View seen in the browser at 1440 px. Phone width for these two screens not yet viewed; the mission clock on the simulator only animates while the tab is visible.
 
+## U7 Implementation Log (done, not yet deployed)
+- **Checked with real Chrome (puppeteer-core, Lighthouse run from a scratch folder, nothing added to the repo):**
+  - All 7 screens at 375 / 768 / 1440 px: no console errors, no horizontal overflow (the Sync log table was widening the page; grid children may now shrink).
+  - Lighthouse on `/app/board` (cold first launch): **desktop 100 / 100 / 100 / 100**; **mobile accessibility 100, best practices 100, SEO 100, performance 72**. The mobile number is the one-time first-launch seeding of the demo (about 300 ms of script unthrottled, about 1 s under Lighthouse's 4x CPU slowdown, in one chunk). Not fixed; a Web Worker for seeding is the next step if it matters.
+  - Offline: after one visit, reload and navigation to Trends, Ground Sync and Simulator work with the network off (lazy chunks included).
+  - Reduced motion: no infinite animation runs on the board or Sync.
+- **Fixes found by the audit:** muted text raised to 4.5:1 or better; text on the orange accent changed from white (2.6:1) to a dark ink; avatar, twin-chip and crew-overview names are real text so they match what is visible; the phone top bar reserves its two rows (layout shift 0.125 to 0); a global reduced-motion safety net.
+- **README:** feature table and a Crew Console screenshot set (`docs/screenshots/console-*.jpg`).
+- **Not done:** deploy (push to `main` triggers Netlify), re-running Lighthouse on the live URL, install-to-home-screen on a real phone, turning off Netlify site protection, the README video URL.
+
 ## Current Phase
-**C0–C12 done and deployed. Console v2: U0 to U6 done.** Next: U7 (polish and ship).
+**C0–C12 done and deployed. Console v2: U0 to U7 done locally.** Next: push to deploy, then re-check the live URL.
 
 ## Next Roadmap
 1. **Deploy:** live at https://astrodocx.netlify.app (console at `/app/`), auto-deploys from `main`. README, `og:url`, absolute `og:image` / `twitter:image` and canonical tag updated. Still to do: turn off Netlify site protection (visitor access) so the public can open it, re-run Lighthouse on the live URL, check install-to-home-screen on a phone.

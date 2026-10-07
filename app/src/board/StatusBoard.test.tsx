@@ -45,7 +45,7 @@ describe('StatusBoard', () => {
     expect(within(next).getByRole('link', { name: /Open action card/ }).getAttribute('href')).toBe('/alerts')
     const twin = screen.getByRole('group', { name: 'Health twin' })
     expect(within(twin).getAllByRole('link')).toHaveLength(5)
-    expect(within(twin).getByRole('link', { name: 'Jump to Isolation card, ACT' }).getAttribute('href')).toBe('#hz-I')
+    expect(within(twin).getByRole('link', { name: /^Jump to Isolation card, ACT/ }).getAttribute('href')).toBe('#hz-I')
     expect(document.getElementById('hz-I')).toBeTruthy()
   })
 
@@ -64,7 +64,7 @@ describe('StatusBoard', () => {
     const ov = screen.getByRole('region', { name: 'Crew overview' })
     const btns = within(ov).getAllByRole('button')
     expect(btns.map((b) => b.getAttribute('aria-pressed'))).toEqual(['false', 'true'])
-    expect(btns[1].getAttribute('aria-label')).toBe('Show Pilot: readiness 61 percent, Act, worst hazard Isolation')
+    expect(within(ov).getByRole('button', { name: 'Show Pilot: readiness 61 percent, Act, worst hazard Isolation' })).toBe(btns[1])
     fireEvent.click(btns[0])
     expect(onSelect).toHaveBeenCalledWith('cmdr')
   })

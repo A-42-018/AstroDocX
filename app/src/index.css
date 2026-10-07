@@ -5,11 +5,11 @@
 
 :root {
   /* Colour roles are strict: orange = action/brand, cyan = live data, the three status colours = status only. */
-  --accent: #ff7a2f; --accent-hi: #ffa266; --accent-soft: rgba(255, 122, 47, 0.16);
+  --on-accent: #1a0b02; --accent: #ff7a2f; --accent-hi: #ffa266; --accent-soft: rgba(255, 122, 47, 0.16);
   --data: #2dd4e8; --data-soft: rgba(45, 212, 232, 0.14);
   --ok: #3ddc97; --watch: #ffc53d; --act: #ff5a6e;
   --bg: #07080b;
-  --text-hi: #f4f5f7; --text-mid: rgba(235, 238, 245, 0.64); --text-lo: rgba(235, 238, 245, 0.42);
+  --text-hi: #f4f5f7; --text-mid: rgba(235, 238, 245, 0.64); --text-lo: rgba(235, 238, 245, 0.58);
   /* Smoked glass, three levels: chrome (rail/top bar), cards, wells inside cards */
   --glass-1: rgba(14, 15, 19, 0.6); --glass-2: rgba(20, 22, 27, 0.46); --glass-3: rgba(8, 9, 12, 0.38);
   --line: rgba(255, 255, 255, 0.08); --line-hi: rgba(255, 255, 255, 0.16);
@@ -70,7 +70,7 @@ main, .disclaimer { position: relative; z-index: 1; }
   color: var(--text-mid); font-size: 0.64rem; font-weight: 600; letter-spacing: 0.01em; transition: color 0.18s, background 0.18s;
 }
 .rail a:hover { color: var(--text-hi); background: rgba(255, 255, 255, 0.06); }
-.rail a.active { color: #fff; background: var(--accent); box-shadow: 0 6px 18px -4px rgba(255, 122, 47, 0.55); }
+.rail a.active { color: var(--on-accent); background: var(--accent); box-shadow: 0 6px 18px -4px rgba(255, 122, 47, 0.55); }
 .brand-mark {
   width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
   background: radial-gradient(circle at 30% 30%, #ffd0a8, var(--accent) 45%, #c2410c 100%);
@@ -141,7 +141,8 @@ a.chip:hover { border-color: var(--line-hi); background: rgba(255, 255, 255, 0.0
   /* Two rows: greeting + clock, then crew switcher + link + bell */
   .topbar { align-items: center; row-gap: 6px; }
   .tb-right { display: contents; }
-  .greet { order: 0; flex: 1 1 0; min-width: 0; }
+  .greet { order: 0; flex: 1 1 0; min-width: 0; min-height: 42px; display: grid; align-content: center; }
+  .topbar { min-height: 128px; } /* two rows, reserved up front so the page does not jump when the crew switcher appears */
   .met { order: 1; flex: 0 0 auto; min-height: 32px; }
   .tb-break { display: block; order: 2; flex: 0 0 100%; height: 0; }
   .crew-switch { order: 3; flex: 0 0 auto; }
@@ -288,7 +289,7 @@ main > p.glass[role='status'] { font-size: 0.9rem; color: var(--text-mid); }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   min-height: 44px; padding: 0 22px; border-radius: 999px; border: 1px solid transparent;
-  background: var(--accent); color: #fff; font: inherit; font-weight: 600; font-size: 0.9rem; cursor: pointer;
+  background: var(--accent); color: var(--on-accent); font: inherit; font-weight: 600; font-size: 0.9rem; cursor: pointer;
   box-shadow: 0 6px 20px -6px rgba(255, 122, 47, 0.6);
   transition: background 0.18s, box-shadow 0.18s, transform 0.18s var(--ease);
 }
@@ -390,7 +391,7 @@ main h1 { font-size: clamp(1.45rem, 2.6vw, 1.85rem); font-weight: 700; letter-sp
 /* ---- Accessibility ---- */
 .skip-link {
   position: absolute; left: 12px; top: -60px; z-index: 10; padding: 10px 16px; border-radius: var(--r-sm);
-  background: var(--accent); color: #fff; font-weight: 700;
+  background: var(--accent); color: var(--on-accent); font-weight: 700;
 }
 .skip-link:focus { top: 8px; }
 main:focus { outline: none; }
@@ -657,3 +658,11 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .mini-twin .twin-aura { stroke-width: 6; }
 @media (min-width: 1180px) { .ground-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (prefers-reduced-motion: reduce) { .ld-flow, .ld-burst circle { animation: none; } .ld-flow { stroke-dasharray: 2 22; } }
+
+/* Grid children may shrink below their content, so wide tables scroll inside their card instead of widening the page */
+.board > * { min-width: 0; }
+
+/* Safety net: with reduced motion nothing loops and every transition is instant (specific rules above also stop their own effects) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

@@ -27,9 +27,10 @@ export function CrewSwitcher({ crew, crewId, onSelect }: { crew: ShellCrew[]; cr
         return (
           <button
             key={c.id} type="button" aria-pressed={on} className={`av st-${c.status}${on ? ' on' : ''}`} title={`${c.name}: ${STATUS_WORD[c.status]}`}
-            aria-label={`${c.name}, ${STATUS_WORD[c.status]}${c.alerts ? `, ${c.alerts} open alert${c.alerts > 1 ? 's' : ''}` : ''}`}
             onClick={() => onSelect(c.id)}
           >
+            {/* The name is real text (not an aria-label), so the visible initials and the accessible name never disagree. */}
+            <span className="sr-only">{`${c.name}, ${STATUS_WORD[c.status]}${c.alerts ? `, ${c.alerts} open alert${c.alerts > 1 ? 's' : ''}` : ''}`}</span>
             <span className="av-disc" aria-hidden="true">{initials(c.name)}</span>
             <span className="av-flag" aria-hidden="true"><Icon size={11} strokeWidth={3} /></span>
             {on && <span className="av-name" aria-hidden="true">{c.name}</span>}

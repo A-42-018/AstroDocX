@@ -15,9 +15,9 @@ export function CrewOverview({ crew, crewId, onSelect }: { crew: ShellCrew[]; cr
           <li key={c.id}>
             <button
               type="button" aria-pressed={c.id === crewId} className={`glass st-${c.status}${c.id === crewId ? ' on' : ''}`}
-              aria-label={`Show ${c.name}: readiness ${c.readiness} percent, ${WORD[c.status]}${c.worstHazard ? `, worst hazard ${c.worstHazard}` : ''}`}
               onClick={() => onSelect(c.id)}
             >
+              <span className="sr-only">{`Show ${c.name}: readiness ${c.readiness} percent, ${WORD[c.status]}${c.worstHazard ? `, worst hazard ${c.worstHazard}` : ''}`}</span>
               <span className="ov-ring" aria-hidden="true">
                 <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" className="ring-track" /><circle cx="22" cy="22" r="18" className="ring-fill" pathLength={100} strokeDasharray={`${c.readiness} 100`} transform="rotate(-90 22 22)" /></svg>
                 <b>{initials(c.name)}</b>

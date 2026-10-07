@@ -25,20 +25,38 @@ AstroDocX learns each astronaut's **personal baseline**, spots drift early, and 
 
 | Module | What it does |
 |---|---|
-| Health Status Board | Five hazard tiles, each Nominal / Watch / Act, measured against the personal baseline |
-| Explainable Alerts | States what changed, by how much, and since when |
+| Health Status Board | Readiness dial, Health Twin with one hotspot per hazard, next action, live vitals, and five hazard cards with their own mini chart, measured against the personal baseline |
+| Explainable Alerts | List and detail: what changed, by how much, a chart of the trigger, and the alert's timeline |
 | Action Cards | Step-by-step countermeasures; tapping Done logs the action |
-| Daily Check-in | Mood, sleep and symptoms, plus a reaction-time test |
-| Trend Charts | Each indicator plotted against the baseline band |
-| Mission Simulator | Synthetic crew data plus events you can trigger, for the demo |
-| Ground Sync | Outbox, simulated link windows and blackouts; log syncs to the ground when a window opens |
+| Daily Check-in | Four-step wizard: mood, sleep, symptoms and a reaction-time test |
+| Trend Charts | A focus chart with stats and a crew-median overlay, plus all 11 indicators against their baseline bands |
+| Mission Simulator | Mission control: scenarios, a time scrubber and a live feed of what the engine decided |
+| Ground Sync | Animated ship, relay and Earth link, outbox of packets, simulated windows and blackouts, filterable log; syncs when a window opens |
 
 > **Status:** the landing page and the **Crew Console** (`app/`) are built. The console is an offline-first PWA (React, TypeScript, Dexie, Recharts) that runs the full loop on synthetic data: Status Board, Alerts + Action cards, Trends, Daily check-in with a reaction test, Mission Simulator, Ground Sync and a flight-surgeon Ground View. See [`plan.md`](plan.md) for the build log. AstroDocX is a concept prototype, **not a medical device**; all thresholds not cited in the code are illustrative.
 
 ## Screenshots
+**Landing page**
+
 | Hero | Health Twin | Mission Simulator |
 |---|---|---|
 | ![Hero](docs/screenshots/hero.jpg) | ![Health Twin](docs/screenshots/health-twin.jpg) | ![Mission Simulator](docs/screenshots/mission-simulator.jpg) |
+
+**Crew Console** (synthetic demo data, Flight Engineer selected)
+
+![Mission Health board](docs/screenshots/console-board.jpg)
+
+| Alerts | Trends |
+|---|---|
+| ![Alerts](docs/screenshots/console-alerts.jpg) | ![Trends](docs/screenshots/console-trends.jpg) |
+
+| Check-in | Mission control |
+|---|---|
+| ![Check-in](docs/screenshots/console-checkin.jpg) | ![Simulator](docs/screenshots/console-simulator.jpg) |
+
+![Ground Sync](docs/screenshots/console-sync.jpg)
+
+The live waves on the board (ECG, pulse oximeter, breathing) are **simulated telemetry** built around the latest real readings; they never change alerts.
 
 ## Try it
 - **Health Twin:** scroll through the section. The scan runs head to feet, six system panels appear, Crew Readiness counts up, then the heart turns amber and an action card appears.
