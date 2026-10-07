@@ -153,3 +153,14 @@ main { flex: 1; padding: 24px 20px; max-width: 1100px; width: 100%; margin: 0 au
 .sim-last p { margin: 4px 0; }
 .btn.ghost { border-color: var(--glass-border); background: transparent; color: var(--text-mid); }
 .btn.danger { border-color: var(--act); background: rgba(244, 63, 94, 0.18); color: var(--act); }
+
+/* ---- Ground sync (C10) ---- */
+.link { border-left: 4px solid var(--st); }
+.link-state { margin: 6px 0; font-size: 1.1rem; font-weight: 700; color: var(--st); letter-spacing: 0.06em; }
+.check { display: flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; font-size: 0.9rem; }
+.check input { width: 20px; height: 20px; accent-color: var(--holo); }
+.sync-ok { color: var(--ok); font-weight: 600; margin: 8px 0 0; }
+.log-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.log-entry { display: grid; gap: 4px 12px; padding: 10px 14px; font-size: 0.88rem; grid-template-columns: auto auto 1fr; align-items: baseline; }
+.log-entry .kind { color: var(--holo); }
+@media (max-width: 600px) { .log-entry { grid-template-columns: 1fr; } }

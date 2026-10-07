@@ -3,6 +3,8 @@ import { useSnapshot } from '../board/hooks'
 import { useBoard } from '../board/store'
 import { seedDemo } from '../data/demo'
 import { advance, LEAD_HOURS, makeInjection, missionNow, type AdvanceResult } from './advance'
+import { autoSync } from '../sync/outbox'
+import { useSync } from '../sync/store'
 import { useSim } from './store'
 import { SimulatorView } from './SimulatorView'
 
@@ -22,6 +24,8 @@ export default function SimulatorPage() {
   const step = async (hours: number, list = useSim.getState().injections) => {
     const res = await advance(hours, list)
     prune(res.to)
+    const { auto, blackout } = useSync.getState()
+    if (auto) await autoSync(res.from, res.to, blackout)
     setLast(res)
   }
 

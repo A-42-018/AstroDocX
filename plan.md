@@ -357,11 +357,18 @@ The video itself is recorded after L3.
 - **Inject** adds the scenario (lasting its `SCENARIOS` duration) and immediately runs a lead time so the effect shows (6 h for solar and CO2, 48 h for insomnia and deconditioning, because daily metrics need two daily readings). Running injections are in memory (Zustand): a reload ends them, the readings stay. Advancing time ages unsynced log entries, so the Distance tile goes Watch after 24 h, which C10 resolves with real sync.
 - **Tests (99 total, 13 new):** window generation (deterministic, daily metrics only at 07:00, shifts hit only the injected person), every scenario raises the right alert for the right person (solar -> dose, resolves after it ends; CO2 -> Act for both; insomnia -> sleep alert, no bystander; deconditioning -> exercise), no alerts when nothing is injected, view callbacks and reset confirm, and an App-level run on the demo mission (inject solar, clock moves to D30 05:00, Dose rate ACT reported). Vitest now caps workers at 3 and the demo-seeding tests have longer timeouts, because four files seed the 20k-reading demo and starved each other. `tsc`, `oxlint`, `npm run build` clean. No browser QA until C11.
 
+## C10 Implementation Log (done)
+- **Ground Sync page (`app/src/sync`, route `/sync`):** link status with icon and text (LINK OPEN / WAITING FOR WINDOW / BLACKOUT), time to the next window or to closing, queued count, last sync, one-way delay; an **outbox** of pending log entries and a "Recently synced" list showing when each was sent; **Sync now** (enabled only in an open window with something queued), "Simulate comms blackout" and "Auto-sync in windows" toggles.
+- **Simulated link (`link.ts`, pure):** two 2-hour windows per mission day (00:00 and 12:00 MET) and a one-way delay of 12 min. All three are **illustrative**, not a real contact plan (a Mars one-way light time is roughly 3 to 22 min). A blackout overrides any window.
+- **Outbox (`outbox.ts`):** `syncNow` marks all pending entries `synced` with `syncedAt` (throws in blackout or between windows, entries stay queued); `autoSync(from, to)` runs after each simulator advance and, for every window passed, uploads what was queued up to 30 min after it opened (nothing during a blackout), so the sync time and history look realistic. Entries are mission-wide, not per crew.
+- **Wiring:** the Simulator calls `autoSync`, so fast-forwarding past midnight/noon clears the queue and resets the board's Distance tile (Watch at 24 h and Act at 72 h unsynced); a blackout lets it climb to those levels. All six nav routes are real pages; the placeholder component is gone.
+- **Tests (112 total, 13 new):** window schedule and open/closed/blackout; `syncNow` and `autoSync` (30 min upload lag, blackout, no window crossed, later entries stay queued); view states (open, closed, blackout, empty); an App-level run on the demo (closed at 23:00 with the next window in 1.0 h, +6 h in the simulator clears the older queue and fills "Recently synced"). `tsc`, `oxlint`, `npm run build` clean. No browser QA until C11.
+
 ## Current Phase
-**C9 Simulator panel done.** C0-C8 and the landing page are done.
+**C10 Ground sync done.** C0-C9 and the landing page are done.
 
 ## Next Roadmap
-1. **C10 Ground sync:** outbox over the `pending` log entries, simulated link windows (open for a set time, then blackout), blackout status, sync marks entries `synced` with `syncedAt`; the Distance tile and board link line then reflect real state. Tests, no browser QA. Then commit + push.
-2. C11 in order (§9.2), one phase per session, commit + push after each.
+1. **C11 Ship:** browser QA of every screen (phone and desktop widths, tap-test feel, charts), offline test of the built PWA, Lighthouse, Netlify deploy of `app/`, landing "Launch Crew Console" CTA, README live URL. Then commit + push.
+2. Stretch C12 only if time is left.
 3. Content still open on the landing page: team cards 2–4, About counter citations, README live/video URLs, absolute `og:image` after deploy.
 4. Video (`tour.js` + recording) after C11.
