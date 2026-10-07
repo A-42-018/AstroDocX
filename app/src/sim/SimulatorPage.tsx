@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { liveQuery } from 'dexie'
+import { useEffect, useState } from 'react'
 import { useSnapshot } from '../board/hooks'
 import { useBoard } from '../board/store'
 import { seedDemo } from '../data/demo'
@@ -6,6 +7,7 @@ import { advance, LEAD_HOURS, makeInjection, missionNow, type AdvanceResult } fr
 import { autoSync } from '../sync/outbox'
 import { useSync } from '../sync/store'
 import { useSim } from './store'
+import { loadFeed, type FeedEvent } from './feed'
 import { SimulatorView } from './SimulatorView'
 
 export default function SimulatorPage() {
@@ -15,6 +17,14 @@ export default function SimulatorPage() {
   const [last, setLast] = useState<AdvanceResult | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [events, setEvents] = useState<FeedEvent[]>([])
+  const crew = snap?.crew
+  // The feed follows the on-board log, so every engine decision shows up as it is made.
+  useEffect(() => {
+    if (!crew) return
+    const sub = liveQuery(() => loadFeed(crew)).subscribe({ next: setEvents, error: () => setEvents([]) })
+    return () => sub.unsubscribe()
+  }, [crew])
 
   const run = async (job: () => Promise<void>) => {
     setBusy(true)
@@ -47,6 +57,7 @@ export default function SimulatorPage() {
       injections={injections}
       last={last}
       busy={busy}
+      events={events}
       error={error}
       onInject={(scenario, crewIds) => void run(async () => {
         const inj = makeInjection(scenario, crewIds, await missionNow())

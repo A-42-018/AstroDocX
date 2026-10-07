@@ -7,12 +7,14 @@ interface Props {
   onResult: (s: PvtSummary | null) => void
   /** Test seam: random wait in ms. */
   waitMs?: () => number
+  /** The person's own median reaction time (ms), for the comparison on the result. */
+  baselineMs?: number | null
 }
 
 const randomWait = () => WAIT_MS[0] + Math.random() * (WAIT_MS[1] - WAIT_MS[0])
 
 /** Tap-the-pad reaction test: wait for the pad to turn green, then tap as fast as you can. */
-export function ReactionTest({ onResult, waitMs = randomWait }: Props) {
+export function ReactionTest({ onResult, waitMs = randomWait, baselineMs }: Props) {
   const [phase, setPhase] = useState<Phase>('idle')
   const [trials, setTrials] = useState<(number | 'early')[]>([])
   const [note, setNote] = useState('')
@@ -61,6 +63,14 @@ export function ReactionTest({ onResult, waitMs = randomWait }: Props) {
         When the pad turns green, tap it as fast as you can. Tapping early does not count. Responses over {LAPSE_MS} ms are lapses (PVT convention).
       </p>
       <button type="button" className={`rt-pad ${phase}`} onClick={press}>{label}</button>
+      {phase === 'done' && s.medianMs !== null && (
+        <div className="rt-result" aria-hidden="true">
+          <b className="mono">{s.medianMs}<small> ms</small></b>
+          <span>median of {s.valid} taps</span>
+          {baselineMs != null && <span className="mono">{Math.round(baselineMs)} ms is your baseline ({s.medianMs - Math.round(baselineMs) >= 0 ? '+' : '−'}{Math.abs(s.medianMs - Math.round(baselineMs))} ms)</span>}
+          <span>{s.lapses === 0 ? 'No lapses' : `${s.lapses} lapse${s.lapses === 1 ? '' : 's'} over ${LAPSE_MS} ms`}</span>
+        </div>
+      )}
       <p className="mono rt-status" role="status" aria-live="polite">
         {phase === 'done'
           ? s.medianMs === null

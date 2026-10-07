@@ -16,7 +16,7 @@ it('injects a solar event into the live demo, moves the clock and reports the ne
   fireEvent.click(within(solar).getByRole('button', { name: 'Inject' }))
   const last = await screen.findByLabelText('Last run', {}, { timeout: 30_000 })
   expect(last.textContent).toMatch(/Dose rate \(ACT\)/)
-  await waitFor(() => expect(screen.getByLabelText('Mission elapsed time').textContent).toBe('D30 05:00 MET'))
+  await waitFor(() => expect(screen.getByLabelText('Mission elapsed time').textContent).toBe('D30 05:00 MET'), { timeout: 5000 })
   expect(screen.getByLabelText('Active scenarios').textContent).toContain('Solar particle event')
   expect((await db.readings.orderBy('ts').last())!.ts).toBe(MISSION_START + 30 * DAY + 5 * HOUR)
 }, 120_000)

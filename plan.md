@@ -516,8 +516,14 @@ Text on photo always on a scrim (≥ 4.5:1), status never by colour alone (icon 
 - **Shared plot:** `TrendPlot` serves the focus chart, small multiples and the alert chart.
 - **Checked:** 176 tests, `tsc`, `oxlint`, build clean; seen at 1440 and 375 px.
 
+## U5 Implementation Log (done)
+- **Check-in wizard** (`app/src/checkin/CheckInForm.tsx`): four steps (Mood, Sleep + hours, Symptoms, Reaction test) with a progress bar, one question per card, large illustrated choices (real radio inputs, so keyboard and screen readers work), Next held until answered, Back keeps answers. After saving: "Check-in saved", any alert the engine raised, a "What happens next" list, and buttons to the board, Alerts and a new check-in.
+- **Reaction test:** now a large circular target; the result shows the median, taps, lapses and the person's own baseline with the difference (baseline read from the engine, shown once it has 5+ samples).
+- **Simulator as mission control** (`app/src/sim/`): scenario cards with icon, duration and affected metrics; a time scrubber (+1 h, +6 h, +1 day, +3 days) with a moving track while it runs; a mission clock that runs up to the new time (`MissionClock`); and a live **Engine event feed** from the on-board log (alert opened, escalated, eased, resolved, with person, word and MET; `feed.ts`). A scenario or a check-in changes the board through the same engine as before.
+- **Checked:** 180 tests, `tsc`, `oxlint`, build clean; wizard steps and a solar injection (clock to D30 05:00, feed filled) seen in the browser at 1440 px. Phone width for these two screens not yet viewed.
+
 ## Current Phase
-**C0–C12 done and deployed. Console v2: U0 to U4 done.** Next: U5 (Check-in + Simulator).
+**C0–C12 done and deployed. Console v2: U0 to U5 done.** Next: U6 (Sync + Ground).
 
 ## Next Roadmap
 1. **Deploy:** live at https://astrodocx.netlify.app (console at `/app/`), auto-deploys from `main`. README, `og:url`, absolute `og:image` / `twitter:image` and canonical tag updated. Still to do: turn off Netlify site protection (visitor access) so the public can open it, re-run Lighthouse on the live URL, check install-to-home-screen on a phone.

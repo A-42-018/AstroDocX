@@ -53,3 +53,23 @@ it('summarises the last run', () => {
   render(<SimulatorView {...base} {...handlers()} last={{ from: MISSION_START, to: MISSION_START + 6 * 3_600_000, readings: 264, opened: [a], resolved: [] }} />)
   expect(screen.getByLabelText('Last run').textContent).toContain('Pilot: Dose rate (ACT)')
 })
+
+it('shows the engine event feed with words, not colour alone', () => {
+  const events = [
+    { id: 2, ts: MISSION_START + 3_600_000, kind: 'escalated' as const, crew: 'Pilot', text: 'Escalated to ACT: Dose rate high' },
+    { id: 1, ts: MISSION_START, kind: 'resolved' as const, crew: 'Commander', text: 'HRV back within range' },
+  ]
+  render(<SimulatorView {...base} {...handlers()} events={events} />)
+  const feed = screen.getByLabelText('Engine event feed')
+  expect(within(feed).getAllByRole('listitem')).toHaveLength(2)
+  expect(feed.textContent).toContain('ESCALATED')
+  expect(feed.textContent).toContain('RESOLVED')
+  expect(feed.textContent).toContain('Pilot')
+})
+
+it('lists what each scenario affects', () => {
+  render(<SimulatorView {...base} {...handlers()} />)
+  const solar = screen.getByText('Solar particle event').closest('li')!
+  expect(within(solar).getByLabelText('Affected metrics').textContent).toContain('Dose rate')
+})
+
