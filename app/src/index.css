@@ -413,3 +413,15 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 
 /* A form reads best at a comfortable line length, even on very wide screens */
 .board-form { max-width: 1080px; margin: 0 auto; }
+
+/* ---- Live layer (U2) ---- */
+.vitals { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); grid-column: 1 / -1; }
+.vital { display: grid; gap: 4px; padding: 16px 18px 12px; overflow: hidden; }
+.vital header { display: flex; align-items: center; gap: 10px; }
+.vital h2 { margin: 0; font-size: 0.92rem; font-weight: 600; color: var(--text-mid); }
+.vital .val { margin: 0; }
+.vital-icon { position: relative; width: 34px; height: 34px; display: grid; place-content: center; border-radius: 10px; color: var(--data); background: var(--data-soft); border: 1px solid rgba(45, 212, 232, 0.28); }
+.pulse-ring { position: absolute; inset: 0; border-radius: 10px; border: 2px solid var(--data); opacity: 0; pointer-events: none; }
+.live-wave { width: 100%; display: block; --data: #2dd4e8; }
+.live-num { font-variant-numeric: tabular-nums; }
+.vitals-note { grid-column: 1 / -1; margin: 0; font-size: 0.74rem; }

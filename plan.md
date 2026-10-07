@@ -495,8 +495,14 @@ Text on photo always on a scrim (≥ 4.5:1), status never by colour alone (icon 
 - **Data:** `useShellData` (live query) feeds every screen's shell with each person's worst status, mission time and sync queue.
 - **Checked:** 375 / 768 / 1280 px in the browser, more sheet, crew switch; 157 tests, `tsc`, `oxlint`, build clean.
 
+## U2 Implementation Log (done)
+- **Generator** (`app/src/live/waves.ts`, `telemetry.ts`): `WaveGenerator` streams ECG (PQRST), pleth and breathing at a given rate; the rate eases toward the real value, and each cycle is stretched by seeded beat-to-beat variability (from the real HRV). `liveValues` = real reading + small seeded wobble (HR ±1.6, SpO₂ ±0.25, CO₂ ±0.03), so it can never disagree with the engine; breathing speeds up as cabin CO₂ climbs.
+- **Hook** `useLiveTelemetry(crewId)`: watches the latest real readings (so a simulator scenario changes the live streams), ticks once a second, pauses in background tabs and shows exact still values with reduced motion. Writes nothing to the database and raises no alerts.
+- **Components:** `<LiveWave>` (canvas, 30 fps, device-pixel aware, pauses offscreen and when hidden, glowing leading dot, aria-hidden), `<LiveNumber>` (glides to new values), `<LiveVitals>` (heart pulse ring on each beat, screen-reader summary at most every 30 s, "Simulated live telemetry" label). Placed on the Status Board as a first strip; U3 arranges it in the final layout.
+- **Checked:** generator unit tests (beats per minute match HR for 48–130 bpm, seeded, eases, follows CO₂); 165 tests, `tsc`, `oxlint`, build clean; strip seen in the browser. Not yet measured: CPU budget and Lighthouse (the browser pane was hidden, so animation frames did not run).
+
 ## Current Phase
-**C0–C12 done and deployed. Console v2: U0 and U1 done.** Next: U2 (live layer).
+**C0–C12 done and deployed. Console v2: U0, U1 and U2 done.** Next: U3 (Mission Health).
 
 ## Next Roadmap
 1. **Deploy:** live at https://astrodocx.netlify.app (console at `/app/`), auto-deploys from `main`. README, `og:url`, absolute `og:image` / `twitter:image` and canonical tag updated. Still to do: turn off Netlify site protection (visitor access) so the public can open it, re-run Lighthouse on the live URL, check install-to-home-screen on a phone.

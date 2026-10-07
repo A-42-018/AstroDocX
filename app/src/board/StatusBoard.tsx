@@ -1,6 +1,7 @@
 import type { Snapshot } from './snapshot'
 import type { Status } from '../data/types'
 import { HazardIcon, StatusPill } from '../shell/icons'
+import { LiveVitals } from '../live/LiveVitals'
 
 const LABEL: Record<Status, string> = { nominal: 'NOMINAL', watch: 'WATCH', act: 'ACT' }
 
@@ -64,6 +65,7 @@ export function StatusBoard({ snap }: { snap: Snapshot }) {
           </li>
         ))}
       </ul>
+      <LiveVitals crewId={snap.crewId} />
     </div>
   )
 }
