@@ -83,3 +83,53 @@ export const tickLabel = (ts: number, rangeMs: number, start: number) => {
   const h = Math.floor((t % DAY) / HOUR)
   return rangeMs <= DAY ? `${String(h).padStart(2, '0')}:00` : `D${d}`
 }
+
+export interface SeriesStats {
+  latest: number | null
+  /** Mean of the plotted points. */
+  mean: number | null
+  /** Personal baseline (centre of the latest band) and its sd; null before the band has enough samples. */
+  baseline: number | null
+  sd: number | null
+  /** Latest value against the baseline in signed sd units. */
+  sigma: number | null
+  /** Share of banded points that sit outside the personal band, 0-100. */
+  outsidePct: number
+}
+
+export function seriesStats(s: TrendSeries): SeriesStats {
+  const vals = s.points.map((p) => p.value)
+  const banded = s.points.filter((p) => p.band)
+  const last = [...banded].pop()
+  const baseline = last?.band ? (last.band[0] + last.band[1]) / 2 : null
+  const sd = last?.band ? (last.band[1] - last.band[0]) / 2 / WATCH_Z : null
+  const out = banded.filter((p) => p.value < p.band![0] || p.value > p.band![1]).length
+  return {
+    latest: s.latest,
+    mean: vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null,
+    baseline, sd,
+    sigma: baseline !== null && sd && s.latest !== null ? (s.latest - baseline) / sd : null,
+    outsidePct: banded.length ? Math.round((out / banded.length) * 100) : 0,
+  }
+}
+
+/** Median across the crew at each timestamp they share (needs at least two people). */
+export function crewMedian(perCrew: Reading[][]): { ts: number; value: number }[] {
+  const byTs = new Map<number, number[]>()
+  for (const rows of perCrew) for (const r of rows) (byTs.get(r.ts) ?? byTs.set(r.ts, []).get(r.ts)!).push(r.value)
+  const out: { ts: number; value: number }[] = []
+  for (const [ts, vs] of byTs) {
+    if (vs.length < 2) continue
+    vs.sort((a, b) => a - b)
+    const m = vs.length >> 1
+    out.push({ ts, value: vs.length % 2 ? vs[m] : (vs[m - 1] + vs[m]) / 2 })
+  }
+  return out.sort((a, b) => a.ts - b.ts)
+}
+
+export const trendSummary = (s: TrendSeries) => {
+  const def = METRICS[s.metric]
+  const latest = s.latest === null ? 'no data' : `${s.latest.toFixed(decimalsFor(s.metric))} ${def.unit}`
+  return `${def.label}: latest ${latest}, ${s.outsideBand ? 'outside' : 'inside'} personal band, ${s.markers.length} alert${s.markers.length === 1 ? '' : 's'} in range.`
+}
+

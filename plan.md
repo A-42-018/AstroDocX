@@ -510,8 +510,14 @@ Text on photo always on a scrim (≥ 4.5:1), status never by colour alone (icon 
 - **Crew overview** (`CrewOverview.tsx`): four cards with readiness ring and worst hazard, fed by the shell data (now shared through a context); click to switch.
 - **Checked:** 168 tests, `tsc`, `oxlint`, build clean; seen at 1440 and 375 px (no horizontal overflow). Not measured: the "Act is obvious in < 2 s" test with real viewers.
 
+## U4 Implementation Log (done)
+- **Alerts** (`app/src/alerts/`): master/detail. Left: urgency-sorted list with filter chips (All active / Act / Watch / Resolved, with counts). Right: the chosen alert with a "Why this fired" panel (explanation, σ chip, the triggering metric's chart with the personal band and the crossing point ringed), the action card as a checklist with a progress ring and Done, and a lifecycle timeline built from the on-board log (opened, escalated, each step, action card done, eased, resolved; `timeline.ts`). Resolved alerts open read-only. On phones the list and the detail take turns (Back button).
+- **Trends** (`app/src/trends/`): metric chips grouped by RIDGE hazard, one large focus chart (24 h / 7 d / 30 d, band, alert dots, line draws in, pulsing "now" dot at the live edge, glass tooltip), a stats row (latest, mean, baseline ± sd, distance from baseline in σ, share of readings outside the band), an optional dashed crew-median overlay, and the small multiples for all 11 metrics (each has a Focus button). `seriesStats` and `crewMedian` are unit-tested.
+- **Shared plot:** `TrendPlot` serves the focus chart, small multiples and the alert chart.
+- **Checked:** 176 tests, `tsc`, `oxlint`, build clean; seen at 1440 and 375 px.
+
 ## Current Phase
-**C0–C12 done and deployed. Console v2: U0 to U3 done.** Next: U4 (Alerts + Trends).
+**C0–C12 done and deployed. Console v2: U0 to U4 done.** Next: U5 (Check-in + Simulator).
 
 ## Next Roadmap
 1. **Deploy:** live at https://astrodocx.netlify.app (console at `/app/`), auto-deploys from `main`. README, `og:url`, absolute `og:image` / `twitter:image` and canonical tag updated. Still to do: turn off Netlify site protection (visitor access) so the public can open it, re-run Lighthouse on the live URL, check install-to-home-screen on a phone.

@@ -11,8 +11,8 @@ afterEach(cleanup)
 it('alert -> tick a step -> Done writes the action to the on-board log', async () => {
   render(<MemoryRouter initialEntries={['/alerts']}><App /></MemoryRouter>)
   fireEvent.click(await screen.findByRole('button', { name: /^Flight Engineer/ }, { timeout: 120_000 }))
-  const list = await screen.findByRole('list', { name: 'Active alerts' })
-  const card = within(list).getAllByRole('listitem')[0]
+  await screen.findByRole('list', { name: 'Active alerts' })
+  const card = await screen.findByRole('article')
   const box = within(card).getAllByRole('checkbox')[0] as HTMLInputElement
   expect(box.checked).toBe(false)
   const before = await db.actionLog.count()
@@ -25,5 +25,7 @@ it('alert -> tick a step -> Done writes the action to the on-board log', async (
   await waitFor(() => expect(within(card).getByRole('button', { name: 'Done · logged' })).toBeTruthy())
   const entries = await db.actionLog.toArray()
   expect(entries.filter((e) => e.kind === 'step-done' && e.sync === 'pending').length).toBeGreaterThanOrEqual(2)
+  // the timeline shows the ticked step and the finished action card
+  await waitFor(() => expect(within(card).getByRole('region', { name: 'Alert timeline' }).textContent).toContain('Action card marked done'))
   expect(await db.alerts.where('state').equals('acknowledged').count()).toBeGreaterThan(0)
 }, 150_000)
