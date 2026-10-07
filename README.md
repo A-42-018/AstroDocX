@@ -33,7 +33,7 @@ AstroDocX learns each astronaut's **personal baseline**, spots drift early, and 
 | Mission Simulator | Synthetic crew data plus events you can trigger, for the demo |
 | Ground Sync | Outbox, simulated link windows and blackouts; log syncs to the ground when a window opens |
 
-> **Status:** the landing page and the **Crew Console** (`app/`) are built. The console is an offline-first PWA (React, TypeScript, Dexie, Recharts) that runs the full loop on synthetic data: Status Board, Alerts + Action cards, Trends, Daily check-in with a reaction test, Mission Simulator and Ground Sync. See [`plan.md`](plan.md) for the build log. AstroDocX is a concept prototype, **not a medical device**; all thresholds not cited in the code are illustrative.
+> **Status:** the landing page and the **Crew Console** (`app/`) are built. The console is an offline-first PWA (React, TypeScript, Dexie, Recharts) that runs the full loop on synthetic data: Status Board, Alerts + Action cards, Trends, Daily check-in with a reaction test, Mission Simulator, Ground Sync and a flight-surgeon Ground View. See [`plan.md`](plan.md) for the build log. AstroDocX is a concept prototype, **not a medical device**; all thresholds not cited in the code are illustrative.
 
 ## Screenshots
 | Hero | Health Twin | Mission Simulator |

@@ -4,6 +4,7 @@ import TrendsPage from './trends/TrendsPage'
 import CheckInPage from './checkin/CheckInPage'
 import SimulatorPage from './sim/SimulatorPage'
 import SyncPage from './sync/SyncPage'
+import GroundPage from './ground/GroundPage'
 import BoardPage from './board/BoardPage'
 import { useBootDemo } from './board/hooks'
 
@@ -14,6 +15,7 @@ const ROUTES = [
   { path: '/checkin', label: 'Check-in' },
   { path: '/simulator', label: 'Simulator' },
   { path: '/sync', label: 'Ground Sync' },
+  { path: '/ground', label: 'Ground View' },
 ] as const
 
 export default function App() {
@@ -39,6 +41,7 @@ export default function App() {
           <Route path="/checkin" element={<CheckInPage />} />
           <Route path="/simulator" element={<SimulatorPage />} />
           <Route path="/sync" element={<SyncPage />} />
+          <Route path="/ground" element={<GroundPage />} />
           <Route path="*" element={<Navigate to="/board" replace />} />
         </Routes>
       </main>

@@ -378,11 +378,17 @@ The video itself is recorded after L3.
 - **Tests: 113.** `tsc`, `oxlint`, `npm run build` clean.
 - **Not done:** the Netlify deploy itself (needs the owner's Netlify account), so README and `og:image` still say "add URL"; an iOS or Android install check; keyboard-only and screen-reader pass.
 
+## C12 Implementation Log (stretch, done: flight-surgeon view; Supabase not done)
+- **Ground View page (`app/src/ground`, route `/ground`):** the Earth-side picture of the crew, rebuilt **only from synced log entries** (`derive.ts`): per person the open alerts (level parsed from the log text, opened time, steps reported done), recently resolved alerts, the last check-in received, and a count of entries "on board, not yet downlinked" (Earth sees the count, never the content). A header shows "data current to <last sync>", how many entries are still on board, and states that the crew's console is always ahead. Received time adds the illustrative 12 min one-way delay.
+- **Why this and not Supabase:** it demonstrates the delay-tolerant idea (detect on board, Earth catches up after a window) without needing an account or a network service, and it works offline. A real backend (Supabase, with row-level security and signed-in surgeons) is still a possible follow-up and would be the first piece that needs the owner's credentials.
+- **Tests (120 total, 7 new):** level parsing, alert rebuild from open to escalate to step to resolve, pending entries invisible but counted, Act before Watch, check-in tracking, delay; component render; demo mission (Earth knows the pilot's sleep alert and the engineer's exercise alert, the Commander is clear, some entries are still awaiting downlink). Checked visually in the built-in browser. `tsc`, `oxlint`, `npm run build` clean.
+- **Known limits:** the ground view is in the same browser/DB as the crew console (a simulation of the Earth side, not a second device); alert level is parsed from log text, so a real backend should send structured fields.
+
 ## Current Phase
-**C11 Ship done except the live deploy.** C0-C10 and the landing page are done.
+**C12 stretch (Ground View) done; C11 Ship done except the live deploy.** C0-C10 and the landing page are done.
 
 ## Next Roadmap
 1. **Deploy (owner):** connect the repo to Netlify (config is in `netlify.toml`), then put the live URL in README, the landing `og:image` / canonical tags, and re-run Lighthouse on the live URL. Check install-to-home-screen on a phone.
-2. Stretch C12 only if time is left.
+2. Optional: Supabase backend for real ground sync (needs owner's project and keys).
 3. Content still open on the landing page: team cards 2–4, About counter citations, README live/video URLs, absolute `og:image` after deploy.
 4. Video (`tour.js` + recording) after C11.
