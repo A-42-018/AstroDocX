@@ -289,11 +289,18 @@ The video itself is recorded after L3.
 - **Checks:** `npm run build` (tsc + vite + SW) passes, `oxlint` clean, `vite preview` serves `manifest.webmanifest` and `sw.js`. Install prompt and offline behaviour not yet tested in a browser (deferred to C11 per the QA rule).
 - Package name `astrodocx-console`. `npm run dev` starts the dev server on port 5173.
 
+## C1 Implementation Log (done)
+- **`app/src/data/types.ts`:** `Hazard`, `Status`, `MetricId` (hr, hrv, spo2, sleep, exercise, reaction, mood, co2, temp, noise, dose) with a `METRICS` catalog (hazard, label, unit, bad direction), plus `CrewMember`, `Reading`, `Baseline` (Welford `n/mean/m2` + carried `ewma`), `Alert` (state open/acknowledged/resolved, explanation, action-card steps), `ActionLogEntry` (pending/synced), `CheckIn`. Timestamps are epoch ms.
+- **`app/src/data/db.ts`:** Dexie `ConsoleDB` v1 with stores crew, readings (`[crewId+metric+ts]`), baselines (`[crewId+metric]`), alerts (`[crewId+state]`), actionLog (`sync`), checkIns. Helpers: `addReading`, `readingsFor` (range query), `openAlerts`, `pendingSync`, `resetDb`. The class takes a DB name so tests use an isolated instance.
+- **Tests (Vitest + fake-indexeddb, `npm test`):** 5 pass (open with 6 stores, typed reading round-trip and range query, baseline upsert, open-alert filter, pending-log and check-in persistence). `npm run build` and `oxlint` clean.
+- Deps added: `dexie`, `zustand` (used from C5), dev `vitest`, `fake-indexeddb`.
+- Metric baselines and units are illustrative; thresholds get citations in C4.
+
 ## Current Phase
-**C0 Scaffold done** (`app/`). Landing page complete (L1–L3). 
+**C1 Data model done.** C0 scaffold and the landing page are done.
 
 ## Next Roadmap
-1. **C1 Data model** (`types.ts`, Dexie schema: crew, readings, baselines, alerts, actionLog, checkIns; typed read/write), then commit + push.
-2. C2 → C11 in order (§9.2), one phase per session, commit + push after each.
+1. **C2 Synthetic data:** seeded generator (4 crew x 30 days + 4 scenarios: solar event, CO2 fault, insomnia, deconditioning), same seed gives same data, load into Dexie. Then commit + push.
+2. C3 → C11 in order (§9.2), one phase per session, commit + push after each.
 3. Content still open on the landing page: team cards 2–4, About counter citations, README live/video URLs, absolute `og:image` after deploy.
 4. Video (`tour.js` + recording) after C11.

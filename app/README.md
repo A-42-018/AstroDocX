@@ -9,4 +9,4 @@ npm run build    # typecheck + production build (generates the service worker)
 npm run preview  # serve the build to test install / offline
 ```
 
-Phases are tracked in `../plan.md` (§9). Current: C0 scaffold (router shell, theme tokens, PWA).
+Phases are tracked in `../plan.md` (§9). Current: C1 data model (Dexie schema, types). Run `npm test` for the DB tests.
