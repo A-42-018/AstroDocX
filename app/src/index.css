@@ -2,7 +2,7 @@
 :root {
   --void: #0c0a1e; --void-mid: #1a1740; --indigo: #4f46e5; --violet: #818cf8;
   --ice: #f8fafc; --text-hi: #f1f5f9; --text-mid: #94a3b8; --text-lo: #64748b;
-  --holo: #22d3ee; --holo-glow: rgba(34, 211, 238, 0.35);
+  --holo: #22d3ee; --holo-glow: rgba(34, 211, 238, 0.35); --holo-soft: rgba(34, 211, 238, 0.14);
   --ok: #34d399; --watch: #f59e0b; --act: #f43f5e; --pulse: #ec4899;
   --glass-bg: rgba(255, 255, 255, 0.05); --glass-border: rgba(255, 255, 255, 0.12);
   --r-sm: 6px; --r-md: 12px; --nav-h: 56px;
@@ -18,15 +18,16 @@ body {
 a { color: var(--holo); text-decoration: none; }
 .shell { min-height: 100%; display: flex; flex-direction: column; }
 .topbar {
-  height: var(--nav-h); display: flex; align-items: center; gap: 24px; padding: 0 20px;
+  min-height: var(--nav-h); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 24px; padding: 6px 20px;
   background: var(--void-mid); border-bottom: 1px solid var(--glass-border);
 }
 .brand { font-family: var(--font-mono); font-weight: 700; color: var(--holo); letter-spacing: 0.04em; }
 .topbar nav { display: flex; gap: 4px; flex-wrap: wrap; }
 .topbar nav a {
-  padding: 8px 12px; border-radius: var(--r-sm); font-weight: 600; font-size: 0.9rem; color: var(--text-mid);
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: var(--r-sm); font-weight: 600; font-size: 0.9rem; color: var(--text-mid);
 }
-.topbar nav a.active { color: var(--holo); background: var(--holo-glow); }
+@media (max-width: 600px) { .topbar { padding: 6px 12px; } main { padding: 16px 12px; } .topbar nav a { padding: 0 9px; } }
+.topbar nav a.active { color: var(--holo); background: var(--holo-soft); }
 main { flex: 1; padding: 24px 20px; max-width: 1100px; width: 100%; margin: 0 auto; }
 .glass {
   background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--r-md);
@@ -35,7 +36,7 @@ main { flex: 1; padding: 24px 20px; max-width: 1100px; width: 100%; margin: 0 au
 .muted { color: var(--text-mid); }
 .mono { font-family: var(--font-mono); }
 .disclaimer {
-  padding: 10px 20px; text-align: center; font-size: 0.78rem; color: var(--text-lo);
+  padding: 10px 20px; text-align: center; font-size: 0.78rem; color: var(--text-mid);
   border-top: 1px solid var(--glass-border);
 }
 
@@ -48,7 +49,7 @@ main { flex: 1; padding: 24px 20px; max-width: 1100px; width: 100%; margin: 0 au
   min-height: 44px; padding: 0 16px; border-radius: var(--r-sm); border: 1px solid var(--glass-border);
   background: transparent; color: var(--text-mid); font: inherit; font-weight: 600; cursor: pointer;
 }
-.crew-tabs button.on { color: var(--holo); border-color: var(--holo); background: var(--holo-glow); }
+.crew-tabs button.on { color: var(--holo); border-color: var(--holo); background: var(--holo-soft); }
 .crew-tabs button:focus-visible, .topbar nav a:focus-visible { outline: 2px solid var(--holo); outline-offset: 2px; }
 .meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.82rem; color: var(--text-mid); }
 .readiness { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
@@ -88,7 +89,7 @@ main { flex: 1; padding: 24px 20px; max-width: 1100px; width: 100%; margin: 0 au
 .alert-foot { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: 0.8rem; }
 .btn {
   min-height: 44px; padding: 0 22px; border-radius: var(--r-sm); border: 1px solid var(--holo);
-  background: var(--holo-glow); color: var(--holo); font: inherit; font-weight: 700; cursor: pointer;
+  background: var(--holo-soft); color: var(--holo); font: inherit; font-weight: 700; cursor: pointer;
 }
 .btn:disabled { opacity: 0.6; cursor: default; }
 .btn:focus-visible, .step input:focus-visible { outline: 2px solid var(--holo); outline-offset: 2px; }
@@ -112,7 +113,7 @@ main { flex: 1; padding: 24px 20px; max-width: 1100px; width: 100%; margin: 0 au
   min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
   border: 1px solid var(--glass-border); border-radius: var(--r-sm); cursor: pointer; font-size: 0.78rem; text-align: center; padding: 4px;
 }
-.scale-row label.on, .chip.on { border-color: var(--holo); background: var(--holo-glow); color: var(--holo); }
+.scale-row label.on, .chip.on { border-color: var(--holo); background: var(--holo-soft); color: var(--holo); }
 .scale-row input, .chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .scale-row label:focus-within, .chip:focus-within { outline: 2px solid var(--holo); outline-offset: 2px; }
 .field { display: grid; gap: 4px; max-width: 280px; font-weight: 600; }

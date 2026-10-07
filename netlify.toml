@@ -1,8 +1,24 @@
+# One site: the landing page at / and the Crew Console PWA at /app/.
 [build]
+  base = "."
+  command = "cd app && npm ci && npm run build && rm -rf ../landing/app && cp -r dist ../landing/app"
   publish = "landing"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[redirects]]
+  from = "/app/*"
+  to = "/app/index.html"
+  status = 200
 
 [[headers]]
   for = "/*"
   [headers.values]
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/app/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"

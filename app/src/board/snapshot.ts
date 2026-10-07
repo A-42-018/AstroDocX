@@ -110,7 +110,8 @@ export async function loadSnapshot(crewId: string | undefined, d: ConsoleDB = db
   const [baselines, alerts, log] = await Promise.all([
     d.baselines.where('crewId').equals(id).toArray(),
     d.alerts.where('[crewId+state]').anyOf([id, 'open'], [id, 'acknowledged']).toArray(),
-    d.actionLog.where('crewId').equals(id).toArray(),
+    // The ground link is shared by the whole crew, so its numbers come from the whole log.
+    d.actionLog.toArray(),
   ])
   const latest: Partial<Record<MetricId, number>> = {}
   for (const h of HAZARDS) {

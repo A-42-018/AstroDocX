@@ -364,11 +364,25 @@ The video itself is recorded after L3.
 - **Wiring:** the Simulator calls `autoSync`, so fast-forwarding past midnight/noon clears the queue and resets the board's Distance tile (Watch at 24 h and Act at 72 h unsynced); a blackout lets it climb to those levels. All six nav routes are real pages; the placeholder component is gone.
 - **Tests (112 total, 13 new):** window schedule and open/closed/blackout; `syncNow` and `autoSync` (30 min upload lag, blackout, no window crossed, later entries stay queued); view states (open, closed, blackout, empty); an App-level run on the demo (closed at 23:00 with the next window in 1.0 h, +6 h in the simulator clears the older queue and fills "Recently synced"). `tsc`, `oxlint`, `npm run build` clean. No browser QA until C11.
 
+## C11 Implementation Log (done except the live deploy)
+- **Single-site layout:** the console is built with base `/app/` (router basename from `BASE_URL`, PWA scope and start_url `/app/`, service-worker fallback `/app/index.html`). `netlify.toml` builds it (`cd app && npm ci && npm run build`), copies `dist` to `landing/app/` (git-ignored) and publishes `landing/`, with a `/app/*` SPA redirect and no-cache for `sw.js`. So one Netlify site serves the landing page at `/` and the console at `/app/`.
+- **Landing page:** hero primary button and nav CTA are now "Launch Crew Console" (`/app/`); the Built On card marks Crew Console **Live** and lists the real stack. README rewritten (status, run, deploy, tech, structure).
+- **Browser QA (built-in browser at 375 px and desktop, on a fresh DB):** all six screens render with no horizontal overflow at 375 px; 11 charts draw; a real check-in with five reaction taps saved (median 323 ms); a CO2 injection raised Act for all four crew and the board showed "Last ground sync 4.5 h ago" and "6 pending". Bugs found and fixed:
+  1. **"Started at" drifted:** an ongoing alert's explanation was rewritten with the latest reading's time (card said opened D27, text said started D29). `alertSince` now keeps the alert's original start. Regression test added.
+  2. **Distance tile used per-crew sync data** ("114 h since sync, 0 pending" for the Commander). The ground link is shared, so the board now reads the whole log; the demo seed replays the C10 link windows, so the starting state is "synced 10.5 h ago, a few entries queued".
+  3. **Half-seeded DB after a reload during first-run seeding** (crew existed, readings did not, and the app treated it as loaded). `seedDemo` now runs in one transaction, so an interrupted seed keeps nothing.
+  4. **Top nav overflowed at phone width** (fixed-height bar, links overlapped the crew tabs); it now wraps with 44 px targets.
+  5. Contrast (Lighthouse): active-nav and chip backgrounds softened (`--holo-soft`), footer text lightened.
+- **Offline (headless Chrome via puppeteer-core, production build):** service worker registers and controls the page; with the network switched off, reload of the board and loads of Alerts, Trends, Check-in, Simulator and Sync all render from the precache plus IndexedDB, with no console errors. (The in-app browser pane blocks service-worker scripts, so this check used Chrome.)
+- **Lighthouse (headless Chrome, mobile profile, `/app/board`, first load includes seeding the 20k-reading demo):** performance 96, accessibility 100, best practices 100, SEO 100. The remaining notes are main-thread time from seeding and unused JS (Recharts); not addressed.
+- **Tests: 113.** `tsc`, `oxlint`, `npm run build` clean.
+- **Not done:** the Netlify deploy itself (needs the owner's Netlify account), so README and `og:image` still say "add URL"; an iOS or Android install check; keyboard-only and screen-reader pass.
+
 ## Current Phase
-**C10 Ground sync done.** C0-C9 and the landing page are done.
+**C11 Ship done except the live deploy.** C0-C10 and the landing page are done.
 
 ## Next Roadmap
-1. **C11 Ship:** browser QA of every screen (phone and desktop widths, tap-test feel, charts), offline test of the built PWA, Lighthouse, Netlify deploy of `app/`, landing "Launch Crew Console" CTA, README live URL. Then commit + push.
+1. **Deploy (owner):** connect the repo to Netlify (config is in `netlify.toml`), then put the live URL in README, the landing `og:image` / canonical tags, and re-run Lighthouse on the live URL. Check install-to-home-screen on a phone.
 2. Stretch C12 only if time is left.
 3. Content still open on the landing page: team cards 2–4, About counter citations, README live/video URLs, absolute `og:image` after deploy.
 4. Video (`tour.js` + recording) after C11.

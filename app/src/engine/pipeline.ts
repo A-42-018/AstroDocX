@@ -29,6 +29,12 @@ async function doseLast24hMsv(d: ConsoleDB, crewId: string, ts: Timestamp): Prom
   return rows.reduce((a, r) => a + r.value, 0) / 1000
 }
 
+/** When the open alert for (crew, ruleId) started, or `ts` if there is none yet: explanations say "Started at" this time. */
+async function alertSince(d: ConsoleDB, crewId: string, ruleId: string, ts: Timestamp): Promise<Timestamp> {
+  const open = await d.alerts.where('[crewId+state]').anyOf([crewId, 'open'], [crewId, 'acknowledged']).filter((a) => a.ruleId === ruleId).first()
+  return open?.openedAt ?? ts
+}
+
 async function log(d: ConsoleDB, e: Omit<ActionLogEntry, 'sync'>) {
   await d.actionLog.add({ ...e, sync: 'pending' })
 }
@@ -104,7 +110,7 @@ export async function processReading(r: Reading, d: ConsoleDB = db): Promise<Pro
     await d.baselines.put({ ...res.baseline, warnRun, actRun, limitRun, total: prior.total + r.value })
 
     const status = worse(stat, limit.status)
-    let explanation = res.scored ? explainBaseline(res.baseline, r.value, res.z, r.ts, who) : ''
+    let explanation = res.scored ? explainBaseline(res.baseline, r.value, res.z, await alertSince(d, r.crewId, r.metric, r.ts), who) : ''
     if (limit.status !== 'nominal' && RANK[limit.status] >= RANK[stat]) explanation = limit.reason
     if (r.metric === 'dose' && status !== 'nominal') {
       explanation += ` Cumulative mission dose: ${(((prior.total + r.value) / 1000)).toFixed(2)} mSv of the ${CAREER_DOSE_MSV} mSv career limit (NASA-STD-3001 Vol. 1).`
@@ -122,7 +128,7 @@ async function combined(d: ConsoleDB, r: Reading, who: string) {
   const both = !!sb && !!rb && sb.status !== 'nominal' && rb.status !== 'nominal'
   if (!both) return apply(d, r.crewId, COMBINED, { status: 'nominal', kind: 'combined', metric: 'reaction', z: 0, value: 0, baselineMean: 0, explanation: '' }, r.ts)
   const [sl, re] = await Promise.all([latest(d, r.crewId, 'sleep'), latest(d, r.crewId, 'reaction')])
-  const text = explainCombined(who, { value: sl?.value ?? sb.mean, z: sb.ewma }, { value: re?.value ?? rb.mean, z: rb.ewma }, r.ts)
+  const text = explainCombined(who, { value: sl?.value ?? sb.mean, z: sb.ewma }, { value: re?.value ?? rb.mean, z: rb.ewma }, await alertSince(d, r.crewId, COMBINED, r.ts))
   return apply(d, r.crewId, COMBINED, { status: 'watch', kind: 'combined', metric: 'reaction', z: Math.max(sb.ewma, rb.ewma), value: re?.value ?? 0, baselineMean: rb.mean, explanation: text }, r.ts)
 }
 
