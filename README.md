@@ -69,6 +69,9 @@ python3 -m http.server 8000
 # open http://localhost:8000
 ```
 
+## Record the project video (tour mode)
+Open the landing page with `?tour=1` (for example `http://localhost:8000/?tour=1`) and it scrolls itself from hero to footer at a steady pace, so a screen recording is smooth. The cursor and back-to-top button are hidden, and the Live Demo's *Play scenario* starts on its own. Options: `&speed=1.25` (faster), `&delay=5` (lead-in seconds). Keys: Space pause, R restart, Esc stop; any mouse wheel or touch also stops it. Default run is roughly 3 to 4 minutes; check the Space Apps video length rules and tune `PLAN` in `landing/tour.js`.
+
 ## Deploy (Netlify)
 `netlify.toml` builds the console (`cd app && npm ci && npm run build`), copies it to `landing/app/`, and publishes `landing/`. So one site serves the landing page at `/` and the Crew Console PWA at `/app/` (with an SPA fallback). Connect the repo in Netlify and deploy.
 

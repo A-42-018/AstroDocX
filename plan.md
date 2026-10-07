@@ -387,6 +387,10 @@ The video itself is recorded after L3.
 ## Landing citations (done)
 - The About counters now carry a "Sources" line (`.about-sources`, `landing/built.css`): 5 hazards (NASA HRP, https://www.nasa.gov/hrp/), distance from Earth (https://www.nasa.gov/hrp/hazard-distance-from-earth/), and Mars communication delay of up to 22 min one way on an 850-day mission (NASA NTRS 20220013418, https://ntrs.nasa.gov/citations/20220013418). The "about 3 years" round trip is marked approximate (NASA HRP describes roughly three years away from Earth). Checked in the browser at the pinned About step.
 
+## Video tour mode (done, recording is yours)
+- `landing/tour.js`, loaded last on the landing page, does nothing unless the URL has `?tour=1`. It then waits (`&delay`, default 3 s), scrolls hero to footer with a trapezoid ease (steady speed, soft start and stop), holds on the hero, the sim and the footer, and clicks the Live Demo's *Play scenario* when the section arrives (the demo only runs while on screen, so the sim hold is 27 s). `&speed` scales holds and pace; Space pauses, R restarts, Esc or any wheel/touch stops. The cursor and back-to-top button are hidden while it runs. `PLAN` at the top of the file sets each section's hold and scroll speed.
+- **Verified:** at 6x speed in the built-in browser it ran top to bottom with no backward jumps and finished at the page end. **Not verified:** real-time pacing, the sim autoplay and the total run time, because the browser pane throttles animation while hidden; do one dry run at `speed=1` before recording. The Space Apps video length and format rules still need checking, then tune `PLAN`.
+
 ## Current Phase
 **C12 stretch (Ground View) done; C11 Ship done except the live deploy.** C0-C10 and the landing page are done.
 
@@ -394,4 +398,4 @@ The video itself is recorded after L3.
 1. **Deploy (owner):** connect the repo to Netlify (config is in `netlify.toml`), then put the live URL in README, the landing `og:image` / canonical tags, and re-run Lighthouse on the live URL. Check install-to-home-screen on a phone.
 2. Optional: Supabase backend for real ground sync (needs owner's project and keys).
 3. Content still open on the landing page: team cards 2–4, README live/video URLs, absolute `og:image` after deploy.
-4. Video (`tour.js` + recording) after C11.
+4. Record the video (tour mode is ready; see README), after the deploy.
