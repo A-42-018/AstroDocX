@@ -1,11 +1,14 @@
 import { Suspense, useEffect, useRef } from 'react'
-import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import BoardPage from './board/BoardPage'
 import { seedDemo } from './data/demo'
 import { Backdrop } from './shell/Backdrop'
 import { ErrorBoundary } from './shell/ErrorBoundary'
 import { useInstallPrompt } from './shell/install'
 import { lazyPage } from './shell/lazyPage'
+import { BottomTabs, Rail, TopBar } from './shell/Chrome'
+import { ROUTES } from './shell/nav'
+import { useShellData } from './shell/useShellData'
 
 // The board is the landing screen and loads eagerly; every other screen (Trends carries the chart
 // library) is its own chunk. The service worker precaches all chunks, so they still work offline;
@@ -17,16 +20,6 @@ const SimulatorPage = lazyPage(() => import('./sim/SimulatorPage'))
 const SyncPage = lazyPage(() => import('./sync/SyncPage'))
 const GroundPage = lazyPage(() => import('./ground/GroundPage'))
 import { useBootDemo } from './board/hooks'
-
-const ROUTES = [
-  { path: '/board', label: 'Status Board' },
-  { path: '/alerts', label: 'Alerts' },
-  { path: '/trends', label: 'Trends' },
-  { path: '/checkin', label: 'Check-in' },
-  { path: '/simulator', label: 'Simulator' },
-  { path: '/sync', label: 'Ground Sync' },
-  { path: '/ground', label: 'Ground View' },
-] as const
 
 /** On navigation: name the page in the tab title and move focus to the new content, so screen-reader and keyboard users land on it. */
 function useRouteAnnounce(main: React.RefObject<HTMLElement | null>) {
@@ -45,22 +38,15 @@ export default function App() {
   const main = useRef<HTMLElement>(null)
   useRouteAnnounce(main)
   const install = useInstallPrompt()
+  const shell = useShellData()
   const { pathname } = useLocation()
   return (
     <div className="shell">
       <Backdrop />
       <a href="#main" className="skip-link">Skip to content</a>
-      <header className="topbar">
-        <span className="brand"><span className="brand-mark" aria-hidden="true" />AstroDocX<small>Crew Console</small></span>
-        <nav aria-label="Crew Console">
-          {ROUTES.map((r) => (
-            <NavLink key={r.path} to={r.path} className={({ isActive }) => (isActive ? 'active' : '')}>
-              {r.label}
-            </NavLink>
-          ))}
-        </nav>
-        {install && <button type="button" className="btn ghost install-btn" onClick={() => void install()}>Install app</button>}
-      </header>
+      <Rail />
+      <div className="frame">
+        <TopBar data={shell} install={install} />
       <main id="main" ref={main} tabIndex={-1}>
         {/* key: a crash on one screen clears when the crew moves to another */}
         <ErrorBoundary key={pathname} onReset={() => seedDemo().then(() => undefined)}>
@@ -80,6 +66,8 @@ export default function App() {
         </ErrorBoundary>
       </main>
       <footer className="disclaimer">Concept prototype, not a medical device.</footer>
+      </div>
+      <BottomTabs />
     </div>
   )
 }

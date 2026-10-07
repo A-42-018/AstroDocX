@@ -12,10 +12,9 @@ const series: TrendSeries[] = [
   { metric: 'co2', points: [], markers: [], latest: 2.4, outsideBand: false },
 ]
 
-it('summarises each chart in text and reports range and crew changes', () => {
+it('summarises each chart in text and reports range changes', () => {
   const onRange = vi.fn()
-  const onSelectCrew = vi.fn()
-  render(<TrendsView crew={crew} crewId="pilot" range="7d" series={series} onSelectCrew={onSelectCrew} onRange={onRange} />)
+  render(<TrendsView crew={crew} crewId="pilot" range="7d" series={series} onRange={onRange} />)
   const list = screen.getByRole('list', { name: 'Metric trends' })
   expect(within(list).getAllByRole('listitem')).toHaveLength(2)
   expect(screen.getAllByText(/outside personal band, 1 alert in range/).length).toBeGreaterThan(0)
@@ -24,6 +23,4 @@ it('summarises each chart in text and reports range and crew changes', () => {
   expect(screen.getByRole('button', { name: '7 days' }).getAttribute('aria-pressed')).toBe('true')
   fireEvent.click(screen.getByRole('button', { name: '24 h' }))
   expect(onRange).toHaveBeenCalledWith('24h')
-  fireEvent.click(screen.getByRole('button', { name: 'Commander' }))
-  expect(onSelectCrew).toHaveBeenCalledWith('cmdr')
 })

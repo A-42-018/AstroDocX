@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { CrewTabs } from '../board/CrewTabs'
 import { alertTitle } from '../engine/actions'
 import type { CrewMember } from '../data/types'
 import type { PvtSummary } from './pvt'
@@ -30,13 +29,12 @@ interface Props {
   crew: CrewMember[]
   crewId: string
   now: number
-  onSelectCrew: (id: string) => void
   onSubmit: (input: CheckInInput) => Promise<CheckInResult>
   /** Test seam to stub the reaction pad. */
   reactionTest?: typeof ReactionTest
 }
 
-export function CheckInForm({ crew, crewId, now, onSelectCrew, onSubmit, reactionTest: Reaction = ReactionTest }: Props) {
+export function CheckInForm({ crew, crewId, now, onSubmit, reactionTest: Reaction = ReactionTest }: Props) {
   const [mood, setMood] = useState<number | null>(null)
   const [sleepQuality, setSleepQuality] = useState<number | null>(null)
   const [hours, setHours] = useState('')
@@ -68,7 +66,6 @@ export function CheckInForm({ crew, crewId, now, onSelectCrew, onSubmit, reactio
 
   return (
     <div className="board board-form">
-      <div className="board-head"><CrewTabs crew={crew} crewId={crewId} onSelect={(id) => { setResult(null); reset(); onSelectCrew(id) }} /></div>
       <section className="glass">
         <h1 style={{ margin: 0 }}>Daily check-in · {who?.name}</h1>
         <p className="muted" style={{ marginBottom: 0 }}>

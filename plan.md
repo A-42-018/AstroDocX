@@ -489,8 +489,14 @@ Text on photo always on a scrim (≥ 4.5:1), status never by colour alone (icon 
 - **Sun flare:** core, halo, six/ten-point starburst, anamorphic streak and five lens ghosts along the sun–centre axis, with a gentle shimmer. Strength follows how high the sun is.
 - **Layout:** the content area is fluid (up to 1760 px, padding scales with the window). The Status Board on ≥ 1180 px is a dashboard: readiness column on the left, hazard cards 3 + 2 beside it. Alerts go two per row and Ground View shows all four crew in a row; the check-in form is capped at 1080 px.
 
+## U1 Implementation Log (done)
+- **Shell:** slim icon rail on the left (≥ 768 px), sticky top bar, and on phones a bottom tab bar (Board, Alerts, Trends, Check-in, plus a More sheet for Simulator, Ground Sync and Ground View; Escape or tapping outside closes it). The old text nav and in-page crew tabs are gone (`board/CrewTabs.tsx` removed).
+- **Top bar** (`app/src/shell/Chrome.tsx`): greeting by mission time of day, crew avatar switcher with a status ring per person (colour + icon + word in the accessible name, arrow keys move between people), MET clock, ground-link widget (open / closed / blackout with the countdown and queued count, links to Ground Sync), alert bell with the open-alert count for the selected person, install button. Two rows on phones.
+- **Data:** `useShellData` (live query) feeds every screen's shell with each person's worst status, mission time and sync queue.
+- **Checked:** 375 / 768 / 1280 px in the browser, more sheet, crew switch; 157 tests, `tsc`, `oxlint`, build clean.
+
 ## Current Phase
-**C0–C12 done and deployed. Console v2: U0 done.** Next: U1 (app shell).
+**C0–C12 done and deployed. Console v2: U0 and U1 done.** Next: U2 (live layer).
 
 ## Next Roadmap
 1. **Deploy:** live at https://astrodocx.netlify.app (console at `/app/`), auto-deploys from `main`. README, `og:url`, absolute `og:image` / `twitter:image` and canonical tag updated. Still to do: turn off Netlify site protection (visitor access) so the public can open it, re-run Lighthouse on the live URL, check install-to-home-screen on a phone.

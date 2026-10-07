@@ -9,7 +9,6 @@ import { TrendsView } from './TrendsView'
 export default function TrendsPage() {
   const snap = useSnapshot()
   const boot = useBoard((s) => s.boot)
-  const select = useBoard((s) => s.selectCrew)
   const [range, setRange] = useState<RangeId>('7d')
   const [data, setData] = useState<TrendData | null>(null)
   const crewId = snap?.crewId
@@ -28,5 +27,5 @@ export default function TrendsPage() {
   if (boot.state !== 'ready' || snap === undefined) return <p className="glass muted" role="status">Initializing demo mission data…</p>
   if (snap === null) return <p className="glass muted">No crew data yet.</p>
   if (!series) return <p className="glass muted" role="status">Loading trends…</p>
-  return <TrendsView crew={snap.crew} crewId={snap.crewId} range={range} series={series} onSelectCrew={select} onRange={setRange} />
+  return <TrendsView crew={snap.crew} crewId={snap.crewId} range={range} series={series} onRange={setRange} />
 }

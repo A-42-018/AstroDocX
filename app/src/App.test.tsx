@@ -14,7 +14,7 @@ it('boots the demo mission, shows the board for the first crew member and switch
   expect(list.querySelectorAll('li')).toHaveLength(5)
   expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Commander')
 
-  fireEvent.click(screen.getByRole('button', { name: 'Flight Engineer' }))
+  fireEvent.click(await screen.findByRole('button', { name: /^Flight Engineer/ }))
   await waitFor(() => expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Flight Engineer'))
   expect(screen.getByLabelText(/^Gravity: ACT/)).toBeTruthy()
 }, 150_000)

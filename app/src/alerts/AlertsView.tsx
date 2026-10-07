@@ -1,4 +1,3 @@
-import { CrewTabs } from '../board/CrewTabs'
 import { alertTitle, met } from '../engine/actions'
 import type { Alert, CrewMember } from '../data/types'
 import { AlertCard } from './AlertCard'
@@ -8,18 +7,14 @@ interface Props {
   crewId: string
   active: Alert[]
   resolved: Alert[]
-  onSelectCrew: (id: string) => void
   onStep: (alertId: number, index: number, done: boolean) => void
   onDone: (alertId: number) => void
 }
 
-export function AlertsView({ crew, crewId, active, resolved, onSelectCrew, onStep, onDone }: Props) {
+export function AlertsView({ crew, crewId, active, resolved, onStep, onDone }: Props) {
   const who = crew.find((c) => c.id === crewId)
   return (
     <div className="board">
-      <div className="board-head">
-        <CrewTabs crew={crew} crewId={crewId} onSelect={onSelectCrew} />
-      </div>
       <section className="glass" aria-label="Alert summary">
         <h1 style={{ margin: 0 }}>Alerts · {who?.name}</h1>
         <p className="muted" style={{ marginBottom: 0 }}>

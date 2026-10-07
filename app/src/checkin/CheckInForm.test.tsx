@@ -14,7 +14,7 @@ const Stub = ({ onResult }: { onResult: (s: { medianMs: number; valid: number; l
 
 it('blocks saving until mood and sleep quality are chosen', async () => {
   const onSubmit = vi.fn()
-  render(<CheckInForm crew={crew} crewId="cmdr" now={1} onSelectCrew={() => {}} onSubmit={onSubmit} />)
+  render(<CheckInForm crew={crew} crewId="cmdr" now={1} onSubmit={onSubmit} />)
   fireEvent.click(screen.getByRole('button', { name: 'Save check-in' }))
   expect((await screen.findByRole('alert')).textContent).toContain('Pick a mood')
   expect(onSubmit).not.toHaveBeenCalled()
@@ -22,7 +22,7 @@ it('blocks saving until mood and sleep quality are chosen', async () => {
 
 it('submits the chosen answers, symptoms and reaction time, then confirms and resets', async () => {
   const onSubmit = vi.fn().mockResolvedValue(ok)
-  render(<CheckInForm crew={crew} crewId="cmdr" now={42} onSelectCrew={() => {}} onSubmit={onSubmit} reactionTest={Stub as never} />)
+  render(<CheckInForm crew={crew} crewId="cmdr" now={42} onSubmit={onSubmit} reactionTest={Stub as never} />)
   fireEvent.click(screen.getByLabelText(/Good/, { selector: 'input[name="mood"]' }))
   fireEvent.click(screen.getByLabelText(/Fair/))
   fireEvent.change(screen.getByLabelText(/Hours slept/), { target: { value: '6.5' } })
@@ -36,7 +36,7 @@ it('submits the chosen answers, symptoms and reaction time, then confirms and re
 
 it('shows an alert the engine raised', async () => {
   const raised: CheckInResult = { ...ok, raised: [{ id: 1, crewId: 'cmdr', ruleId: 'reaction', kind: 'baseline', hazard: 'I', metric: 'reaction', status: 'act', peakStatus: 'act', state: 'open', z: 4, value: 900, baselineMean: 310, explanation: 'Reaction time 900 ms is 4.0σ above baseline.', steps: [], openedAt: 1 }] }
-  render(<CheckInForm crew={crew} crewId="cmdr" now={1} onSelectCrew={() => {}} onSubmit={vi.fn().mockResolvedValue(raised)} />)
+  render(<CheckInForm crew={crew} crewId="cmdr" now={1} onSubmit={vi.fn().mockResolvedValue(raised)} />)
   fireEvent.click(screen.getByLabelText(/Good/, { selector: 'input[name="mood"]' }))
   fireEvent.click(screen.getByLabelText(/Fair/))
   fireEvent.click(screen.getByRole('button', { name: 'Save check-in' }))

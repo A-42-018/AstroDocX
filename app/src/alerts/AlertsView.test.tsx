@@ -12,7 +12,7 @@ const base: Alert = {
   steps: [{ text: 'Protect an 8 h sleep window', done: true }, { text: 'Dim the cabin lights', done: false }], openedAt: 1,
 }
 const crew = [{ id: 'cmdr', name: 'Commander', role: 'Commander' }, { id: 'pilot', name: 'Pilot', role: 'Pilot' }]
-const props = { crew, crewId: 'pilot', resolved: [], onSelectCrew: () => {}, onStep: () => {}, onDone: () => {} }
+const props = { crew, crewId: 'pilot', resolved: [], onStep: () => {}, onDone: () => {} }
 
 it('shows the explanation, step progress and reports step ticks and Done', () => {
   const onStep = vi.fn()

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, render, screen, within } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
 import { StatusBoard } from './StatusBoard'
 import { buildTiles, overallOf, readinessOf, type Snapshot } from './snapshot'
 import type { Alert } from '../data/types'
@@ -21,7 +21,7 @@ const snap: Snapshot = {
 
 describe('StatusBoard', () => {
   it('renders five hazard tiles with status text, values and the alert explanation', () => {
-    render(<StatusBoard snap={snap} onSelectCrew={() => {}} />)
+    render(<StatusBoard snap={snap} />)
     const list = screen.getByRole('list', { name: 'Hazard status' })
     expect(within(list).getAllByRole('listitem')).toHaveLength(5)
     expect(screen.getByLabelText(/^Isolation: ACT/)).toBeTruthy()
@@ -30,18 +30,8 @@ describe('StatusBoard', () => {
   })
 
   it('shows readiness, overall status and the mission clock', () => {
-    render(<StatusBoard snap={snap} onSelectCrew={() => {}} />)
+    render(<StatusBoard snap={snap} />)
     expect(screen.getByLabelText(new RegExp(`Crew readiness ${snap.readiness} percent, ACT`))).toBeTruthy()
-    expect(screen.getByLabelText('Mission elapsed time').textContent).toBe('D3 07:00 MET')
     expect(screen.getByText('1 active alert')).toBeTruthy()
-  })
-
-  it('switches crew from the tab list', () => {
-    const onSelect = vi.fn()
-    render(<StatusBoard snap={snap} onSelectCrew={onSelect} />)
-    const tabs = within(screen.getByRole('group', { name: 'Crew member' })).getAllByRole('button')
-    expect(tabs.map((t) => t.getAttribute('aria-pressed'))).toEqual(['false', 'true'])
-    fireEvent.click(tabs[0])
-    expect(onSelect).toHaveBeenCalledWith('cmdr')
   })
 })

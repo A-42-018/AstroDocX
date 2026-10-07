@@ -16,7 +16,7 @@ it('shows a chart for every metric from the demo mission and has an insomnia mar
   const list = await screen.findByRole('list', { name: 'Metric trends' }, { timeout: 120_000 })
   expect(list.querySelectorAll(':scope > li')).toHaveLength(11)
 
-  fireEvent.click(screen.getByRole('button', { name: 'Pilot' }))
+  fireEvent.click(screen.getByRole('button', { name: /^Pilot/ }))
   await waitFor(() => expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('Pilot'))
   fireEvent.click(screen.getByRole('button', { name: '30 days' }))
 

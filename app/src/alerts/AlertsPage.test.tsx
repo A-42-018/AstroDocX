@@ -10,7 +10,7 @@ afterEach(cleanup)
 
 it('alert -> tick a step -> Done writes the action to the on-board log', async () => {
   render(<MemoryRouter initialEntries={['/alerts']}><App /></MemoryRouter>)
-  fireEvent.click(await screen.findByRole('button', { name: 'Flight Engineer' }, { timeout: 120_000 }))
+  fireEvent.click(await screen.findByRole('button', { name: /^Flight Engineer/ }, { timeout: 120_000 }))
   const list = await screen.findByRole('list', { name: 'Active alerts' })
   const card = within(list).getAllByRole('listitem')[0]
   const box = within(card).getAllByRole('checkbox')[0] as HTMLInputElement

@@ -16,9 +16,9 @@ it('has a skip link to the main region, names each page in the title and moves f
   expect(document.title).toBe('Status Board · AstroDocX Crew Console')
   expect(document.activeElement).not.toBe(main) // no focus jump on first load
 
-  fireEvent.click(screen.getByRole('link', { name: 'Trends' }))
+  fireEvent.click(screen.getAllByRole('link', { name: 'Trends' })[0])
   // Trends is a lazy chunk: the route switches once it has loaded.
   await waitFor(() => expect(document.title).toBe('Trends · AstroDocX Crew Console'), { timeout: 15_000 })
   expect(document.activeElement).toBe(main)
-  expect(screen.getByRole('link', { name: 'Trends' }).getAttribute('aria-current')).toBe('page')
+  expect(screen.getAllByRole('link', { name: 'Trends' })[0].getAttribute('aria-current')).toBe('page')
 }, 20_000)

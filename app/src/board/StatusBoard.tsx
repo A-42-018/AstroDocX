@@ -1,5 +1,3 @@
-import { met } from '../engine/actions'
-import { CrewTabs } from './CrewTabs'
 import type { Snapshot } from './snapshot'
 import type { Status } from '../data/types'
 import { HazardIcon, StatusPill } from '../shell/icons'
@@ -24,15 +22,13 @@ export function ReadinessRing({ value, status }: { value: number; status: Status
   )
 }
 
-export function StatusBoard({ snap, onSelectCrew }: { snap: Snapshot; onSelectCrew: (id: string) => void }) {
+export function StatusBoard({ snap }: { snap: Snapshot }) {
   const who = snap.crew.find((c) => c.id === snap.crewId)
   const linkLabel = snap.sinceSyncH === null ? 'No ground sync yet' : `Last ground sync ${snap.sinceSyncH.toFixed(1)} h ago`
   return (
     <div className="board board-home">
       <div className="board-head">
-        <CrewTabs crew={snap.crew} crewId={snap.crewId} onSelect={onSelectCrew} />
         <div className="meta mono">
-          <span aria-label="Mission elapsed time">{met(snap.now)}</span>
           <span>{linkLabel}</span>
         </div>
       </div>

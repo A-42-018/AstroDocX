@@ -1,4 +1,3 @@
-import { CrewTabs } from '../board/CrewTabs'
 import type { CrewMember } from '../data/types'
 import { TrendChart } from './TrendChart'
 import { RANGES, type RangeId, type TrendSeries } from './series'
@@ -8,17 +7,15 @@ interface Props {
   crewId: string
   range: RangeId
   series: TrendSeries[]
-  onSelectCrew: (id: string) => void
   onRange: (r: RangeId) => void
 }
 
-export function TrendsView({ crew, crewId, range, series, onSelectCrew, onRange }: Props) {
+export function TrendsView({ crew, crewId, range, series, onRange }: Props) {
   const who = crew.find((c) => c.id === crewId)
   const ms = RANGES.find((r) => r.id === range)!.ms
   return (
     <div className="board">
       <div className="board-head">
-        <CrewTabs crew={crew} crewId={crewId} onSelect={onSelectCrew} />
         <div role="group" aria-label="Time range" className="crew-tabs">
           {RANGES.map((r) => (
             <button key={r.id} aria-pressed={r.id === range} className={r.id === range ? 'on' : ''} onClick={() => onRange(r.id)}>{r.label}</button>
