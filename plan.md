@@ -337,11 +337,18 @@ The video itself is recorded after L3.
 - App routes `/alerts` to the real page; the other placeholders remain.
 - **Tests (64 total, 4 new files' worth: 3 view tests + 1 integration, ~33 s):** view renders explanation/progress, reports ticks and Done, locks acknowledged cards, lists resolved, empty state; integration boots the demo, opens Flight Engineer alerts, ticks a step and presses Done, then checks the DB log (`step-done`, `pending`) and the alert state `acknowledged`. `tsc`, `oxlint` and `npm run build` clean. No browser QA until C11.
 
+## C7 Implementation Log (done)
+- **Trends page (`app/src/trends`, route `/trends`):** crew tabs, range buttons (24 h / 7 days / 30 days, default 7 days), and one Recharts card per metric (11: dose, sleep, reaction, mood, exercise, HR, HRV, CO2, SpO2, temperature, noise). Each card shows the line, the personal band, alert dots (amber Watch, red Act, using the alert's peak level) and a text summary ("latest value, inside/outside personal band, n alerts in range") that doubles as the chart's `aria-label`. CO2 also draws the cited NASA 3.0 mmHg limit line.
+- **Band (`series.ts`, pure and tested):** rebuilt with the engine's own Welford/EWMA baseline (same per-metric window), baseline mean ± 1.8σ (the Watch threshold), from samples *before* each point so a spike never widens its own band; no band for the first 8 samples. History before the visible range still feeds the band. The two-signal alert shows on both the sleep and reaction charts.
+- **Data (`data.ts`):** `loadTrendData` reads a crew member's full history and alerts through `liveQuery` (about 5k readings, fast); charts update when the DB changes.
+- Dep added: `recharts`. Precache grew to about 740 KiB.
+- **Tests (73 total, 9 new, ~42 s):** series (range filter, band warm-up and shape, no self-widening, pre-range history, marker placement and range filter, empty series, two-signal routing), view (text summaries, range/crew callbacks), and a demo integration (11 charts render, pilot's 30-day sleep series has points, band and an alert marker). jsdom cannot lay out SVG, so chart pixels are not asserted; **visual check is left to C11 browser QA**. `tsc`, `oxlint`, `npm run build` clean.
+
 ## Current Phase
-**C6 Alerts + Action card done.** C0-C5 and the landing page are done.
+**C7 Trends done.** C0-C6 and the landing page are done.
 
 ## Next Roadmap
-1. **C7 Trends:** Recharts per metric with the personal baseline band and alert markers, 24h / 7d / 30d ranges; unit tests for the series/band selectors, no browser QA. Then commit + push.
-2. C8 → C11 in order (§9.2), one phase per session, commit + push after each.
+1. **C8 Check-in:** mood / sleep quality / symptoms form plus a tap reaction-time test (PVT-style, cited), saved as `CheckIn` and as readings through `processReading` so the engine, alerts and trends react; log entry per check-in. Unit and component tests, no browser QA. Then commit + push.
+2. C9 → C11 in order (§9.2), one phase per session, commit + push after each.
 3. Content still open on the landing page: team cards 2–4, About counter citations, README live/video URLs, absolute `og:image` after deploy.
 4. Video (`tour.js` + recording) after C11.
