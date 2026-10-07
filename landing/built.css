@@ -48,3 +48,6 @@
   .built-reveal { opacity:1 !important;transform:none !important;transition:none; }
   .built-title::after { animation:none !important; }
 }
+
+.about-sources { margin: 14px 0 0; font-size: .74rem; line-height: 1.6; color: rgba(255,255,255,0.62); max-width: 52ch; }
+.about-sources a { color: var(--holo, #22d3ee); text-decoration: underline; text-underline-offset: 2px; }

@@ -384,11 +384,14 @@ The video itself is recorded after L3.
 - **Tests (120 total, 7 new):** level parsing, alert rebuild from open to escalate to step to resolve, pending entries invisible but counted, Act before Watch, check-in tracking, delay; component render; demo mission (Earth knows the pilot's sleep alert and the engineer's exercise alert, the Commander is clear, some entries are still awaiting downlink). Checked visually in the built-in browser. `tsc`, `oxlint`, `npm run build` clean.
 - **Known limits:** the ground view is in the same browser/DB as the crew console (a simulation of the Earth side, not a second device); alert level is parsed from log text, so a real backend should send structured fields.
 
+## Landing citations (done)
+- The About counters now carry a "Sources" line (`.about-sources`, `landing/built.css`): 5 hazards (NASA HRP, https://www.nasa.gov/hrp/), distance from Earth (https://www.nasa.gov/hrp/hazard-distance-from-earth/), and Mars communication delay of up to 22 min one way on an 850-day mission (NASA NTRS 20220013418, https://ntrs.nasa.gov/citations/20220013418). The "about 3 years" round trip is marked approximate (NASA HRP describes roughly three years away from Earth). Checked in the browser at the pinned About step.
+
 ## Current Phase
 **C12 stretch (Ground View) done; C11 Ship done except the live deploy.** C0-C10 and the landing page are done.
 
 ## Next Roadmap
 1. **Deploy (owner):** connect the repo to Netlify (config is in `netlify.toml`), then put the live URL in README, the landing `og:image` / canonical tags, and re-run Lighthouse on the live URL. Check install-to-home-screen on a phone.
 2. Optional: Supabase backend for real ground sync (needs owner's project and keys).
-3. Content still open on the landing page: team cards 2–4, About counter citations, README live/video URLs, absolute `og:image` after deploy.
+3. Content still open on the landing page: team cards 2–4, README live/video URLs, absolute `og:image` after deploy.
 4. Video (`tour.js` + recording) after C11.
