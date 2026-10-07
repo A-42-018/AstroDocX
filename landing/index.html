@@ -28,6 +28,7 @@
   <link rel="icon" href="favicon.png" type="image/png">
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="twin.css" />
+  <link rel="stylesheet" href="sim.css" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -101,6 +102,7 @@
         <li><a href="#skills">Hazards</a></li>
         <li><a href="#projects">Features</a></li>
         <li><a href="#twin">Health Twin</a></li>
+        <li><a href="#sim">Live Demo</a></li>
         <li><a href="#education">How It Works</a></li>
         <li><a href="#contact">Team</a></li>
         <li><a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener" class="nav-cta">GitHub</a></li>
@@ -585,6 +587,88 @@
       </div>
     </section>
 
+    <!-- ═══════════════════════════════════════ LIVE DEMO (#sim) ═════════
+         Interactive Mission Simulator. Markup here, styles in sim.css,
+         engine in sim.js (synthetic data, runs fully in the browser).
+         Tiles are rendered by sim.js from its METRICS config.
+    ══════════════════════════════════════════════════════════════ -->
+    <section id="sim" aria-labelledby="sim-title">
+      <div class="sim-overlay" aria-hidden="true"></div>
+      <div class="sim-inner">
+
+        <header class="sim-header">
+          <p class="sim-eyebrow"><span class="bracket">&lt;</span>live-demo<span class="bracket">/&gt;</span></p>
+          <h2 class="sim-title" id="sim-title">Mission Simulator</h2>
+          <p class="sim-subtitle">Break something. Watch AstroDocX detect it, explain it and tell the crew what to do &mdash; all on board.
+            <span class="sim-tag">Synthetic crew data</span></p>
+        </header>
+
+        <div class="sim-grid">
+
+          <!-- ── Left: live hazard board + fault injector ── -->
+          <div class="sim-left">
+            <div class="sim-inject">
+              <p class="sim-inject-label">Inject a fault</p>
+              <div class="sim-btns">
+                <button type="button" class="sim-btn" data-event="E"><i>E</i>CO&#8322; scrubber fault</button>
+                <button type="button" class="sim-btn" data-event="R"><i>R</i>Solar particle event</button>
+                <button type="button" class="sim-btn" data-event="I"><i>I</i>Poor sleep night</button>
+                <button type="button" class="sim-btn" data-event="G"><i>G</i>Skipped workout</button>
+                <button type="button" class="sim-btn" data-event="D"><i>D</i>Comms blackout</button>
+              </div>
+              <div class="sim-btns sim-btns-sub">
+                <button type="button" class="sim-btn sim-btn-ghost" id="simPlay">&#9654; Play scenario</button>
+                <button type="button" class="sim-btn sim-btn-ghost" id="simReset">Reset crew</button>
+              </div>
+            </div>
+
+            <div class="sim-board" id="simTiles" role="group" aria-label="Live hazard status board"></div>
+
+          </div>
+
+          <!-- ── Right: readiness, alert → action, log + sync ── -->
+          <div class="sim-right">
+
+            <div class="sim-card sim-ready" id="simReady">
+              <svg class="sr-ring" viewBox="0 0 80 80" aria-hidden="true">
+                <circle class="sr-bg" cx="40" cy="40" r="33"/>
+                <circle class="sr-fg" id="simReadyRing" cx="40" cy="40" r="33" pathLength="100"/>
+              </svg>
+              <div class="sr-text">
+                <span class="sr-label">Crew Readiness</span>
+                <b class="sr-value"><span id="simReadyVal">99</span>%</b>
+                <span class="sr-status" id="simReadyStatus"><i></i>Nominal</span>
+              </div>
+              <div class="sr-clock">
+                <span class="sr-label">Mission clock</span>
+                <b id="simClock">D142 03:12:00</b>
+                <span class="sr-sub">Mars transit &middot; 4 crew</span>
+              </div>
+            </div>
+
+            <div class="sim-card sim-alert" id="simAlert" aria-live="polite">
+              <!-- filled by sim.js -->
+            </div>
+
+            <div class="sim-card sim-log">
+              <header class="sl-head">
+                <h3>On-board log</h3>
+                <span class="sl-pending" id="simPending">0 pending sync</span>
+              </header>
+              <ul class="sl-list" id="simLog"></ul>
+              <div class="sl-sync">
+                <span class="sl-link" id="simLink"><i></i><span id="simLinkText">Next link window 0:60</span></span>
+                <button type="button" class="sim-btn sim-btn-sm" id="simSync">Open link window</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <p class="sim-note">Concept demo: thresholds and numbers are illustrative, not medical guidance.</p>
+      </div>
+    </section>
+
     <!-- ═══════════════════════════════════════ HOW IT WORKS (#education) ═════════
          Same scroll-driven SVG timeline as the template, extended
          from 2 to 5 nodes (script.js now reads nodes from the DOM).
@@ -797,6 +881,7 @@
   <script src="script.js"></script>
   <script src="astronaut.js"></script>
   <script src="twin.js"></script>
+  <script src="sim.js"></script>
 
 </body>
 
