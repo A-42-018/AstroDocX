@@ -312,11 +312,21 @@ The video itself is recorded after L3.
 - **Tuning found by the tests:** learning only readings below 1.8σ truncated the sd and gave false Acts, so learning now depends on the smoothed status; a 7-sample daily warm-up was too noisy, so it is 14.
 - **Known limit:** on clean data over 30 seeds, 28 give no false Act and 2 give one Act in 20,640 readings; Watch is about 0.8% of scored readings. The fixed-seed tests use seeds 42 and 99. C4 adds a persistence rule for Act (and absolute limits) to cut this further.
 
+## C4 Implementation Log (done)
+- **Absolute limits (`app/src/engine/limits.ts`), cited:** CO2 average 1-hour habitat ppCO2 <= 3 mmHg (NASA-STD-3001 Vol. 2, [V2 6004]); career effective dose 600 mSv and 250 mSv per solar particle event (NASA-STD-3001 Vol. 1). Source URLs are in the file header. CO2 rule: Watch after 3 consecutive hourly readings above 3.0 mmHg, Act after 6, or at once at 4.5 mmHg (**illustrative** emergency level). Dose rule: rolling 24 h dose versus 250 mSv (Watch at half, Act at the limit); the career 600 mSv budget is shown in every dose alert from a running total. Everything else (steps, persistence counts, 4.5 mmHg) is labelled illustrative.
+- **Persistence (new, from C3's false-alert finding):** a statistical Watch needs N consecutive readings and Act needs N consecutive Act readings (N = 3 hourly, 2 daily). Clean-history check: seeds 42 and 99, two crew each, give no Act and 6 Watch alerts (about 3 per crew-month); the earlier 22 and 20 were single-blip Watches.
+- **Two-signal rule:** sleep and reaction both off baseline for one crew member raises a behavioral Watch (`ruleId 'sleep+reaction'`, kind `combined`, hazard I) with its own explanation and steps.
+- **Explanations and action cards (`actions.ts`):** "what changed, by how much, against whose baseline, since when" (`Reaction time 361 ms is 3.2σ above Pilot's baseline (...). Started at D26 07:00 MET.`) and illustrative 3-4 step cards per metric and level (co2, dose, sleep, reaction, exercise, hr, hrv, spo2, generic fallback, behavioral).
+- **Alert lifecycle (`pipeline.ts`):** `processReading(reading, db)` scores, applies limits and persistence, then one alert per crew + ruleId: opens, updates, escalates (reopens the card with fresh steps), eases, and resolves when values recover, writing each change to the on-board log as `pending`. `setStepDone` and `completeActionCard` (Done -> `acknowledged`) are the crew actions; the engine still resolves the alert on recovery. `processAll` loads a batch in time order.
+- **Data model additions:** `Alert.ruleId`, `kind`, `peakStatus` (highest level reached, since an alert can ease to Watch before resolving); `Baseline.warnRun`, `actRun`, `limitRun`, `total` (running sum, used for cumulative dose). No Dexie schema change (none are indexed).
+- **Synthetic data change:** cabin metrics (CO2, temperature, noise, dose) now carry no personal offset, because they describe the shared habitat; otherwise the 3.0 mmHg limit fired on a crew member's normal baseline.
+- **Tests (46 total, 32 new, ~40 s because every reading is a fake-indexeddb transaction):** limits and citations, action cards for every level, MET format, lifecycle (open -> escalate -> resolve, Done and reopen, cumulative dose, event-dose limit alert), each scenario raises the right alert (solar and CO2 reach Act for every crew member checked and resolve; insomnia gives the pilot a sleep alert plus the combined Watch; deconditioning gives the flight engineer an exercise Act; bystanders stay quiet), and clean history stays free of Act. Scenario runs use two crew members each to keep runtime reasonable. `npm run build` and `oxlint` clean.
+
 ## Current Phase
-**C3 Engine core done.** C0 scaffold, C1 data model, C2 synthetic data and the landing page are done.
+**C4 Rules + actions done.** C0-C3 and the landing page are done.
 
 ## Next Roadmap
-1. **C4 Rules + actions:** absolute limits (CO2, dose) with citations, two-signal rule (poor sleep + slow reaction -> behavioral Watch), explanation text, action-card JSON, alert lifecycle (open/ack/resolve, escalate/clear), tests that each scenario raises the right alert. Then commit + push.
-2. C5 → C11 in order (§9.2), one phase per session, commit + push after each.
+1. **C5 Status Board UI:** crew switcher, 5 hazard tiles from the engine output, readiness ring, mission clock (Zustand store; reads baselines and open alerts from Dexie). No browser QA before C11, so verify with unit tests on the selectors and `npm run build`. Then commit + push.
+2. C6 → C11 in order (§9.2), one phase per session, commit + push after each.
 3. Content still open on the landing page: team cards 2–4, About counter citations, README live/video URLs, absolute `og:image` after deploy.
 4. Video (`tour.js` + recording) after C11.

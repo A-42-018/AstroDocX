@@ -5,7 +5,7 @@ import type { Alert } from './types'
 
 const d = new ConsoleDB('test-db')
 const alert = (over: Partial<Alert> = {}): Alert => ({
-  crewId: 'c1', hazard: 'E', metric: 'co2', status: 'watch', state: 'open', z: 2, value: 3,
+  crewId: 'c1', ruleId: 'co2', kind: 'baseline', hazard: 'E', metric: 'co2', status: 'watch', peakStatus: 'watch', state: 'open', z: 2, value: 3,
   baselineMean: 2.4, explanation: 'x', steps: [{ text: 's', done: false }], openedAt: 1, ...over,
 })
 
@@ -26,7 +26,7 @@ describe('ConsoleDB', () => {
   })
 
   it('stores baselines keyed by crew + metric (upsert)', async () => {
-    const b = { crewId: 'c1', metric: 'hr' as const, n: 1, mean: 60, m2: 0, ewma: 0, status: 'nominal' as const, updatedAt: 1 }
+    const b = { crewId: 'c1', metric: 'hr' as const, n: 1, mean: 60, m2: 0, ewma: 0, status: 'nominal' as const, warnRun: 0, actRun: 0, limitRun: 0, total: 0, updatedAt: 1 }
     await d.baselines.put(b)
     await d.baselines.put({ ...b, n: 2, mean: 61 })
     expect(await d.baselines.count()).toBe(1)

@@ -59,17 +59,32 @@ export interface Baseline {
   ewma: number
   /** Last classified status (kept for hysteresis). */
   status: Status
+  /** Consecutive readings at WATCH or above (a statistical Watch needs 2 in a row). */
+  warnRun: number
+  /** Consecutive readings classified ACT (statistical Act needs 2 in a row). */
+  actRun: number
+  /** Consecutive readings above an absolute limit. */
+  limitRun: number
+  /** Sum of every value processed (for dose: cumulative µSv, since readings are hourly). */
+  total: number
   updatedAt: Timestamp
 }
 
 export type AlertState = 'open' | 'acknowledged' | 'resolved'
 
+export type AlertKind = 'baseline' | 'limit' | 'combined'
+
 export interface Alert {
   id?: number
   crewId: string
+  /** One open alert per crew + ruleId: a metric id, or 'sleep+reaction' for the two-signal rule. */
+  ruleId: string
+  kind: AlertKind
   hazard: Hazard
   metric: MetricId
   status: Exclude<Status, 'nominal'>
+  /** Highest level reached while the alert was open (status can ease back to watch before it resolves). */
+  peakStatus: Exclude<Status, 'nominal'>
   state: AlertState
   z: number
   value: number

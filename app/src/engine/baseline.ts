@@ -9,11 +9,13 @@ export const EWMA_ALPHA = 0.5
 /** Effective baseline window (samples): 7 days of hourly metrics, 21 days of daily metrics. */
 export const DAILY_METRICS: ReadonlySet<MetricId> = new Set<MetricId>(['sleep', 'exercise', 'reaction', 'mood'])
 export const windowFor = (m: MetricId) => (DAILY_METRICS.has(m) ? 21 : 168)
+/** Consecutive WATCH-or-above readings needed before a statistical alert shows (and consecutive ACT readings for Act). */
+export const persistFor = (m: MetricId) => (DAILY_METRICS.has(m) ? 2 : 3)
 /** Samples needed before a baseline is trusted; until then status stays nominal. */
 export const warmupFor = (m: MetricId) => (DAILY_METRICS.has(m) ? 14 : 48)
 
 export function newBaseline(crewId: string, metric: MetricId, ts: Timestamp = 0): Baseline {
-  return { crewId, metric, n: 0, mean: 0, m2: 0, ewma: 0, status: 'nominal', updatedAt: ts }
+  return { crewId, metric, n: 0, mean: 0, m2: 0, ewma: 0, status: 'nominal', warnRun: 0, actRun: 0, limitRun: 0, total: 0, updatedAt: ts }
 }
 
 /**

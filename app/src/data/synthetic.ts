@@ -86,7 +86,8 @@ export function generateReadings(opts: GenerateOptions = {}): Reading[] {
     const r = rng(seed * 1000 + ci + 1)
     // Personal offset: each person's baseline differs by up to ~1 sd.
     const offset = {} as Record<MetricId, number>
-    for (const m of Object.keys(NORMAL) as MetricId[]) offset[m] = r.gauss() * 0.8 * NORMAL[m].sd
+    // Cabin readings describe the shared habitat, not a person, so they carry no personal offset.
+    for (const m of Object.keys(NORMAL) as MetricId[]) offset[m] = NORMAL[m].source === 'cabin' ? (r.gauss(), 0) : r.gauss() * 0.8 * NORMAL[m].sd
 
     const emit = (metric: MetricId, ts: number, day: number) => {
       const n = NORMAL[metric]
