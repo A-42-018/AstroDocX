@@ -13,7 +13,7 @@ afterEach(cleanup)
 
 it('shows a chart for every metric from the demo mission and has an insomnia marker for the pilot', async () => {
   render(<MemoryRouter initialEntries={['/trends']}><App /></MemoryRouter>)
-  const list = await screen.findByRole('list', { name: 'Metric trends' }, { timeout: 60_000 })
+  const list = await screen.findByRole('list', { name: 'Metric trends' }, { timeout: 120_000 })
   expect(list.querySelectorAll(':scope > li')).toHaveLength(11)
 
   fireEvent.click(screen.getByRole('tab', { name: 'Pilot' }))
@@ -25,4 +25,4 @@ it('shows a chart for every metric from the demo mission and has an insomnia mar
   expect(sleep.points.length).toBeGreaterThan(25)
   expect(sleep.markers.length).toBeGreaterThan(0)
   expect(sleep.points.some((p) => p.band)).toBe(true)
-}, 90_000)
+}, 150_000)

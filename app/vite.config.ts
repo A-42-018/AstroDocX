@@ -1,8 +1,10 @@
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  // Four test files seed the 20k-reading demo mission; cap workers so they do not starve each other.
+  test: { maxWorkers: 3 },
   plugins: [
     react(),
     VitePWA({

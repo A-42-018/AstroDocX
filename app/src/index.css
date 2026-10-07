@@ -137,3 +137,19 @@ main { flex: 1; padding: 24px 20px; max-width: 1100px; width: 100%; margin: 0 au
 .checkin-done h2 { margin: 0 0 6px; font-size: 1.05rem; }
 .checkin-done p { margin: 4px 0; }
 @media (max-width: 520px) { .scale-row span { font-size: 0.68rem; } }
+
+/* ---- Simulator (C9) ---- */
+.sim-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.sim-grid li { display: grid; gap: 8px; align-content: start; }
+.sim-grid h3 { margin: 0; font-size: 1rem; }
+.sim-sub { margin: 0; font-size: 0.78rem; }
+.field select {
+  min-height: 44px; padding: 0 10px; border-radius: var(--r-sm); border: 1px solid var(--glass-border);
+  background: var(--void-mid); color: var(--text-hi); font: inherit;
+}
+.sim-steps { display: flex; flex-wrap: wrap; gap: 8px; }
+.sim-active { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+.sim-last { margin-top: 12px; border-top: 1px solid var(--glass-border); padding-top: 8px; }
+.sim-last p { margin: 4px 0; }
+.btn.ghost { border-color: var(--glass-border); background: transparent; color: var(--text-mid); }
+.btn.danger { border-color: var(--act); background: rgba(244, 63, 94, 0.18); color: var(--act); }

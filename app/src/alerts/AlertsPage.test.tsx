@@ -10,7 +10,7 @@ afterEach(cleanup)
 
 it('alert -> tick a step -> Done writes the action to the on-board log', async () => {
   render(<MemoryRouter initialEntries={['/alerts']}><App /></MemoryRouter>)
-  fireEvent.click(await screen.findByRole('tab', { name: 'Flight Engineer' }, { timeout: 60_000 }))
+  fireEvent.click(await screen.findByRole('tab', { name: 'Flight Engineer' }, { timeout: 120_000 }))
   const list = await screen.findByRole('list', { name: 'Active alerts' })
   const card = within(list).getAllByRole('listitem')[0]
   const box = within(card).getAllByRole('checkbox')[0] as HTMLInputElement
@@ -26,4 +26,4 @@ it('alert -> tick a step -> Done writes the action to the on-board log', async (
   const entries = await db.actionLog.toArray()
   expect(entries.filter((e) => e.kind === 'step-done' && e.sync === 'pending').length).toBeGreaterThanOrEqual(2)
   expect(await db.alerts.where('state').equals('acknowledged').count()).toBeGreaterThan(0)
-}, 90_000)
+}, 150_000)

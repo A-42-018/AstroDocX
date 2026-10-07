@@ -351,11 +351,17 @@ The video itself is recorded after L3.
 - **Known limits:** sleep quality and symptoms are stored and logged but have no metric, so they do not trigger alerts yet (stated on the form). Several check-ins at the same mission time are allowed.
 - **Tests (86 total, 13 new):** PVT summary (median, even count, false starts, too few valid taps); the reaction pad with fake timers (five taps give median and lapse; early taps give no result); form (blocks until required answers, submits exact payload and resets, shows a raised alert); `submitCheckIn` on a 20-day DB (check-in row, three `checkin` readings, pending log text, repeated 900 ms reactions raise a reaction alert, invalid input writes nothing). `tsc`, `oxlint`, `npm run build` clean. No browser QA until C11 (the tap timing feel in particular).
 
+## C9 Implementation Log (done)
+- **Simulator page (`app/src/sim`, route `/simulator`):** four scenario cards (solar event, CO2 fault, insomnia, deconditioning) with a "Who" picker (default crew from `SCENARIOS`, or one person, or whole crew) and Inject; a "Running now" list with End now; time controls +1 h / +6 h / +1 day / +3 days; a "Last run" summary (readings processed, NEW and CLEARED alerts by person and level); and Reset to the demo mission behind a two-step confirm (it erases local data).
+- **Time and data (`advance.ts`):** the mission clock is the latest reading. `advance(hours, injections)` generates the next hours (hourly metrics every hour, daily metrics at 07:00 MET) centred on each person's healthy level (median of the first 14 mission days, before any scenario), adds the active scenarios' shifts (sd units, same table as the history generator), and runs everything through `processAll`, so alerts, persistence, logging and the board behave exactly as for real readings. Seeded by the start time, so the same state gives the same data.
+- **Inject** adds the scenario (lasting its `SCENARIOS` duration) and immediately runs a lead time so the effect shows (6 h for solar and CO2, 48 h for insomnia and deconditioning, because daily metrics need two daily readings). Running injections are in memory (Zustand): a reload ends them, the readings stay. Advancing time ages unsynced log entries, so the Distance tile goes Watch after 24 h, which C10 resolves with real sync.
+- **Tests (99 total, 13 new):** window generation (deterministic, daily metrics only at 07:00, shifts hit only the injected person), every scenario raises the right alert for the right person (solar -> dose, resolves after it ends; CO2 -> Act for both; insomnia -> sleep alert, no bystander; deconditioning -> exercise), no alerts when nothing is injected, view callbacks and reset confirm, and an App-level run on the demo mission (inject solar, clock moves to D30 05:00, Dose rate ACT reported). Vitest now caps workers at 3 and the demo-seeding tests have longer timeouts, because four files seed the 20k-reading demo and starved each other. `tsc`, `oxlint`, `npm run build` clean. No browser QA until C11.
+
 ## Current Phase
-**C8 Check-in done.** C0-C7 and the landing page are done.
+**C9 Simulator panel done.** C0-C8 and the landing page are done.
 
 ## Next Roadmap
-1. **C9 Simulator panel:** inject the four scenarios (solar event, CO2 fault, insomnia, deconditioning) into the live DB, fast-forward mission time (generate and process new readings), reset to the demo; tests per scenario, no browser QA. Then commit + push.
-2. C10 → C11 in order (§9.2), one phase per session, commit + push after each.
+1. **C10 Ground sync:** outbox over the `pending` log entries, simulated link windows (open for a set time, then blackout), blackout status, sync marks entries `synced` with `syncedAt`; the Distance tile and board link line then reflect real state. Tests, no browser QA. Then commit + push.
+2. C11 in order (§9.2), one phase per session, commit + push after each.
 3. Content still open on the landing page: team cards 2–4, About counter citations, README live/video URLs, absolute `og:image` after deploy.
 4. Video (`tour.js` + recording) after C11.
