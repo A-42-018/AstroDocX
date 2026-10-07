@@ -102,7 +102,7 @@ export function CheckInForm({ crew, crewId, now, onSelectCrew, onSubmit, reactio
               </label>
             ))}
           </div>
-          <p className="muted note">A symptom on three check-ins in a row, three or more symptoms at once, or blurred vision twice in a row raises an alert (illustrative rules).</p>
+          <p className="muted note">A symptom on three daily check-ins in a row, three or more symptoms at once, or blurred vision two days in a row raises an alert (illustrative rules). One check-in per mission day counts; a later one the same day replaces it.</p>
         </fieldset>
         <Reaction onResult={setPvt} />
         {error && <p role="alert" className="form-error">{error}</p>}

@@ -5,7 +5,7 @@ import { CREW, DAY, MISSION_START } from '../data/synthetic'
 import type { CheckIn } from '../data/types'
 import { submitCheckIn } from '../checkin/submit'
 import { alertTitle, stepsFor } from './actions'
-import { sleepQualityRule, symptomRule } from './checkinRules'
+import { perDay, sleepQualityRule, symptomRule } from './checkinRules'
 
 const ci = (day: number, symptoms: string[], sleepQuality = 4): CheckIn => ({ crewId: 'pilot', ts: MISSION_START + day * DAY, mood: 4, sleepQuality, symptoms })
 /** Newest first, as the rules expect. */
@@ -19,7 +19,7 @@ describe('symptomRule', () => {
   it('Watch when the same symptom is reported on three check-ins in a row, with its hazard', () => {
     const r = symptomRule(hist(ci(1, ['Headache']), ci(2, ['Headache', 'Nausea']), ci(3, ['Headache'])), 'Pilot')
     expect(r).toMatchObject({ status: 'watch', hazard: 'E' })
-    expect(r.explanation).toContain('headache on 3 check-ins in a row (D1 00:00 MET to D3 00:00 MET)')
+    expect(r.explanation).toContain('headache on 3 daily check-ins in a row (D1 00:00 MET to D3 00:00 MET)')
   })
   it('a gap breaks the streak', () => {
     expect(symptomRule(hist(ci(1, ['Headache']), ci(2, []), ci(3, ['Headache'])), 'Pilot').status).toBe('nominal')
@@ -42,6 +42,12 @@ describe('sleepQualityRule', () => {
     expect(sleepQualityRule(hist(ci(1, [], 2), ci(2, [], 3), ci(3, [], 2)), 'Pilot').status).toBe('nominal')
     expect(sleepQualityRule(hist(ci(1, [], 1), ci(2, [], 1)), 'Pilot').status).toBe('nominal')
   })
+})
+
+it('counts one check-in per mission day, the latest that day', () => {
+  const morning = { ...ci(4, ['Blurred vision']), id: 1 }
+  const evening = { ...ci(4, []), ts: ci(4, []).ts + 12 * 3_600_000, id: 2 }
+  expect(perDay([morning, evening, ci(3, ['Headache'])]).map((c) => c.symptoms)).toEqual([[], ['Headache']])
 })
 
 it('titles and steps come from the rule id', () => {
@@ -67,6 +73,10 @@ it('check-ins drive the alert lifecycle: open, escalate to Act, resolve', async 
   expect(fourth.raised.map((a) => [a.ruleId, a.status])).toEqual([['symptoms', 'act']])
   const act = (await d.alerts.toArray()).find((a) => a.ruleId === 'symptoms')!
   expect(act.steps[0].text).toMatch(/vision check/)
+
+  // Saving again on the same day replaces that day's answers instead of extending a streak.
+  const again = await send(4, ['Blurred vision'], 2)
+  expect(again.raised).toHaveLength(0)
 
   const fifth = await send(5, [], 1)
   expect(fifth.resolved.map((a) => a.ruleId)).toEqual(['symptoms'])
