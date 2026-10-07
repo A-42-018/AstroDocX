@@ -27,6 +27,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="icon" href="favicon.png" type="image/png">
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="twin.css" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -99,6 +100,7 @@
         <li><a href="#about">Problem</a></li>
         <li><a href="#skills">Hazards</a></li>
         <li><a href="#projects">Features</a></li>
+        <li><a href="#twin">Health Twin</a></li>
         <li><a href="#education">How It Works</a></li>
         <li><a href="#contact">Team</a></li>
         <li><a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener" class="nav-cta">GitHub</a></li>
@@ -411,6 +413,178 @@
       </div><!-- /.hscroll-track -->
     </section>
 
+    <!-- ═══════════════════════════════════════ HEALTH TWIN (#twin) ═════════
+         L2 signature visual. Fully isolated: markup here, styles in
+         twin.css, behaviour in twin.js (own pinned ScrollTrigger on
+         desktop; stacked + auto-played on mobile; static final state
+         with prefers-reduced-motion). Values are simulated demo data.
+    ══════════════════════════════════════════════════════════════ -->
+    <section id="twin" aria-labelledby="twin-title">
+      <div class="twin-overlay" aria-hidden="true"></div>
+
+      <div class="twin-inner">
+        <header class="twin-header">
+          <p class="twin-eyebrow">
+            <span class="bracket">&lt;</span>health-twin<span class="bracket">/&gt;</span>
+          </p>
+          <h2 class="twin-title" id="twin-title">Health Twin</h2>
+          <p class="twin-subtitle">One body scan. Six systems. One readiness score. <span class="twin-tag">Concept &middot; simulated data</span></p>
+        </header>
+
+        <div class="twin-stage" id="twinStage">
+          <svg class="twin-leaders" id="twinLeaders" aria-hidden="true"></svg>
+
+          <!-- ── Left column ── -->
+          <div class="twin-col twin-col-left">
+            <article class="twin-panel" data-hot="brain" data-side="left">
+              <header class="tp-head"><span class="tp-dot"></span><h3>Behavioral &amp; Cognitive</h3><span class="tp-state">OK</span></header>
+              <div class="tp-row"><span>Mood check-in</span><b>4 / 5</b></div>
+              <div class="tp-row"><span>Reaction time</span><b>312 ms <small class="tp-delta tp-up">&uarr; 6%</small></b></div>
+              <svg class="tp-spark" viewBox="0 0 120 26" preserveAspectRatio="none" aria-hidden="true">
+                <polyline points="0,18 12,16 24,17 36,14 48,15 60,13 72,14 84,11 96,12 108,9 120,10"/>
+              </svg>
+            </article>
+
+            <article class="twin-panel" data-hot="radiation" data-side="left">
+              <header class="tp-head"><span class="tp-dot"></span><h3>Radiation &amp; Immune</h3><span class="tp-state">OK</span></header>
+              <div class="tp-split">
+                <svg class="tp-ring" viewBox="0 0 44 44" aria-hidden="true">
+                  <circle class="tp-ring-bg" cx="22" cy="22" r="18"/>
+                  <circle class="tp-ring-fg" cx="22" cy="22" r="18" pathLength="100" style="--val:23.7"/>
+                </svg>
+                <div>
+                  <b class="tp-big">142 <small>/ 600 mSv</small></b>
+                  <span class="tp-note">Mission dose budget</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="twin-panel" data-hot="bone" data-side="left">
+              <header class="tp-head"><span class="tp-dot"></span><h3>Bone Density</h3><span class="tp-state">OK</span></header>
+              <div class="tp-bars" aria-hidden="true">
+                <i style="--h:100%"></i><i style="--h:94%"></i><i style="--h:88%"></i><i style="--h:83%"></i><i style="--h:77%"></i><i style="--h:72%"></i>
+              </div>
+              <div class="tp-row"><span>Hip BMD trend</span><b>&minus;0.8% <small>/ month</small></b></div>
+            </article>
+          </div>
+
+          <!-- ── Figure ── -->
+          <div class="twin-figure" id="twinFigure">
+            <svg class="twin-body" id="twinBody" viewBox="0 0 300 660" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+              <defs>
+                <filter id="twinGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="4" result="b"/>
+                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+                <linearGradient id="twinScanGrad" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0" stop-color="#22D3EE" stop-opacity="0"/>
+                  <stop offset=".5" stop-color="#E0FBFF" stop-opacity="1"/>
+                  <stop offset="1" stop-color="#22D3EE" stop-opacity="0"/>
+                </linearGradient>
+                <linearGradient id="twinScanTrail" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0" stop-color="#22D3EE" stop-opacity="0"/>
+                  <stop offset="1" stop-color="#22D3EE" stop-opacity=".22"/>
+                </linearGradient>
+                <clipPath id="twinClip"><path id="twinClipPath"/></clipPath>
+              </defs>
+
+              <!-- scanner base rings -->
+              <g class="twin-rings" id="twinRings">
+                <g transform="translate(150 640) scale(1 .26)">
+                  <g class="ring ring-a"><circle r="70"/></g>
+                  <g class="ring ring-b"><circle r="104"/></g>
+                  <g class="ring ring-c"><circle r="138"/></g>
+                </g>
+              </g>
+
+              <!-- body outline (path built in twin.js) -->
+              <path class="twin-outline" id="twinOutline" pathLength="1" filter="url(#twinGlow)"/>
+
+              <!-- anatomy hints, lit by the scan line -->
+              <g class="twin-anatomy" id="twinAnatomy" clip-path="url(#twinClip)">
+                <g class="organ" data-hot="brain"><ellipse cx="150" cy="44" rx="20" ry="15"/><path d="M150 30v28M138 40q6 4 0 9M162 40q-6 4 0 9"/></g>
+                <g class="organ" data-hot="eyes"><circle cx="140" cy="60" r="3.4"/><circle cx="160" cy="60" r="3.4"/></g>
+                <g class="organ"><path d="M150 100v232" stroke-dasharray="6 4"/></g>
+                <g class="organ"><path d="M118 142q32 -14 64 0M114 160q36 -14 72 0M114 178q36 -13 72 0M117 196q33 -12 66 0M122 213q28 -10 56 0"/></g>
+                <g class="organ" data-hot="heart"><path d="M163 186c-10-7-17-13-17-20a7 7 0 0 1 13-4l4 4 4-4a7 7 0 0 1 13 4c0 7-7 13-17 20z"/></g>
+                <g class="organ" data-hot="radiation"><path d="M132 238h36M128 258h44M132 278h36" stroke-dasharray="2 5"/><circle cx="150" cy="262" r="16"/></g>
+                <g class="organ"><path d="M120 320q30 30 60 0M124 336q26 14 52 0"/></g>
+                <g class="organ" data-hot="bone"><path d="M128 346l-6 128M172 346l6 128"/><circle cx="122" cy="476" r="5"/><circle cx="178" cy="476" r="5"/><path d="M122 484l-2 112M178 484l2 112"/></g>
+                <g class="organ" data-hot="muscle"><ellipse cx="184" cy="400" rx="13" ry="42"/></g>
+              </g>
+
+              <!-- scan line -->
+              <g class="twin-scan" id="twinScan">
+                <rect x="0" y="-60" width="300" height="60" fill="url(#twinScanTrail)" clip-path="url(#twinClip)"/>
+                <rect x="10" y="-1" width="280" height="2" fill="url(#twinScanGrad)"/>
+              </g>
+
+              <!-- hotspots -->
+              <g class="twin-hot" data-hot="brain" transform="translate(150 42)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
+              <g class="twin-hot" data-hot="eyes" transform="translate(160 60)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
+              <g class="twin-hot" data-hot="heart" transform="translate(163 172)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
+              <g class="twin-hot" data-hot="radiation" transform="translate(150 262)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
+              <g class="twin-hot" data-hot="bone" transform="translate(124 420)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
+              <g class="twin-hot" data-hot="muscle" transform="translate(184 400)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
+            </svg>
+            <canvas class="twin-canvas" id="twinCanvas" aria-hidden="true"></canvas>
+          </div>
+
+          <!-- ── Right column ── -->
+          <div class="twin-col twin-col-right">
+            <article class="twin-panel" data-hot="eyes" data-side="right">
+              <header class="tp-head"><span class="tp-dot"></span><h3>Vision (SANS)</h3><span class="tp-state">OK</span></header>
+              <div class="tp-row"><span>Amsler grid self-test</span><b class="tp-ok">&#10003; Pass</b></div>
+              <div class="tp-row"><span>Acuity check</span><b class="tp-ok">&#10003; Pass</b></div>
+            </article>
+
+            <article class="twin-panel" data-hot="heart" data-side="right" id="twinHeartPanel">
+              <header class="tp-head"><span class="tp-dot"></span><h3>Cardiovascular</h3><span class="tp-state">OK</span></header>
+              <canvas class="tp-ecg" id="twinEcg" aria-hidden="true"></canvas>
+              <div class="tp-row tp-row-duo">
+                <span>HR <b id="twinHr">62</b> bpm <small class="tp-delta tp-up" id="twinHrDelta"></small></span>
+                <span>HRV <b>48</b> ms</span>
+              </div>
+            </article>
+
+            <article class="twin-panel" data-hot="muscle" data-side="right">
+              <header class="tp-head"><span class="tp-dot"></span><h3>Muscle &amp; Exercise</h3><span class="tp-state">OK</span></header>
+              <ul class="tp-loads">
+                <li><span>Resistive</span><i style="--w:82%"></i><b>82%</b></li>
+                <li><span>Treadmill</span><i style="--w:64%"></i><b>64%</b></li>
+                <li><span>Cycle</span><i style="--w:45%"></i><b>45%</b></li>
+              </ul>
+            </article>
+          </div>
+
+          <!-- ── Bottom: readiness + action card ── -->
+          <div class="twin-bottom">
+            <div class="twin-readiness" id="twinReadiness">
+              <svg class="tr-ring" viewBox="0 0 80 80" aria-hidden="true">
+                <circle class="tr-bg" cx="40" cy="40" r="33"/>
+                <circle class="tr-fg" id="twinReadyRing" cx="40" cy="40" r="33" pathLength="100"/>
+              </svg>
+              <div class="tr-text">
+                <span class="tr-label">Crew Readiness</span>
+                <b class="tr-value"><span id="twinReadyVal">0</span>%</b>
+                <span class="tr-status"><i></i>Nominal</span>
+              </div>
+            </div>
+
+            <aside class="twin-action" id="twinAction" aria-live="polite">
+              <p class="ta-kicker">Action card &middot; Cardiovascular</p>
+              <p class="ta-why">Resting HR +14% vs your baseline</p>
+              <ol class="ta-steps">
+                <li>Hydrate: 500 ml water</li>
+                <li>Rest 20 min, then re-check HR</li>
+              </ol>
+              <p class="ta-log">Logged on board &middot; syncs to ground later</p>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ═══════════════════════════════════════ HOW IT WORKS (#education) ═════════
          Same scroll-driven SVG timeline as the template, extended
          from 2 to 5 nodes (script.js now reads nodes from the DOM).
@@ -622,6 +796,7 @@
 
   <script src="script.js"></script>
   <script src="astronaut.js"></script>
+  <script src="twin.js"></script>
 
 </body>
 
