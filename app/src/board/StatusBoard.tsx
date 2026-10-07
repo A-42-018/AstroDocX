@@ -2,9 +2,9 @@ import { met } from '../engine/actions'
 import { CrewTabs } from './CrewTabs'
 import type { Snapshot } from './snapshot'
 import type { Status } from '../data/types'
+import { HazardIcon, StatusPill } from '../shell/icons'
 
 const LABEL: Record<Status, string> = { nominal: 'NOMINAL', watch: 'WATCH', act: 'ACT' }
-const ICON: Record<Status, string> = { nominal: '●', watch: '▲', act: '◆' }
 
 export function ReadinessRing({ value, status }: { value: number; status: Status }) {
   const r = 52
@@ -18,7 +18,7 @@ export function ReadinessRing({ value, status }: { value: number; status: Status
       </svg>
       <figcaption>
         <b className="mono">{value}%</b>
-        <span>{ICON[status]} {LABEL[status]}</span>
+        <StatusPill status={status} />
       </figcaption>
     </figure>
   )
@@ -52,9 +52,9 @@ export function StatusBoard({ snap, onSelectCrew }: { snap: Snapshot; onSelectCr
         {snap.tiles.map((t) => (
           <li key={t.hazard} className={`glass tile st-${t.status}`} aria-label={`${t.name}: ${LABEL[t.status]}. ${t.label} ${t.value} ${t.unit}`}>
             <header>
-              <span className="hz mono">{t.hazard}</span>
+              <HazardIcon hazard={t.hazard} status={t.status} />
               <h2>{t.name}</h2>
-              <span className="badge mono">{ICON[t.status]} {LABEL[t.status]}</span>
+              <StatusPill status={t.status} />
             </header>
             <p className="val mono">
               <b>{t.value}</b> <small>{t.unit}</small>

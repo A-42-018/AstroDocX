@@ -1,12 +1,13 @@
+import { Clock, Radio, WifiOff } from 'lucide-react'
 import { met } from '../engine/actions'
 import type { ActionLogEntry } from '../data/types'
 import { HOUR } from '../data/synthetic'
 import { ONE_WAY_DELAY_MIN, WINDOW_LEN, type LinkInfo } from './link'
 
 const STATE = {
-  open: { icon: '●', text: 'LINK OPEN', cls: 'st-nominal' },
-  closed: { icon: '▲', text: 'WAITING FOR WINDOW', cls: 'st-watch' },
-  blackout: { icon: '◆', text: 'BLACKOUT', cls: 'st-act' },
+  open: { Icon: Radio, text: 'LINK OPEN', cls: 'st-nominal' },
+  closed: { Icon: Clock, text: 'WAITING FOR WINDOW', cls: 'st-watch' },
+  blackout: { Icon: WifiOff, text: 'BLACKOUT', cls: 'st-act' },
 } as const
 
 interface Props {
@@ -47,7 +48,7 @@ export function SyncView({ now, link, pending, synced, lastSyncedAt, station, bl
     <div className="board">
       <section className={`glass link ${s.cls}`} aria-label="Ground link status">
         <h1 style={{ margin: 0 }}>Ground sync</h1>
-        <p className="link-state mono"><span aria-hidden="true">{s.icon}</span> {s.text}</p>
+        <p className="link-state mono"><s.Icon size={18} strokeWidth={2.2} aria-hidden="true" /> {s.text}</p>
         <p className="muted">
           {link.state === 'open' && `Window closes in ${hoursUntil(link.closesAt!, now).toFixed(1)} h.`}
           {link.state === 'closed' && `Next window opens ${met(link.nextOpen)} (in ${hoursUntil(link.nextOpen, now).toFixed(1)} h) for ${WINDOW_LEN / HOUR} h.`}

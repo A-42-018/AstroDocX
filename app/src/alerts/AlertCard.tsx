@@ -1,8 +1,8 @@
 import { alertTitle, met } from '../engine/actions'
 import type { Alert } from '../data/types'
+import { HazardIcon, StatusPill } from '../shell/icons'
 
 const LABEL = { watch: 'WATCH', act: 'ACT' } as const
-const ICON = { watch: '▲', act: '◆' } as const
 
 interface Props {
   alert: Alert
@@ -19,9 +19,9 @@ export function AlertCard({ alert: a, onStep, onDone }: Props) {
   return (
     <li className={`glass alert st-${a.status}`} aria-label={`${title}: ${LABEL[a.status]}`}>
       <header>
-        <span className="hz mono">{a.hazard}</span>
+        <HazardIcon hazard={a.hazard} status={a.status} />
         <h2>{title}</h2>
-        <span className="badge mono">{ICON[a.status]} {LABEL[a.status]}</span>
+        <StatusPill status={a.status} />
       </header>
       <p className="mono muted since">
         Opened {met(a.openedAt)}

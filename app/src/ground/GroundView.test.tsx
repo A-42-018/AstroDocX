@@ -18,7 +18,7 @@ it('shows only what Earth knows, with level text, step reports and what is still
   render(<GroundView now={MISSION_START + 86_400_000} lastSyncedAt={MISSION_START + 3_600_000} pending={2} crew={crew} />)
   expect(screen.getByLabelText('Ground view status').textContent).toMatch(/data current to D0 01:00 MET · 2 entries still on board/)
   const pilot = screen.getByLabelText('Pilot: 1 open')
-  expect(within(pilot).getAllByText('◆ ACT')).toHaveLength(2) // card badge + alert row
+  expect(within(pilot).getAllByText('ACT')).toHaveLength(2) // card badge + alert row
   expect(within(pilot).getByText(/Sleep last night 4\.7 h/)).toBeTruthy()
   expect(within(pilot).getByText(/1 step reported done/)).toBeTruthy()
   expect(within(pilot).getByText(/2 on board, not yet downlinked/)).toBeTruthy()

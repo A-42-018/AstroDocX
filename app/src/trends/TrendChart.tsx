@@ -2,6 +2,7 @@ import { Area, ComposedChart, Line, ReferenceDot, ReferenceLine, ResponsiveConta
 import { METRICS } from '../data/types'
 import { MISSION_START } from '../data/synthetic'
 import { CO2_LIMIT_MMHG } from '../engine/limits'
+import { HazardIcon } from '../shell/icons'
 import { decimalsFor, tickLabel, type TrendSeries } from './series'
 
 const COLOR = { watch: 'var(--watch)', act: 'var(--act)' } as const
@@ -14,7 +15,7 @@ export function TrendChart({ series, rangeMs }: { series: TrendSeries; rangeMs: 
   return (
     <li className="glass trend" aria-label={def.label}>
       <header>
-        <span className="hz hz-holo mono">{def.hazard}</span>
+        <HazardIcon hazard={def.hazard} />
         <h2>{def.label}</h2>
         <span className="mono val-now">{latest}</span>
       </header>
@@ -25,9 +26,9 @@ export function TrendChart({ series, rangeMs }: { series: TrendSeries; rangeMs: 
             <XAxis dataKey="ts" type="number" scale="time" domain={['dataMin', 'dataMax']} tickFormatter={(t: number) => tickLabel(t, rangeMs, MISSION_START)} tick={{ fill: 'var(--text-mid)', fontSize: 11 }} stroke="var(--glass-border)" minTickGap={28} />
             <YAxis domain={['auto', 'auto']} tick={{ fill: 'var(--text-mid)', fontSize: 11 }} stroke="var(--glass-border)" width={44} tickFormatter={(v: number) => v.toFixed(d)} />
             <Tooltip
-              contentStyle={{ background: 'rgba(12, 10, 32, 0.92)', border: '1px solid rgba(34, 211, 238, 0.35)', borderRadius: 8, fontFamily: 'var(--font-mono)', fontSize: 12, boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)' }}
-              labelStyle={{ color: 'var(--holo-hi)' }}
-              cursor={{ stroke: 'rgba(34, 211, 238, 0.4)', strokeDasharray: '3 3' }}
+              contentStyle={{ background: 'rgba(14, 15, 19, 0.92)', border: '1px solid rgba(255, 255, 255, 0.14)', borderRadius: 12, fontFamily: 'var(--font-mono)', fontSize: 12, boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)' }}
+              labelStyle={{ color: 'var(--text-hi)' }}
+              cursor={{ stroke: 'rgba(255, 255, 255, 0.3)', strokeDasharray: '3 3' }}
               labelFormatter={(t) => tickLabel(Number(t), 0, MISSION_START)}
               formatter={(v) => (Array.isArray(v) ? `${Number(v[0]).toFixed(d)} to ${Number(v[1]).toFixed(d)} (band)` : `${Number(v).toFixed(d)} ${def.unit}`)}
             />

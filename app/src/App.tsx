@@ -2,6 +2,7 @@ import { Suspense, useEffect, useRef } from 'react'
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import BoardPage from './board/BoardPage'
 import { seedDemo } from './data/demo'
+import { Backdrop } from './shell/Backdrop'
 import { ErrorBoundary } from './shell/ErrorBoundary'
 import { useInstallPrompt } from './shell/install'
 import { lazyPage } from './shell/lazyPage'
@@ -47,9 +48,10 @@ export default function App() {
   const { pathname } = useLocation()
   return (
     <div className="shell">
+      <Backdrop />
       <a href="#main" className="skip-link">Skip to content</a>
       <header className="topbar">
-        <span className="brand">&lt;astrodocX/&gt;</span>
+        <span className="brand"><span className="brand-mark" aria-hidden="true" />AstroDocX<small>Crew Console</small></span>
         <nav aria-label="Crew Console">
           {ROUTES.map((r) => (
             <NavLink key={r.path} to={r.path} className={({ isActive }) => (isActive ? 'active' : '')}>

@@ -1,13 +1,13 @@
 import { met } from '../engine/actions'
 import { ONE_WAY_DELAY_MIN } from '../sync/link'
 import type { GroundAlert, GroundCrew } from './derive'
+import { StatusPill } from '../shell/icons'
 
-const ICON = { watch: '▲', act: '◆' } as const
 
 function AlertRow({ a }: { a: GroundAlert }) {
   return (
     <li className={`ground-alert st-${a.level}`}>
-      <span className="badge mono">{ICON[a.level]} {a.level.toUpperCase()}</span>
+      <StatusPill status={a.level} />
       <span>{a.text.replace(/^(WATCH|ACT):\s*/, '')}</span>
       <span className="mono muted">opened {met(a.openedAt)} · {a.stepsDone} step{a.stepsDone === 1 ? '' : 's'} reported done</span>
     </li>
@@ -52,7 +52,7 @@ export function GroundView({ now, lastSyncedAt, pending, crew, source, sourceErr
             <li key={g.crew.id} className={`glass ground-card st-${worst}`} aria-label={`${g.crew.name}: ${worst === 'nominal' ? 'no open alerts' : `${g.open.length} open`}`}>
               <header>
                 <h2>{g.crew.name}</h2>
-                <span className="badge mono">{worst === 'nominal' ? '● NOMINAL' : `${ICON[worst]} ${worst.toUpperCase()}`}</span>
+                <StatusPill status={worst} />
               </header>
               <p className="muted ground-role">{g.crew.role}</p>
               {g.open.length > 0 ? <ul className="ground-alerts">{g.open.map((a) => <AlertRow key={a.alertId} a={a} />)}</ul> : <p className="muted">No open alerts reported.</p>}

@@ -404,13 +404,88 @@ The video itself is recorded after L3.
 - **I. Safe redeploys:** with code splitting, a console left open across a deploy would ask for chunk files the new service worker had replaced, and that screen would fail. `shell/lazyPage.ts` wraps `React.lazy`: on a failed chunk import it reloads once into the new version (sessionStorage guard, so a truly broken chunk shows the error screen instead of looping). **Reproduced and verified in headless Chrome:** v1 open and controlled by its service worker, v2 built with new chunk hashes and activated, then navigating to Trends in the old page reloaded exactly once and opened Trends on v2 with no error.
 - **Tests: 149.** `tsc`, `oxlint`, `npm run build` clean.
 
-## Console visual refresh (done)
+## Console visual refresh (done, superseded by §11)
 - **Why it looked dated:** the console never loaded its fonts, so all mono text fell back to Courier New; the background was one flat colour, so the glass cards had nothing to blur and read as grey boxes; status was only a 4 px left border.
 - **Fix:** Inter + JetBrains Mono (latin variable subsets) bundled in `app/public/fonts` and precached, so offline looks the same; deep-space backdrop (nebula glows, stars, faint HUD grid); glass panels with HUD corner ticks and a status-tinted glow edge; hazard chips and status pills (ACT pulses, reduced-motion respected); larger glowing readiness ring with tick ring; segmented crew switcher; sticky blurred top bar with a glowing active tab (one swipeable row on phones); gradient buttons; chart band gradient, glowing line, mono axes and a glass tooltip.
 - **Checked:** all seven screens at 1280 px and 375 px (no horizontal overflow), fonts load, 149 tests, `tsc`, `oxlint`, build clean.
 
+## 11. Console UI/UX v2 — "Living Mission Health" (plan, not started)
+The 2026-10-08 refresh above is **superseded**: the owner wants the console to have its own identity (not the landing page look), a professional product feel, charts that look live, and a natural, energetic background that motivates the crew to look after their health.
+
+### 11.1 What the reference images teach (owner's 4 refs)
+| Ref | Take | Leave |
+|---|---|---|
+| Nexabank dashboard | Smoked-glass panels floating over a **real photo**; floating **icon rail**; a **KPI strip** on top; one big smooth "hero" chart; goal cards with progress bars; one warm accent colour | Finance content, too-low text contrast |
+| Fitness dashboard | **Full-bleed photo** with a dark scrim; greeting header; a row of **metric cards, each with its own mini chart type** (bars, step line, range bars); waveform score cards; a big **speed-dial gauge** for one headline number | Celebrity-style hero photo |
+| Hologram body | A **central anatomical figure** with organ highlights; ECG lines running across panels; thin HUD frames | Noise text, unreadable micro labels |
+| AI diagnostics monitor | Body figure with **hotspot rings** on organs; **circular gauges row**; cyan + amber two-tone; node/flow diagram for connections | Decorative fake numbers |
+
+**Direction:** a calm, clinical-grade product (Apple Health × mission control). Photo background for energy, smoked glass for focus, the body as the centrepiece, and every number tied to real engine output. Nothing decorative is fake: where a signal is simulated, it is labelled.
+
+### 11.2 Visual language
+- **Background (natural + energetic):** a NASA public-domain photo of **orbital sunrise over Earth** (sunlight breaking over the atmosphere's edge, oceans and clouds below). It means "home, life, a new day" and stays on-mission. Treatment: dark scrim gradient (left/bottom heavier so text sits on ≥ 4.5:1 contrast), 2–4 px blur behind panels, a very slow 60 s drift (off with reduced motion). The sunrise tint warms with readiness: green-gold when nominal, cooler and dimmer when there is an Act alert (subtle, never alarming). Alternatives if the owner prefers: aurora from the ISS, or a green forest/ocean "Earth memories" set that rotates daily. One compressed WebP/AVIF (~150–250 kB), precached for offline; a gradient fallback if it fails.
+- **Surfaces:** smoked glass in 3 levels (rail/topbar, cards, nested wells): `rgba(18,20,24,.55/.68/.8)`, 1 px light border at 8 % white, 20 px radius cards / 12 px inner, soft long shadow. No HUD corner ticks, no grid.
+- **Colour roles (strict):** brand accent **Solar orange `#FF7A2F`** (active nav, primary buttons, focus chart line) · data accent **Vital cyan `#2DD4E8`** (live signals, baselines) · status only: **Nominal `#3DDC97`**, **Watch `#FFC53D`**, **Act `#FF5A6E`**. Orange is never used for status, so it cannot be confused with Watch.
+- **Type:** Inter only for UI (600 tight display sizes for big numbers: 48/32/24, 14 body, 12 labels in caps tracking); JetBrains Mono only for mission time and raw log lines. Tabular numbers everywhere.
+- **Icons:** `lucide-react` (tree-shaken, ~1 kB per icon) replacing the text glyphs: hazards (Radiation ☢ → `Radiation`, Isolation → `Brain`, Distance → `Satellite`, Gravity → `Dumbbell`, Environment → `Wind`), nav, actions.
+- **Motion spec:** UI 180 ms ease-out; data transitions 600 ms; live loops at ≤ 30 fps on canvas; everything paused when the tab is hidden and replaced by static frames with `prefers-reduced-motion`.
+
+### 11.3 App shell
+- **Left floating icon rail** (desktop/tablet): 7 screens as icons with labels on hover/focus, active = orange pill; bottom: install app, settings (motion on/off, units).
+- **Top bar:** greeting "Good morning, Pilot" + crew **avatar switcher** (round avatars with a status ring per person, so the whole crew's state is visible from any screen) · **MET clock** ticking every second · **Link widget** (signal bars animate during a window, countdown "next window in 58 min", blackout state) · **Alert bell** with count and dropdown of the top 3.
+- **Mobile (< 768 px):** bottom tab bar with 5 items (Board, Alerts, Trends, Check-in, More → Simulator/Sync/Ground), avatar switcher as a horizontal strip.
+
+### 11.4 The "live" layer (key requirement)
+The engine data is hourly/daily, so live motion comes from an honest **telemetry simulator** layered on top of real values:
+- `useLiveTelemetry(crewId)`: a seeded generator that produces high-rate signals **around the latest real reading and personal baseline** (HR, HRV, SpO₂, respiration, cabin CO₂, dose rate). If the engine says HR 70 bpm, the ECG beats at ~70; if a CO₂ scenario is injected, the CO₂ stream climbs. Labelled "Simulated live telemetry" in the UI and README. It does **not** write to the database or create alerts (the engine stays the single source of truth).
+- `<LiveWave>` canvas component: scrolling ECG (PQRST shape at the live HR), pleth wave (SpO₂), respiration sine, with a glowing leading dot and fading tail. 30 fps, device-pixel-ratio aware, pauses offscreen (`IntersectionObserver`) and when hidden.
+- `<LiveNumber>`: values tick smoothly (spring) when they change; a soft pulse ring on the heart icon in sync with each beat.
+- **History charts that feel alive:** draw-in on load, a pulsing "now" dot at the right edge, the newest point streams in when the simulator advances time, hover crosshair with a glass tooltip. Recharts stays for history; canvas only for live waves (cheap).
+- **Flows:** animated SVG paths with moving dash "packets" for data flow (sensors → engine → alert → action card; ship → ground link during windows).
+- **Budget:** live layer ≤ 3 % CPU on a mid laptop, no layout thrash, Lighthouse performance ≥ 95.
+
+### 11.5 Screens
+1. **Mission Health (Status Board)** — the hero screen
+   - Row 1: **Health Twin** centre (SVG body adapted from `landing/twin.js`, translucent cyan, slowly breathing glow) with 5 **hazard hotspots** (head = Isolation, chest = Environment/heart, skeleton/legs = Gravity, whole-body aura = Radiation, ear/antenna = Distance), each coloured by status with leader lines to its card. Left of it the **Readiness speed-dial gauge** (like the fitness ref: 0–100 %, needle animates, status label). Right: **Next action** card (most urgent alert, first step, "Open action card" button).
+   - Row 2: **Live vitals strip**: ECG + HR, SpO₂ pleth, respiration, BP, each a small glass card with a live wave.
+   - Row 3: **5 hazard cards**, each with a different mini chart that fits the metric (dose: cumulative area; sleep: step line; reaction: dot strip; exercise: bars by day; CO₂: line vs NASA limit), value, delta vs baseline ("+0.4 σ"), status pill.
+   - Row 4: **Crew overview**: 4 compact cards (avatar, readiness ring, worst hazard), click to switch.
+2. **Alerts** — master/detail. Left: list sorted by urgency with filter chips (Act / Watch / Resolved). Right: big title + status, **"why" panel** with the triggering metric chart (baseline band, the crossing point highlighted, σ value), **action card** as a checklist with a progress ring, **lifecycle timeline** (opened → escalated → steps → resolved), Done button. Mobile: list → full-screen detail.
+3. **Trends** — Nexabank-style: metric chips grouped by RIDGE hazard, one **large focus chart** (range 24 h / 7 d / 30 d, baseline band, alert markers, live edge), a stats row (latest, mean, baseline, σ, time outside band), then **small multiples** of all metrics; optional "compare with crew median" overlay.
+4. **Check-in** — a 4-step **wizard** (Mood → Sleep → Symptoms → Reaction test) with a progress bar, large illustrated scale buttons, one question per card; reaction test as a large circular target with a satisfying result screen (median vs personal baseline, lapses). Ends with "What happens next" (which alerts this may affect).
+5. **Simulator** — "Mission Control": scenario cards with icon, duration, affected metrics; a **time scrubber** (+1 h / +6 h / +1 d / +3 d with an animated clock); a **live event feed** of what the engine did (alert opened, escalated, resolved) as it happens.
+6. **Ground Sync** — an animated **link diagram**: ship ⇄ relay ⇄ Earth with packets moving only during a window, a countdown ring to the next window, blackout state shown as a broken link; outbox as a queue of packets; log table with filters and the CSV button.
+7. **Ground View** — flight-surgeon layout: "Earth is 12 min behind the crew" banner, 4 crew columns with mini twin + known alerts, "on board, not yet downlinked" counters.
+
+### 11.6 Accessibility and quality gates (unchanged bar)
+Text on photo always on a scrim (≥ 4.5:1), status never by colour alone (icon + label), 44 px targets, keyboard and screen-reader paths kept, live waves `aria-hidden` with a text summary that updates politely at most every 30 s, reduced motion = static. Tests stay green (role/label based), `tsc`, `oxlint`, build clean, offline still works (photo and fonts precached), Lighthouse ≥ 95 / 100 / 100 / 100.
+
+### 11.7 Phases (each one session, ship after each)
+| # | Phase | Output | Done when |
+|---|---|---|---|
+| U0 | Design system | Tokens, surfaces, type scale, colour roles, lucide icons, background photo + scrim, remove v1 HUD styles | Every screen re-skinned without layout change; contrast checked |
+| U1 | App shell | Icon rail, top bar (greeting, avatar switcher with status rings, MET clock, link widget, alert bell), mobile bottom tabs | Navigation works at 375 / 768 / 1280 px, keyboard OK |
+| U2 | Live layer | `useLiveTelemetry`, `<LiveWave>`, `<LiveNumber>`, pause/reduced-motion handling, unit tests for the generator (seeded, follows real values) | ECG matches HR from the engine; CPU budget met |
+| U3 | Mission Health | Health Twin with hotspots, readiness gauge, next-action card, vitals strip, 5 hazard cards with mini charts, crew overview | Board tells the full story in one screen; Act state is obvious in < 2 s |
+| U4 | Alerts + Trends | Master/detail alerts with why-chart and timeline; focus chart + small multiples with live edge | Full alert → action → resolve flow; all 11 metrics charted |
+| U5 | Check-in + Simulator | Wizard, new reaction test screen, mission-control simulator with event feed | A check-in and a scenario both visibly change the board |
+| U6 | Sync + Ground | Animated link diagram, packet queue, ground view refresh | Pending → synced visible as motion during a window |
+| U7 | Polish + ship | Motion tuning, empty/loading/error states, screenshots for README/landing, Lighthouse + offline + phone check, deploy | Live URL passes all gates |
+
+### 11.8 Owner decisions (2026-10-08)
+1. **Background: live orbital sunrise, no photos.** The owner first picked a rotating photo set, then a single sunrise photo, and finally asked for something moving instead of static images. The background is now drawn live in WebGL (`app/src/shell/Backdrop.tsx`). It replaces the photo treatment described in §11.2. Earth's limb from low orbit, procedural oceans/land/clouds sliding under the camera, a blue atmosphere glowing gold near the sun, stars, and the sun rising and setting on a 150 s loop. The mood follows the selected crew member: warm gold when nominal, paler with a Watch, cool and dimmer with an Act. It renders at 30 fps and half resolution, draws a frame immediately and on every resize, pauses in hidden tabs, shows a still frame with reduced motion, and falls back to a CSS dawn gradient without WebGL. No image assets.
+2. **Accent:** solar orange for actions, vital cyan for live signals, and the status colours reserved for status only.
+3. **Assets:** `lucide-react` approved.
+
+## U0 Implementation Log (done)
+- **Design system v2** (`app/src/index.css`, rewritten): smoked glass in 3 levels over the live sky, 20 px cards, orange pill nav and buttons, white segmented crew switcher, Inter for UI and big numbers (JetBrains Mono only for mission time and log lines), status colours only for status, and an Act card with a red-tinted edge. The v1 HUD styles are removed (corner ticks, grid, star field, cyan glows).
+- **Icons** (`app/src/shell/icons.tsx`): `HazardIcon` (Radiation, Brain, Satellite, Dumbbell, Wind; the RIDGE letter is kept for screen readers) and `StatusPill` (icon + word, never colour alone). These replace the ●▲◆ glyphs on the board, alerts, trends, ground view and sync link state.
+- **Shell:** new brand mark ("AstroDocX · Crew Console"); the top bar stays visible while scrolling (sticky); on phones the nav is one row you can swipe. The full shell redesign is U1.
+- **Fixed during QA:** the sky was black when the tab started hidden, and again after a resize cleared the canvas; the first frame and every resize now draw straight away.
+- **Checked:** board (nominal + Act), alerts, trends, simulator and sync at 1280 px, board at 375 px (no overflow); 149 tests, `tsc`, `oxlint`, build clean.
+
 ## Current Phase
-**C12 stretch (Ground View) done; C11 Ship done except the live deploy.** C0-C10 and the landing page are done.
+**C0–C12 done and deployed. Console v2: U0 done.** Next: U1 (app shell).
 
 ## Next Roadmap
 1. **Deploy:** live at https://astrodocx.netlify.app (console at `/app/`), auto-deploys from `main`. README, `og:url`, absolute `og:image` / `twitter:image` and canonical tag updated. Still to do: turn off Netlify site protection (visitor access) so the public can open it, re-run Lighthouse on the live URL, check install-to-home-screen on a phone.
