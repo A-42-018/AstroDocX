@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, it } from 'vitest'
 import App from './App'
 
 afterEach(cleanup)
 
-it('has a skip link to the main region, names each page in the title and moves focus on navigation', () => {
+it('has a skip link to the main region, names each page in the title and moves focus on navigation', async () => {
   render(<MemoryRouter initialEntries={['/board']}><App /></MemoryRouter>)
   const skip = screen.getByRole('link', { name: 'Skip to content' })
   expect(skip.getAttribute('href')).toBe('#main')
@@ -17,7 +17,8 @@ it('has a skip link to the main region, names each page in the title and moves f
   expect(document.activeElement).not.toBe(main) // no focus jump on first load
 
   fireEvent.click(screen.getByRole('link', { name: 'Trends' }))
-  expect(document.title).toBe('Trends · AstroDocX Crew Console')
+  // Trends is a lazy chunk: the route switches once it has loaded.
+  await waitFor(() => expect(document.title).toBe('Trends · AstroDocX Crew Console'), { timeout: 15_000 })
   expect(document.activeElement).toBe(main)
   expect(screen.getByRole('link', { name: 'Trends' }).getAttribute('aria-current')).toBe('page')
-})
+}, 20_000)

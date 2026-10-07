@@ -1,12 +1,15 @@
-import { useEffect, useRef } from 'react'
+import { Suspense, lazy, useEffect, useRef } from 'react'
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import AlertsPage from './alerts/AlertsPage'
-import TrendsPage from './trends/TrendsPage'
-import CheckInPage from './checkin/CheckInPage'
-import SimulatorPage from './sim/SimulatorPage'
-import SyncPage from './sync/SyncPage'
-import GroundPage from './ground/GroundPage'
 import BoardPage from './board/BoardPage'
+
+// The board is the landing screen and loads eagerly; every other screen (Trends carries the chart
+// library) is its own chunk. The service worker precaches all chunks, so they still work offline.
+const AlertsPage = lazy(() => import('./alerts/AlertsPage'))
+const TrendsPage = lazy(() => import('./trends/TrendsPage'))
+const CheckInPage = lazy(() => import('./checkin/CheckInPage'))
+const SimulatorPage = lazy(() => import('./sim/SimulatorPage'))
+const SyncPage = lazy(() => import('./sync/SyncPage'))
+const GroundPage = lazy(() => import('./ground/GroundPage'))
 import { useBootDemo } from './board/hooks'
 
 const ROUTES = [
@@ -49,6 +52,7 @@ export default function App() {
         </nav>
       </header>
       <main id="main" ref={main} tabIndex={-1}>
+        <Suspense fallback={<p className="glass muted" role="status">Loading…</p>}>
         <Routes>
           <Route path="/" element={<Navigate to="/board" replace />} />
           <Route path="/board" element={<BoardPage />} />
@@ -60,6 +64,7 @@ export default function App() {
           <Route path="/ground" element={<GroundPage />} />
           <Route path="*" element={<Navigate to="/board" replace />} />
         </Routes>
+        </Suspense>
       </main>
       <footer className="disclaimer">Concept prototype, not a medical device.</footer>
     </div>
