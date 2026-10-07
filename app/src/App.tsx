@@ -1,4 +1,5 @@
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import AlertsPage from './alerts/AlertsPage'
 import TrendsPage from './trends/TrendsPage'
 import CheckInPage from './checkin/CheckInPage'
@@ -18,10 +19,25 @@ const ROUTES = [
   { path: '/ground', label: 'Ground View' },
 ] as const
 
+/** On navigation: name the page in the tab title and move focus to the new content, so screen-reader and keyboard users land on it. */
+function useRouteAnnounce(main: React.RefObject<HTMLElement | null>) {
+  const { pathname } = useLocation()
+  const first = useRef(true)
+  useEffect(() => {
+    const label = ROUTES.find((r) => pathname.startsWith(r.path))?.label
+    document.title = label ? `${label} · AstroDocX Crew Console` : 'AstroDocX Crew Console'
+    if (first.current) { first.current = false; return }
+    main.current?.focus()
+  }, [pathname, main])
+}
+
 export default function App() {
   useBootDemo()
+  const main = useRef<HTMLElement>(null)
+  useRouteAnnounce(main)
   return (
     <div className="shell">
+      <a href="#main" className="skip-link">Skip to content</a>
       <header className="topbar">
         <span className="brand">&lt;astrodocX/&gt;</span>
         <nav aria-label="Crew Console">
@@ -32,7 +48,7 @@ export default function App() {
           ))}
         </nav>
       </header>
-      <main>
+      <main id="main" ref={main} tabIndex={-1}>
         <Routes>
           <Route path="/" element={<Navigate to="/board" replace />} />
           <Route path="/board" element={<BoardPage />} />

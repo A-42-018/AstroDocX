@@ -39,8 +39,8 @@ describe('StatusBoard', () => {
   it('switches crew from the tab list', () => {
     const onSelect = vi.fn()
     render(<StatusBoard snap={snap} onSelectCrew={onSelect} />)
-    const tabs = screen.getAllByRole('tab')
-    expect(tabs.map((t) => t.getAttribute('aria-selected'))).toEqual(['false', 'true'])
+    const tabs = within(screen.getByRole('group', { name: 'Crew member' })).getAllByRole('button')
+    expect(tabs.map((t) => t.getAttribute('aria-pressed'))).toEqual(['false', 'true'])
     fireEvent.click(tabs[0])
     expect(onSelect).toHaveBeenCalledWith('cmdr')
   })

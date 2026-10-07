@@ -24,6 +24,6 @@ it('summarises each chart in text and reports range and crew changes', () => {
   expect(screen.getByRole('button', { name: '7 days' }).getAttribute('aria-pressed')).toBe('true')
   fireEvent.click(screen.getByRole('button', { name: '24 h' }))
   expect(onRange).toHaveBeenCalledWith('24h')
-  fireEvent.click(screen.getByRole('tab', { name: 'Commander' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Commander' }))
   expect(onSelectCrew).toHaveBeenCalledWith('cmdr')
 })

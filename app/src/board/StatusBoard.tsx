@@ -41,7 +41,7 @@ export function StatusBoard({ snap, onSelectCrew }: { snap: Snapshot; onSelectCr
         <div>
           <h1>{who?.name}</h1>
           <p className="muted">{who?.role} · readiness combines all five RIDGE hazards against this person’s own baseline.</p>
-          <p className="mono muted">
+          <p className="mono muted" aria-live="polite">
             {snap.alerts.length === 0 ? 'No active alerts' : `${snap.alerts.length} active alert${snap.alerts.length > 1 ? 's' : ''}`}
           </p>
         </div>

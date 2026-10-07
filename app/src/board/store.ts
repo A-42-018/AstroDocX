@@ -7,9 +7,18 @@ interface BoardState {
   setBoot: (b: BoardState['boot']) => void
 }
 
+const KEY = 'astrodocx.crew'
+/** The selected crew member survives a reload; storage can be unavailable (private mode), so failures are ignored. */
+const saved = (): string | undefined => {
+  try { return localStorage.getItem(KEY) ?? undefined } catch { return undefined }
+}
+
 export const useBoard = create<BoardState>((set) => ({
-  crewId: undefined,
-  selectCrew: (crewId) => set({ crewId }),
+  crewId: saved(),
+  selectCrew: (crewId) => {
+    try { localStorage.setItem(KEY, crewId) } catch { /* not persisted */ }
+    set({ crewId })
+  },
   boot: { state: 'idle', done: 0, total: 0 },
   setBoot: (boot) => set({ boot }),
 }))
