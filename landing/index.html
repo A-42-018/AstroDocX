@@ -29,6 +29,7 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="twin.css" />
   <link rel="stylesheet" href="sim.css" />
+  <link rel="stylesheet" href="built.css" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -782,6 +783,57 @@
       </div><!-- /edu-inner -->
     </section>
 
+    <!-- ═══════════════════════════════════════ BUILT ON (#built) ═════════
+         L3: static section (no pin). Styles in built.css; reveal handled
+         by the small IntersectionObserver at the end of sim.js.
+    ══════════════════════════════════════════════════════════════ -->
+    <section id="built" aria-labelledby="built-title">
+      <div class="built-inner">
+        <header class="built-header">
+          <p class="built-eyebrow"><span class="bracket">&lt;</span>built-on<span class="bracket">/&gt;</span></p>
+          <h2 class="built-title" id="built-title">Built On</h2>
+          <p class="built-subtitle">Open web tech today, an offline-first console next, grounded in NASA and open physiology data.</p>
+        </header>
+
+        <div class="built-grid">
+          <div class="built-card built-stack">
+            <h3>Landing page <span class="built-pill built-pill-live">Live</span></h3>
+            <ul class="built-chips">
+              <li>HTML / CSS / JS</li><li>Three.js r128</li><li>GSAP 3 + ScrollTrigger</li><li>Canvas 2D</li><li>SVG</li><li>Netlify</li>
+            </ul>
+            <h3>Crew Console <span class="built-pill">Planned</span></h3>
+            <ul class="built-chips">
+              <li>React + TypeScript</li><li>PWA (offline)</li><li>IndexedDB / Dexie</li><li>Recharts</li><li>Supabase (ground sync)</li>
+            </ul>
+            <p class="built-foot">Detection logic: personal baselines, EWMA-smoothed z-scores, rule-based action cards. The same engine already runs in the <a href="#sim">Live Demo</a>.</p>
+          </div>
+
+          <ul class="built-sources">
+            <li class="built-card built-src">
+              <span class="bs-tag">Hazards &amp; risks</span>
+              <h3><a href="https://www.nasa.gov/hrp/" target="_blank" rel="noopener">NASA Human Research Program <span aria-hidden="true">&#8599;</span></a></h3>
+              <p>The RIDGE hazard framework and the human-health risks it maps to.</p>
+            </li>
+            <li class="built-card built-src">
+              <span class="bs-tag">Spaceflight data</span>
+              <h3><a href="https://osdr.nasa.gov/" target="_blank" rel="noopener">NASA OSDR <span aria-hidden="true">&#8599;</span></a></h3>
+              <p>Open Science Data Repository: spaceflight biology and physiology datasets.</p>
+            </li>
+            <li class="built-card built-src">
+              <span class="bs-tag">Long-duration evidence</span>
+              <h3><a href="https://www.nasa.gov/twins-study/" target="_blank" rel="noopener">NASA Twins Study <span aria-hidden="true">&#8599;</span></a></h3>
+              <p>A year in orbit compared with an identical twin on Earth.</p>
+            </li>
+            <li class="built-card built-src">
+              <span class="bs-tag">Signals</span>
+              <h3><a href="https://physionet.org/" target="_blank" rel="noopener">PhysioNet <span aria-hidden="true">&#8599;</span></a></h3>
+              <p>Open ECG / HRV recordings to shape realistic synthetic baselines.</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
     <!-- ═══════════════════════════════════════ TEAM (#contact) ═══════════
          Edit the team cards below: name, role, links, initials.
     ══════════════════════════════════════════════════════════════ -->
@@ -867,6 +919,7 @@
       <ul class="footer-links">
         <li><a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener">GitHub</a></li>
         <li><a href="https://www.spaceappschallenge.org/" target="_blank" rel="noopener">Space Apps</a></li>
+        <li><a href="#built">Data sources</a></li>
         <li><a href="#hero">Top</a></li>
       </ul>
     </div>

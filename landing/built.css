@@ -1,0 +1,50 @@
+/* ============================================================
+   ASTRODOCX — BUILT ON (#built)  · L3 · static, no pin
+============================================================ */
+#built { position:relative;z-index:1;background:transparent;scroll-margin-top:var(--nav-h);color:#fff; }
+.built-inner { position:relative;z-index:2;max-width:var(--wrap);margin:0 auto;padding:var(--pad-y) var(--pad-x) 40px; }
+
+.built-reveal { opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1); }
+.built-reveal.in { opacity:1;transform:none; }
+
+.built-header { margin-bottom:30px; }
+.built-eyebrow { font-family:var(--font-mono);font-size:.76rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--violet);margin-bottom:12px;display:flex;align-items:center;gap:10px; }
+.built-eyebrow::before { content:'';width:24px;height:1.5px;background:var(--violet); }
+.built-eyebrow .bracket { color:var(--holo);opacity:.7; }
+.built-title { font-family:var(--font-display);font-feature-settings:"liga" 1,"clig" 1;font-size:2rem;font-weight:800;letter-spacing:-.02em;display:inline-block;
+  background:linear-gradient(115deg,#ffffff 15%,var(--violet) 65%,#C084FC 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent; }
+.built-title::after { content:'';display:block;width:44px;height:3px;margin-top:8px;border-radius:99px;background:linear-gradient(90deg,var(--indigo),#C084FC,var(--indigo));background-size:200% auto;animation:moveGradient 4s linear infinite; }
+.built-subtitle { margin-top:8px;font-size:1.02rem;color:rgba(255,255,255,.62);max-width:680px; }
+
+.built-grid { display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:20px;align-items:start; }
+.built-card { position:relative;border-radius:var(--r-md);padding:20px 22px;background:rgba(10,7,26,.62);
+  backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));
+  border:1px solid rgba(129,140,248,.22);box-shadow:0 8px 32px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.03) inset;font-family:var(--font-body); }
+.built-card::before { content:'';position:absolute;top:0;left:14px;right:14px;height:1px;background:linear-gradient(90deg,transparent,var(--violet),transparent);opacity:.6; }
+
+.built-stack h3 { display:flex;align-items:center;gap:10px;font-size:.92rem;font-weight:700;color:#fff;margin-bottom:12px; }
+.built-stack h3:not(:first-child) { margin-top:20px; }
+.built-pill { font-family:var(--font-mono);font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:99px;color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.22); }
+.built-pill-live { color:var(--ok);border-color:rgba(52,211,153,.45);background:rgba(52,211,153,.08); }
+.built-chips { list-style:none;display:flex;flex-wrap:wrap;gap:8px; }
+.built-chips li { font-family:var(--font-mono);font-size:.74rem;font-weight:600;padding:6px 11px;border-radius:var(--r-sm);color:#E0E7FF;background:rgba(129,140,248,.1);border:1px solid rgba(129,140,248,.28);transition:border-color .2s,background .2s; }
+.built-chips li:hover { border-color:var(--holo);background:rgba(34,211,238,.1); }
+.built-foot { margin-top:20px;font-size:.82rem;line-height:1.65;color:rgba(255,255,255,.6); }
+.built-foot a { color:var(--holo); }
+.built-foot a:hover { color:#A5F3FC; }
+
+.built-sources { list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px; }
+.built-src { padding:18px 18px 16px;transition:border-color .25s,box-shadow .25s,transform .25s; }
+.built-src:hover { border-color:rgba(34,211,238,.45);box-shadow:0 8px 32px rgba(0,0,0,.45),0 0 24px rgba(34,211,238,.12);transform:translateY(-2px); }
+.bs-tag { display:inline-block;font-family:var(--font-mono);font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--holo);margin-bottom:8px; }
+.built-src h3 { font-size:.95rem;font-weight:700;line-height:1.35;margin-bottom:6px; }
+.built-src h3 a { color:#fff; }
+.built-src h3 a:hover { color:#A5F3FC; }
+.built-src p { font-size:.8rem;line-height:1.6;color:rgba(255,255,255,.6); }
+
+@media (max-width:900px) { .built-grid { grid-template-columns:1fr; } }
+@media (max-width:560px) { .built-sources { grid-template-columns:1fr; } }
+@media (prefers-reduced-motion:reduce) {
+  .built-reveal { opacity:1 !important;transform:none !important;transition:none; }
+  .built-title::after { animation:none !important; }
+}
