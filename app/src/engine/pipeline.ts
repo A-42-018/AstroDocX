@@ -147,7 +147,18 @@ export async function setStepDone(alertId: number, index: number, done: boolean,
   })
 }
 
-/** Load a batch of readings through the pipeline in time order. */
-export async function processAll(readings: Reading[], d: ConsoleDB = db) {
-  for (const r of [...readings].sort((a, b) => a.ts - b.ts)) await processReading(r, d)
+/**
+ * Load a batch of readings through the pipeline in time order. The whole batch runs in one
+ * IndexedDB transaction (nested `processReading` transactions join it), which is far faster than
+ * one transaction per reading.
+ */
+export async function processAll(readings: Reading[], d: ConsoleDB = db, onProgress?: (done: number, total: number) => void) {
+  const sorted = [...readings].sort((a, b) => a.ts - b.ts)
+  await d.transaction('rw', d.crew, d.readings, d.baselines, d.alerts, d.actionLog, async () => {
+    for (let i = 0; i < sorted.length; i++) {
+      await processReading(sorted[i], d)
+      if (onProgress && i % 500 === 499) onProgress(i + 1, sorted.length)
+    }
+  })
+  onProgress?.(sorted.length, sorted.length)
 }

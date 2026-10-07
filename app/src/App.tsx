@@ -1,4 +1,6 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import BoardPage from './board/BoardPage'
+import { useBootDemo } from './board/hooks'
 
 const ROUTES = [
   { path: '/board', label: 'Status Board', phase: 'C5', blurb: 'Per-crew hazard tiles, readiness ring, mission clock.' },
@@ -20,6 +22,7 @@ function Placeholder({ label, phase, blurb }: { label: string; phase: string; bl
 }
 
 export default function App() {
+  useBootDemo()
   return (
     <div className="shell">
       <header className="topbar">
@@ -35,7 +38,8 @@ export default function App() {
       <main>
         <Routes>
           <Route path="/" element={<Navigate to="/board" replace />} />
-          {ROUTES.map((r) => (
+          <Route path="/board" element={<BoardPage />} />
+          {ROUTES.filter((r) => r.path !== '/board').map((r) => (
             <Route key={r.path} path={r.path} element={<Placeholder {...r} />} />
           ))}
           <Route path="*" element={<Navigate to="/board" replace />} />

@@ -322,11 +322,20 @@ The video itself is recorded after L3.
 - **Synthetic data change:** cabin metrics (CO2, temperature, noise, dose) now carry no personal offset, because they describe the shared habitat; otherwise the 3.0 mmHg limit fired on a crew member's normal baseline.
 - **Tests (46 total, 32 new, ~40 s because every reading is a fake-indexeddb transaction):** limits and citations, action cards for every level, MET format, lifecycle (open -> escalate -> resolve, Done and reopen, cumulative dose, event-dose limit alert), each scenario raises the right alert (solar and CO2 reach Act for every crew member checked and resolve; insomnia gives the pilot a sleep alert plus the combined Watch; deconditioning gives the flight engineer an exercise Act; bystanders stay quiet), and clean history stays free of Act. Scenario runs use two crew members each to keep runtime reasonable. `npm run build` and `oxlint` clean.
 
+## C5 Implementation Log (done)
+- **Demo data (`app/src/data/demo.ts`):** on first run the app seeds a 30-day mission (seed 42, insomnia for the pilot and deconditioning for the flight engineer still active at the end) through the full engine, then marks log entries older than 24 h as synced so the ground-link tile has something real to show. `seedDemo()` replaces the DB; it shows progress in the UI.
+- **Faster ingest:** `processAll` now wraps the batch in one IndexedDB transaction (nested `processReading` joins it): 20,640 readings in about 7 s instead of minutes. The scenario tests in `pipeline.test.ts` still use two crew members each and could now use all four.
+- **Selectors (`app/src/board/snapshot.ts`, pure and tested):** `loadSnapshot(crewId)` reads baselines, open alerts, latest headline readings and the log for one crew member; `buildTiles` makes the five RIDGE tiles. Tile status is the worst open alert for that hazard; headline metrics are dose rate (R), sleep (I), exercise (G), CO2 (E). **Distance (D)** has no sensor, so it shows time since the last ground sync and pending entries, and goes Watch at 24 h / Act at 72 h of the oldest unsynced entry (illustrative; C10 makes the sync real).
+- **Readiness (illustrative formula):** per hazard, 100 minus up to 40 points for the worst smoothed z (3σ = full penalty), capped at 80 for Watch and 55 for Act so an active alert always lowers it; readiness is the mean of the five. Overall status is the worst tile.
+- **UI:** `board/StatusBoard.tsx` (crew tabs, readiness ring, five tiles with status icon + text, explanation or "what we track", mission clock `D29 23:00 MET`, last-sync line), `BoardPage` (loading / error / empty states), Zustand store for the selected crew and boot state, `useSnapshot` via Dexie `liveQuery` (updates when the DB changes), `useBootDemo`. Status is shown by icon and text as well as color; tabs are 44 px; reduced-motion removes the ring transition. Other routes are still placeholders.
+- **Tests (60 total, 14 new, ~20 s):** scoring and link-status rules; the demo snapshot (five tiles per crew member, mission clock at D29 23:00, pilot's insomnia on Isolation with an explanation, engineer's Gravity at Act, commander all nominal with the highest readiness, ground link nominal with pending entries); unknown id falls back, empty DB returns null; StatusBoard component render and tab switching (jsdom + Testing Library); an App-level test that boots and seeds the demo, shows the Commander's board and switches to the Flight Engineer. `npm run build` and `oxlint` clean. **No browser/screenshot QA yet, per the plan (C11).**
+- Deps added (dev): `jsdom`, `@testing-library/react`.
+
 ## Current Phase
-**C4 Rules + actions done.** C0-C3 and the landing page are done.
+**C5 Status Board UI done.** C0-C4 and the landing page are done.
 
 ## Next Roadmap
-1. **C5 Status Board UI:** crew switcher, 5 hazard tiles from the engine output, readiness ring, mission clock (Zustand store; reads baselines and open alerts from Dexie). No browser QA before C11, so verify with unit tests on the selectors and `npm run build`. Then commit + push.
-2. C6 → C11 in order (§9.2), one phase per session, commit + push after each.
+1. **C6 Alerts + Action card:** alert list for the selected crew member, explanation, checkable steps (`setStepDone`), Done (`completeActionCard`) writes to the log; alerts keep resolving from the engine. Unit and component tests, no browser QA. Then commit + push.
+2. C7 → C11 in order (§9.2), one phase per session, commit + push after each.
 3. Content still open on the landing page: team cards 2–4, About counter citations, README live/video URLs, absolute `og:image` after deploy.
 4. Video (`tour.js` + recording) after C11.

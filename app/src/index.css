@@ -38,3 +38,37 @@ main { flex: 1; padding: 24px 20px; max-width: 1100px; width: 100%; margin: 0 au
   padding: 10px 20px; text-align: center; font-size: 0.78rem; color: var(--text-lo);
   border-top: 1px solid var(--glass-border);
 }
+
+/* ---- Status Board (C5) ---- */
+.st-nominal { --st: var(--ok); } .st-watch { --st: var(--watch); } .st-act { --st: var(--act); }
+.board { display: grid; gap: 16px; }
+.board-head { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; }
+.crew-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.crew-tabs button {
+  min-height: 44px; padding: 0 16px; border-radius: var(--r-sm); border: 1px solid var(--glass-border);
+  background: transparent; color: var(--text-mid); font: inherit; font-weight: 600; cursor: pointer;
+}
+.crew-tabs button.on { color: var(--holo); border-color: var(--holo); background: var(--holo-glow); }
+.crew-tabs button:focus-visible, .topbar nav a:focus-visible { outline: 2px solid var(--holo); outline-offset: 2px; }
+.meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.82rem; color: var(--text-mid); }
+.readiness { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+.readiness h1 { margin: 0; font-size: 1.5rem; }
+.readiness p { margin: 4px 0; max-width: 56ch; }
+.ring { margin: 0; position: relative; width: 140px; height: 140px; flex-shrink: 0; }
+.ring svg { width: 100%; height: 100%; }
+.ring-track { fill: none; stroke: var(--glass-border); stroke-width: 9; }
+.ring-fill { fill: none; stroke: var(--st); stroke-width: 9; stroke-linecap: round; transition: stroke-dashoffset 0.6s; }
+.ring figcaption { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.ring figcaption b { font-size: 1.8rem; }
+.ring figcaption span { font-size: 0.7rem; letter-spacing: 0.1em; color: var(--st); font-weight: 700; }
+.tiles { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.tile { border-left: 4px solid var(--st); display: flex; flex-direction: column; gap: 2px; }
+.tile header { display: flex; align-items: center; gap: 8px; }
+.tile h2 { margin: 0; font-size: 1rem; flex: 1; }
+.hz { width: 26px; height: 26px; display: grid; place-content: center; border-radius: 50%; background: var(--st); color: #0c0a1e; font-weight: 800; font-size: 0.8rem; }
+.badge { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; color: var(--st); }
+.val { margin: 8px 0 0; font-size: 0.9rem; color: var(--text-mid); }
+.val b { font-size: 1.9rem; color: var(--text-hi); }
+.lbl, .why { margin: 0; font-size: 0.8rem; }
+.why { margin-top: 8px; line-height: 1.45; }
+@media (prefers-reduced-motion: reduce) { .ring-fill { transition: none; } }
