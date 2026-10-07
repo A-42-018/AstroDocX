@@ -2,13 +2,17 @@ import { Activity, HeartPulse, Wind } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { LiveNumber } from './LiveNumber'
 import { LiveWave } from './LiveWave'
-import { useLiveTelemetry } from './useLiveTelemetry'
+import { emitBeat } from './heartbeat'
+import type { LiveTelemetry } from './useLiveTelemetry'
 
 /** Live vitals strip: ECG at the real heart rate, pleth at the real SpO₂, breathing. Simulated, and labelled as such. */
-export function LiveVitals({ crewId }: { crewId: string }) {
-  const { targets, values, seed } = useLiveTelemetry(crewId)
+export function LiveVitals({ crewId, telemetry }: { crewId: string; telemetry: LiveTelemetry }) {
+  const { targets, values, seed } = telemetry
   const pulse = useRef<HTMLSpanElement>(null)
-  const beat = () => pulse.current?.animate([{ transform: 'scale(1)', opacity: 0.7 }, { transform: 'scale(1.9)', opacity: 0 }], { duration: 600, easing: 'ease-out' })
+  const beat = () => {
+    emitBeat()
+    pulse.current?.animate?.([{ transform: 'scale(1)', opacity: 0.7 }, { transform: 'scale(1.9)', opacity: 0 }], { duration: 600, easing: 'ease-out' })
+  }
 
   // Screen readers get a short summary at most every 30 s, never the moving numbers.
   const [summary, setSummary] = useState('')

@@ -1,6 +1,7 @@
 import type { Hazard, Status } from '../data/types'
 import { CO2_LIMIT_MMHG } from '../engine/limits'
 import { LiveVitals } from '../live/LiveVitals'
+import { useLiveTelemetry } from '../live/useLiveTelemetry'
 import type { ShellCrew } from '../shell/useShellData'
 import { HazardIcon, StatusPill } from '../shell/icons'
 import { CrewOverview } from './CrewOverview'
@@ -38,6 +39,8 @@ interface Props {
 
 export function StatusBoard({ snap, mini, crew, onSelectCrew }: Props) {
   const who = snap.crew.find((c) => c.id === snap.crewId)
+  // One telemetry stream feeds both the vitals strip and the twin's heartbeat.
+  const telemetry = useLiveTelemetry(snap.crewId)
   const linkLabel = snap.sinceSyncH === null ? 'No ground sync yet' : `Last ground sync ${snap.sinceSyncH.toFixed(1)} h ago`
   return (
     <div className="board board-home">
@@ -59,12 +62,12 @@ export function StatusBoard({ snap, mini, crew, onSelectCrew }: Props) {
           </div>
         </section>
         <section className={`glass twin-card st-${snap.overall}`} aria-label="Health twin">
-          <Twin tiles={snap.tiles} overall={snap.overall} />
+          <Twin tiles={snap.tiles} overall={snap.overall} hr={telemetry.targets.hr} />
         </section>
         <NextAction snap={snap} />
       </div>
 
-      <LiveVitals crewId={snap.crewId} />
+      <LiveVitals crewId={snap.crewId} telemetry={telemetry} />
 
       <ul className="tiles" aria-label="Hazard status">
         {snap.tiles.map((t) => (

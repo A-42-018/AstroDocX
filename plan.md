@@ -537,6 +537,12 @@ Text on photo always on a scrim (≥ 4.5:1), status never by colour alone (icon 
 - **README:** feature table and a Crew Console screenshot set (`docs/screenshots/console-*.jpg`).
 - **Not done:** deploy (push to `main` triggers Netlify), re-running Lighthouse on the live URL, install-to-home-screen on a real phone, turning off Netlify site protection, the README video URL.
 
+## U3.1 Health Twin hologram (owner feedback)
+- The twin is now an anatomical hologram like the owner's reference (`app/src/board/anatomy.ts`, `Twin.tsx`): glass body, skeleton (skull, spine, ribcage, sternum, clavicles, pelvis, arm and leg bones, joints), brain, lungs, liver, stomach, kidneys, intestine, arteries and veins, sparkles, a scan line and a holographic floor.
+- **Live heart:** beats (lub-dub) in step with the ECG on the vitals strip through a shared heartbeat (`live/heartbeat.ts`); when the ECG is off screen it keeps the same rhythm from the heart rate. Each beat sends a pulse wave out along every artery; veins flow back. Still with reduced motion or in a background tab.
+- **Status on the body:** brain takes the Isolation status, lungs Environment, leg bones Gravity, the whole-body aura Radiation.
+- **Checked:** 186 tests, `tsc`, `oxlint`, build clean; twin seen at 1440 and 375 px; all 7 screens at 3 sizes without overflow or console errors.
+
 ## Current Phase
 **C0–C12 done and deployed. Console v2: U0 to U7 done locally.** Next: push to deploy, then re-check the live URL.
 
