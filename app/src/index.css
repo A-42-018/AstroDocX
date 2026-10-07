@@ -614,3 +614,46 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .rt-result { display: grid; justify-items: center; gap: 4px; margin: 12px 0 4px; text-align: center; font-size: 0.85rem; color: var(--text-mid); }
 .rt-result b { font-size: 2.6rem; color: var(--text-hi); line-height: 1.1; } .rt-result b small { font-size: 1rem; }
 @media (max-width: 520px) { .scale-row.big { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; } .scale-row.big label span { font-size: 0.62rem; } .scale-row.big label svg { width: 26px; height: 26px; } }
+
+/* ---- Sync + Ground (U6) ---- */
+.ld { display: grid; gap: 8px 24px; grid-template-columns: minmax(0, 1fr) 150px; align-items: center; margin: 14px 0 6px; }
+.ld-svg { width: 100%; height: auto; max-height: 200px; overflow: visible; }
+.ld-node { fill: var(--glass-3); stroke: var(--line-hi); stroke-width: 1.5; }
+.ld-ico { color: var(--text-hi); }
+.ld-label { fill: var(--text-mid); font-size: 13px; font-weight: 600; letter-spacing: 0.04em; }
+.ld-line { stroke: var(--line-hi); stroke-width: 3; stroke-linecap: round; fill: none; }
+.ld-open .ld-line { stroke: color-mix(in srgb, var(--ok) 55%, transparent); }
+.ld-open .ld-node { stroke: var(--ok); }
+.ld-blackout .ld-node { stroke: var(--act); }
+.ld-flow { fill: none; stroke: var(--data); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 2 22; animation: ldflow 1.6s linear infinite; filter: drop-shadow(0 0 4px var(--data)); }
+@keyframes ldflow { to { stroke-dashoffset: -96; } }
+.ld-break path { stroke: var(--act); stroke-width: 3; stroke-linecap: round; fill: none; }
+.ld-spark { opacity: 0.6; stroke-dasharray: 3 5; }
+.ld-burst circle { fill: var(--data); filter: drop-shadow(0 0 5px var(--data)); opacity: 0; animation: ldburst 1.6s ease-in forwards; }
+@keyframes ldburst { 0% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(500px); } }
+.ld-ring { position: relative; width: 130px; height: 130px; justify-self: center; }
+.ld-ring svg { width: 100%; height: 100%; }
+.ld-ring .ring-track, .ld-ring .ring-fill { stroke-width: 7; }
+.ld-open .ring-fill { stroke: var(--ok); } .ld-closed .ring-fill { stroke: var(--watch); } .ld-blackout .ring-fill { stroke: var(--act); }
+.ld-ring > div { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 2px; text-align: center; }
+.ld-ring b { font-size: 1.15rem; } .ld-ring small { font-size: 0.66rem; }
+@media (max-width: 640px) { .ld { grid-template-columns: 1fr; } }
+.packets { grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
+.log-entry.packet { border-left: 3px solid var(--data); border-radius: var(--r-sm); grid-template-columns: auto 1fr; }
+.log-entry.packet > span:last-child { grid-column: 1 / -1; }
+.log-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 20px; margin-bottom: 12px; }
+.log-filters .field { max-width: 220px; }
+.log-table-wrap { padding: 8px; overflow-x: auto; }
+.log-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+.log-table th { text-align: left; padding: 10px 12px; font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-mid); border-bottom: 1px solid var(--line); }
+.log-table td { padding: 10px 12px; vertical-align: top; border-bottom: 1px solid var(--line); }
+.log-table tr:last-child td { border-bottom: 0; }
+.log-table td:nth-child(4) { min-width: 260px; }
+.sync-tag { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 0.78rem; font-weight: 600; }
+.sync-tag.ok { color: var(--ok); } .sync-tag.wait { color: var(--watch); }
+.behind { margin: 4px 0 10px; font-size: 1.15rem; }
+.behind b { color: var(--watch); }
+.mini-twin { display: block; height: 130px; margin: 6px auto; --st: var(--ok); }
+.mini-twin .twin-aura { stroke-width: 6; }
+@media (min-width: 1180px) { .ground-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { .ld-flow, .ld-burst circle { animation: none; } .ld-flow { stroke-dasharray: 2 22; } }

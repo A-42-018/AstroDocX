@@ -1,8 +1,11 @@
 import { Clock, Radio, WifiOff } from 'lucide-react'
+import { useState } from 'react'
 import { met } from '../engine/actions'
-import type { ActionLogEntry } from '../data/types'
+import type { ActionLogEntry, CrewMember } from '../data/types'
 import { HOUR } from '../data/synthetic'
 import { ONE_WAY_DELAY_MIN, WINDOW_LEN, type LinkInfo } from './link'
+import { LinkDiagram } from './LinkDiagram'
+import { LogTable } from './LogTable'
 
 const STATE = {
   open: { Icon: Radio, text: 'LINK OPEN', cls: 'st-nominal' },
@@ -28,13 +31,16 @@ interface Props {
   onAuto: (b: boolean) => void
   /** Download the whole on-board log as CSV. */
   onExport?: () => void
+  /** The whole on-board log and the crew, for the filterable table (omitted: no table). */
+  log?: ActionLogEntry[]
+  crew?: CrewMember[]
 }
 
 const hoursUntil = (t: number, now: number) => Math.max(0, (t - now) / HOUR)
 
 function Entry({ e, sent }: { e: ActionLogEntry; sent?: boolean }) {
   return (
-    <li className="glass log-entry">
+    <li className={`glass log-entry${sent ? '' : ' packet'}`}>
       <span className="mono muted">{met(e.ts)}{sent && e.syncedAt !== undefined ? ` → sent ${met(e.syncedAt)}` : ''}</span>
       <span className="badge mono kind">{e.kind}</span>
       <span>{e.text}</span>
@@ -42,12 +48,20 @@ function Entry({ e, sent }: { e: ActionLogEntry; sent?: boolean }) {
   )
 }
 
-export function SyncView({ now, link, pending, synced, lastSyncedAt, station, blackout, auto, busy, message, error, onSync, onBlackout, onAuto, onExport }: Props) {
+export function SyncView({ now, link, pending, synced, lastSyncedAt, station, blackout, auto, busy, message, error, onSync, onBlackout, onAuto, onExport, log, crew }: Props) {
   const s = STATE[link.state]
+  // When queued entries leave while this screen is open, a burst of packets flies to Earth.
+  const [seen, setSeen] = useState(pending.length)
+  const [burst, setBurst] = useState({ n: 0, key: 0 })
+  if (pending.length !== seen) {
+    setSeen(pending.length)
+    if (pending.length < seen) setBurst((b) => ({ n: seen - pending.length, key: b.key + 1 }))
+  }
   return (
     <div className="board">
       <section className={`glass link ${s.cls}`} aria-label="Ground link status">
         <h1 style={{ margin: 0 }}>Ground sync</h1>
+        <LinkDiagram link={link} now={now} queued={pending.length} burst={burst} />
         <p className="link-state mono"><s.Icon size={18} strokeWidth={2.2} aria-hidden="true" /> {s.text}</p>
         <p className="muted">
           {link.state === 'open' && `Window closes in ${hoursUntil(link.closesAt!, now).toFixed(1)} h.`}
@@ -74,7 +88,7 @@ export function SyncView({ now, link, pending, synced, lastSyncedAt, station, bl
       <section aria-label="Outbox">
         <h2 className="sec-title">Outbox · pending ({pending.length})</h2>
         {pending.length === 0 ? <p className="muted">Everything is synced.</p> : (
-          <ul className="log-list">{pending.map((e) => <Entry key={e.id} e={e} />)}</ul>
+          <ul className="log-list packets">{pending.map((e) => <Entry key={e.id} e={e} />)}</ul>
         )}
       </section>
 
@@ -84,6 +98,7 @@ export function SyncView({ now, link, pending, synced, lastSyncedAt, station, bl
           <ul className="log-list">{synced.map((e) => <Entry key={e.id} e={e} sent />)}</ul>
         )}
       </section>
+      {log && crew && <LogTable log={log} crew={crew} />}
     </div>
   )
 }

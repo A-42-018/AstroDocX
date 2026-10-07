@@ -38,3 +38,23 @@ export function linkAt(ts: number, blackout = false): LinkInfo {
   if (start !== undefined && ts < start + WINDOW_LEN) return { state: 'open', nextOpen, closesAt: start + WINDOW_LEN }
   return { state: 'closed', nextOpen }
 }
+
+export interface WindowProgress {
+  /** 0..1: how far through the open window, or through the wait since the last window closed. */
+  fraction: number
+  /** Time until the window closes (open) or opens (closed); 0 during a blackout. */
+  remainingMs: number
+  mode: 'closes' | 'opens' | 'blackout'
+}
+
+/** Drives the countdown ring: elapsed share of the current window, or of the gap before the next one. */
+export function windowProgress(now: number, link: LinkInfo): WindowProgress {
+  if (link.state === 'blackout') return { fraction: 0, remainingMs: 0, mode: 'blackout' }
+  if (link.state === 'open') {
+    const closes = link.closesAt ?? now
+    return { fraction: Math.min(1, Math.max(0, 1 - (closes - now) / WINDOW_LEN)), remainingMs: Math.max(0, closes - now), mode: 'closes' }
+  }
+  const prev = windowStarts(now - DAY, now).pop()
+  const from = prev === undefined ? now - DAY / 2 : prev + WINDOW_LEN
+  return { fraction: Math.min(1, Math.max(0, (now - from) / Math.max(1, link.nextOpen - from))), remainingMs: Math.max(0, link.nextOpen - now), mode: 'opens' }
+}

@@ -2,6 +2,19 @@ import { met } from '../engine/actions'
 import { ONE_WAY_DELAY_MIN } from '../sync/link'
 import type { GroundAlert, GroundCrew } from './derive'
 import { StatusPill } from '../shell/icons'
+import { BODY_D } from '../board/Twin'
+import { duration } from '../shell/format'
+import type { Status } from '../data/types'
+
+/** Small body silhouette whose glow is the worst status the ground knows about. */
+function MiniTwin({ status }: { status: Status }) {
+  return (
+    <svg className={`mini-twin st-${status}`} viewBox="0 0 300 660" aria-hidden="true">
+      <path d={BODY_D} className="twin-aura" />
+      <path d={BODY_D} className="twin-body" fillRule="evenodd" fill="rgba(45, 212, 232, 0.12)" />
+    </svg>
+  )
+}
 
 
 function AlertRow({ a }: { a: GroundAlert }) {
@@ -36,6 +49,11 @@ export function GroundView({ now, lastSyncedAt, pending, crew, source, sourceErr
         <p className="muted">
           What Earth can see. Everything here is rebuilt from log entries the crew has already synced, about {ONE_WAY_DELAY_MIN} min after each contact. The crew's own console is always ahead of this page.
         </p>
+        <p className="behind" role="status">
+          {lastSyncedAt === null
+            ? 'Earth has heard nothing from the crew yet.'
+            : <>Earth is <b>{duration(Math.max(0, now - lastSyncedAt) + ONE_WAY_DELAY_MIN * 60_000)}</b> behind the crew.</>}
+        </p>
         <p className="mono">
           Mission {met(now)} · data current to {lastSyncedAt === null ? 'nothing yet' : met(lastSyncedAt)} {pending !== null && `· ${pending} entr${pending === 1 ? 'y' : 'ies'} still on board`}
         </p>
@@ -54,6 +72,7 @@ export function GroundView({ now, lastSyncedAt, pending, crew, source, sourceErr
                 <h2>{g.crew.name}</h2>
                 <StatusPill status={worst} />
               </header>
+              <MiniTwin status={worst} />
               <p className="muted ground-role">{g.crew.role}</p>
               {g.open.length > 0 ? <ul className="ground-alerts">{g.open.map((a) => <AlertRow key={a.alertId} a={a} />)}</ul> : <p className="muted">No open alerts reported.</p>}
               {g.resolved.length > 0 && (

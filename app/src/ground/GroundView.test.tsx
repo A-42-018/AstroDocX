@@ -25,3 +25,12 @@ it('shows only what Earth knows, with level text, step reports and what is still
   expect(within(screen.getByLabelText('Commander: no open alerts')).getByText('No open alerts reported.')).toBeTruthy()
   expect(screen.getByText(/1 open alert known to the ground/)).toBeTruthy()
 })
+
+it('says how far behind the crew Earth is, and that it has heard nothing before any sync', () => {
+  const now = MISSION_START + 86_400_000
+  const { rerender } = render(<GroundView now={now} lastSyncedAt={now - 4 * 3_600_000} pending={0} crew={crew} />)
+  expect(screen.getByRole('status').textContent).toBe('Earth is 4h 12m behind the crew.')
+  rerender(<GroundView now={now} lastSyncedAt={null} pending={0} crew={crew} />)
+  expect(screen.getByRole('status').textContent).toContain('heard nothing')
+})
+

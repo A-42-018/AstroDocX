@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { SyncView } from './SyncView'
 import { linkAt } from './link'
@@ -47,3 +47,33 @@ it('empty outbox', () => {
   expect(screen.getByText('Everything is synced.')).toBeTruthy()
   expect(screen.getByText('Nothing synced yet.')).toBeTruthy()
 })
+
+it('filters the on-board log by state, kind and person', () => {
+  const crew = [{ id: 'cmdr', name: 'Commander', role: 'Commander' }, { id: 'pilot', name: 'Pilot', role: 'Pilot' }]
+  const log = [
+    e(1, { text: 'opened A', kind: 'alert-opened' }),
+    e(2, { text: 'note B', kind: 'note', sync: 'synced', syncedAt: now }),
+    e(3, { text: 'checkin C', kind: 'checkin', crewId: 'pilot' }),
+  ]
+  render(<SyncView {...props({ pending: [], synced: [], log, crew })} />)
+  const table = screen.getByRole('table')
+  expect(within(table).getAllByRole('row')).toHaveLength(4)
+  fireEvent.click(screen.getByRole('button', { name: 'Synced' }))
+  expect(within(table).getByText('note B')).toBeTruthy()
+  expect(within(table).queryByText('opened A')).toBeNull()
+  fireEvent.click(screen.getByRole('button', { name: 'All' }))
+  fireEvent.change(screen.getByLabelText('Person'), { target: { value: 'pilot' } })
+  expect(within(table).getAllByRole('row')).toHaveLength(2)
+  fireEvent.change(screen.getByLabelText('Person'), { target: { value: 'all' } })
+  fireEvent.change(screen.getByLabelText('Kind'), { target: { value: 'note' } })
+  expect(within(table).getAllByRole('row')).toHaveLength(2)
+})
+
+it('sends a burst of packets to Earth when queued entries are delivered', () => {
+  const t = now + HOUR
+  const { container, rerender } = render(<SyncView {...props({ now: t, link: linkAt(t) })} />)
+  expect(container.querySelector('.ld-burst')).toBeNull()
+  rerender(<SyncView {...props({ now: t, link: linkAt(t), pending: [] })} />)
+  expect(container.querySelectorAll('.ld-burst circle')).toHaveLength(2)
+})
+

@@ -522,8 +522,13 @@ Text on photo always on a scrim (≥ 4.5:1), status never by colour alone (icon 
 - **Simulator as mission control** (`app/src/sim/`): scenario cards with icon, duration and affected metrics; a time scrubber (+1 h, +6 h, +1 day, +3 days) with a moving track while it runs; a mission clock that runs up to the new time (`MissionClock`); and a live **Engine event feed** from the on-board log (alert opened, escalated, eased, resolved, with person, word and MET; `feed.ts`). A scenario or a check-in changes the board through the same engine as before.
 - **Checked:** 180 tests, `tsc`, `oxlint`, build clean; wizard steps and a solar injection (clock to D30 05:00, feed filled) seen in the browser at 1440 px. Phone width for these two screens not yet viewed.
 
+## U6 Implementation Log (done)
+- **Ground Sync** (`app/src/sync/`): an animated link diagram, Ship, Relay, Earth (`LinkDiagram.tsx`). While a window is open the link is solid green and dash packets flow toward Earth (faster with more queued); between windows it is dim and still; in a blackout it is visibly broken. A countdown ring shows the time to the next window or to the window closing (`windowProgress` in `link.ts`, unit-tested). When queued entries are delivered while the screen is open, a burst of packets flies to Earth. The outbox is a grid of packet cards, and a filterable on-board log table (state, kind, person; `LogTable.tsx`) sits below with the CSV button.
+- **Ground View:** an "Earth is N behind the crew" banner (time since the last sync plus the one-way delay), four crew columns on wide screens, and a mini twin per person whose glow is the worst status the ground knows about, plus the known alerts and the "on board, not yet downlinked" count.
+- **Checked:** 183 tests, `tsc`, `oxlint`, build clean; closed and open windows, the delivery burst (8 packets) and the Ground View seen in the browser at 1440 px. Phone width for these two screens not yet viewed; the mission clock on the simulator only animates while the tab is visible.
+
 ## Current Phase
-**C0–C12 done and deployed. Console v2: U0 to U5 done.** Next: U6 (Sync + Ground).
+**C0–C12 done and deployed. Console v2: U0 to U6 done.** Next: U7 (polish and ship).
 
 ## Next Roadmap
 1. **Deploy:** live at https://astrodocx.netlify.app (console at `/app/`), auto-deploys from `main`. README, `og:url`, absolute `og:image` / `twitter:image` and canonical tag updated. Still to do: turn off Netlify site protection (visitor access) so the public can open it, re-run Lighthouse on the live URL, check install-to-home-screen on a phone.

@@ -4,6 +4,7 @@ import { useSnapshot } from '../board/hooks'
 import { useBoard } from '../board/store'
 import { linkAt } from './link'
 import { db } from '../data/db'
+import type { ActionLogEntry } from '../data/types'
 import { met } from '../engine/actions'
 import { downloadCsv, logToCsv } from './exportLog'
 import { loadOutbox, syncNow, type Outbox } from './outbox'
@@ -16,6 +17,7 @@ export default function SyncPage() {
   const boot = useBoard((s) => s.boot)
   const { blackout, setBlackout, auto, setAuto } = useSync()
   const [box, setBox] = useState<Outbox | null>(null)
+  const [log, setLog] = useState<ActionLogEntry[] | undefined>(undefined)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -23,7 +25,8 @@ export default function SyncPage() {
   useEffect(() => {
     if (!ready) return
     const sub = liveQuery(() => loadOutbox()).subscribe({ next: setBox, error: () => setBox(null) })
-    return () => sub.unsubscribe()
+    const sub2 = liveQuery(() => db.actionLog.toArray()).subscribe({ next: setLog, error: () => setLog(undefined) })
+    return () => { sub.unsubscribe(); sub2.unsubscribe() }
   }, [ready])
 
   if (boot.state === 'error') return <p role="alert" className="glass">Could not open the local database: {boot.error}</p>
@@ -47,6 +50,7 @@ export default function SyncPage() {
   return (
     <SyncView
       now={snap.now} link={linkAt(snap.now, blackout)} pending={box.pending} synced={box.synced} lastSyncedAt={lastSyncedAt} station={getTransport().name}
+      log={log} crew={snap.crew}
       blackout={blackout} auto={auto} busy={busy} message={message} error={error}
       onSync={() => void sync()} onBlackout={setBlackout} onAuto={setAuto}
       onExport={() => void db.actionLog.toArray().then((all) => downloadCsv(logToCsv(all, snap.crew), `astrodocx-log-${met(snap.now).replace(/[ :]/g, '-')}.csv`))}

@@ -22,7 +22,7 @@ function bodyPath(): string {
   }
   return d + 'Z'
 }
-const BODY_D = bodyPath() + 'M121 56a29 37 0 1 0 58 0a29 37 0 1 0 -58 0Z'
+export const BODY_D = bodyPath() + 'M121 56a29 37 0 1 0 58 0a29 37 0 1 0 -58 0Z'
 
 const VB_W = 300
 const VB_H = 660
