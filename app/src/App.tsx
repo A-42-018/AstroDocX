@@ -1,6 +1,9 @@
 import { Suspense, lazy, useEffect, useRef } from 'react'
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import BoardPage from './board/BoardPage'
+import { seedDemo } from './data/demo'
+import { ErrorBoundary } from './shell/ErrorBoundary'
+import { useInstallPrompt } from './shell/install'
 
 // The board is the landing screen and loads eagerly; every other screen (Trends carries the chart
 // library) is its own chunk. The service worker precaches all chunks, so they still work offline.
@@ -38,6 +41,8 @@ export default function App() {
   useBootDemo()
   const main = useRef<HTMLElement>(null)
   useRouteAnnounce(main)
+  const install = useInstallPrompt()
+  const { pathname } = useLocation()
   return (
     <div className="shell">
       <a href="#main" className="skip-link">Skip to content</a>
@@ -50,8 +55,11 @@ export default function App() {
             </NavLink>
           ))}
         </nav>
+        {install && <button type="button" className="btn ghost install-btn" onClick={() => void install()}>Install app</button>}
       </header>
       <main id="main" ref={main} tabIndex={-1}>
+        {/* key: a crash on one screen clears when the crew moves to another */}
+        <ErrorBoundary key={pathname} onReset={() => seedDemo().then(() => undefined)}>
         <Suspense fallback={<p className="glass muted" role="status">Loading…</p>}>
         <Routes>
           <Route path="/" element={<Navigate to="/board" replace />} />
@@ -65,6 +73,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/board" replace />} />
         </Routes>
         </Suspense>
+        </ErrorBoundary>
       </main>
       <footer className="disclaimer">Concept prototype, not a medical device.</footer>
     </div>
