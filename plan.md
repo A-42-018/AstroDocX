@@ -296,11 +296,18 @@ The video itself is recorded after L3.
 - Deps added: `dexie`, `zustand` (used from C5), dev `vitest`, `fake-indexeddb`.
 - Metric baselines and units are illustrative; thresholds get citations in C4.
 
+## C2 Implementation Log (done)
+- **`app/src/data/synthetic.ts`:** seeded generator (mulberry32 + Box-Muller). `generateReadings({seed, days, scenarios, crew, start})` is pure and deterministic; mission start is fixed (`MISSION_START` = 2030-01-01Z) so output never depends on the wall clock. `seedDb()` clears the DB and loads crew + readings (idempotent).
+- **Data shape:** 4 crew (Commander, Pilot, Flight Engineer, Medical Officer) x 30 days. Hourly: hr, hrv, spo2, co2, temp, noise, dose. Daily at 07:00: sleep, exercise, reaction, mood. Total `4 x 30 x (7x24+4)` = 20,640 readings. Each crew member has a personal offset (up to ~0.8 sd) per metric, so baselines differ per person.
+- **Scenarios (opt-in, `SCENARIOS`):** `solar` (all crew, day 20, dose +8σ) · `co2` (all, day 24, CO2 +6σ, HR +1σ) · `insomnia` (pilot, days 26-29, sleep -4σ, reaction +3σ, mood -3σ) · `deconditioning` (flight engineer, days 22-29, exercise -5σ, HRV -2.5σ, HR +2σ). Shifts are sized to cross the 3σ Act threshold in C3/C4. Default history has none, so the engine can be tested on a clean baseline.
+- **Tests (9 new, 14 total, all pass):** same seed identical / different seed differs, counts and time bounds, value validity (mood 1-5, SpO2 <= 100), per-crew personalization, each scenario shifts only its metrics, crew and window, `seedDb` loads Dexie and re-seeding keeps counts. `npm run build` and `oxlint` clean.
+- Normal means/sds are illustrative; citations come with the C4 thresholds.
+
 ## Current Phase
-**C1 Data model done.** C0 scaffold and the landing page are done.
+**C2 Synthetic data done.** C0 scaffold, C1 data model and the landing page are done.
 
 ## Next Roadmap
-1. **C2 Synthetic data:** seeded generator (4 crew x 30 days + 4 scenarios: solar event, CO2 fault, insomnia, deconditioning), same seed gives same data, load into Dexie. Then commit + push.
-2. C3 → C11 in order (§9.2), one phase per session, commit + push after each.
+1. **C3 Engine core:** Welford baseline, EWMA z-score, status + hysteresis (port of `landing/sim.js`: WATCH >= 1.8σ, ACT >= 3σ, 0.4 hysteresis), unit tests. Then commit + push.
+2. C4 → C11 in order (§9.2), one phase per session, commit + push after each.
 3. Content still open on the landing page: team cards 2–4, About counter citations, README live/video URLs, absolute `og:image` after deploy.
 4. Video (`tour.js` + recording) after C11.
