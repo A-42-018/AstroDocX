@@ -41,85 +41,94 @@ let navVisible = true;
 const REPO_URL = 'https://github.com/A-42-018/AstroDocX';
 
 /* FEATURES — rendered into the template's carousel (#projects).
-   Every entry is a concept module for AstroDocX v1. `badge` shows in
-   the ribbon; thumbnails live in assets/features/. */
+   Every entry is a working screen of the Crew Console (/app/). `live` opens
+   it; `badge` shows in the ribbon; thumbnails in assets/features/ are
+   illustrations, not screenshots. */
+const CONSOLE = '/app/';
 const PROJECTS = [
   {
     id: 1,
     title: 'Health Status Board',
     thumbnail: 'assets/features/status-board.svg',
-    alt: 'Concept: health status board with five hazard tiles',
+    alt: 'Illustration: health status board with five hazard tiles',
     role: 'Covers: all 5 hazards',
-    description: 'One glance at the crew\'s health: five hazard tiles, each Nominal, Watch or Act, measured against every astronaut\'s personal baseline instead of population averages.',
-    technologies: ['Personal baseline', 'Z-score / EWMA', 'Offline'],
+    description: 'One glance at each crew member: five RIDGE hazard tiles, each Nominal, Watch or Act against that person\'s own baseline, a readiness ring, the mission clock and the ground-link status.',
+    technologies: ['Personal baseline', 'EWMA z-score', 'Offline PWA'],
     link: REPO_URL,
-    badge: 'Core'
+    live: CONSOLE + 'board',
+    badge: 'Live'
   },
   {
     id: 2,
     title: 'Explainable Alerts',
     thumbnail: 'assets/features/explainable-alerts.svg',
-    alt: 'Concept: alert explaining a drop in heart-rate variability',
-    role: 'Covers: Gravity · Isolation · Radiation',
-    description: 'Alerts in plain language: what changed, by how much and since when, for example "HRV down 22% vs your baseline over 3 days". No black-box scores.',
-    technologies: ['Rules engine', 'Trend detection', 'Plain language'],
+    alt: 'Illustration: alert explaining a change against the personal baseline',
+    role: 'Covers: all 5 hazards',
+    description: 'Every alert says what changed, by how much, against whose baseline and since when, for example "Reaction time 411 ms is 4.3σ above Pilot\'s baseline (317 ms). Started at D27 07:00 MET." NASA limits for CO₂ and radiation dose are applied too.',
+    technologies: ['Rules engine', 'NASA-STD-3001 limits', 'Plain language'],
     link: REPO_URL,
-    badge: 'Core'
+    live: CONSOLE + 'alerts',
+    badge: 'Live'
   },
   {
     id: 3,
     title: 'Action Cards',
     thumbnail: 'assets/features/action-cards.svg',
-    alt: 'Concept: step-by-step action card for radiation shelter',
+    alt: 'Illustration: step-by-step action card for radiation shelter',
     role: 'Covers: Distance from Earth',
-    description: 'Every alert comes with a step-by-step countermeasure the crew can follow on their own: shelter, hydrate, extra exercise, sleep protocol. Tap Done and it is logged.',
+    description: 'Each alert carries a step-by-step card the crew can follow on their own. Tick the steps, press Done and it goes to the on-board log; the engine keeps watching and clears the alert when values recover.',
     technologies: ['Countermeasures', 'Action log', 'Crew autonomy'],
     link: REPO_URL,
-    badge: 'Core'
+    live: CONSOLE + 'alerts',
+    badge: 'Live'
   },
   {
     id: 4,
     title: 'Daily Check-in',
     thumbnail: 'assets/features/daily-check-in.svg',
-    alt: 'Concept: 60-second daily check-in with reaction test',
+    alt: 'Illustration: daily check-in with reaction test',
     role: 'Covers: Isolation & Confinement',
-    description: 'A 60-second routine: mood, sleep and symptoms, plus a short reaction-time test that tracks alertness and cognitive drift over the mission.',
-    technologies: ['Mood', 'Sleep', 'Reaction test'],
+    description: 'Mood, sleep and symptoms plus a five-tap reaction test modelled on the PVT used on the ISS. Answers join the personal baseline; lasting symptoms, poor sleep or blurred vision (SANS) raise their own alerts.',
+    technologies: ['PVT reaction test', 'Symptoms', 'Sleep quality'],
     link: REPO_URL,
-    badge: 'v1'
+    live: CONSOLE + 'checkin',
+    badge: 'Live'
   },
   {
     id: 5,
     title: 'Trend Charts',
     thumbnail: 'assets/features/trend-charts.svg',
-    alt: 'Concept: trend chart with personal baseline band',
+    alt: 'Illustration: trend chart with personal baseline band',
     role: 'Covers: all 5 hazards',
-    description: 'Every indicator over 7 days, 30 days or the full mission, drawn against the astronaut\'s own baseline band so slow changes like bone or muscle loss stand out.',
-    technologies: ['Baseline band', 'Mission timeline', 'Charts'],
+    description: 'Eleven indicators over 24 hours, 7 days or 30 days, drawn against the astronaut\'s own baseline band with alert markers, so slow drift such as deconditioning stands out.',
+    technologies: ['Baseline band', 'Alert markers', 'Recharts'],
     link: REPO_URL,
-    badge: 'v1'
+    live: CONSOLE + 'trends',
+    badge: 'Live'
   },
   {
     id: 6,
     title: 'Mission Simulator',
     thumbnail: 'assets/features/mission-simulator.svg',
-    alt: 'Concept: mission simulator with event triggers',
+    alt: 'Illustration: mission simulator with event triggers',
     role: 'Demo & testing',
-    description: 'Realistic synthetic crew data with events you can trigger: a solar particle event, a CO2 spike, sleep debt or missed exercise, to show how AstroDocX reacts.',
-    technologies: ['Synthetic data', 'Scenarios', 'Demo mode'],
+    description: 'A seeded 30-day, four-person synthetic mission. Inject a solar particle event, a CO₂ scrubber fault, an insomnia streak or deconditioning, fast-forward time and watch every screen respond.',
+    technologies: ['Synthetic data', 'Scenarios', 'Fast-forward'],
     link: REPO_URL,
-    badge: 'v1'
+    live: CONSOLE + 'simulator',
+    badge: 'Live'
   },
   {
     id: 7,
     title: 'Ground Sync',
     thumbnail: 'assets/features/ground-sync.svg',
-    alt: 'Concept: delay-tolerant sync queue to Earth',
+    alt: 'Illustration: delay-tolerant sync queue to Earth',
     role: 'Covers: Distance from Earth',
-    description: 'Records queue on board and reach flight surgeons on Earth whenever the link allows, with simulated delays and blackouts. The crew never has to wait for it.',
-    technologies: ['Delay-tolerant', 'Sync queue', 'Flight surgeon view'],
+    description: 'The log queues on board and goes to Earth only in link windows, with blackouts you can simulate. A flight-surgeon Ground View shows only what has arrived. Optional real upload to Supabase.',
+    technologies: ['Delay-tolerant', 'Outbox', 'Flight surgeon view'],
     link: REPO_URL,
-    badge: 'Stretch'
+    live: CONSOLE + 'sync',
+    badge: 'Live'
   }
 ];
 
@@ -159,8 +168,8 @@ const PROJECTS = [
             (p.technologies || []).map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') +
           '</ul>' +
           '<div class="project-links">' +
-            (p.live ? '<a class="project-live-btn" href="' + esc(p.live) + '" target="_blank" rel="noopener" ' +
-              'aria-label="Visit the live ' + esc(p.title) + ' website (opens in a new tab)">Live Site &#8599;</a>' : '') +
+            (p.live ? '<a class="project-live-btn" href="' + esc(p.live) + '" ' +
+              'aria-label="Open ' + esc(p.title) + ' in the Crew Console">Open in Console &rarr;</a>' : '') +
             '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">View on GitHub &rarr;</a>' +
             '<button type="button" class="project-copy-btn" data-repo="' + esc(p.link) + '" ' +
               'aria-label="Copy link to ' + esc(p.title) + '">Copy Link</button>' +
