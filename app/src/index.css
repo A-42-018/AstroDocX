@@ -102,3 +102,38 @@ main { flex: 1; padding: 24px 20px; max-width: 1100px; width: 100%; margin: 0 au
 .val-now { color: var(--text-hi); font-size: 0.9rem; }
 .band-note { margin: 4px 0 8px; font-size: 0.78rem; }
 .chart-box { width: 100%; min-width: 0; height: 150px; }
+
+/* ---- Check-in (C8) ---- */
+.checkin { display: grid; gap: 18px; }
+.checkin fieldset { border: 1px solid var(--glass-border); border-radius: var(--r-sm); margin: 0; padding: 10px 14px 14px; min-width: 0; }
+.checkin legend { padding: 0 6px; font-weight: 600; }
+.scale-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.scale-row label, .chip {
+  min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
+  border: 1px solid var(--glass-border); border-radius: var(--r-sm); cursor: pointer; font-size: 0.78rem; text-align: center; padding: 4px;
+}
+.scale-row label.on, .chip.on { border-color: var(--holo); background: var(--holo-glow); color: var(--holo); }
+.scale-row input, .chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.scale-row label:focus-within, .chip:focus-within { outline: 2px solid var(--holo); outline-offset: 2px; }
+.field { display: grid; gap: 4px; max-width: 280px; font-weight: 600; }
+.field input {
+  min-height: 44px; padding: 0 12px; border-radius: var(--r-sm); border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.06); color: var(--text-hi); font: inherit;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { flex-direction: row; padding: 0 14px; position: relative; font-size: 0.85rem; }
+.note { margin: 8px 0 0; font-size: 0.78rem; }
+.rt-help { margin: 0 0 10px; font-size: 0.8rem; }
+.rt-pad {
+  width: 100%; min-height: 96px; border-radius: var(--r-md); border: 2px solid var(--glass-border); font: inherit;
+  font-weight: 800; font-size: 1.2rem; letter-spacing: 0.06em; cursor: pointer; color: var(--text-hi); background: var(--void-mid);
+}
+.rt-pad.wait { background: var(--act); color: #0c0a1e; border-color: var(--act); }
+.rt-pad.go { background: var(--ok); color: #0c0a1e; border-color: var(--ok); }
+.rt-pad:focus-visible { outline: 2px solid var(--holo); outline-offset: 2px; }
+.rt-status { margin: 8px 0 0; font-size: 0.82rem; color: var(--text-mid); }
+.form-error { color: var(--act); margin: 0; font-weight: 600; }
+.checkin-done { border-left: 4px solid var(--ok); }
+.checkin-done h2 { margin: 0 0 6px; font-size: 1.05rem; }
+.checkin-done p { margin: 4px 0; }
+@media (max-width: 520px) { .scale-row span { font-size: 0.68rem; } }

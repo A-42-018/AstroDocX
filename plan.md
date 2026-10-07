@@ -344,11 +344,18 @@ The video itself is recorded after L3.
 - Dep added: `recharts`. Precache grew to about 740 KiB.
 - **Tests (73 total, 9 new, ~42 s):** series (range filter, band warm-up and shape, no self-widening, pre-range history, marker placement and range filter, empty series, two-signal routing), view (text summaries, range/crew callbacks), and a demo integration (11 charts render, pilot's 30-day sleep series has points, band and an alert marker). jsdom cannot lay out SVG, so chart pixels are not asserted; **visual check is left to C11 browser QA**. `tsc`, `oxlint`, `npm run build` clean.
 
+## C8 Implementation Log (done)
+- **Check-in page (`app/src/checkin`, route `/checkin`):** crew tabs, mood 1-5 and sleep quality 1-5 (radio rows, 44 px targets), optional hours slept (blank keeps the wearable value, so a day is not double counted), eight symptom chips, the reaction test, and Save. Saving shows a confirmation that lists any alert the check-in raised (pointing to the Alerts tab) or cleared, then resets the form.
+- **Reaction test (`pvt.ts`, `ReactionTest.tsx`):** 5 taps, random 1.5-5 s wait, pad turns green; early taps and responses under 100 ms are false starts; result is the median of valid taps (needs 3), plus lapses (> 500 ms). Modelled on the PVT-B used on the ISS (Basner, Mollicone and Dinges 2011, Acta Astronautica 69:949-959); the 5-trial length, wait range and 100 ms floor are **illustrative**.
+- **Save path (`submit.ts`):** one transaction writes the `CheckIn`, sends `mood` (always), `sleep` (if hours given) and `reaction` (if the test was taken) through `processReading` with source `checkin`, and adds one pending `checkin` entry to the on-board log. Timestamp is mission "now" (latest reading). So alerts, the two-signal rule, the board and trends all react. Input is validated (1-5 scales, 0-16 h) and nothing is written on failure.
+- **Known limits:** sleep quality and symptoms are stored and logged but have no metric, so they do not trigger alerts yet (stated on the form). Several check-ins at the same mission time are allowed.
+- **Tests (86 total, 13 new):** PVT summary (median, even count, false starts, too few valid taps); the reaction pad with fake timers (five taps give median and lapse; early taps give no result); form (blocks until required answers, submits exact payload and resets, shows a raised alert); `submitCheckIn` on a 20-day DB (check-in row, three `checkin` readings, pending log text, repeated 900 ms reactions raise a reaction alert, invalid input writes nothing). `tsc`, `oxlint`, `npm run build` clean. No browser QA until C11 (the tap timing feel in particular).
+
 ## Current Phase
-**C7 Trends done.** C0-C6 and the landing page are done.
+**C8 Check-in done.** C0-C7 and the landing page are done.
 
 ## Next Roadmap
-1. **C8 Check-in:** mood / sleep quality / symptoms form plus a tap reaction-time test (PVT-style, cited), saved as `CheckIn` and as readings through `processReading` so the engine, alerts and trends react; log entry per check-in. Unit and component tests, no browser QA. Then commit + push.
-2. C9 → C11 in order (§9.2), one phase per session, commit + push after each.
+1. **C9 Simulator panel:** inject the four scenarios (solar event, CO2 fault, insomnia, deconditioning) into the live DB, fast-forward mission time (generate and process new readings), reset to the demo; tests per scenario, no browser QA. Then commit + push.
+2. C10 → C11 in order (§9.2), one phase per session, commit + push after each.
 3. Content still open on the landing page: team cards 2–4, About counter citations, README live/video URLs, absolute `og:image` after deploy.
 4. Video (`tour.js` + recording) after C11.
