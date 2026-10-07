@@ -1,4 +1,5 @@
 import { met } from '../engine/actions'
+import { CrewTabs } from './CrewTabs'
 import type { Snapshot } from './snapshot'
 import type { Status } from '../data/types'
 
@@ -28,13 +29,7 @@ export function StatusBoard({ snap, onSelectCrew }: { snap: Snapshot; onSelectCr
   return (
     <div className="board">
       <div className="board-head">
-        <div role="tablist" aria-label="Crew member" className="crew-tabs">
-          {snap.crew.map((c) => (
-            <button key={c.id} role="tab" aria-selected={c.id === snap.crewId} className={c.id === snap.crewId ? 'on' : ''} onClick={() => onSelectCrew(c.id)}>
-              {c.name}
-            </button>
-          ))}
-        </div>
+        <CrewTabs crew={snap.crew} crewId={snap.crewId} onSelect={onSelectCrew} />
         <div className="meta mono">
           <span aria-label="Mission elapsed time">{met(snap.now)}</span>
           <span>{linkLabel}</span>

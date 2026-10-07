@@ -1,4 +1,5 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import AlertsPage from './alerts/AlertsPage'
 import BoardPage from './board/BoardPage'
 import { useBootDemo } from './board/hooks'
 
@@ -39,7 +40,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/board" replace />} />
           <Route path="/board" element={<BoardPage />} />
-          {ROUTES.filter((r) => r.path !== '/board').map((r) => (
+          <Route path="/alerts" element={<AlertsPage />} />
+          {ROUTES.filter((r) => r.path !== '/board' && r.path !== '/alerts').map((r) => (
             <Route key={r.path} path={r.path} element={<Placeholder {...r} />} />
           ))}
           <Route path="*" element={<Navigate to="/board" replace />} />

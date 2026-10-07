@@ -331,11 +331,17 @@ The video itself is recorded after L3.
 - **Tests (60 total, 14 new, ~20 s):** scoring and link-status rules; the demo snapshot (five tiles per crew member, mission clock at D29 23:00, pilot's insomnia on Isolation with an explanation, engineer's Gravity at Act, commander all nominal with the highest readiness, ground link nominal with pending entries); unknown id falls back, empty DB returns null; StatusBoard component render and tab switching (jsdom + Testing Library); an App-level test that boots and seeds the demo, shows the Commander's board and switches to the Flight Engineer. `npm run build` and `oxlint` clean. **No browser/screenshot QA yet, per the plan (C11).**
 - Deps added (dev): `jsdom`, `@testing-library/react`.
 
+## C6 Implementation Log (done)
+- **Alerts page (`app/src/alerts`):** `AlertsPage` (live data via `useSnapshot` + a `liveQuery` of resolved alerts, `resolved.ts`) feeds the pure `AlertsView`: crew tabs (shared `board/CrewTabs`), active alerts most urgent first, "Recently resolved" list (last 8 with peak level and MET span).
+- **Action card (`AlertCard`):** title, status icon + text, opened-at MET (and "peaked at ACT" when eased), the engine's explanation, a fieldset of checkable steps (44 px targets, strike-through when done), "n of m steps done", and **Done**. Steps call `setStepDone`, Done calls `completeActionCard`; both log as `pending` with mission time (`snap.now`) so the log stays in step with readings. An acknowledged card locks its steps and button, but the engine still resolves the alert on recovery.
+- App routes `/alerts` to the real page; the other placeholders remain.
+- **Tests (64 total, 4 new files' worth: 3 view tests + 1 integration, ~33 s):** view renders explanation/progress, reports ticks and Done, locks acknowledged cards, lists resolved, empty state; integration boots the demo, opens Flight Engineer alerts, ticks a step and presses Done, then checks the DB log (`step-done`, `pending`) and the alert state `acknowledged`. `tsc`, `oxlint` and `npm run build` clean. No browser QA until C11.
+
 ## Current Phase
-**C5 Status Board UI done.** C0-C4 and the landing page are done.
+**C6 Alerts + Action card done.** C0-C5 and the landing page are done.
 
 ## Next Roadmap
-1. **C6 Alerts + Action card:** alert list for the selected crew member, explanation, checkable steps (`setStepDone`), Done (`completeActionCard`) writes to the log; alerts keep resolving from the engine. Unit and component tests, no browser QA. Then commit + push.
-2. C7 → C11 in order (§9.2), one phase per session, commit + push after each.
+1. **C7 Trends:** Recharts per metric with the personal baseline band and alert markers, 24h / 7d / 30d ranges; unit tests for the series/band selectors, no browser QA. Then commit + push.
+2. C8 → C11 in order (§9.2), one phase per session, commit + push after each.
 3. Content still open on the landing page: team cards 2–4, About counter citations, README live/video URLs, absolute `og:image` after deploy.
 4. Video (`tour.js` + recording) after C11.
