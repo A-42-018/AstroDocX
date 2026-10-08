@@ -70,6 +70,8 @@ main, .disclaimer { position: relative; z-index: 1; }
   color: var(--text-mid); font-size: 0.64rem; font-weight: 600; letter-spacing: 0.01em; transition: color 0.18s, background 0.18s;
 }
 .rail a:hover { color: var(--text-hi); background: rgba(255, 255, 255, 0.06); }
+.rail .rail-home { padding-bottom: 8px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
+.rail .rail-home a { color: var(--text-hi); border: 1px dashed var(--line-hi); }
 .rail a.active { color: var(--on-accent); background: var(--accent); box-shadow: 0 6px 18px -4px rgba(255, 122, 47, 0.55); }
 .brand-mark {
   display: block; width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;

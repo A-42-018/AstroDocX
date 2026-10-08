@@ -15,8 +15,14 @@ import type { ShellData } from './useShellData'
 export function Rail() {
   return (
     <nav className="rail" aria-label="Crew Console">
-      <a href="/" className="brand-mark" aria-label="Back to the AstroDocX landing page" title="Back to the landing page" />
+      <span className="brand-mark" aria-hidden="true" />
       <ul>
+        <li className="rail-home">
+          <a href="/" aria-label="Back to the AstroDocX landing page" title="Back to the landing page">
+            <House size={20} strokeWidth={1.9} aria-hidden="true" />
+            <span aria-hidden="true">Landing</span>
+          </a>
+        </li>
         {ROUTES.map(({ path, label, tab, icon: Icon }) => (
           <li key={path}>
             <NavLink to={path} aria-label={label} title={label}>
