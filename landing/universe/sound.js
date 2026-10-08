@@ -7,8 +7,11 @@
      twin      a quiet low chord and a soft heartbeat thump, in
                time with the particle heart (1 beat / s, lub-dub)
      adx       resolves to A major and opens up
+     scrolling the particles move, and you hear them: a soft airy
+               shimmer and tiny sparkle notes that grow with scroll
+               speed, strongest in the two morphs, gone when you stop
    Muted by default: browsers only start audio after a click, so the
-   "Sound" pill starts it. The choice is remembered per visitor.
+   speaker button (top right) starts it; while it plays it shows a wave. The choice is remembered per visitor.
    Nothing runs (no AudioContext, no loop) until the first click.
 ============================================================ */
 (function () {
@@ -35,18 +38,18 @@
     adx:       [45, 52, 57, 61, 64]     // A major: the resolution
   };
 
-  let ctx = null, master, filter, wet, on = false, raf = 0, voices = null, chordId = '', lastBeat = -1, nextStar = 0;
+  let ctx = null, master, filter, wet, comp, verb, dust, dustBP, on = false, lastY = 0, lastT = 0, speed = 0, grainAcc = 0, raf = 0, voices = null, chordId = '', lastBeat = -1, nextStar = 0;
 
   /* ── graph: voices -> lowpass -> dry + reverb -> compressor -> master ── */
   function build() {
     ctx = new AC();
     master = ctx.createGain(); master.gain.value = 0;
-    const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 3;
+    comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 3;
     comp.connect(master); master.connect(ctx.destination);
     filter = ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 700; filter.Q.value = 0.4;
     const dry = ctx.createGain(); dry.gain.value = 0.55;
     wet = ctx.createGain(); wet.gain.value = 0.7;
-    const verb = ctx.createConvolver(); verb.buffer = impulse(5.5, 2.2);
+    verb = ctx.createConvolver(); verb.buffer = impulse(5.5, 2.2);
     filter.connect(dry); dry.connect(comp);
     filter.connect(verb); verb.connect(wet); wet.connect(comp);
     /* slow breathing on the whole pad */
@@ -55,6 +58,15 @@
     lfo.connect(lfoG); lfoG.connect(bus.gain); lfo.start();
     bus.connect(filter);
     ctx.bus = bus;
+    /* particle shimmer: looped white noise through a moving band-pass, silent until you scroll */
+    const nb = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), nd = nb.getChannelData(0);
+    for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource(); src.buffer = nb; src.loop = true;
+    dustBP = ctx.createBiquadFilter(); dustBP.type = 'bandpass'; dustBP.frequency.value = 4000; dustBP.Q.value = 1.4;
+    dust = ctx.createGain(); dust.gain.value = 0;
+    const send = ctx.createGain(); send.gain.value = 0.8;
+    src.connect(dustBP); dustBP.connect(dust); dust.connect(comp); dust.connect(send); send.connect(verb);
+    src.start();
   }
   /* synthetic hall: decaying stereo noise */
   function impulse(sec, decay) {
@@ -107,6 +119,18 @@
     o.connect(g); g.connect(filter); o.start(t); o.stop(t + 3.3);
   }
 
+  /* one particle "grain": a tiny high sine blip from the chord, placed somewhere left / right, mostly reverb */
+  function sparkle(amp) {
+    const ch = CHORDS[chordId] || CHORDS.dust, m = ch[Math.floor(Math.random() * ch.length)] + (Math.random() < 0.5 ? 24 : 36);
+    const t = ctx.currentTime, len = 0.05 + Math.random() * 0.1, o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = hz(m) * (1 + (Math.random() - 0.5) * 0.004);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0003, t + len);
+    o.connect(g);
+    if (ctx.createStereoPanner) { const pn = ctx.createStereoPanner(); pn.pan.value = Math.random() * 1.6 - 0.8; g.connect(pn); pn.connect(comp); pn.connect(verb); }
+    else { g.connect(comp); g.connect(verb); }
+    o.start(t); o.stop(t + len + 0.02);
+  }
+
   /* ── follow the journey ── */
   const SCENE_IDS = ['dust', 'planet', 'astronaut', 'orion', 'relay', 'earth'];
   function introScene(q) {
@@ -130,6 +154,17 @@
     const inTwin = id === 'twin' || (id === 'toTwin' && q > 0.6) || (id === 'toAdx' && q < 0.3);
     const beat = Math.floor(now), ph = now - beat;
     if (inTwin && beat !== lastBeat && ph < 0.1) { lastBeat = beat; thump(1); setTimeout(() => { if (on) thump(0.45); }, 280); }
+    /* moving particles: scroll speed (viewports per second, fast attack, slow release) drives shimmer + sparkles */
+    const dt = lastT ? Math.min(0.1, now - lastT) : 0.016, y = window.scrollY;
+    const v = lastT ? Math.abs(y - lastY) / dt / Math.max(1, innerHeight) : 0;
+    lastT = now; lastY = y;
+    speed += (v - speed) * (1 - Math.exp(-dt / (v > speed ? 0.08 : 0.4)));
+    const move = clamp(speed / 1.4, 0, 1) * (1 + swell * 1.2);
+    dust.gain.setTargetAtTime(0.05 * move, t, 0.06);
+    dustBP.frequency.setTargetAtTime(2600 + 3200 * clamp(open, 0, 1) + 1800 * swell, t, 0.2);
+    grainAcc += dt * 34 * move;
+    for (let k = 0; grainAcc >= 1 && k < 4; k++) { grainAcc -= 1; sparkle(0.012 + 0.018 * Math.random() * clamp(move, 0, 1)); }
+    if (grainAcc > 1) grainAcc = 0;
     /* star notes: sparse in the intro and on the reveal */
     if ((id === 'intro' || id === 'adx') && now > nextStar) { if (nextStar) star(); nextStar = now + 1.6 + Math.random() * 2.6; }
   }
@@ -156,7 +191,7 @@
   function ui() {
     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
     btn.classList.toggle('is-on', on);
-    btn.querySelector('.sound-label').textContent = on ? 'Sound on' : 'Sound';
+    btn.setAttribute('aria-label', on ? 'Turn sound off' : 'Turn sound on');
   }
 
   btn.addEventListener('click', e => { e.stopPropagation(); if (on) { stop(); store.set('off'); } else { start(); store.set('on'); } });

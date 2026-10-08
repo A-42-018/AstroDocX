@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const camA = { pos: V3(), look: V3(), fov: 50 }, camB = { pos: V3(), look: V3(), fov: 50 }, cam = { pos: V3(), look: V3(), fov: 50 };
   const pullK = () => camera.aspect < 1.2 ? Math.min(2.4, 1.2 / camera.aspect) : 1;       // portrait: pull back so every shape and the wordmark fit
   function camIntro(p, o) { const c = ADX_CAMERA.at(p), k = pullK(); o.look.copy(c.look); o.pos.copy(c.pos).sub(c.look).multiplyScalar(k).add(c.look); o.fov = c.fov; return o; }
-  function camTwin(o) { const k = small() ? 1.3 : 1; o.pos.set(0, 0.1, 7.5 * k); o.look.set(0, small() ? -0.35 : 0.1, 0); o.fov = 48; return o; }
+  function camTwin(o) { const k = small() ? 1.25 : 1; o.pos.set(0, 0.05, 6.4 * k); o.look.set(0, small() ? -0.35 : 0.0, 0); o.fov = 48; return o; }   // close enough that the figure fills the height
   function camAdx(o) { const k = pullK(); o.pos.set(0, 0.2, 9 * k); o.look.set(0, 0.2, 0); o.fov = 50; return o; }
   function blend(a, b, t, o) { o.pos.copy(a.pos).lerp(b.pos, t); o.look.copy(a.look).lerp(b.look, t); o.fov = a.fov + (b.fov - a.fov) * t; return o; }
 

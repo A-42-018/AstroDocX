@@ -873,6 +873,28 @@ Owner asked for the Interstellar theme; it is copyrighted (Hans Zimmer), so the 
 - **Opt-in:** the "Sound" pill (bottom-right beside back-to-top, icon only on phones) starts it; browsers need a click. The choice is kept in localStorage; a returning "on" visitor's sound starts at their first click or key. Suspended while the tab is hidden; hidden in `?tour=1` (click the page once to start it for a recording).
 - **Checked (Chrome pane):** on -> AudioContext running, 12 oscillators for the first chord; scrolling to the twin crossfades the chord and adds heartbeat thumps; off -> fades and suspends, "off" stored; no console errors; 375 px fits with no horizontal overflow. Not checked by ear in this session.
 
+## S6 Implementation Log: AstroDocX reveal polish (done locally, 2026-10-08)
+- **One call to action:** only "Launch Crew Console" stays (big glowing pill, light sweep, pulsing ring, sliding arrow; `.adx-cta`). "Watch the tour" and "GitHub" removed (tour still at `?tour=1`, GitHub in the footer).
+- **Type:** kicker with cyan rules either side; the pitch in the display face, larger, "doctor on board" in the X gradient; prompt line in cyan mono; the five steps as one line of spaced mono words joined by thin rules (ACT highlighted).
+- **Sound toggle:** a round 🎧 button top right under the nav (Skip intro moved left of it); while sound plays the emoji becomes an animated 5-bar wave; aria-label switches "Turn sound on / off".
+- **Checked (Chrome pane):** 1440×900 and 375 px, toggle on/off, no horizontal overflow.
+- **Twin headline:** "MEET OUR NASA CREW / HEALTH MONITOR SYSTEM"; NASA and CREW in the X gradient (`.ch-title em`), the outlined second line at 0.7em so it stays on one line.
+- **Particle sound (`sound.js`):** scroll speed (viewports/s, fast attack, slow release) drives a looped-noise shimmer through a moving band-pass and tiny panned sparkle notes from the current chord (up to ~34/s), 2.2x in the two morphs, silent when scrolling stops. Checked: 3 oscillators in 1.5 s standing still (heartbeat only) vs 82 while scrolling.
+
+## S7 Implementation Log: realistic Health Twin body (done locally, 2026-10-08)
+- **New `genBody` (`engine.js`):** a sculpted figure ~8 heads tall instead of a dozen blobs: lofted superellipse torso (10 cross-sections: hips, waist, ribcage, shoulders, neck base), head with a narrower jaw, neck, shoulder caps and tapered round-cone limbs (upper arm, forearm, thigh, knee, calf, ankle), hands and feet. Points inside another part are rejected, so only the outer skin remains (clean silhouette); part counts follow real surface area (Knud Thomsen for ellipsoids). 62% skin, ~34% of it snapped to 0.075 contour lines; brain, heart, lungs, gut, spine, ribs, pelvis inside; floor ring.
+- **Hologram shading:** new `aNrm` attribute (skin normals, Morton-sorted with the points); the shader brightens the silhouette (rim = 1 − |n·v|) and keeps faces toward the camera faint, so the figure reads as a body. Lungs / gut / heart toned down so the chest no longer blows out.
+- **Framing:** twin camera closer (z 6.4, phones ×1.25); leader-line anchors and scan centres moved to the new anatomy (`health-twin.js`).
+- **Phones:** the 🎧 button sits in the nav bar left of the menu (it covered "NASA CREW").
+- **Checked (Chrome pane):** 1440×900 brain and heart stages, Earth → body morph, 375 px radiation stage; no console / shader errors; no horizontal overflow.
+
+## S8 Implementation Log: X-ray / MRI Health Twin with a live pulse (done locally, 2026-10-08)
+- **X-ray body (`engine.js` `genBody`):** skin cut to 46% and kept translucent (edge glow only); full skeleton (skull + jaw, 26 vertebrae on an S-curve, 10 rib pairs, sternum, clavicles, humerus, radius/ulna, fingers, femur, tibia/fibula, foot bones, pelvis), bones white, dimmer inside the head.
+- **Arteries (new region 8):** a tree from the heart (aorta arch, descending aorta, iliac/leg arteries to the feet, carotids into the brain and face, subclavian/arm arteries to the hands, small branches), ~3000 points; each stores its path distance from the heart in `aNrm.x`. The shader runs a red pulse along it: lub at every whole second and dub 0.28 s later at 4 units/s (same clock as the heart and the soundtrack's heartbeat).
+- **Heart:** solid two-ventricle shape with atria, apex tilted down-left, saturated red that flashes and pumps on each beat. **Brain:** folded cortex (direction-noise gyri, hemisphere gap), core and cerebellum; pink, amber with the Pilot's ACT alert, activity waves and random cyan "neuron" sparks.
+- Lungs and gut are faint shells; the beat ripple brightens skin at half strength. Arteries light with the body (`health-twin.js`).
+- **Checked (Chrome pane, 800×900):** brain stage and heart stage, a pulse caught in the legs and in the carotids, no shader / console errors.
+
 ## Current Phase
 **C0–C12 done and deployed. Console v2 (U0–U7) and L4 (3D anatomy viewer) done locally. Landing sprint: R1, R2, P0 and P1 (particle engine + procedural shapes) done locally 2026-10-08. P2 (bake pipeline) done, waiting on real model files. P0 to P5, S1 (short page) and S2 (particle wordmark reveal), S3 (particle Health Twin) and S4 (one particle journey, Team removed) done. Next: P6 (ship): check reduced-motion and the tour on the short page, Lighthouse, OG image, README screenshots, deploy, video. Nothing pushed yet (§13.4).**
 

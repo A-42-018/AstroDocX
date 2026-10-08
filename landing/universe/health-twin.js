@@ -21,15 +21,15 @@
 
   /* label order = reveal order. reg = body region to glow, at = body-space anchor of the leader line */
   const STAGES = [
-    { reg: 1, at: [0, 1.58, 0.02] },        // brain  - Isolation
-    { reg: 3, at: [-0.24, 0.82, 0.08] },    // lungs  - Environment
-    { reg: 0, at: [-0.5, 0.25, 0.05] },     // whole body - Radiation
-    { reg: 2, at: [0.10, 0.70, 0.14] },     // heart  - Gravity
-    { reg: 7, at: [0.80, 0.02, 0.06] },     // forearm transmitter - Distance
-    { reg: 5, at: [0.22, -1.25, 0.04] }     // legs   - Gravity
+    { reg: 1, at: [0, 1.70, 0.06] },        // brain  - Isolation
+    { reg: 3, at: [-0.16, 0.86, 0.08] },    // lungs  - Environment
+    { reg: 0, at: [-0.27, 0.30, 0.12] },    // whole body - Radiation
+    { reg: 2, at: [0.06, 0.78, 0.12] },     // heart  - Gravity
+    { reg: 7, at: [0.60, 0.12, 0.08] },     // right forearm transmitter - Distance
+    { reg: 5, at: [0.15, -1.15, 0.08] }     // legs   - Gravity
   ];
   const T0 = 0.30, STEP = 0.09, FINAL_AT = 0.86;
-  const CENTERS = { 0: 9, 1: 1.58, 2: 0.70, 3: 0.80, 4: 0.15, 5: -1.2, 6: 0.5, 7: 0.05, 8: 0, 9: -9 };
+  const CENTERS = { 0: 9, 1: 1.70, 2: 0.78, 3: 0.86, 4: 0.26, 5: -1.2, 6: 0.5, 7: 0.0, 8: 0, 9: -9 };
 
   function create(root) {
     const labels = Array.from(root.querySelectorAll('.tw-label'));
@@ -47,7 +47,7 @@
       const scan = p < 0.20 ? 3 : p > 0.31 ? -3 : 2.3 - (p - 0.20) / 0.11 * 4.6;           // sweeps 2.3 -> -2.3
       U.uScan.value = scan;
       const lit = U.uLit.value, foc = U.uFocus.value;
-      for (let r = 0; r < 10; r++) lit[r] = r === 0 || r === 9 ? clamp(morph * 1.6 - 0.2, 0, 1) : clamp((CENTERS[r] - scan) / 0.5 + 0.5, 0, 1) * (p > 0.20 ? 1 : 0);
+      for (let r = 0; r < 10; r++) lit[r] = r === 0 || r === 8 || r === 9 ? clamp(morph * 1.6 - 0.2, 0, 1) : clamp((CENTERS[r] - scan) / 0.5 + 0.5, 0, 1) * (p > 0.20 ? 1 : 0);
       let cur = -1;
       for (let i = 0; i < STAGES.length; i++) if (p >= T0 + i * STEP) cur = i;
       for (let r = 0; r < 10; r++) foc[r] = 0;
