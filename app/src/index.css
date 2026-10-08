@@ -73,11 +73,7 @@ main, .disclaimer { position: relative; z-index: 1; }
 .rail .rail-home { padding-bottom: 8px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
 .rail .rail-home a { color: var(--text-hi); border: 1px dashed var(--line-hi); }
 .rail a.active { color: var(--on-accent); background: var(--accent); box-shadow: 0 6px 18px -4px rgba(255, 122, 47, 0.55); }
-.brand-mark {
-  display: block; width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
-  background: radial-gradient(circle at 30% 30%, #ffd0a8, var(--accent) 45%, #c2410c 100%);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15) inset, 0 4px 14px rgba(255, 122, 47, 0.45);
-}
+.brand-mark { display: block; width: 40px; height: 40px; flex-shrink: 0; filter: drop-shadow(0 4px 12px rgba(79, 70, 229, 0.45)); }
 .tabs { display: none; }
 
 .topbar {

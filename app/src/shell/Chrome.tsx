@@ -15,7 +15,7 @@ import type { ShellData } from './useShellData'
 export function Rail() {
   return (
     <nav className="rail" aria-label="Crew Console">
-      <span className="brand-mark" aria-hidden="true" />
+      <img className="brand-mark" src={`${import.meta.env.BASE_URL}favicon.svg`} alt="AstroDocX" width={40} height={40} />
       <ul>
         <li className="rail-home">
           <a href="/" aria-label="Back to the AstroDocX landing page" title="Back to the landing page">
