@@ -69,7 +69,7 @@
 .tw-dot { fill:#22D3EE;opacity:0; }
 .tw-line.is-act { stroke:rgba(245,166,35,.75); } .tw-dot.is-act { fill:#F5A623; }
 
-.tw-head { position:absolute;z-index:2;left:var(--pad-x,24px);top:calc(var(--nav-h,64px) + 24px);max-width:min(620px,46vw); }
+.tw-head { position:absolute;z-index:3;left:var(--pad-x,24px);top:calc(var(--nav-h,64px) + 24px);max-width:min(620px,46vw); }
 .tw-head .ch-title { font-size:clamp(1.8rem,3.4vw,3.3rem); }
 .tw-head .ch-title span + span { font-size:.7em;letter-spacing:.14em;margin-top:6px; }   /* HEALTH MONITOR SYSTEM on one line */
 .tw-head .ch-sub { margin-bottom:18px; }
@@ -78,7 +78,9 @@
 .tw-label { position:absolute;width:min(220px,22vw);opacity:0;will-change:opacity,translate;text-shadow:0 2px 18px rgba(2,3,10,.95); }
 .tw-label[data-side="left"] { left:var(--pad-x,24px); }
 .tw-label[data-side="right"] { right:var(--pad-x,24px); }
-.tw-label:nth-of-type(1) { top:47vh; } .tw-label:nth-of-type(2) { top:63vh; } .tw-label:nth-of-type(3) { top:79vh; }
+/* the left column never starts above the bottom of the heading block (--tw-head-b, set from its real height), so the 3D anatomy button is never covered */
+#twin { --tw-l1:max(47vh,calc(var(--tw-head-b,0px) + 20px)); }
+.tw-label:nth-of-type(1) { top:var(--tw-l1); } .tw-label:nth-of-type(2) { top:calc(var(--tw-l1) + 16vh); } .tw-label:nth-of-type(3) { top:calc(var(--tw-l1) + 32vh); }
 .tw-label:nth-of-type(4) { top:24vh; } .tw-label:nth-of-type(5) { top:44vh; } .tw-label:nth-of-type(6) { top:64vh; }
 .tw-kick { display:flex;align-items:center;gap:8px;margin:0 0 6px;font-family:var(--font-mono);font-size:.68rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#E0FBFF; }
 .tw-kick i { width:7px;height:7px;border-radius:50%;background:#3EE6A0;box-shadow:0 0 8px #3EE6A0;flex:none; }

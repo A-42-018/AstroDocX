@@ -27,7 +27,7 @@
     { id: 'planet',    sc: 2.5, off: [2.6, 0, 0],     rot: 0.10, tint: [1.0, 0.86, 0.62],  dis: 1.6 },
     { id: 'astronaut', sc: 2.1, off: [-2.5, 0.4, 0],    rot: 0.12, tint: [1, 1, 1],          dis: 1.6 },
     { id: 'orion',     sc: 2.7, off: [2.0, 0.2, 0],     rot: 0.0, tint: [0.95, 0.97, 1.0],  dis: 1.6 },
-    { id: 'relay',     sc: 2.0, off: [-2.0, -0.2, 0],    rot: 0.02, tint: [1, 1, 1],          dis: 1.6 },
+    { id: 'relay',     sc: 3.0, off: [-3.4, -0.3, 0],    rot: 0.02, tint: [1, 1, 1],          dis: 1.6 },
     { id: 'earth',     sc: 2.5, off: [0, -1.7, 0],    rot: 0.08, tint: [0.62, 0.82, 1.15], dis: 1.6 }
   ];
 
@@ -159,7 +159,7 @@
     let k = 0, guard = 0;
     while (k < n - cloudN && guard++ < n * 8) {
       const p = fib(Math.floor(r() * 200000), 200000), land = noise3(p[0] * 2.6 + 1, p[1] * 2.6, p[2] * 2.6) + noise3(p[0] * 6, p[1] * 6, p[2] * 6) * 0.25 > 0.12;
-      if (land || r() < 0.22) { a[k * 3] = p[0] * 0.8; a[k * 3 + 1] = p[1] * 0.8; a[k * 3 + 2] = p[2] * 0.8; k++; }
+      if (land || r() < 0.8) { a[k * 3] = p[0] * 0.8; a[k * 3 + 1] = p[1] * 0.8; a[k * 3 + 2] = p[2] * 0.8; k++; }
     }
     for (; k < n; k++) { const p = fib(Math.floor(r() * 5000), 5000); a[k * 3] = p[0] * 0.85; a[k * 3 + 1] = p[1] * 0.85; a[k * 3 + 2] = p[2] * 0.85; }
     return a;
@@ -393,6 +393,7 @@
     'uniform float uLit[10]; uniform float uFocus[10];',
     'varying vec3 vC; varying float vA;',
     'vec3 pick(float i){ if(i<.5) return aP0; if(i<1.5) return aP1; if(i<2.5) return aP2; if(i<3.5) return aP3; if(i<4.5) return aP4; if(i<5.5) return aP5; if(i<6.5) return aP6; return aP7; }',
+    'float n3(vec3 p){ return (sin(p.x*1.7+sin(p.y*2.3)+p.z)+sin(p.y*1.9+sin(p.z*2.1)+p.x*.7)+sin(p.z*2.2+sin(p.x*1.3)+p.y*.9))/3.; }',
     'vec3 rotY(vec3 p,float a){ float c=cos(a),s=sin(a); return vec3(c*p.x+s*p.z,p.y,-s*p.x+c*p.z); }',
     'vec3 curl(vec3 p){ vec3 n=vec3(sin(p.y*1.7+uTime*.31)+sin(p.z*2.3-uTime*.17), sin(p.z*1.9+uTime*.26)+sin(p.x*2.1+uTime*.13), sin(p.x*1.6+uTime*.35)+sin(p.y*2.4-uTime*.21)); return vec3(n.y-n.z,n.z-n.x,n.x-n.y)*.5; }',
     'void main(){',
@@ -412,8 +413,15 @@
     ' vec4 mv=modelViewMatrix*vec4(pos,1.);',
     /* star look (intro shapes, wordmark) */
     ' vec3 base=aSeed.y<.70?vec3(.92,.95,1.):(aSeed.y<.90?vec3(.50,.66,1.):vec3(.96,.79,.48));',
-    ' vec3 cI=base*mix(uTintA,uTintB,e);',
-    ' float aI=(.55+aSeed.z*.45)*(1.+sin(3.14159*t)*.35)*(1.+bw*5.);',
+    /* Earth (shape 5): land and sea use the same noise as genEarth, so continents read in green and sand against deep blue, with ice caps and white cloud */
+    ' float ew=(abs(uSeg-5.)<.5?1.-e:0.)+(abs(uSegB-5.)<.5?e:0.); vec3 eq=abs(uSegB-5.)<.5?pb:pa; vec3 ed=normalize(eq+vec3(1e-5)); float elr=length(eq);',
+    ' float eL=n3(ed*2.6+vec3(1.,0.,0.))+n3(ed*6.)*.25; float land=step(.12,eL); float hi=smoothstep(.2,.5,n3(ed*3.1+vec3(4.,1.,2.)));',
+    ' vec3 earthC=mix(vec3(.05,.3,.95),vec3(.2,.62,1.),smoothstep(-.1,.1,eL));',
+    ' earthC=mix(earthC,mix(vec3(.18,.72,.3),vec3(.85,.68,.36),hi),land);',
+    ' earthC=mix(earthC,vec3(.96,.98,1.),smoothstep(.8,.92,abs(ed.y)));',
+    ' float cloud=step(.82,elr); earthC=mix(earthC,vec3(1.),cloud);',
+    ' vec3 cI=mix(base*mix(uTintA,uTintB,e),earthC,ew);',
+    ' float aI=(.55+aSeed.z*.45)*(1.+sin(3.14159*t)*.35)*(1.+bw*5.); aI*=mix(1.,mix(.95,1.35,land)*(1.+cloud*.2),ew);',
     ' float lit=smoothstep(-.25,.65,dot(normalize(pos-uPlanetC),uLight)); aI*=mix(1.,.3+1.0*lit,uWPlanet);',   // planet terminator
     /* body look: colour per region, the scan line and the focused system glow */
     /* X-ray look: translucent skin, white bones, red arteries with a pulse running out from the heart, a red beating heart, a live brain */

@@ -14,6 +14,16 @@ window.addEventListener('load', () => ScrollTrigger.refresh());
 /* single source of truth for "does this visitor want reduced motion" */
 const REDUCE_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/* ── Health Twin: tell the CSS how tall the heading block really is, so the left labels start below it ── */
+(function () {
+  const twin = document.getElementById('twin'), head = twin && twin.querySelector('.tw-head');
+  if (!head || !window.ResizeObserver) return;
+  const set = () => twin.style.setProperty('--tw-head-b', Math.round(head.offsetTop + head.offsetHeight) + 'px');
+  new ResizeObserver(set).observe(head);
+  window.addEventListener('resize', set);
+  set();
+})();
+
 /* ── Back to top ── */
 (function () {
   const btn = document.getElementById('back-to-top');
