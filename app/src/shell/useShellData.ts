@@ -10,7 +10,7 @@ export interface ShellCrew {
   /** Name of the worst hazard, or null when every hazard is nominal. */
   worstHazard: string | null
 }
-export interface ShellData { crew: ShellCrew[]; crewId: string; now: number; pendingSync: number }
+export interface ShellData { crew: ShellCrew[]; crewId: string; now: number; pendingSync: number; sinceSyncH: number | null }
 
 const RANK = { nominal: 0, watch: 1, act: 2 }
 function worstHazard(s: Snapshot | null | undefined): string | null {
@@ -31,7 +31,7 @@ export function useShellData(): ShellData | null {
       const snaps = await Promise.all(first.crew.map((c) => (c.id === first.crewId ? first : loadSnapshot(c.id))))
       return {
         crew: first.crew.map((c, i) => ({ ...c, status: snaps[i]?.overall ?? 'nominal', alerts: snaps[i]?.alerts.length ?? 0, readiness: snaps[i]?.readiness ?? 0, worstHazard: worstHazard(snaps[i]) })),
-        crewId: first.crewId, now: first.now, pendingSync: first.pendingSync,
+        crewId: first.crewId, now: first.now, pendingSync: first.pendingSync, sinceSyncH: first.sinceSyncH,
       } satisfies ShellData
     }).subscribe({ next: setData, error: () => setData(null) })
     return () => sub.unsubscribe()

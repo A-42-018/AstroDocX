@@ -111,26 +111,31 @@ export const readinessOf = (tiles: HazardTile[]) => Math.round(tiles.reduce((a, 
 export const overallOf = (tiles: HazardTile[]) => tiles.reduce<Status>((s, t) => worst(s, t.status), 'nominal')
 
 /** Read everything the board needs for one crew member. */
-export async function loadSnapshot(crewId: string | undefined, d: ConsoleDB = db): Promise<Snapshot | null> {
+export async function loadSnapshot(crewId: string | undefined, d: ConsoleDB = db, at?: number): Promise<Snapshot | null> {
   const crew = await d.crew.toArray()
   const id = crewId && crew.some((c) => c.id === crewId) ? crewId : crew[0]?.id
   if (!id) return null
   const last = await d.readings.orderBy('ts').last()
-  const now = last?.ts ?? MISSION_START
+  const now = at ?? last?.ts ?? MISSION_START
   const [baselines, alerts, log] = await Promise.all([
     d.baselines.where('crewId').equals(id).toArray(),
-    d.alerts.where('[crewId+state]').anyOf([id, 'open'], [id, 'acknowledged']).toArray(),
+    // `at` replays an earlier moment: every alert that was open then, at the level it had reached.
+    at === undefined
+      ? d.alerts.where('[crewId+state]').anyOf([id, 'open'], [id, 'acknowledged']).toArray()
+      : d.alerts.where('[crewId+state]').between([id, ''], [id, '\uffff']).toArray()
+          .then((all) => all.filter((a) => a.openedAt <= at && (a.resolvedAt === undefined || a.resolvedAt > at)).map((a) => ({ ...a, status: a.peakStatus }))),
     // The ground link is shared by the whole crew, so its numbers come from the whole log.
     d.actionLog.toArray(),
   ])
   const latest: Partial<Record<MetricId, number>> = {}
   for (const h of HAZARDS) {
     if (!h.headline) continue
-    const r = await d.readings.where('[crewId+metric+ts]').between([id, h.headline, -Infinity], [id, h.headline, Infinity]).last()
+    const r = await d.readings.where('[crewId+metric+ts]').between([id, h.headline, -Infinity], [id, h.headline, now], true, true).last()
     if (r) latest[h.headline] = r.value
   }
-  const pending = log.filter((e) => e.sync === 'pending')
-  const synced = log.filter((e) => e.syncedAt !== undefined)
+  const seen = at === undefined ? log : log.filter((e) => e.ts <= at)
+  const pending = at === undefined ? seen.filter((e) => e.sync === 'pending') : seen.filter((e) => e.syncedAt === undefined || e.syncedAt > at)
+  const synced = seen.filter((e) => e.syncedAt !== undefined && e.syncedAt <= now)
   const lastSync = synced.length ? Math.max(...synced.map((e) => e.syncedAt!)) : null
   const sinceSyncH = lastSync === null ? null : Math.max(0, (now - lastSync) / HOUR)
   const oldest = pending.length ? Math.min(...pending.map((e) => e.ts)) : null

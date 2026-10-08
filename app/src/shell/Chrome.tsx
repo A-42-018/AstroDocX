@@ -1,8 +1,9 @@
-import { Bell, Download, Radio, RadioTower, WifiOff } from 'lucide-react'
+import { Bell, Download, Play, Radio, RadioTower, RotateCcw, WifiOff } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useBoard } from '../board/store'
 import { met } from '../engine/actions'
+import { DEMO_MAX_STEPS, resetDemo, runDemo, useDemo } from '../sim/demoRun'
 import { linkAt } from '../sync/link'
 import { useSync } from '../sync/store'
 import { CrewSwitcher } from './CrewSwitcher'
@@ -90,9 +91,12 @@ export function TopBar({ data, install }: { data: ShellData | null; install: (()
   const blackout = useSync((s) => s.blackout)
   const who = data?.crew.find((c) => c.id === data.crewId)
   const link = data ? linkAt(data.now, blackout) : null
-  const summary = data && link ? linkSummary(link, data.now, data.pendingSync) : null
+  const summary = data && link ? linkSummary(link, data.now, data.pendingSync, data.sinceSyncH) : null
   const LinkIcon = link?.state === 'open' ? RadioTower : link?.state === 'blackout' ? WifiOff : Radio
   const open = who?.alerts ?? 0
+  const navigate = useNavigate()
+  const demo = useDemo()
+  const startDemo = () => { navigate('/board'); void runDemo(select) }
 
   return (
     <header className="topbar">
@@ -111,6 +115,15 @@ export function TopBar({ data, install }: { data: ShellData | null; install: (()
               <span className="lc-long" aria-hidden="true">{summary.long}</span>
               <span className="lc-short" aria-hidden="true">{summary.short}</span>
             </Link>
+          )}
+          {demo.phase === 'idle' ? (
+            <button type="button" className="btn ghost demo-btn" onClick={startDemo} title="Inject a CO₂ scrubber fault and watch the board react (about 20 s)">
+              <Play size={15} aria-hidden="true" />Run demo
+            </button>
+          ) : (
+            <button type="button" className="btn ghost demo-btn" onClick={() => void resetDemo()} title="Restore the demo mission data">
+              <RotateCcw size={15} aria-hidden="true" />{demo.phase === 'running' ? `Demo ${demo.step}/${DEMO_MAX_STEPS} · stop` : 'Reset demo'}
+            </button>
           )}
           <Link to="/alerts" className={`bell st-${who.status}`} aria-label={open ? `${open} open alert${open > 1 ? 's' : ''} for ${who.name}` : `No open alerts for ${who.name}`}>
             <Bell size={20} strokeWidth={1.9} aria-hidden="true" />

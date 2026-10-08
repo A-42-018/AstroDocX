@@ -9,7 +9,7 @@ const START = 150 // degrees clockwise from +x; the dial sweeps 240° up and ove
 const pt = (deg: number, r = R) => [CX + r * Math.cos((deg * Math.PI) / 180), CY + r * Math.sin((deg * Math.PI) / 180)]
 
 /** Readiness speed-dial: a 240° arc, tick marks, an animated needle and the value. */
-export function ReadinessRing({ value, status }: { value: number; status: Status }) {
+export function ReadinessRing({ value, status, heldBy }: { value: number; status: Status; heldBy?: { name: string; status: Status } | null }) {
   const [x0, y0] = pt(START)
   const [x1, y1] = pt(START + 240)
   const arc = `M${x0.toFixed(2)} ${y0.toFixed(2)}A${R} ${R} 0 1 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`
@@ -33,6 +33,11 @@ export function ReadinessRing({ value, status }: { value: number; status: Status
         <b className="mono">{value}%</b>
         <StatusPill status={status} />
       </figcaption>
+      {heldBy && (
+        <p className={`dial-held mono st-${heldBy.status}`}>
+          Held back by: {heldBy.name} (<b>{heldBy.status === 'act' ? 'Act' : 'Watch'}</b>)
+        </p>
+      )}
     </figure>
   )
 }

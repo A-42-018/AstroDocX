@@ -3,6 +3,7 @@ import type { Hazard, Status } from '../data/types'
 import { useHeartbeat } from '../live/heartbeat'
 import { useHidden, useReducedMotion } from '../live/usePaused'
 import * as A from './anatomy'
+import { useBoard } from './store'
 import { HazardIcon, StatusPill } from '../shell/icons'
 import type { HazardTile } from './snapshot'
 
@@ -30,12 +31,12 @@ export const BODY_D = bodyPath() + 'M121 56a29 37 0 1 0 58 0a29 37 0 1 0 -58 0Z'
 
 const VB_W = 300
 const VB_H = 660
-/** Where each hazard sits on the body, and which side its label goes. Radiation is a whole-body aura (the outline glows), pinned at the abdomen; Environment sits on the lungs. */
+/** Where each hazard sits on the body, and which side its label goes. Radiation is a faint whole-body aura (the outline glows), pinned on the left flank; Distance sits at the ear (the antenna); Environment sits on the lungs. */
 const SPOTS: { id: Hazard; x: number; y: number; side: 'l' | 'r' }[] = [
   { id: 'I', x: 150, y: 40, side: 'l' },
-  { id: 'D', x: 214, y: 46, side: 'r' },
+  { id: 'D', x: 173, y: 58, side: 'r' },
   { id: 'E', x: 176, y: 194, side: 'r' },
-  { id: 'R', x: 150, y: 270, side: 'l' },
+  { id: 'R', x: 74, y: 270, side: 'l' },
   { id: 'G', x: 182, y: 468, side: 'r' },
 ]
 const WORD: Record<Status, string> = { nominal: 'NOMINAL', watch: 'WATCH', act: 'ACT' }
@@ -71,6 +72,8 @@ export function Twin({ tiles, overall, hr = 62 }: { tiles: HazardTile[]; overall
   const by = new Map(tiles.map((t) => [t.hazard, t]))
   const st = (h: Hazard) => by.get(h)?.status ?? 'nominal'
   const { heart, glow, pulses } = useBeatAnimation(hr)
+  const focus = useBoard((s) => s.focusHazard)
+  const setFocus = useBoard((s) => s.setFocusHazard)
   return (
     <div className="twin" role="group" aria-label="Health twin">
       <div className={`twin-fig st-${overall}`}>
@@ -81,6 +84,11 @@ export function Twin({ tiles, overall, hr = 62 }: { tiles: HazardTile[]; overall
               <stop offset="0.55" stopColor="#2dd4e8" stopOpacity="0.1" />
               <stop offset="1" stopColor="#2dd4e8" stopOpacity="0.04" />
             </linearGradient>
+            <radialGradient id="twin-heart-calm" cx="0.4" cy="0.35" r="0.7">
+              <stop offset="0" stopColor="#c8f7ff" />
+              <stop offset="0.45" stopColor="#2dd4e8" />
+              <stop offset="1" stopColor="#0b6f85" />
+            </radialGradient>
             <radialGradient id="twin-heart" cx="0.4" cy="0.35" r="0.7">
               <stop offset="0" stopColor="#ffb3bc" />
               <stop offset="0.45" stopColor="#ff4d5e" />
@@ -148,9 +156,9 @@ export function Twin({ tiles, overall, hr = 62 }: { tiles: HazardTile[]; overall
             {/* heart */}
             <g transform={`translate(${A.HEART_AT.x} ${A.HEART_AT.y}) scale(0.92)`}>
               <circle ref={glow} r="26" className="heart-glow" />
-              <g ref={heart} className="heart">
+              <g ref={heart} className={`heart${st('E') === 'act' ? ' heart-alert' : ''}`}>
                 <path d={A.HEART_VESSELS} className="heart-vessels" />
-                <path d={A.HEART} fill="url(#twin-heart)" />
+                <path d={A.HEART} fill={st('E') === 'act' ? 'url(#twin-heart)' : 'url(#twin-heart-calm)'} />
                 <path d={A.HEART_LINES} className="heart-line" />
               </g>
             </g>
@@ -163,10 +171,10 @@ export function Twin({ tiles, overall, hr = 62 }: { tiles: HazardTile[]; overall
             const status = st(s.id)
             const x2 = s.side === 'l' ? -14 : VB_W + 14
             return (
-              <g key={s.id} className={`twin-spot st-${status}`}>
+              <g key={s.id} className={`twin-spot st-${status}${focus === s.id ? ' is-linked' : ''}`}>
                 <line x1={s.x} y1={s.y} x2={x2} y2={s.y} className="twin-leader" />
                 <circle cx={s.x} cy={s.y} r="13" className="twin-halo" />
-                <circle cx={s.x} cy={s.y} r="5" className="twin-dot" />
+                <circle cx={s.x} cy={s.y} r="5" className="twin-dot" data-spot={s.id} />
               </g>
             )
           })}
@@ -175,7 +183,8 @@ export function Twin({ tiles, overall, hr = 62 }: { tiles: HazardTile[]; overall
           const t = by.get(s.id)
           if (!t) return null
           return (
-            <a key={s.id} href={`#hz-${s.id}`} className={`twin-chip ${s.side} st-${t.status}`} style={{ top: `${(s.y / VB_H) * 100}%` }}>
+            <a key={s.id} href={`#hz-${s.id}`} className={`twin-chip ${s.side} st-${t.status}${focus === s.id ? ' is-linked' : ''}`} style={{ top: `${(s.y / VB_H) * 100}%` }}
+              onMouseEnter={() => setFocus(s.id)} onMouseLeave={() => setFocus(null)} onFocus={() => setFocus(s.id)} onBlur={() => setFocus(null)}>
               <span className="sr-only">{`Jump to ${t.name} card, ${WORD[t.status]}`}</span>
               <HazardIcon hazard={s.id} status={t.status} />
               <span className="twin-chip-text" aria-hidden="true"><b>{t.name}</b><StatusPill status={t.status} /></span>

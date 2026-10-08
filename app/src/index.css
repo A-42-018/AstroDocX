@@ -9,7 +9,7 @@
   --data: #2dd4e8; --data-soft: rgba(45, 212, 232, 0.14);
   --ok: #3ddc97; --watch: #ffc53d; --act: #ff5a6e;
   --bg: #07080b;
-  --text-hi: #f4f5f7; --text-mid: rgba(235, 238, 245, 0.64); --text-lo: rgba(235, 238, 245, 0.58);
+  --text-hi: #f4f5f7; --text-mid: rgba(235, 238, 245, 0.72); --text-lo: rgba(235, 238, 245, 0.66);
   /* Smoked glass, three levels: chrome (rail/top bar), cards, wells inside cards */
   --glass-1: rgba(14, 15, 19, 0.6); --glass-2: rgba(20, 22, 27, 0.46); --glass-3: rgba(8, 9, 12, 0.38);
   --line: rgba(255, 255, 255, 0.08); --line-hi: rgba(255, 255, 255, 0.16);
@@ -104,6 +104,7 @@ a.chip:hover { border-color: var(--line-hi); background: rgba(255, 255, 255, 0.0
   position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; display: grid; place-content: center;
   font-size: 0.7rem; line-height: 1; color: #160a02; background: var(--st, var(--watch)); border: 2px solid #12141a;
 }
+.demo-btn { min-height: 40px; padding: 0 14px; font-size: 0.84rem; gap: 6px; white-space: nowrap; }
 .install-btn { min-height: 40px; padding: 0 16px; font-size: 0.84rem; }
 
 /* Crew switcher: avatars with status rings; the selected one shows its name */
@@ -413,10 +414,11 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .pulse-ring { position: absolute; inset: 0; border-radius: 10px; border: 2px solid var(--data); opacity: 0; pointer-events: none; }
 .live-wave { width: 100%; display: block; --data: #2dd4e8; }
 .live-num { font-variant-numeric: tabular-nums; }
-.vitals-note { grid-column: 1 / -1; margin: 0; font-size: 0.74rem; }
+.sim-chip { margin-left: auto; padding: 2px 7px; border-radius: 999px; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; color: var(--text-mid); border: 1px solid var(--line-hi, var(--line)); }
+.vital-base { font-size: 0.74rem; color: var(--text-mid); }
 
 /* ---- Mission Health (U3) ---- */
-.board-top { display: grid; gap: 18px; grid-template-columns: 1fr; }
+.board-top { position: relative; display: grid; gap: 18px; grid-template-columns: 1fr; }
 @media (min-width: 820px) { .board-top { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .twin-card { grid-row: span 2; order: -1; } }
 @media (min-width: 1180px) {
   .board-top { grid-template-columns: minmax(280px, 340px) minmax(380px, 1fr) minmax(280px, 340px); }
@@ -425,9 +427,17 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .readiness { flex-direction: column; align-items: stretch; justify-content: center; gap: 14px; padding: 24px; }
 .readiness > div { flex: 0 0 auto; min-width: 0; }
 .readiness .ring { align-self: center; }
+.rd-trend { display: grid; gap: 10px; margin-top: 10px; }
+.rd-trend .mini { height: 38px; }
+.rd-checkin { font-size: 0.82rem; color: var(--text-mid); }
+.rd-checkin b { color: var(--watch); font-weight: 600; }
 .ring.dial { width: 230px; height: auto; aspect-ratio: 6 / 5; }
 .ring.dial svg { height: 100%; }
 .ring.dial .ring-track, .ring.dial .ring-fill { stroke-width: 9; }
+.ring.dial .ring-fill { stroke: var(--cyan, #2dd4e8); }
+.ring.dial { margin-bottom: 26px; }
+.dial-held { position: absolute; left: 0; right: 0; bottom: -26px; margin: 0; text-align: center; font-size: 0.72rem; color: var(--text-lo); }
+.dial-held b { color: var(--st); font-weight: 600; }
 .ring.dial figcaption { inset: auto 0 0 0; top: 68%; align-content: start; gap: 4px; }
 .ring.dial figcaption b { font-size: 2rem; }
 .dial-tick { stroke: var(--text-lo); stroke-width: 1.2; stroke-linecap: round; }
@@ -441,8 +451,8 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .twin-fig { position: relative; width: min(46%, 240px); aspect-ratio: 300 / 660; --st: var(--ok); }
 .twin-fig > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .twin-body { stroke: rgba(127, 232, 255, 0.7); stroke-width: 1.3; filter: drop-shadow(0 0 6px rgba(45, 212, 232, 0.45)); }
-.twin-aura { fill: none; stroke: var(--st); stroke-width: 3; opacity: 0.55; filter: blur(7px); }
-.twin-aura.st-nominal { opacity: 0.18; }
+.twin-aura { fill: none; stroke: var(--st); stroke-width: 3; opacity: 0.3; filter: blur(7px); }
+.twin-aura.st-nominal { opacity: 0.1; }
 .twin-scan { fill: url(#twin-scan-g); animation: scan 7s linear infinite; }
 @keyframes scan { from { transform: translateY(-60px); } to { transform: translateY(680px); } }
 .twin-leader { stroke: var(--st); stroke-width: 1; stroke-dasharray: 3 4; opacity: 0.6; }
@@ -475,6 +485,7 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .next .sec-title { margin: 0; }
 .next-title { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em; }
 .next-step { margin: 0; font-size: 1.02rem; line-height: 1.45; }
+.next .step.next-step { min-height: 0; padding: 4px 0; }
 .next-meta { margin: 0; font-size: 0.8rem; }
 .next .btn { align-self: flex-start; margin-top: 4px; }
 
@@ -494,19 +505,6 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .backlog-fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--st, var(--data)); }
 .backlog i { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--text-mid); border-radius: 1px; }
 
-.crew-ov { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
-.crew-ov button {
-  width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 16px; text-align: left; font: inherit; color: var(--text-hi); cursor: pointer;
-  transition: transform 0.25s var(--ease), border-color 0.25s;
-}
-.crew-ov button:hover { transform: translateY(-2px); border-color: var(--line-hi); }
-.crew-ov button.on { border-color: var(--text-mid); }
-.ov-ring { position: relative; width: 46px; height: 46px; flex-shrink: 0; }
-.ov-ring svg { width: 100%; height: 100%; }
-.ov-ring .ring-track, .ov-ring .ring-fill { stroke-width: 4; }
-.ov-ring b { position: absolute; inset: 0; display: grid; place-content: center; font-size: 0.74rem; }
-.ov-text { display: grid; flex: 1; min-width: 0; font-size: 0.9rem; }
-.ov-text .mono { font-size: 0.74rem; color: var(--text-mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (prefers-reduced-motion: reduce) { .twin-scan, .twin-spot .twin-halo, .dial-needle { animation: none; transition: none; } }
 
 /* ---- Alerts master/detail (U4) ---- */
@@ -691,9 +689,11 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .veins path { fill: none; stroke: rgba(90, 160, 255, 0.4); stroke-width: 1.2; stroke-linecap: round; stroke-dasharray: 3 7; animation: venous 2.4s linear infinite; }
 @keyframes venous { to { stroke-dashoffset: -20; } }
 .pulses path { fill: none; stroke: #ff6b7a; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 60 1000; stroke-dashoffset: -1000; filter: drop-shadow(0 0 4px #ff4d5e); }
-.heart { transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 0 8px rgba(255, 77, 94, 0.75)); }
-.heart-glow { fill: rgba(255, 77, 94, 0.35); opacity: 0; filter: blur(6px); }
-.heart-vessels { fill: none; stroke: #ff6b7a; stroke-width: 3.2; stroke-linecap: round; }
+.heart { transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 0 8px rgba(45, 212, 232, 0.7)); }
+.heart.heart-alert { filter: drop-shadow(0 0 8px rgba(255, 77, 94, 0.75)); }
+.heart-glow { fill: rgba(45, 212, 232, 0.35); opacity: 0; filter: blur(6px); }
+.heart-vessels { fill: none; stroke: #5fe3f2; stroke-width: 3.2; stroke-linecap: round; }
+.heart-alert .heart-vessels { stroke: #ff6b7a; }
 .heart-line { fill: none; stroke: rgba(110, 0, 20, 0.6); stroke-width: 1.1; stroke-linecap: round; }
 .spark { fill: #bff6ff; opacity: 0.2; animation: spark 4s ease-in-out infinite; }
 @keyframes spark { 50% { opacity: 0.85; } }
@@ -702,3 +702,11 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 @keyframes floorspin { to { stroke-dashoffset: -280; } }
 .twin-aura { stroke-width: 4; }
 @media (prefers-reduced-motion: reduce) { .veins path, .spark, .floor-ring.spin { animation: none; } }
+
+/* Twin <-> hazard cards: hovering or focusing either one lights both; a spark runs from an Act hotspot to Next Action */
+.tile.is-linked { border-color: var(--st); box-shadow: 0 0 0 1px var(--st), 0 8px 28px -8px color-mix(in srgb, var(--st) 55%, transparent); transform: translateY(-2px); }
+.twin-spot.is-linked .twin-halo { fill: color-mix(in srgb, var(--st) 38%, transparent); stroke-width: 2; }
+.twin-spot.is-linked .twin-leader { opacity: 1; stroke-width: 1.6; }
+.twin-chip.is-linked { background: rgba(255, 255, 255, 0.1); border-color: var(--st); }
+.pulse-spark { position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%; background: var(--act); box-shadow: 0 0 14px 4px color-mix(in srgb, var(--act) 70%, transparent); pointer-events: none; z-index: 5; opacity: 0; }
+.tile:focus-visible { outline: 2px solid var(--st); outline-offset: 2px; }

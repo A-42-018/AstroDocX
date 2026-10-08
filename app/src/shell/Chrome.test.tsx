@@ -10,7 +10,7 @@ import type { ShellData } from './useShellData'
 afterEach(cleanup)
 
 const data: ShellData = {
-  crewId: 'eng', now: MISSION_START + 8 * 3600_000, pendingSync: 2,
+  crewId: 'eng', now: MISSION_START + 8 * 3600_000, pendingSync: 2, sinceSyncH: 3.5,
   crew: [
     { id: 'cmdr', name: 'Commander', role: 'Commander', status: 'nominal', alerts: 0, readiness: 95, worstHazard: null },
     { id: 'eng', name: 'Flight Engineer', role: 'Flight Engineer', status: 'act', alerts: 2, readiness: 61, worstHazard: 'Gravity' },

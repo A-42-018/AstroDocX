@@ -25,6 +25,8 @@ describe('shell formatting', () => {
     const t = MISSION_START + 6 * HOUR
     expect(linkSummary({ state: 'closed', nextOpen: t + 6 * HOUR }, t, 0).long).toBe('Link closed · opens in 6h 00m')
     expect(linkSummary({ state: 'open', nextOpen: t + 12 * HOUR, closesAt: t + HOUR }, t, 3).long).toBe('Link open · closes in 1h 00m · 3 queued')
+    expect(linkSummary({ state: 'closed', nextOpen: t + 6 * HOUR }, t, 0, 10.46).long).toBe('Link closed · opens in 6h 00m · synced 10.5 h ago')
+    expect(linkSummary({ state: 'closed', nextOpen: t + 6 * HOUR }, t, 0, null).long).toBe('Link closed · opens in 6h 00m · no sync yet')
     expect(linkSummary({ state: 'blackout', nextOpen: t }, t, 0).short).toBe('Blackout')
   })
 })

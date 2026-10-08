@@ -895,6 +895,72 @@ Owner asked for the Interstellar theme; it is copyrighted (Hans Zimmer), so the 
 - Lungs and gut are faint shells; the beat ripple brightens skin at half strength. Arteries light with the body (`health-twin.js`).
 - **Checked (Chrome pane, 800×900):** brain stage and heart stage, a pulse caught in the legs and in the carotids, no shader / console errors.
 
+## 14. Status Board polish + landing nav (plan, not started, 2026-10-08)
+Source: review of the Status Board (Commander = all nominal, Pilot = Act) at 1440 px. One phase per session; after each phase: `tsc`, `oxlint`, tests, build, check at 1440 px and 375 px in the preview pane, zip (no push, §13.4).
+
+| Phase | Fix | Files (likely) | Done when |
+|---|---|---|---|
+| **B0 — Landing nav** | Navbar always visible with the blurred glass background (drop the transparent-until-scroll state). Remove "Health System" and "AstroDocX" links and the hamburger; keep only **Launch Console** as a highlighted button, on phones too. | `landing/index.html`, `landing/styles.css`, `landing/script.js` | Nav is blurred at scroll 0 and below; one CTA at 1440 px and 375 px; tour still works |
+| **B1 — Status colours** | Readiness gauge arc no longer red at a high score: neutral arc + status pill, plus "Held back by: Sleep (Act)" under the number. Twin heart beats in cyan; red only when Environment/heart is Act. | `board/Dial.tsx`, `board/StatusBoard.tsx`, `board/Twin.tsx` | Commander shows no red anywhere; Pilot's 83% reads correctly |
+| **B2 — Hotspot anchors** | Radiation = faint whole-body aura; Distance = ear/antenna point; every hotspot dot sits on the body and its leader line reaches it. | `board/Twin.tsx`, `board/anatomy.ts` | All 5 labels point at a visible spot |
+| **B3 — Remove repeats** | Drop the readiness card's name title (greeting keeps it). Merge "Last ground sync" into the top-bar link widget. Crew row becomes a commander overview (worst hazard + mini trend per person) or is removed. | `board/StatusBoard.tsx`, `board/CrewOverview.tsx`, `shell/Chrome.tsx` | Each fact appears once per screen |
+| **B4 — Readiness card + contrast** | Fill the empty card: 7-day readiness sparkline + "Last check-in 14 h ago · due" link. Hazard card helper text raised to ≥ 4.5:1. | `board/StatusBoard.tsx`, `board/mini.ts`, `index.css` | No empty space; a11y test passes contrast |
+| **B5 — Live waves honesty** | "SIM" chip on each live-wave card; baseline next to the value ("61 bpm · baseline 64"). Remove the small footnote. | `live/LiveVitals.tsx` | Simulated signals are labelled where they are shown |
+| **B6 — Twin ↔ cards link** | Hover/focus a hotspot highlights its hazard card and the reverse; during an Act alert a pulse travels from the hotspot to Next Action. Reduced-motion: highlight only. | `board/Twin.tsx`, `board/StatusBoard.tsx`, `board/store.ts` | Keyboard and mouse both work; paused when tab hidden |
+| **B7 — Inline first step** | Next Action shows step 1 as a checkbox; ticking it saves to the action card (same store as Alerts). | `board/NextAction.tsx`, `alerts/*` | Step progress matches on Board and Alerts |
+| **B8 — Demo button** | Top-bar "Run demo": injects a CO₂ scenario and advances time so Environment goes Watch → Act, an alert opens and Next Action updates (~20 s). Resettable. | `shell/Chrome.tsx`, `sim/store.ts`, `sim/advance.ts` | Full loop visible in ≤ 20 s, reset restores demo data |
+
+Order: B0 → B1 → B2 → B3 → B4 → B5 → B6 → B7 → B8. B0–B5 are small fixes; B6–B8 are the demo-facing features.
+
+### B0 Implementation Log: landing nav (done locally, 2026-10-08)
+- Nav is now logo + one **Launch Console** button at every width; "Health System" / "AstroDocX" links, hamburger, active-link sync and scroll hide/show code removed (`index.html`, `script.js`).
+- Glass background (`rgba(12,10,30,.92)` + 12px blur) is the default state; the `.scrolled` class and the intro-time `.nav-hidden` fade (`universe.js`, `universe.css`) are gone, so the bar shows from scroll 0.
+- Sound toggle on phones moved left of the CTA (was left of the hamburger).
+- Checked (preview pane, 762 px and 375 px): blur at scroll 0, one CTA, no overlap, no console errors from the change.
+
+### B1 Implementation Log: status colours (done locally, 2026-10-08)
+- Readiness dial arc is now neutral cyan at every score; the status pill carries the colour. New line under the dial: "Held back by: <hazard> (Act|Watch)" for the lowest-scoring non-nominal hazard, hidden when all are nominal (`Dial.tsx`, `StatusBoard.tsx`, `index.css`).
+- Twin heart is cyan (new `twin-heart-calm` gradient, vessels, glow); it turns red only with `heart-alert` when Environment is Act (`Twin.tsx`).
+- Checked: tsc, oxlint, 186 tests and build pass; Pilot reads 83% cyan arc + "Held back by: Isolation (Act)"; Commander shows no red.
+
+### B2 Implementation Log: hotspot anchors (done locally, 2026-10-08)
+- Distance dot moved from empty space beside the head to the ear (173, 58); Radiation dot moved from the abdomen to the left flank (74, 270), and the whole-body aura is fainter (0.3 / 0.1 opacity) so it reads as an aura, not a hotspot (`Twin.tsx`, `index.css`).
+- Checked with `isPointInFill` on the body path and a zoomed screenshot: all 5 dots sit on the body and their leader lines reach them. tsc, oxlint, build pass; `AlertsPage.test.tsx` timed out once under full-suite load (25 s) and passes alone.
+
+### B3 Implementation Log: remove repeats (done locally, 2026-10-08)
+- Readiness card: the name title is now a screen-reader-only `h1` (the greeting shows the name).
+- "Last ground sync" pill removed from the board; the top-bar link chip now ends with "· synced 10.5 h ago" (or "· no sync yet"), via `linkSummary(..., sinceSyncH)` and a new `sinceSyncH` on `ShellData`.
+- Crew row removed (the top-bar switcher already shows each person's status; hover/aria carry readiness). `CrewOverview.tsx`, its CSS and its test deleted; `StatusBoard`/`BoardPage` lose the `crew`/`onSelectCrew` props.
+- Checked: tsc, oxlint, 185 tests, build; Pilot board shows one sync fact, one name, no crew row.
+
+### B4 Implementation Log: readiness card + contrast (done locally, 2026-10-08)
+- `loadSnapshot(crewId, d, at?)` can replay an earlier moment (readings up to `at`, alerts open then at their peak level, sync state then). `loadMini` uses it for a 7-day readiness series (last point is the live snapshot) and also returns the last check-in time (`mini.ts`, `snapshot.ts`).
+- Readiness card: step-line sparkline "Readiness, last 7 days · min–max%" and "Last check-in N h ago · due" (due from 12 h; "No check-in yet · due" when none) linking to `/checkin` (`StatusBoard.tsx`, `index.css`).
+- Contrast: measured the hazard cards' helper text at 6.0:1 (label, chart caption) and 7.1:1 (tracks line) against the composited background; raised `--text-mid` to .72 and `--text-lo` to .66 for margin.
+- Checked: tsc, oxlint, 185 tests, build; Pilot board in the preview. The demo mission has no check-ins, so the link shows "No check-in yet · due".
+
+### B5 Implementation Log: live waves honesty (done locally, 2026-10-08)
+- Each live-wave card (heart rate, SpO₂, breathing) has a "SIM" chip in its header with a tooltip, and the value line carries the person's own baseline ("59 bpm · baseline 62"; breathing uses the normal 14/min). Baselines come from the baselines table through `liveQuery` (`LiveVitals.tsx`, `index.css`).
+- The footnote under the strip is removed; the screen-reader summary still says "Simulated live telemetry".
+- Checked: tsc, oxlint, 185 tests, build; Pilot board in the preview.
+
+### B6 Implementation Log: twin <-> cards link (done locally, 2026-10-08)
+- `focusHazard` in the board store. Hovering or focusing a twin chip lights its hazard card, hotspot halo and leader line; hovering or focusing a card (now `tabIndex=0`) lights the same hotspot and chip (`Twin.tsx`, `StatusBoard.tsx`, `store.ts`, `index.css`).
+- While the top alert is Act, a red spark runs from its hotspot to the Next Action card every 4 s (`useAlertPulse`, Web Animations, ~1.4 s). No spark under reduced motion or in a background tab; the highlight still works.
+- Checked: tsc, oxlint, 185 tests, build; in the preview the spark travelled from the hotspot (x 724) to Next Action (x 997), and hover/focus linking works both ways and clears on leave/blur.
+
+### B7 Implementation Log: inline first step (done locally, 2026-10-08)
+- Next Action shows the first open step as a checkbox; ticking calls `setStepDone` (same function and store as the Alerts page), so it saves, writes the "Step done" log entry, and the next step takes its place. When all steps are ticked the card says so as before (`NextAction.tsx`, `index.css`).
+- Checked: tsc, oxlint, 185 tests, build; in the preview, ticking on the Board moved "0 of 3" to "1 of 3" and the Alerts page showed step 1 ticked; unticking there restored the demo state.
+- Not added: a unit test for the tick (the store round-trip is covered by the existing `setStepDone` tests).
+
+### B8 Implementation Log: Run demo button (done locally, 2026-10-08)
+- New `sim/demoRun.ts`: `runDemo` reseeds the demo mission, selects the first crew member, injects the CO₂ scrubber fault and advances the clock one hour every 2.2 s (max 8 steps) until Environment reaches Act; `resetDemo` restores the seed data and cancels a run. State lives in a small zustand store (`useDemo`).
+- Top bar button: "Run demo" -> "Demo n/8 · stop" while running -> "Reset demo" afterwards; it opens the Board first (`Chrome.tsx`, `index.css`).
+- Checked: tsc, oxlint, 185 tests, build; in the preview the loop ran in about 8 s (mission clock D29 23:00 -> D30 02:00, Environment nominal -> Act, Next Action "Cabin CO₂ ACT", alert bell and readiness update), and Reset demo restored D29 23:00 and all-nominal tiles.
+- Note: in one-hour steps the engine goes straight from nominal to Act, so the Watch stage is not shown.
+- B0 to B8 are all done locally. Not pushed (§13.4).
+
 ## Current Phase
 **C0–C12 done and deployed. Console v2 (U0–U7) and L4 (3D anatomy viewer) done locally. Landing sprint: R1, R2, P0 and P1 (particle engine + procedural shapes) done locally 2026-10-08. P2 (bake pipeline) done, waiting on real model files. P0 to P5, S1 (short page) and S2 (particle wordmark reveal), S3 (particle Health Twin) and S4 (one particle journey, Team removed) done. Next: P6 (ship): check reduced-motion and the tour on the short page, Lighthouse, OG image, README screenshots, deploy, video. Nothing pushed yet (§13.4).**
 

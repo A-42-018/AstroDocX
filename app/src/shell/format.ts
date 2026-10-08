@@ -20,8 +20,8 @@ export function duration(ms: number): string {
 }
 
 /** One line for the top-bar link widget: what the link is doing now and when it changes. */
-export function linkSummary(link: LinkInfo, now: number, pending: number): { short: string; long: string } {
-  const queue = pending > 0 ? ` · ${pending} queued` : ''
+export function linkSummary(link: LinkInfo, now: number, pending: number, sinceSyncH?: number | null): { short: string; long: string } {
+  const queue = (pending > 0 ? ` · ${pending} queued` : '') + (sinceSyncH === undefined ? '' : sinceSyncH === null ? ' · no sync yet' : ` · synced ${sinceSyncH.toFixed(1)} h ago`)
   if (link.state === 'blackout') return { short: 'Blackout', long: `Blackout${queue}` }
   if (link.state === 'open') return { short: 'Link open', long: `Link open · closes in ${duration((link.closesAt ?? now) - now)}${queue}` }
   return { short: 'Link closed', long: `Link closed · opens in ${duration(link.nextOpen - now)}${queue}` }
