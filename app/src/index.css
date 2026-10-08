@@ -437,8 +437,8 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .ring.dial svg { height: 100%; }
 .ring.dial .ring-track, .ring.dial .ring-fill { stroke-width: 9; }
 .ring.dial .ring-fill { stroke: var(--cyan, #2dd4e8); }
-.ring.dial { margin-bottom: 26px; }
-.dial-held { position: absolute; left: 0; right: 0; bottom: -26px; margin: 0; text-align: center; font-size: 0.72rem; color: var(--text-lo); }
+.ring.dial { margin-bottom: 56px; }
+.dial-held { position: absolute; left: 0; right: 0; top: calc(100% + 10px); margin: 0; text-align: center; font-size: 0.72rem; line-height: 1.35; color: var(--text-lo); }
 .dial-held b { color: var(--st); font-weight: 600; }
 .ring.dial figcaption { inset: auto 0 0 0; top: 68%; align-content: start; gap: 4px; }
 .ring.dial figcaption b { font-size: 2rem; }
