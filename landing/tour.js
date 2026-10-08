@@ -22,7 +22,7 @@
      Pinned sections are tall because of their pin spacer, so their speed sets the pace of the story. */
   var PLAN = [
     { id: 'universe',  hold: 0,  pps: 320 },
-    { id: 'twin',      hold: 1,  pps: 230 },
+    { id: 'twin',      hold: 1,  pps: 200 },
     { id: 'astrodocx', hold: 1,  pps: 210 },
     { id: 'contact',   hold: 6,  pps: 300 }
   ];

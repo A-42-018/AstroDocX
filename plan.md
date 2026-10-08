@@ -836,8 +836,26 @@ Owner feedback: the AstroDocX part was better with the particle wordmark.
 - **Checked (real Chrome pane):** pin order intro, Twin, reveal; cloud at p .2, wordmark at .45, final layout at .92 (desktop); 375 px final state fits with no horizontal overflow; `?reduce=1` gives no reveal pin and the CSS wordmark; no console errors. Wordmark size was increased after the first look (3.2 to 2.1).
 - **Not re-checked:** full tour, tier drop, Lighthouse, real-GPU frame rate (two WebGL contexts exist on the page: the intro, idle once scrolled past, and the reveal).
 
+## S3 Implementation Log: Health Twin made of particles (done, 2026-10-08)
+Owner request: replace the old Health Twin (SVG body, glass panels, canvas-2D particles) with a particle-made twin in the new style.
+- **`landing/universe/health-twin.js` (new)** and a rewritten `#twin` section: one WebGL canvas, one draw call, ~18k particles (9k to 11k on phones and low-end): skin shell, skeleton (spine, ribs, pelvis ring), brain, heart, two lungs, gut, legs, a transmitter on the right forearm, and a floor ring. Slots are shuffled so a draw-range prefix is a uniform sample.
+- **Scroll (pin +=480% desktop, 420% phone; `refreshPriority 0`):** 0 to .20 the starfield gathers into the body (feet first, curl dissolve); .20 to .30 a scan line sweeps head to feet and each region lights as it passes; .30 to .84 six systems, one every 0.09 (Isolation brain, Environment lungs, Radiation whole body, Gravity heart, Distance link, Gravity legs): the region glows, its reading fades in beside it with a leader line (SVG, projected from the 3D anchor); .86 to 1 crew readiness 83% (counts up) and the real Pilot action card, with the six labels dimmed.
+- **Live:** the heart beats once a second (lub, softer dub) and sends a ripple through the body; lungs breathe; the brain pulses amber (the Pilot's ACT alert, with an amber leader line); gentle sway; cursor repel on desktop.
+- **Text style:** plain text blocks in the intro's type (mono kicker with status dot and OK / ACT chip, readings, baseline note), no glass cards. Same demo-mission numbers as before. The opt-in "Explore real anatomy in 3D" button (L4) stays in the header.
+- **Phones:** header compact, body fills the middle, only the current system's caption shows at the bottom. **Reduced motion / no WebGL (`?reduce=1`):** no pin or canvas; the six systems and the readiness / action card become a plain grid.
+- **Removed:** `twin.js`, `twin.css` and the old section markup. `ADX_TWIN.yAt(p)` is exposed for tests. Tour pace through the twin is 200 px/s.
+- **Checked (real Chrome pane):** gather and scan, a mid stage with the amber brain and its leader line, all six labels, the readiness / action card; 375 px (two camera distances tried, k = 1.3 kept, no horizontal overflow); `?reduce=1` static grid; pin order intro, twin, reveal; no console errors.
+- **Not checked:** frame rate on a real GPU (now three WebGL canvases exist in total, two active at once at most), Lighthouse, the full tour, labels at very short viewports (< 600 px tall), tier drop on the twin (it uses a fixed draw count, no adaptive drop).
+
+## S4 Implementation Log: One sky for every section (done, 2026-10-08)
+Owner question: why did the particle Health Twin's background differ from the intro's?
+- **Cause:** the twin had only the flat base colour plus a cyan radial glow, no stars; the AstroDocX reveal used a third variant (CSS dots and a glow).
+- **`landing/universe/stars.js` (new):** the shared starfield (three twinkling white / blue / gold layers, tiers high 3000/1500/600, mid, low, draw-range prefix, brightness <= 35% of the main particles), extracted from `universe.js`, which now uses it too. `ADX_STARS.create(scene, {tier})` returns `setTime`, `setPR`, `setBright`, `setTier`, `dispose`. The twin and the reveal use it at brightness 0.5 (their camera is nearer, fewer stars in view).
+- **Backgrounds:** `#twin` and the particle-mode `#astrodocx` are now the plain base `#02030a` (the cyan glow and the CSS dots are gone in particle mode; the dots stay for the no-WebGL fallback), with the same edge vignette as the intro (`::after` radial scrim).
+- **Checked (real Chrome pane):** twin at p .40 and .62 and the reveal at .92 show the same sky as the intro; intro still renders; no console errors. Not re-checked: phone widths and the tier drop with the shared module, frame rate (three canvases).
+
 ## Current Phase
-**C0–C12 done and deployed. Console v2 (U0–U7) and L4 (3D anatomy viewer) done locally. Landing sprint: R1, R2, P0 and P1 (particle engine + procedural shapes) done locally 2026-10-08. P2 (bake pipeline) done, waiting on real model files. P0 to P5, S1 (short page) and S2 (particle wordmark reveal) done. Next: P6 (ship): check reduced-motion and the tour on the short page, Lighthouse, OG image, README screenshots, deploy, video. Nothing pushed yet (§13.4).**
+**C0–C12 done and deployed. Console v2 (U0–U7) and L4 (3D anatomy viewer) done locally. Landing sprint: R1, R2, P0 and P1 (particle engine + procedural shapes) done locally 2026-10-08. P2 (bake pipeline) done, waiting on real model files. P0 to P5, S1 (short page) and S2 (particle wordmark reveal) and S3 (particle Health Twin) done. Next: P6 (ship): check reduced-motion and the tour on the short page, Lighthouse, OG image, README screenshots, deploy, video. Nothing pushed yet (§13.4).**
 
 ## Next Roadmap
 0. **Landing sprint rule:** no push until P1–P6 are done; zip after every phase, one push at the end (§13.4).

@@ -78,8 +78,8 @@
 #universe.is-static { background:#02030a; }
 
 /* ═══ the page after the intro: Health Twin, AstroDocX reveal, Team all sit on the same near-black ═══ */
-#twin, #contact { background:#02030a; }
-#twin .twin-overlay, #contact .contact-overlay { background:radial-gradient(ellipse 60% 50% at 50% 30%,rgba(34,211,238,.07),transparent 70%); }
+#contact { background:#02030a; }
+#contact .contact-overlay { background:radial-gradient(ellipse 60% 50% at 50% 30%,rgba(34,211,238,.07),transparent 70%); }
 
 #astrodocx { position:relative;z-index:1;min-height:100vh;min-height:100svh;display:flex;align-items:center;justify-content:center;overflow:hidden;
   padding:calc(var(--nav-h,64px) + 40px) var(--pad-x,24px) 90px;text-align:center;color:#fff;scroll-margin-top:var(--nav-h,64px);
@@ -136,3 +136,75 @@
   #astrodocx.is-particle .hero-actions .btn-primary { grid-column:1 / -1; }
 }
 @media (max-height:700px) and (min-width:901px) { #astrodocx.is-particle .hero-tagline { display:none; } }
+
+/* ═══ #twin: the Health Twin made of particles (health-twin.js) ═══ */
+#twin { position:relative;z-index:1;height:100vh;height:100svh;overflow:hidden;color:#fff;scroll-margin-top:var(--nav-h,64px);background:#02030a; }
+#twin::after, #astrodocx.is-particle::after { content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(2,3,10,0) 0%,rgba(2,3,10,.55) 100%); }
+#twinCanvas { position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0; }
+.tw-lines { position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;overflow:visible; }
+.tw-line { fill:none;stroke:rgba(34,211,238,.6);stroke-width:1;opacity:0; }
+.tw-dot { fill:#22D3EE;opacity:0; }
+.tw-line.is-act { stroke:rgba(245,166,35,.75); } .tw-dot.is-act { fill:#F5A623; }
+
+.tw-head { position:absolute;z-index:2;left:var(--pad-x,24px);top:calc(var(--nav-h,64px) + 22px);max-width:min(560px,44vw); }
+.tw-eyebrow { font-family:var(--font-mono);font-size:.66rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--holo,#22D3EE);margin:0 0 12px; }
+.tw-eyebrow .bracket { color:rgba(127,168,255,.8); }
+.tw-title { font-family:var(--font-display);font-weight:800;line-height:1;margin:0 0 14px;text-transform:uppercase;letter-spacing:.1em;font-size:clamp(1.9rem,4.4vw,3.8rem);
+  text-shadow:0 0 36px rgba(2,3,10,.9); }
+.tw-title span { display:block; }
+.tw-title span + span { color:transparent;-webkit-text-stroke:1.3px rgba(234,242,255,.85);font-size:.62em;letter-spacing:.14em;margin-top:6px; }
+.tw-sub { font-size:clamp(.82rem,1.1vw,.95rem);line-height:1.55;color:rgba(234,242,255,.72);max-width:44ch;margin:0 0 14px; }
+
+.tw-labels { position:absolute;inset:0;z-index:2;pointer-events:none; }
+.tw-label { position:absolute;width:min(270px,26vw);opacity:0;will-change:opacity,translate;text-shadow:0 2px 18px rgba(2,3,10,.95); }
+.tw-label[data-side="left"] { left:var(--pad-x,24px);text-align:left; }
+.tw-label[data-side="right"] { right:var(--pad-x,24px);text-align:left; }
+.tw-label:nth-of-type(1) { top:41vh; } .tw-label:nth-of-type(2) { top:60vh; } .tw-label:nth-of-type(3) { top:78vh; }
+.tw-label:nth-of-type(4) { top:20vh; } .tw-label:nth-of-type(5) { top:44vh; } .tw-label:nth-of-type(6) { top:66vh; }
+.tw-kick { display:flex;align-items:center;gap:8px;margin:0 0 7px;font-family:var(--font-mono);font-size:.64rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#E0FBFF; }
+.tw-kick i { width:7px;height:7px;border-radius:50%;background:#3EE6A0;box-shadow:0 0 8px #3EE6A0;flex:none; }
+.tw-kick b { margin-left:auto;padding:2px 8px;border-radius:99px;font-size:.58rem;letter-spacing:.14em;color:#3EE6A0;border:1px solid rgba(62,230,160,.45); }
+[data-state="act"] > .tw-kick i { background:#F5A623;box-shadow:0 0 8px #F5A623;animation:twPulse 1.3s ease-in-out infinite; }
+[data-state="act"] > .tw-kick b { color:#F5A623;border-color:rgba(245,166,35,.55); }
+@keyframes twPulse { 50% { opacity:.4; } }
+.tw-row { display:flex;justify-content:space-between;gap:12px;margin:0 0 4px;font-size:.82rem;line-height:1.35;color:rgba(234,242,255,.62); }
+.tw-row b { color:#fff;font-weight:600;white-space:nowrap; } .tw-row small { font-size:.7rem;color:#F5A623;font-weight:600; }
+.tw-note { margin:6px 0 0;font-size:.7rem;line-height:1.4;color:rgba(234,242,255,.5); }
+
+.tw-final { position:absolute;left:50%;bottom:3.5vh;transform:translateX(-50%);width:min(94vw,760px);display:flex;gap:22px;align-items:flex-start;opacity:0;
+  padding:14px 18px;border-radius:14px;background:rgba(4,10,22,.72);border:1px solid rgba(34,211,238,.22);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px); }
+.tw-ready { flex:none;display:flex;flex-direction:column;gap:4px;min-width:120px; }
+.tw-ready span { font-family:var(--font-mono);font-size:.6rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(234,242,255,.6); }
+.tw-ready b { font-size:2.1rem;line-height:1;font-weight:800;color:#fff; } .tw-ready b i { font-style:normal; }
+.tw-ready em { font-style:normal;font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.16em;color:#F5A623; }
+.tw-card .tw-why { margin:0 0 6px;font-size:.84rem;color:#fff;line-height:1.4; }
+.tw-card ol { margin:0 0 4px 18px;padding:0;font-size:.78rem;line-height:1.45;color:rgba(234,242,255,.75); }
+
+@media (max-width:900px) {
+  .tw-head { max-width:none;right:var(--pad-x,24px);top:calc(var(--nav-h,64px) + 10px); }
+  .tw-title { font-size:1.6rem;margin-bottom:8px; }
+  .tw-sub { display:none; }
+  .tw-eyebrow { margin-bottom:8px;font-size:.58rem; }
+  .tw-head .anat3d-open { transform:scale(.9);transform-origin:left center; }
+  .tw-label, .tw-label:nth-of-type(n) { left:var(--pad-x,24px);right:var(--pad-x,24px);width:auto;top:auto;bottom:3.5vh;padding:12px 14px;border-radius:12px;background:rgba(4,10,22,.78);border:1px solid rgba(34,211,238,.22); }
+  .tw-final { flex-direction:column;gap:8px;width:auto;left:var(--pad-x,24px);right:var(--pad-x,24px);transform:none;bottom:3.5vh; }
+  .tw-ready { flex-direction:row;align-items:baseline;gap:10px; } .tw-ready b { font-size:1.5rem; }
+  .tw-card ol { font-size:.74rem; }
+}
+
+@media (max-height:700px) and (min-width:901px) { .tw-sub { display:none; } .tw-title { margin-bottom:10px; } }
+
+/* static twin (reduced motion / no WebGL): a plain grid of the six systems */
+#twin.is-static { height:auto;overflow:visible;padding:calc(var(--nav-h,64px) + 40px) var(--pad-x,24px) 80px; }
+#twin.is-static #twinCanvas, #twin.is-static .tw-lines { display:none; }
+#twin.is-static .tw-head { position:relative;inset:auto;max-width:none;margin-bottom:28px; }
+#twin.is-static .tw-sub { display:block; }
+#twin.is-static .tw-labels { position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px; }
+#twin.is-static .tw-label, #twin.is-static .tw-label:nth-of-type(n) { position:relative;inset:auto;width:auto;opacity:1;padding:14px 16px;border-radius:12px;background:rgba(10,18,34,.55);border:1px solid rgba(127,168,255,.18); }
+#twin.is-static .tw-final { position:relative;inset:auto;transform:none;width:auto;opacity:1;grid-column:1 / -1;flex-direction:row; }
+
+/* same sky everywhere: with the real starfield the CSS glow and dots are not needed */
+#astrodocx.is-particle { background:#02030a; }
+#astrodocx.is-particle .adx-stars { display:none; }
+#astrodocx.is-particle .adx-inner { z-index:2; }

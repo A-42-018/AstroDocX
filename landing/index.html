@@ -29,7 +29,6 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="icon" href="favicon.png" type="image/png">
   <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="twin.css" />
   <link rel="stylesheet" href="anatomy3d.css" />
   <link rel="stylesheet" href="universe/universe.css" />
   <script type="application/ld+json">
@@ -115,169 +114,69 @@
     </section>
 
     <!-- ═══════════════════════════════════════ HEALTH TWIN (#twin) ═════════
-         L2 signature visual. Fully isolated: markup here, styles in
-         twin.css, behaviour in twin.js (own pinned ScrollTrigger on
-         desktop; stacked + auto-played on mobile; static final state
-         with prefers-reduced-motion). Values are simulated demo data.
-    ══════════════════════════════════════════════════════════════ -->
+         The Health Twin made of particles (universe/health-twin.js): the starfield gathers into a
+         body, a scan lights each system, and its reading appears beside it. Readings are the demo
+         mission snapshot (Pilot). Static grid without WebGL / with reduced motion. -->
     <section id="twin" aria-labelledby="twin-title">
-      <div class="twin-overlay" aria-hidden="true"></div>
+      <canvas id="twinCanvas" aria-hidden="true"></canvas>
+      <svg class="tw-lines" id="twLines" aria-hidden="true"></svg>
 
-      <div class="twin-inner">
-        <header class="twin-header">
-          <p class="twin-eyebrow">
-            <span class="bracket">&lt;</span>health-twin<span class="bracket">/&gt;</span>
-          </p>
-          <h2 class="twin-title" id="twin-title">Meet our health care system</h2>
-          <p class="twin-subtitle">Astronauts have to look after their health, far from any doctor. Every crew member gets a Health Twin: one body scan, six systems, one readiness score. <span class="twin-tag">Demo mission data &middot; Pilot</span>
-            <button type="button" class="anat3d-open" id="anat3dOpen" aria-haspopup="dialog" aria-controls="anat3d" aria-expanded="false">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/></svg>
-              Explore real anatomy in 3D
-            </button></p>
-        </header>
+      <header class="tw-head">
+        <p class="tw-eyebrow"><span class="bracket">&lt;</span>health-twin<span class="bracket">/&gt;</span> &middot; demo mission data &middot; Pilot</p>
+        <h2 class="tw-title" id="twin-title"><span>MEET OUR</span><span>HEALTH CARE SYSTEM</span></h2>
+        <p class="tw-sub">Astronauts have to look after their health, far from any doctor. Every crew member gets a Health Twin: one body scan, six systems, one readiness score.</p>
+        <button type="button" class="anat3d-open" id="anat3dOpen" aria-haspopup="dialog" aria-controls="anat3d" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/></svg>
+          Explore real anatomy in 3D
+        </button>
+      </header>
 
-        <div class="twin-stage" id="twinStage">
-          <svg class="twin-leaders" id="twinLeaders" aria-hidden="true"></svg>
+      <div class="tw-labels">
+        <article class="tw-label" data-side="left" data-state="act">
+          <p class="tw-kick"><i></i>Isolation &middot; Brain <b>ACT</b></p>
+          <p class="tw-row"><span>Sleep last night</span><b>4.7 h <small>&darr; 3.4&sigma;</small></b></p>
+          <p class="tw-row"><span>Reaction time</span><b>411 ms <small>&uarr; 4.3&sigma;</small></b></p>
+          <p class="tw-row"><span>Mood check-in</span><b>3 / 5</b></p>
+          <p class="tw-note">Own baseline: 6.3 h &middot; 317 ms</p>
+        </article>
+        <article class="tw-label" data-side="left" data-state="ok">
+          <p class="tw-kick"><i></i>Environment &middot; Air <b>OK</b></p>
+          <p class="tw-row"><span>Cabin CO&#8322;</span><b>2.11 <small>mmHg</small></b></p>
+          <p class="tw-row"><span>SpO&#8322;</span><b>96.3 <small>%</small></b></p>
+          <p class="tw-note">NASA-STD-3001 habitat limit: 3 mmHg CO&#8322;</p>
+        </article>
+        <article class="tw-label" data-side="left" data-state="ok">
+          <p class="tw-kick"><i></i>Radiation &middot; Whole body <b>OK</b></p>
+          <p class="tw-row"><span>Dose rate</span><b>32.4 <small>&micro;Sv/h</small></b></p>
+          <p class="tw-note">Own baseline 25.2 &micro;Sv/h &middot; event limit 250 mSv / 24 h</p>
+        </article>
+        <article class="tw-label" data-side="right" data-state="ok">
+          <p class="tw-kick"><i></i>Gravity &middot; Heart <b>OK</b></p>
+          <p class="tw-row"><span>Heart rate</span><b>59 <small>bpm</small></b></p>
+          <p class="tw-row"><span>HRV</span><b>59 <small>ms</small></b></p>
+          <p class="tw-note">The beat you see is the live ECG rhythm</p>
+        </article>
+        <article class="tw-label" data-side="right" data-state="ok">
+          <p class="tw-kick"><i></i>Distance &middot; Ground link <b>OK</b></p>
+          <p class="tw-row"><span>Since ground sync</span><b>10.5 <small>h</small></b></p>
+          <p class="tw-row"><span>Waiting in outbox</span><b>3 <small>entries</small></b></p>
+          <p class="tw-note">Watch at 24 h unsynced &middot; Act at 72 h</p>
+        </article>
+        <article class="tw-label" data-side="right" data-state="ok">
+          <p class="tw-kick"><i></i>Gravity &middot; Legs <b>OK</b></p>
+          <p class="tw-row"><span>Exercise load</span><b>122 <small>min</small></b></p>
+          <p class="tw-note">Own baseline 113 min &middot; Act below ~3&sigma;</p>
+        </article>
 
-          <!-- ── Left column ── (values: demo mission, Pilot, latest readings; baselines from the engine) -->
-          <div class="twin-col twin-col-left">
-            <article class="twin-panel" data-hot="brain" data-side="left" data-alert="act">
-              <header class="tp-head"><span class="tp-dot"></span><h3>Isolation &middot; Brain</h3><span class="tp-state">ACT</span></header>
-              <div class="tp-row"><span>Sleep last night</span><b>4.7 h <small class="tp-delta tp-up">&darr; 3.4&sigma;</small></b></div>
-              <div class="tp-row"><span>Reaction time</span><b>411 ms <small class="tp-delta tp-up">&uarr; 4.3&sigma;</small></b></div>
-              <div class="tp-row"><span>Mood check-in</span><b>3 / 5</b></div>
-              <p class="tp-note">Own baseline: 6.3 h &middot; 317 ms</p>
-            </article>
-
-            <article class="twin-panel" data-hot="lungs" data-side="left">
-              <header class="tp-head"><span class="tp-dot"></span><h3>Environment &middot; Air</h3><span class="tp-state">OK</span></header>
-              <div class="tp-row"><span>Cabin CO&#8322;</span><b>2.11 <small>mmHg</small></b></div>
-              <div class="tp-row"><span>SpO&#8322;</span><b>96.3 <small>%</small></b></div>
-              <p class="tp-note">NASA-STD-3001 habitat limit: 3 mmHg CO&#8322;</p>
-            </article>
-
-            <article class="twin-panel" data-hot="radiation" data-side="left">
-              <header class="tp-head"><span class="tp-dot"></span><h3>Radiation &middot; Whole body</h3><span class="tp-state">OK</span></header>
-              <b class="tp-big">32.4 <small>&micro;Sv/h</small></b>
-              <span class="tp-note">Dose rate &middot; own baseline 25.2 &micro;Sv/h</span>
-              <span class="tp-note">Event limit: 250 mSv / 24 h</span>
-            </article>
+        <aside class="tw-final" aria-live="polite">
+          <div class="tw-ready"><span>Crew readiness</span><b><i id="twReadyVal">83</i>%</b><em>ACT</em></div>
+          <div class="tw-card">
+            <p class="tw-kick"><i></i>Action card &middot; Isolation &middot; Act</p>
+            <p class="tw-why">Sleep last night 4.70 h is 3.4&sigma; below Pilot&rsquo;s baseline (6.29 h).</p>
+            <ol><li>Swap safety-critical tasks to a rested crewmate</li><li>Take a scheduled rest period and a 20-minute nap</li><li>Notify the commander and the flight surgeon</li></ol>
+            <p class="tw-note">Logged on board &middot; syncs to ground later</p>
           </div>
-
-          <!-- ── Figure ── -->
-          <div class="twin-figure" id="twinFigure">
-            <svg class="twin-body" id="twinBody" viewBox="0 0 300 660" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-              <defs>
-                <filter id="twinGlow" x="-30%" y="-30%" width="160%" height="160%">
-                  <feGaussianBlur stdDeviation="4" result="b"/>
-                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
-                <linearGradient id="twinScanGrad" x1="0" x2="1" y1="0" y2="0">
-                  <stop offset="0" stop-color="#22D3EE" stop-opacity="0"/>
-                  <stop offset=".5" stop-color="#E0FBFF" stop-opacity="1"/>
-                  <stop offset="1" stop-color="#22D3EE" stop-opacity="0"/>
-                </linearGradient>
-                <linearGradient id="twinScanTrail" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0" stop-color="#22D3EE" stop-opacity="0"/>
-                  <stop offset="1" stop-color="#22D3EE" stop-opacity=".22"/>
-                </linearGradient>
-                <clipPath id="twinClip"><path id="twinClipPath"/></clipPath>
-              </defs>
-
-              <!-- scanner base rings -->
-              <g class="twin-rings" id="twinRings">
-                <g transform="translate(150 640) scale(1 .26)">
-                  <g class="ring ring-a"><circle r="70"/></g>
-                  <g class="ring ring-b"><circle r="104"/></g>
-                  <g class="ring ring-c"><circle r="138"/></g>
-                </g>
-              </g>
-
-              <!-- body outline (path built in twin.js) -->
-              <path class="twin-outline" id="twinOutline" pathLength="1" filter="url(#twinGlow)"/>
-
-              <!-- anatomy hints, lit by the scan line -->
-              <g class="twin-anatomy" id="twinAnatomy" clip-path="url(#twinClip)">
-                <g class="organ" data-hot="brain"><ellipse cx="150" cy="44" rx="20" ry="15"/><path d="M150 30v28M138 40q6 4 0 9M162 40q-6 4 0 9"/></g>
-                <g class="organ" data-hot="lungs"><ellipse cx="132" cy="162" rx="13" ry="27"/><ellipse cx="168" cy="158" rx="11" ry="23"/></g>
-                <g class="organ" data-hot="link"><circle cx="245" cy="366" r="9"/><path d="M241 366a4 4 0 0 1 8 0M238 366a7 7 0 0 1 14 0"/></g>
-                <g class="organ"><path d="M150 100v232" stroke-dasharray="6 4"/></g>
-                <g class="organ"><path d="M118 142q32 -14 64 0M114 160q36 -14 72 0M114 178q36 -13 72 0M117 196q33 -12 66 0M122 213q28 -10 56 0"/></g>
-                <g class="organ" data-hot="heart"><path d="M163 186c-10-7-17-13-17-20a7 7 0 0 1 13-4l4 4 4-4a7 7 0 0 1 13 4c0 7-7 13-17 20z"/></g>
-                <g class="organ" data-hot="radiation"><path d="M132 238h36M128 258h44M132 278h36" stroke-dasharray="2 5"/><circle cx="150" cy="262" r="16"/></g>
-                <g class="organ"><path d="M120 320q30 30 60 0M124 336q26 14 52 0"/></g>
-                <g class="organ" data-hot="legs"><path d="M128 346l-6 128M172 346l6 128"/><circle cx="122" cy="476" r="5"/><circle cx="178" cy="476" r="5"/><path d="M122 484l-2 112M178 484l2 112"/></g>
-                <g class="organ" data-hot="muscle"><ellipse cx="184" cy="400" rx="13" ry="42"/></g>
-              </g>
-
-              <!-- scan line -->
-              <g class="twin-scan" id="twinScan">
-                <rect x="0" y="-60" width="300" height="60" fill="url(#twinScanTrail)" clip-path="url(#twinClip)"/>
-                <rect x="10" y="-1" width="280" height="2" fill="url(#twinScanGrad)"/>
-              </g>
-
-              <!-- hotspots -->
-              <g class="twin-hot" data-hot="brain" transform="translate(150 42)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
-              <g class="twin-hot" data-hot="lungs" transform="translate(132 162)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
-              <g class="twin-hot" data-hot="heart" transform="translate(163 172)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
-              <g class="twin-hot" data-hot="radiation" transform="translate(150 262)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
-              <g class="twin-hot" data-hot="link" transform="translate(245 366)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
-              <g class="twin-hot" data-hot="muscle" transform="translate(184 400)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
-            </svg>
-            <canvas class="twin-canvas" id="twinCanvas" aria-hidden="true"></canvas>
-          </div>
-
-          <!-- ── Right column ── -->
-          <div class="twin-col twin-col-right">
-            <article class="twin-panel" data-hot="heart" data-side="right" id="twinHeartPanel">
-              <header class="tp-head"><span class="tp-dot"></span><h3>Gravity &middot; Heart</h3><span class="tp-state">OK</span></header>
-              <canvas class="tp-ecg" id="twinEcg" aria-hidden="true"></canvas>
-              <div class="tp-row tp-row-duo">
-                <span>HR <b id="twinHr">59</b> bpm</span>
-                <span>HRV <b>59</b> ms</span>
-              </div>
-            </article>
-
-            <article class="twin-panel" data-hot="link" data-side="right">
-              <header class="tp-head"><span class="tp-dot"></span><h3>Distance &middot; Ground link</h3><span class="tp-state">OK</span></header>
-              <div class="tp-row"><span>Since ground sync</span><b>10.5 <small>h</small></b></div>
-              <div class="tp-row"><span>Waiting in outbox</span><b>3 <small>entries</small></b></div>
-              <p class="tp-note">Watch at 24 h unsynced &middot; Act at 72 h</p>
-            </article>
-
-            <article class="twin-panel" data-hot="muscle" data-side="right">
-              <header class="tp-head"><span class="tp-dot"></span><h3>Gravity &middot; Legs</h3><span class="tp-state">OK</span></header>
-              <div class="tp-row"><span>Exercise load</span><b>122 <small>min</small></b></div>
-              <p class="tp-note">Own baseline 113 min &middot; Act below ~3&sigma;</p>
-            </article>
-          </div>
-
-          <!-- ── Bottom: readiness + action card ── -->
-          <div class="twin-bottom">
-            <div class="twin-readiness is-act" id="twinReadiness" title="Mean of the five hazard scores, as on the console Status Board">
-              <svg class="tr-ring" viewBox="0 0 80 80" aria-hidden="true">
-                <circle class="tr-bg" cx="40" cy="40" r="33"/>
-                <circle class="tr-fg" id="twinReadyRing" cx="40" cy="40" r="33" pathLength="100"/>
-              </svg>
-              <div class="tr-text">
-                <span class="tr-label">Crew Readiness</span>
-                <b class="tr-value"><span id="twinReadyVal">0</span>%</b>
-                <span class="tr-status"><i></i>Act</span>
-              </div>
-            </div>
-
-            <aside class="twin-action" id="twinAction" aria-live="polite">
-              <p class="ta-kicker">Action card &middot; Isolation &middot; Act</p>
-              <p class="ta-why">Sleep last night 4.70 h is 3.4&sigma; below Pilot&rsquo;s baseline (6.29 h).</p>
-              <ol class="ta-steps">
-                <li>Swap safety-critical tasks to a rested crewmate</li>
-                <li>Take a scheduled rest period and a 20-minute nap</li>
-                <li>Notify the commander and the flight surgeon</li>
-              </ol>
-              <p class="ta-log">Logged on board &middot; syncs to ground later</p>
-            </aside>
-          </div>
-        </div>
+        </aside>
       </div>
     </section>
 
@@ -402,12 +301,13 @@
 
   <script src="script.js"></script>
   <script src="universe/scenes.js"></script>
+  <script src="universe/stars.js"></script>
   <script src="universe/camera.js"></script>
   <script src="universe/engine.js"></script>
   <script src="universe/fx.js"></script>
   <script src="universe/universe.js"></script>
+  <script src="universe/health-twin.js"></script>
   <script src="universe/reveal.js"></script>
-  <script src="twin.js"></script>
   <script src="team.js"></script>
   <script src="tour.js"></script>
   <script src="anatomy3d.js"></script>

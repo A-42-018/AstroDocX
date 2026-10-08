@@ -47,6 +47,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const lowEnd = (navigator.deviceMemory && navigator.deviceMemory <= 4) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
   const tier = (small() || lowEnd) ? 'low' : 'high';
   const engine = ADX_ENGINE.create(scene, { tier: tier, reveal: true });
+  const stars = window.ADX_STARS ? ADX_STARS.create(scene, { tier: tier }) : null;
+  if (stars) stars.setBright(0.5);      // the same sky as the intro, a little brighter (camera is nearer)
 
   let k = 1;
   function resize() {
@@ -54,13 +56,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const dpr = Math.min(devicePixelRatio || 1, tier === 'low' ? 1.25 : 1.75);
     renderer.setPixelRatio(dpr); renderer.setSize(w, h, false);
     camera.aspect = w / h; camera.updateProjectionMatrix();
-    engine.uniforms.uPR.value = dpr;
+    engine.uniforms.uPR.value = dpr; if (stars) stars.setPR(dpr);
     k = camera.aspect < 1.2 ? Math.min(2.4, 1.2 / camera.aspect) : 1;      // portrait: pull back so the wordmark fits
     camera.position.set(0, 0.2, 9 * k); camera.lookAt(0, 0.2, 0);
   }
 
   let P = 0, onScreen = false, running = false;
   function apply(p, time) {
+    if (stars) stars.setTime(time);
     const morph = sm(clamp(p / 0.40, 0, 1)), rise = sm(clamp((p - 0.50) / 0.25, 0, 1)), show = clamp((p - 0.55) / 0.25, 0, 1);
     engine.setPair(0, 6, morph, time, { sc: lerp(3.2, 2.1, rise), off: [0, lerp(0, small() ? 2.4 : 2.1, rise), 0] });
     items.forEach((el, i) => {

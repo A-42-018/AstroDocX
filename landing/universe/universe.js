@@ -109,56 +109,14 @@ document.addEventListener('DOMContentLoaded', function () {
   const NEXT_TIER = { high: 'mid', mid: 'low' };
 
   let staticMode = false, posterT = 0;
-  let renderer = null, scene, camera, starLayers = [], webgl = false, engine = null, fx = null;
-  const U = { uTime: { value: 0 }, uPR: { value: 1 }, uBright: { value: 0.35 } };   // stars <= 35% of main brightness
+  let renderer = null, scene, camera, stars = null, webgl = false, engine = null, fx = null;
   try {
     renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: false, alpha: false, powerPreference: 'high-performance' });
     webgl = true;
   } catch (e) { webgl = false; }
 
-  const STAR_VS =
-    'attribute vec4 aSeed; uniform float uTime, uPR, uLayer; varying float vA; varying vec3 vC;' +
-    'void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0);' +
-    ' float tw = .7 + .3 * sin(uTime * (.4 + aSeed.x * 1.6) + aSeed.y * 6.2831);' +
-    ' gl_PointSize = clamp((1.1 + aSeed.z * 2.2) * uPR * (320.0 / -mv.z) * (.6 + uLayer * .25), 1.0, 7.0);' +
-    ' vA = tw * (.35 + aSeed.z * .65);' +
-    ' vC = aSeed.w < .7 ? vec3(.92,.95,1.) : (aSeed.w < .92 ? vec3(.5,.66,1.) : vec3(.96,.79,.48));' +
-    ' gl_Position = projectionMatrix * mv; }';
-  const STAR_FS =
-    'precision mediump float; uniform float uBright; varying float vA; varying vec3 vC;' +
-    'void main(){ vec2 d = gl_PointCoord - .5; float r2 = dot(d,d) * 4.0;' +
-    ' float a = exp(-r2 * 5.0) + .15 * exp(-r2 * 1.6);' +
-    ' gl_FragColor = vec4(vC * a * vA * uBright * 2.4, a * vA); }';
-
-  function buildStars() {
-    starLayers.forEach(l => { scene.remove(l); l.geometry.dispose(); l.material.dispose(); });
-    starLayers = [];
-    const radii = [[28, 60], [18, 40], [10, 26]];                             // far, mid, near shells
-    TIERS.high.stars.forEach((n, li) => {                                    // built at the top count; lower tiers just draw a prefix
-      const pos = new Float32Array(n * 3), seed = new Float32Array(n * 4);
-      for (let i = 0; i < n; i++) {
-        const u = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2, s = Math.sqrt(1 - u * u);
-        const r = radii[li][0] + Math.random() * (radii[li][1] - radii[li][0]);
-        pos[i * 3] = r * s * Math.cos(th); pos[i * 3 + 1] = r * u * 0.7; pos[i * 3 + 2] = r * s * Math.sin(th) - 8;
-        seed[i * 4] = Math.random(); seed[i * 4 + 1] = Math.random(); seed[i * 4 + 2] = Math.random(); seed[i * 4 + 3] = Math.random();
-      }
-      const g = new THREE.BufferGeometry();
-      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 4));
-      const m = new THREE.ShaderMaterial({
-        uniforms: Object.assign({ uLayer: { value: li } }, U),
-        vertexShader: STAR_VS, fragmentShader: STAR_FS,
-        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
-      });
-      const pts = new THREE.Points(g, m);
-      pts.frustumCulled = false;
-      scene.add(pts); starLayers.push(pts);
-    });
-    setStarRange();
-  }
-  function setStarRange() { starLayers.forEach((l, li) => l.geometry.setDrawRange(0, TIERS[tier].stars[li])); }
   function setTier(t) {
-    tier = t; setStarRange();
+    tier = t; if (stars) stars.setTier(t);
     if (engine) engine.setTier(t);
     resize();
   }
@@ -168,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function () {
     camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
     camera.position.set(0, 0, 14);
     renderer.setClearColor(0x02030a, 1);
-    buildStars();
+    stars = ADX_STARS.create(scene, { tier: tier });
     engine = ADX_ENGINE.create(scene, { tier: tier });
     engine.onChange = () => { if (staticMode) schedulePosters(); else if (!running) renderOnce(); };
     fx = ADX_FX.create(scene, engine);
@@ -183,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
     renderer.setPixelRatio(dpr);
     renderer.setSize(w, h, false);
     camera.aspect = w / h; camera.updateProjectionMatrix();
-    U.uPR.value = dpr;
+    if (stars) stars.setPR(dpr);
     if (engine) { engine.uniforms.uPR.value = dpr; fx.setPR(dpr); }
   }
 
@@ -226,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     P += (targetP - P) * (1 - Math.exp(-dt / 90));
     if (Math.abs(targetP - P) < 0.0003) P = targetP;
-    U.uTime.value = time * 0.001;
+    stars.setTime(time * 0.001);
     applyCamera(P, time);
     engine.setProgress(P, time * 0.001); fx.update(time * 0.001);
     renderer.render(scene, camera);
@@ -270,7 +228,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!webgl || !engine) return;
     const W = 1280, H = 720;
     renderer.setPixelRatio(1); renderer.setSize(W, H, false);
-    U.uPR.value = 1; engine.uniforms.uPR.value = 1; fx.setPR(1);
+    stars.setPR(1); engine.uniforms.uPR.value = 1; fx.setPR(1);
     camera.aspect = W / H; camera.updateProjectionMatrix();
     mx = my = 0;
     SCENES.forEach((s, i) => {
