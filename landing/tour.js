@@ -21,13 +21,9 @@
      speed through the section (px/s) until the next section's top.
      Pinned sections are tall because of their pin spacer, so their speed sets the pace of the story. */
   var PLAN = [
-    { id: 'universe', hold: 0,  pps: 320 },
-    { id: 'about',     hold: 1,  pps: 260 },
-    { id: 'nebula-offset', hold: 0, pps: 300 },
+    { id: 'universe',  hold: 0,  pps: 320 },
     { id: 'twin',      hold: 1,  pps: 230 },
-    { id: 'sim',       hold: 27, pps: 300, action: 'sim' } /* "Play scenario" runs about 25 s, only while on screen */,
-    { id: 'education', hold: 1,  pps: 280 },
-    { id: 'built',     hold: 2,  pps: 300 },
+    { id: 'astrodocx', hold: 1,  pps: 210 },
     { id: 'contact',   hold: 6,  pps: 300 }
   ];
 
@@ -68,7 +64,6 @@
         })(0);
         return;
       }
-      if (s.action === 'sim') later(function () { var b = document.getElementById('simPlay'); if (b) b.click(); }, 1 / speed);
       later(function () { glide(scrollY, end, s.pps * speed, function () { i++; section(); }); }, s.hold / speed);
     }
     section();

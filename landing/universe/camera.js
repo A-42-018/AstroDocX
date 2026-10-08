@@ -11,19 +11,18 @@
   const KEYS = [
     { p: 0.00, pos: [0, 0, 14],        look: [0, 0, 0],        fov: 50 },   // 01 far, slow approach
     { p: 0.08, pos: [0, 0, 10.5],      look: [0, 0, 0],        fov: 50 },
-    { p: 0.22, pos: [-1.4, 0.5, 9],    look: [1.6, 0, 0],      fov: 50 },   // 02 gentle orbit past the planet
-    { p: 0.30, pos: [-0.6, 0.2, 9.4],  look: [0.2, 0, 0],      fov: 50 },
-    { p: 0.42, pos: [1.6, -0.9, 8],    look: [-1.6, 0.1, 0],   fov: 50 },   // 03 3/4 side angle, slightly below
-    { p: 0.50, pos: [0.3, -0.3, 9],    look: [0, 0, 0],       fov: 52 },
-    { p: 0.595, pos: [-3.4, 0.7, 8],   look: [1.6, 0.1, 0],    fov: 57 },   // 04 trailing chase, FOV kick
-    { p: 0.67, pos: [-1.0, 0.3, 9],    look: [0, 0, 0],      fov: 52 },
-    { p: 0.755, pos: [2.2, 0.9, 7.8],  look: [-1.6, -0.1, 0],  fov: 50 },   // 05 around the relay, Earth behind
-    { p: 0.83, pos: [0.8, 0.5, 8.6],   look: [0, -0.4, 0],     fov: 50 },
-    { p: 0.865, pos: [0, 0.3, 9.4],    look: [0, -0.7, 0],     fov: 50 },   // 06 slow push-in on Earth
-    { p: 0.93, pos: [0, 0.2, 7.4],     look: [0, -0.8, 0],     fov: 48 },
-    { p: 0.985, pos: [0, 0.3, 9],      look: [0, 0.2, 0],      fov: 50 },   // 07 centred, frontal
-    { p: 1.00, pos: [0, 0.3, 9],       look: [0, 0.2, 0],      fov: 50 }
+    { p: 0.23, pos: [-1.4, 0.5, 9],    look: [1.6, 0, 0],      fov: 50 },   // 02 gentle orbit past the planet
+    { p: 0.34, pos: [-0.6, 0.2, 9.4],  look: [0.2, 0, 0],      fov: 50 },
+    { p: 0.45, pos: [1.6, -0.9, 8],    look: [-1.6, 0.1, 0],   fov: 50 },   // 03 3/4 side angle, slightly below
+    { p: 0.56, pos: [0.3, -0.3, 9],    look: [0, 0, 0],        fov: 52 },
+    { p: 0.65, pos: [-3.4, 0.7, 8],    look: [1.6, 0.1, 0],    fov: 57 },   // 04 trailing chase, FOV kick
+    { p: 0.735, pos: [-1.0, 0.3, 9],   look: [0, 0, 0],        fov: 52 },
+    { p: 0.82, pos: [2.2, 0.9, 7.8],   look: [-1.6, -0.1, 0],  fov: 50 },   // 05 around the relay, Earth behind
+    { p: 0.90, pos: [0.8, 0.5, 8.6],   look: [0, -0.4, 0],     fov: 50 },
+    { p: 0.93, pos: [0, 0.3, 9.4],     look: [0, -0.7, 0],     fov: 50 },   // 06 slow push-in on Earth, then the Health Twin
+    { p: 1.00, pos: [0, 0.2, 7.2],     look: [0, -0.8, 0],     fov: 48 }
   ];
+
   const V = a => new THREE.Vector3(a[0], a[1], a[2]);
   let posC = null, lookC = null;
   const tmpP = new THREE.Vector3(), tmpL = new THREE.Vector3();

@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const navbar  = document.getElementById('navbar');
   const REDUCE  = window.matchMedia('(prefers-reduced-motion: reduce)').matches || /[?&]reduce=1\b/.test(location.search);   // ?reduce=1 forces the static path for QA
   const clamp   = (v, a, b) => v < a ? a : v > b ? b : v;
-  const HERO_P  = SCENES[SCENES.length - 1].hold[0];          // scene 07 starts here
+  const END_P   = SCENES[SCENES.length - 1].hold[0];          // the last scene (Earth) starts here; the nav comes back
   const mid     = s => (s.hold[0] + s.hold[1]) / 2;
 
   /* A reload with the browser's restored scroll makes ScrollTrigger measure the pin while already scrolled
@@ -41,9 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   /* ── 1. DOM: scene text (real <h2>/<p>, so SEO + screen readers get the story) ── */
-  const heroEl = document.getElementById('uniHero');           // scene 07 markup lives in index.html (it is the page hero)
   const sceneEls = SCENES.map((s, i) => {
-    if (i === SCENES.length - 1 && heroEl) return heroEl;
     const el = document.createElement('article');
     el.className = 'uni-scene';
     el.dataset.pos = s.pos;
@@ -55,8 +53,6 @@ document.addEventListener('DOMContentLoaded', function () {
     textBox.appendChild(el);
     return el;
   });
-
-  if (heroEl) textBox.appendChild(heroEl);                     // hero last in the DOM (matters for the stacked static layout)
 
   /* progress rail: 7 ticks, scene name on hover, click = jump to that hold */
   const ticks = SCENES.map((s, i) => {
@@ -72,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   /* ── 2. Scene state for progress p (pure function: scroll jumps / reversal are safe) ── */
   const FADE = 0.025;
-  let current = -1, wasHero = false;
+  let current = -1, wasEnd = false;
   function applyText(p) {
     let best = 0, bi = 0;
     SCENES.forEach((s, i) => {
@@ -88,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
       el.style.setProperty('--ls', (0.12 + (1 - v) * 0.28).toFixed(3) + 'em');          // letter-spacing eases 0.4em -> 0.12em on enter
       el.style.visibility = v > 0.01 ? 'visible' : 'hidden';
       el.classList.toggle('is-on', v > 0.5);
-      const slide = i === 0 || i === SCENES.length - 1 ? 0 : 1;
+      const slide = i === 0 ? 0 : 1;
       el.style.filter = v < 1 ? 'blur(' + ((1 - v) * 8).toFixed(1) + 'px)' : 'none';
       const k = (p < (a + b) / 2 ? 1 : -1) * 40 * (1 - v) * slide;           // enter from below, exit upward
       el.style.translate = '0 ' + k.toFixed(1) + 'px';
@@ -98,10 +94,10 @@ document.addEventListener('DOMContentLoaded', function () {
       current = bi;
       ticks.forEach((t, i) => { t.classList.toggle('is-current', i === bi); if (i === bi) t.setAttribute('aria-current', 'true'); else t.removeAttribute('aria-current'); });
     }
-    if (navbar) navbar.classList.toggle('nav-hidden', !REDUCE && !!st && st.isActive && p < HERO_P - 0.03);   // nav appears with scene 07
-    const inHero = p >= HERO_P - 0.005;
-    if (inHero !== wasHero) { wasHero = inHero; if (inHero && navbar) gsap.to(navbar, { yPercent: 0, duration: 0.45, ease: 'power2.out', overwrite: 'auto' }); }   // template hides the nav on scroll-down; scene 07 shows it
-    skip.classList.toggle('is-hidden', inHero);
+    if (navbar) navbar.classList.toggle('nav-hidden', !REDUCE && !!st && st.isActive && p < END_P - 0.03);   // nav appears with the last scene
+    const inEnd = p >= END_P - 0.005;
+    if (inEnd !== wasEnd) { wasEnd = inEnd; if (inEnd && navbar) gsap.to(navbar, { yPercent: 0, duration: 0.45, ease: 'power2.out', overwrite: 'auto' }); }   // template hides the nav on scroll-down; the last scene shows it
+    skip.classList.toggle('is-hidden', inEnd);
     hint.classList.toggle('is-hidden', p > 0.02);
   }
 
@@ -206,10 +202,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const k = camera.aspect < 1.2 ? Math.min(2.4, 1.2 / camera.aspect) : 1;       // portrait: pull back so every shape and the wordmark fit
     camera.position.copy(c.pos).sub(c.look).multiplyScalar(k).add(c.look);
     camera.position.x += mx * 0.35; camera.position.y += -my * 0.25;
-    if (k > 1) {                                                                   // portrait: in scene 07 look lower so the wordmark rides above the hero block
-      const f = clamp((p - 0.93) / 0.055, 0, 1);
-      c.look.y -= 2.4 * f * f * (3 - 2 * f);
-    }
     camera.lookAt(c.look);
     camera.rotation.y += -mx * 0.026; camera.rotation.x += -my * 0.026;
     if (Math.abs(camera.fov - c.fov) > 0.01) { camera.fov = c.fov; camera.updateProjectionMatrix(); }
@@ -264,7 +256,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const y = st.start + (st.end - st.start) * clamp(p, 0, 1);
     window.scrollTo({ top: y, behavior: REDUCE ? 'auto' : 'smooth' });
   }
-  skip.addEventListener('click', e => { e.preventDefault(); scrollToP(HERO_P + 0.04); });
+  /* Skip intro = on to the Health Twin (the pin's end is where #twin starts) */
+  function skipToTwin() {
+    const tw = document.getElementById('twin');
+    if (st) window.scrollTo({ top: st.end, behavior: REDUCE ? 'auto' : 'smooth' });
+    else if (tw) tw.scrollIntoView({ behavior: REDUCE ? 'auto' : 'smooth' });
+  }
+  skip.addEventListener('click', e => { e.preventDefault(); skipToTwin(); });
 
   /* ── static mode (reduced motion, or no WebGL): no pin, scenes stack; with WebGL each scene gets a poster
         rendered once from the real engine (shape fully formed) as its background ── */
@@ -276,7 +274,7 @@ document.addEventListener('DOMContentLoaded', function () {
     camera.aspect = W / H; camera.updateProjectionMatrix();
     mx = my = 0;
     SCENES.forEach((s, i) => {
-      const p = i === SCENES.length - 1 ? 0.998 : mid(s);
+      const p = mid(s);
       applyCamera(p, 0); engine.setProgress(p, 3); fx.update(3);
       renderer.render(scene, camera);
       try { sceneEls[i].style.setProperty('--poster', 'url(' + canvas.toDataURL('image/jpeg', 0.82) + ')'); sceneEls[i].classList.add('has-poster'); } catch (e) {}
@@ -310,15 +308,15 @@ document.addEventListener('DOMContentLoaded', function () {
   });
   mm.add('(prefers-reduced-motion: reduce)', enterStatic);
 
-  /* ?skip=1 → straight to scene 07 (hero state) so the CTAs are one click away */
+  /* ?skip=1 -> straight to the Health Twin */
   if (/[?&]skip=1\b/.test(location.search) && !REDUCE) {
-    window.addEventListener('load', () => setTimeout(() => scrollToP(HERO_P + 0.04), 60), { once: true });
+    window.addEventListener('load', () => setTimeout(skipToTwin, 60), { once: true });
   }
 
   window.ADX_UNIVERSE = {
     /* for tour.js: pixel position of progress p, and the stops (scene holds) with how long to dwell */
     yAt: p => st ? st.start + (st.end - st.start) * clamp(p, 0, 1) : 0,
-    stops: () => SCENES.map((s, i) => ({ p: i === SCENES.length - 1 ? 0.998 : mid(s), hold: s.tour || 3 })),
+    stops: () => SCENES.map(s => ({ p: mid(s), hold: s.tour || 3 })),
     get tier() { return tier; }, setTier: setTier,
     scrollToP: scrollToP, get progress() { return targetP; }, scenes: SCENES };
 });

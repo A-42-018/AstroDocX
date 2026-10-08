@@ -30,8 +30,6 @@
   <link rel="icon" href="favicon.png" type="image/png">
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="twin.css" />
-  <link rel="stylesheet" href="sim.css" />
-  <link rel="stylesheet" href="built.css" />
   <link rel="stylesheet" href="anatomy3d.css" />
   <link rel="stylesheet" href="universe/universe.css" />
   <script type="application/ld+json">
@@ -82,18 +80,9 @@
 
 <body>
 
-  <!-- Shared nebula: ONE fixed WebGL canvas behind About → Contact.
-       Direct child of <body> so pinned/transformed sections can't displace it. -->
-  <div id="nebulaStage" aria-hidden="true">
-    <canvas id="threeCanvas"></canvas>
-    <div class="nebula-vignette"></div>
-    <div class="nebula-grade"></div>
   </div>
 
-  <!-- ═══════════════════════════════════════ NAV ══════════
-       Section ids (#about, #skills, #projects, #education, #contact)
-       are kept from the template on purpose: the pin / nebula /
-       reveal code in script.js is wired to them. Only labels changed. -->
+  <!-- ═══════════════════════════════════════ NAV ══════════ -->
   <nav id="navbar" aria-label="Primary navigation">
     <div class="nav-inner">
       <a href="#universe" class="nav-logo" aria-label="AstroDocX home">
@@ -103,12 +92,8 @@
         <span></span><span></span><span></span>
       </button>
       <ul class="nav-links" id="nav-links">
-        <li><a href="#about">Problem</a></li>
-        <li><a href="#skills">Hazards</a></li>
-        <li><a href="#projects">Features</a></li>
-        <li><a href="#twin">Health Twin</a></li>
-        <li><a href="#sim">Live Demo</a></li>
-        <li><a href="#education">How It Works</a></li>
+        <li><a href="#twin">Health System</a></li>
+        <li><a href="#astrodocx">AstroDocX</a></li>
         <li><a href="#contact">Team</a></li>
         <li><a href="/app/" class="nav-cta">Launch Console</a></li>
       </ul>
@@ -118,304 +103,15 @@
   <main>
 
     <!-- ═══════════════════════════════════════ UNIVERSE INTRO (#universe) ═════
-         Particle Universe intro (plan §12). Scenes 01 to 06 are generated from
-         universe/scenes.js; scene 07 is the page hero (the .uni-hero block below). -->
+         Particle Universe intro (plan §12): six scenes from stardust to Earth, text from
+         universe/scenes.js. It hands over to the Health Twin. -->
     <section id="universe" aria-label="Introduction: from stardust to crew health">
       <canvas id="uniCanvas" aria-hidden="true"></canvas>
       <div class="uni-scrim" aria-hidden="true"></div>
-      <div class="uni-text">
-        <!-- scene 07 = the hero: particles form the ASTRODOCX wordmark above this block -->
-        <div class="uni-scene uni-hero" data-pos="hero" id="uniHero" aria-labelledby="uniH6">
-          <h1 id="uniH6" class="uni-sr">AstroDocX: your doctor on board when Earth is minutes away</h1>
-          <p class="hero-eyebrow"><span class="bracket">&lt;</span>nasa space apps 2026<span class="bracket">/&gt;</span></p>
-          <p class="hero-pitch">
-            Your <strong>doctor on board</strong> when Earth is minutes away. AstroDocX learns each
-            astronaut&rsquo;s <strong>personal baseline</strong>, spots health changes early and turns
-            every alert into a <strong>clear action</strong> the crew can take on their own.
-          </p>
-          <div class="hero-typerow" aria-live="polite">
-            <span class="prompt">~/astrodocx $</span>
-            <span id="hero-typed"></span><span class="hero-cursor" aria-hidden="true"></span>
-          </div>
-          <p class="hero-tagline">Working PWA &middot; offline &middot; 4-crew demo mission inside.</p>
-          <div class="hero-actions">
-            <a href="/app/" class="btn btn-primary" data-cursor="LAUNCH">Launch Crew Console</a>
-            <a href="?tour=1" class="btn btn-secondary" data-cursor="WATCH">Watch the tour</a>
-            <a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener" class="btn btn-secondary" data-cursor="GITHUB">GitHub</a>
-          </div>
-          <a class="uni-more" href="#about" data-cursor="EXPLORE">Scroll to explore &darr;</a>
-        </div>
-      </div>
+      <div class="uni-text"></div>
       <ol class="uni-rail" aria-label="Intro scenes"></ol>
-      <a class="uni-skip" href="#about">Skip intro</a>
+      <a class="uni-skip" href="#twin">Skip intro</a>
       <p class="uni-hint" aria-hidden="true">Scroll &darr;</p>
-    </section>
-
-    <!-- ═══════════════════════════════════════ MARQUEE ══
-         Telemetry ticker: the 11 console metrics, sample values for illustration. -->
-    <div class="marquee-band" aria-hidden="true">
-      <div class="marquee-wrap">
-        <div class="marquee-group">
-          <span>HR 62 bpm</span><span class="sep">✦</span>
-          <span>HRV 48 ms</span><span class="sep">✦</span>
-          <span>SpO₂ 98%</span><span class="sep">✦</span>
-          <span>Dose rate 25 &micro;Sv/h</span><span class="sep">✦</span>
-          <span>CO₂ 2.4 mmHg</span><span class="sep">✦</span>
-          <span>Sleep 6.8 h</span><span class="sep">✦</span>
-          <span>Mood 4 / 5</span><span class="sep">✦</span>
-          <span>Reaction 312 ms</span><span class="sep">✦</span>
-          <span>Exercise 120 min</span><span class="sep">✦</span>
-          <span>Noise 52 dBA</span><span class="sep">✦</span>
-          <span>Cabin 22.5 °C</span><span class="sep">✦</span>
-          <span>Status NOMINAL</span><span class="sep">✦</span>
-        </div>
-        <div class="marquee-group" aria-hidden="true">
-          <span>HR 62 bpm</span><span class="sep">✦</span>
-          <span>HRV 48 ms</span><span class="sep">✦</span>
-          <span>SpO₂ 98%</span><span class="sep">✦</span>
-          <span>Dose rate 25 &micro;Sv/h</span><span class="sep">✦</span>
-          <span>CO₂ 2.4 mmHg</span><span class="sep">✦</span>
-          <span>Sleep 6.8 h</span><span class="sep">✦</span>
-          <span>Mood 4 / 5</span><span class="sep">✦</span>
-          <span>Reaction 312 ms</span><span class="sep">✦</span>
-          <span>Exercise 120 min</span><span class="sep">✦</span>
-          <span>Noise 52 dBA</span><span class="sep">✦</span>
-          <span>Cabin 22.5 °C</span><span class="sep">✦</span>
-          <span>Status NOMINAL</span><span class="sep">✦</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════ THE PROBLEM (#about) ════ -->
-    <section id="about">
-      <div class="about-wrap">
-
-        <div class="about-left-col">
-          <div class="avatar-glass-wrap">
-            <div class="avatar-ring-glow">
-              <div class="avatar-initials-glass mission-patch" role="img" aria-label="AstroDocX mission patch">
-                <svg viewBox="0 0 120 120" aria-hidden="true">
-                  <defs>
-                    <path id="patchArc" d="M 60 60 m -45 0 a 45 45 0 1 1 90 0 a 45 45 0 1 1 -90 0"/>
-                    <radialGradient id="patchMars" cx="40%" cy="35%" r="70%">
-                      <stop offset="0%" stop-color="#fb923c"/>
-                      <stop offset="100%" stop-color="#9a3412"/>
-                    </radialGradient>
-                  </defs>
-                  <circle cx="60" cy="60" r="53" fill="none" stroke="rgba(34,211,238,.35)" stroke-width="1"/>
-                  <text font-family="JetBrains Mono, monospace" font-size="8.6" font-weight="700" letter-spacing="2.4" fill="#a5f3fc">
-                    <textPath href="#patchArc">ASTRODOCX • SPACE APPS 2026 •</textPath>
-                  </text>
-                  <ellipse cx="60" cy="62" rx="30" ry="11" fill="none" stroke="#818cf8" stroke-width="1.4" transform="rotate(-18 60 62)"/>
-                  <circle cx="60" cy="62" r="14" fill="url(#patchMars)"/>
-                  <rect x="57" y="53" width="6" height="18" rx="1.2" fill="#f8fafc"/>
-                  <rect x="51" y="59" width="18" height="6" rx="1.2" fill="#f8fafc"/>
-                  <circle cx="86" cy="52" r="2.4" fill="#22d3ee"/>
-                  <circle cx="38" cy="40" r="1.2" fill="#e0e7ff"/>
-                  <circle cx="80" cy="82" r="1" fill="#e0e7ff"/>
-                </svg>
-              </div>
-            </div>
-            <span class="avatar-badge">
-              <span class="badge-pulse-dot"></span>Mission Active
-            </span>
-          </div>
-
-          <div class="quick-info-card">
-            <div class="qi-row">
-              <dt>Mission</dt>
-              <dd>Mars transit (example)</dd>
-            </div>
-            <div class="qi-row">
-              <dt>Crew</dt>
-              <dd>4 astronauts</dd>
-            </div>
-            <div class="qi-row">
-              <dt>Signal</dt>
-              <dd>~3&ndash;22 min one-way</dd>
-            </div>
-            <div class="qi-row">
-              <dt>Ground MD</dt>
-              <dd>
-                <span class="qi-tag qi-tag-warn">Not real-time</span>
-              </dd>
-            </div>
-            <div class="qi-row">
-              <dt>On board</dt>
-              <dd>
-                <span class="qi-tag">AstroDocX</span>
-                <span class="qi-tag">Offline</span>
-              </dd>
-            </div>
-            <div class="qi-socials">
-              <a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener" class="social-pill">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.28-.01-1.02-.01-2-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.21.08 1.84 1.24 1.84 1.24 1.07 1.84 2.81 1.31 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02.01 2.04.14 3 .4 2.28-1.55 3.29-1.23 3.29-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.93.43.37.81 1.1.81 2.22 0 1.61-.01 2.9-.01 3.29 0 .32.21.7.82.58C20.56 21.8 24 17.3 24 12 24 5.37 18.63 0 12 0z"/>
-                </svg>
-                Repo
-              </a>
-              <a href="https://www.spaceappschallenge.org/" target="_blank" rel="noopener" class="social-pill">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(-25 12 12)"/></svg>
-                Space Apps
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <div class="about-right-col">
-          <p class="about-eyebrow">
-            <span class="bracket">&lt;</span>the problem<span class="bracket">/&gt;</span>
-          </p>
-          <h2 class="about-heading">Earth Is Too Far to Call a Doctor</h2>
-          <div class="about-body">
-            <p>
-              Long-duration missions expose astronauts to <span class="kw-nebula">space radiation</span>,
-              <span class="kw-nebula">isolation and confinement</span>, <span class="kw-nebula">altered gravity</span>
-              and a <span class="kw-nebula">hostile closed environment</span>. Over months, these can bring
-              immune changes, bone and muscle loss, cardiovascular events and behavioral health problems.
-            </p>
-            <p>
-              Beyond the Moon, a message to Earth can take many minutes each way, with periods of no contact at all.
-              The crew has to <strong>spot these changes in themselves</strong> &mdash; often without a doctor
-              on the line &mdash; and decide what to do next.
-            </p>
-            <p class="currently-learning">
-              <span class="cl-dot" aria-hidden="true"></span>
-              <strong>Our answer is running now:</strong> AstroDocX &mdash; detect, explain, act, log, and sync with Earth later.
-              <a href="/app/">Open the Crew Console &rarr;</a>
-            </p>
-          </div>
-          <div class="about-chips">
-            <div class="stat-chip">
-              <span class="about-stat-num" data-target="5" data-suffix="">0</span>
-              <span class="stat-chip-label">Spaceflight hazards</span>
-            </div>
-            <div class="stat-chip">
-              <span class="about-stat-num" data-target="22" data-suffix=" min">0</span>
-              <span class="stat-chip-label">Max Mars signal delay</span>
-            </div>
-            <div class="stat-chip">
-              <span class="about-stat-num" data-target="3" data-suffix=" yrs">0</span>
-              <span class="stat-chip-label">Mars round trip (approx.)</span>
-            </div>
-          </div>
-          <p class="about-sources">
-            Sources:
-            <a href="https://www.nasa.gov/hrp/" target="_blank" rel="noopener">NASA HRP, five hazards</a> &middot;
-            <a href="https://www.nasa.gov/hrp/hazard-distance-from-earth/" target="_blank" rel="noopener">NASA HRP, distance from Earth</a> &middot;
-            <a href="https://ntrs.nasa.gov/citations/20220013418" target="_blank" rel="noopener">NASA, Mars communication delays (up to 22 min one way, 850-day mission)</a>.
-            Round trip is approximate.
-          </p>
-          <div class="about-cta-row">
-            <a href="#skills" class="btn btn-primary">See the Hazards</a>
-            <a href="#education" class="btn btn-secondary">How It Works</a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════ HAZARDS + FEATURES ══
-         Horizontal-scroll pinned zone (unchanged mechanics from the
-         template): #skills = the 5 RIDGE hazards, #projects = feature
-         carousel rendered from the FEATURES array in script.js.
-    ══════════════════════════════════════════════════════════════ -->
-    <section id="nebula-offset">
-
-      <div class="hscroll-track" id="hscrollTrack">
-
-      <!-- ═══ HAZARDS (#skills) ═══ -->
-      <div class="hscroll-panel">
-      <div class="section-inner" id="skills">
-        <p class="section-eyebrow">
-          <span class="bracket">&lt;</span>hazards<span class="bracket">/&gt;</span>
-        </p>
-        <h2 class="section-title">The 5 Hazards</h2>
-        <p class="section-subtitle">NASA&rsquo;s RIDGE framework &mdash; each card lists what the console really tracks</p>
-        <div class="skills-grid hazards-grid">
-          <div class="skill-category hazard-card" data-hazard="R">
-            <span class="hazard-letter" aria-hidden="true">R</span>
-            <div class="skill-icon-wrap">
-              <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M12 12 8.2 5.4A7.6 7.6 0 0 1 15.8 5.4ZM12 12 19.6 12A7.6 7.6 0 0 1 15.8 18.6ZM12 12 8.2 18.6A7.6 7.6 0 0 1 4.4 12Z" fill="currentColor" opacity=".55"/></svg>
-            </div>
-            <h3>Radiation</h3>
-            <p class="hazard-effect">Immune changes, cancer risk, nervous-system effects</p>
-            <ul class="skill-list">
-              <li>Dose rate vs your baseline</li><li>Event limit: 250 mSv / 24 h</li><li>Solar-event action card</li>
-            </ul>
-          </div>
-          <div class="skill-category hazard-card" data-hazard="I">
-            <span class="hazard-letter" aria-hidden="true">I</span>
-            <div class="skill-icon-wrap">
-              <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="6.5"/><circle cx="12" cy="10.5" r="2"/><path d="M8.6 16c.8-1.5 2-2.2 3.4-2.2s2.6.7 3.4 2.2"/></svg>
-            </div>
-            <h3>Isolation</h3>
-            <p class="hazard-effect">Sleep loss, mood and behavioral health changes</p>
-            <ul class="skill-list">
-              <li>Sleep, mood, 5-tap reaction test</li><li>Rule: poor sleep + slow reaction</li><li>Symptom chips</li>
-            </ul>
-          </div>
-          <div class="skill-category hazard-card" data-hazard="D">
-            <span class="hazard-letter" aria-hidden="true">D</span>
-            <div class="skill-icon-wrap">
-              <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="18" r="3"/><circle cx="19" cy="5" r="1.8"/><path d="M8.8 15.2 16.8 7.2" stroke-dasharray="1.6 2.4"/></svg>
-            </div>
-            <h3>Distance</h3>
-            <p class="hazard-effect">No real-time medical help from Earth</p>
-            <ul class="skill-list">
-              <li>Outbox + link windows</li><li>Watch at 24 h, Act at 72 h unsynced</li><li>Offline action cards</li>
-            </ul>
-          </div>
-          <div class="skill-category hazard-card" data-hazard="G">
-            <span class="hazard-letter" aria-hidden="true">G</span>
-            <div class="skill-icon-wrap">
-              <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11M7.5 9.5 12 14l4.5-4.5"/><path d="M4 19.5h16"/></svg>
-            </div>
-            <h3>Gravity</h3>
-            <p class="hazard-effect">Bone &amp; muscle loss, heart changes</p>
-            <ul class="skill-list">
-              <li>Exercise load</li><li>Heart rate</li><li>HRV</li>
-            </ul>
-          </div>
-          <div class="skill-category hazard-card" data-hazard="E">
-            <span class="hazard-letter" aria-hidden="true">E</span>
-            <div class="skill-icon-wrap">
-              <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 8h10a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h6"/></svg>
-            </div>
-            <h3>Hostile Env.</h3>
-            <p class="hazard-effect">CO&#8322; headaches, infection, noise in a closed cabin</p>
-            <ul class="skill-list">
-              <li>CO&#8322; vs NASA limit (3 mmHg)</li><li>SpO&#8322;, cabin temperature, noise</li><li>Symptom alerts</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-      </div><!-- /.hscroll-panel (hazards) -->
-
-      <!-- ═══ FEATURES (#projects) — cards rendered from FEATURES in script.js ═══ -->
-      <div class="hscroll-panel project-panel">
-      <div class="section-inner projects-zone" id="projects">
-
-        <header class="projects-header">
-          <div class="projects-header-left">
-            <p class="section-eyebrow">
-              <span class="bracket">&lt;</span>features<span class="bracket">/&gt;</span>
-            </p>
-            <h2 class="section-title">Features</h2>
-            <p class="section-subtitle">Working screens of the Crew Console, open any of them</p>
-          </div>
-          <p class="projects-scroll-hint" aria-hidden="true">Scroll <span>&rarr;</span> Explore</p>
-        </header>
-
-        <div class="projects-stage" id="projectsStage" role="region" aria-roledescription="carousel" aria-label="Features showcase">
-          <div class="projects-rail" id="projectsRail"></div>
-        </div>
-
-        <div class="project-dots" id="projectDots" aria-label="Jump to feature"></div>
-
-      </div>
-      </div><!-- /.hscroll-panel (features) -->
-
-      </div><!-- /.hscroll-track -->
     </section>
 
     <!-- ═══════════════════════════════════════ HEALTH TWIN (#twin) ═════════
@@ -432,8 +128,8 @@
           <p class="twin-eyebrow">
             <span class="bracket">&lt;</span>health-twin<span class="bracket">/&gt;</span>
           </p>
-          <h2 class="twin-title" id="twin-title">Health Twin</h2>
-          <p class="twin-subtitle">One body scan. Six systems. One readiness score. <span class="twin-tag">Demo mission data &middot; Pilot</span>
+          <h2 class="twin-title" id="twin-title">Meet our health care system</h2>
+          <p class="twin-subtitle">Astronauts have to look after their health, far from any doctor. Every crew member gets a Health Twin: one body scan, six systems, one readiness score. <span class="twin-tag">Demo mission data &middot; Pilot</span>
             <button type="button" class="anat3d-open" id="anat3dOpen" aria-haspopup="dialog" aria-controls="anat3d" aria-expanded="false">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/></svg>
               Explore real anatomy in 3D
@@ -585,270 +281,37 @@
       </div>
     </section>
 
-    <!-- ═══════════════════════════════════════ LIVE DEMO (#sim) ═════════
-         Interactive Mission Simulator. Markup here, styles in sim.css,
-         engine in sim.js (synthetic data, runs fully in the browser).
-         Tiles are rendered by sim.js from its METRICS config.
-    ══════════════════════════════════════════════════════════════ -->
-    <section id="sim" aria-labelledby="sim-title">
-      <div class="sim-overlay" aria-hidden="true"></div>
-      <div class="sim-inner">
-
-        <header class="sim-header">
-          <p class="sim-eyebrow"><span class="bracket">&lt;</span>live-demo<span class="bracket">/&gt;</span></p>
-          <h2 class="sim-title" id="sim-title">Mission Simulator</h2>
-          <p class="sim-subtitle">Break something. Watch AstroDocX detect it, explain it and tell the crew what to do &mdash; all on board.
-            <span class="sim-tag">Synthetic crew data</span>
-            <a class="sim-real" href="/app/simulator">Run the real simulator &rarr;</a></p>
-        </header>
-
-        <div class="sim-grid">
-
-          <!-- ── Left: live hazard board + fault injector ── -->
-          <div class="sim-left">
-            <div class="sim-inject">
-              <p class="sim-inject-label">Inject a fault</p>
-              <div class="sim-btns">
-                <button type="button" class="sim-btn" data-event="E"><i>E</i>CO&#8322; scrubber fault</button>
-                <button type="button" class="sim-btn" data-event="R"><i>R</i>Solar particle event</button>
-                <button type="button" class="sim-btn" data-event="I"><i>I</i>Insomnia streak</button>
-                <button type="button" class="sim-btn" data-event="G"><i>G</i>Skipped exercise</button>
-                <button type="button" class="sim-btn" data-event="D"><i>D</i>Link blackout</button>
-              </div>
-              <div class="sim-btns sim-btns-sub">
-                <button type="button" class="sim-btn sim-btn-ghost" id="simPlay">&#9654; Play scenario</button>
-                <button type="button" class="sim-btn sim-btn-ghost" id="simReset">Reset crew</button>
-              </div>
-            </div>
-
-            <div class="sim-board" id="simTiles" role="group" aria-label="Live hazard status board"></div>
-
-          </div>
-
-          <!-- ── Right: readiness, alert → action, log + sync ── -->
-          <div class="sim-right">
-
-            <div class="sim-card sim-ready" id="simReady">
-              <svg class="sr-ring" viewBox="0 0 80 80" aria-hidden="true">
-                <circle class="sr-bg" cx="40" cy="40" r="33"/>
-                <circle class="sr-fg" id="simReadyRing" cx="40" cy="40" r="33" pathLength="100"/>
-              </svg>
-              <div class="sr-text">
-                <span class="sr-label">Crew Readiness</span>
-                <b class="sr-value"><span id="simReadyVal">100</span>%</b>
-                <span class="sr-status" id="simReadyStatus"><i></i>Nominal</span>
-              </div>
-              <div class="sr-clock">
-                <span class="sr-label">Mission clock</span>
-                <b id="simClock">D142 03:12:00</b>
-                <span class="sr-sub">Mars transit &middot; 4 crew</span>
-              </div>
-            </div>
-
-            <div class="sim-card sim-alert" id="simAlert" aria-live="polite">
-              <!-- filled by sim.js -->
-            </div>
-
-            <div class="sim-card sim-log">
-              <header class="sl-head">
-                <h3>On-board log</h3>
-                <span class="sl-pending" id="simPending">0 pending sync</span>
-              </header>
-              <ul class="sl-list" id="simLog"></ul>
-              <div class="sl-sync">
-                <span class="sl-link" id="simLink"><i></i><span id="simLinkText">Next link window 0:60</span></span>
-                <button type="button" class="sim-btn sim-btn-sm" id="simSync">Open link window</button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <p class="sim-note">A mini version of the console engine: same Watch 1.8&sigma; / Act 3.0&sigma; thresholds and readiness formula. Only the CO&#8322; and dose limits are cited (NASA-STD-3001); the other numbers are illustrative, not medical guidance. <a href="/app/simulator">Run the full simulator &rarr;</a></p>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════ HOW IT WORKS (#education) ═════════
-         Same scroll-driven SVG timeline as the template, extended
-         from 2 to 5 nodes (script.js now reads nodes from the DOM).
-    ══════════════════════════════════════════════════════════════ -->
-    <section id="education">
-      <div class="edu-overlay" aria-hidden="true"></div>
-
-      <div class="section-inner edu-inner">
-        <p class="edu-eyebrow">
-          <span class="bracket">&lt;</span>pipeline<span class="bracket">/&gt;</span>
+    <!-- ═══════════════════════════════════════ ASTRODOCX (#astrodocx) ═════
+         The reveal after the Health Twin. universe/reveal.js pins it and morphs particles into the
+         ASTRODOCX wordmark; without WebGL or with reduced motion it stays a normal section (the h1). -->
+    <section id="astrodocx" aria-labelledby="adx-title">
+      <canvas id="adxCanvas" aria-hidden="true"></canvas>
+      <div class="adx-stars" aria-hidden="true"></div>
+      <div class="adx-inner">
+        <p class="hero-eyebrow adx-reveal"><span class="bracket">&lt;</span>nasa space apps 2026<span class="bracket">/&gt;</span></p>
+        <h1 class="adx-wordmark adx-reveal" id="adx-title">ASTRODOC<span class="hero-x">X</span></h1>
+        <p class="hero-pitch adx-pitch adx-reveal">
+          Your <strong>doctor on board</strong> when Earth is minutes away. AstroDocX learns each
+          astronaut&rsquo;s <strong>personal baseline</strong>, spots health changes early and turns
+          every alert into a <strong>clear action</strong> the crew can take on their own.
         </p>
-        <h2 class="edu-title">How It Works</h2>
-
-        <div class="edu-timeline-wrap edu-steps" id="edu-timeline-wrap">
-
-          <svg class="edu-svg" id="edu-svg" aria-hidden="true" overflow="visible">
-            <defs>
-              <linearGradient id="edu-line-grad" gradientUnits="userSpaceOnUse"
-                              x1="0" y1="40" x2="100" y2="40">
-                <stop offset="0%"   stop-color="#22d3ee"/>
-                <stop offset="50%"  stop-color="#818cf8"/>
-                <stop offset="100%" stop-color="#f59e0b"/>
-              </linearGradient>
-              <filter id="edu-glow-f" x="-80%" y="-200%" width="260%" height="500%">
-                <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
-                <feMerge>
-                  <feMergeNode in="blur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-            <line id="edu-track"
-                  x1="0" y1="40" x2="100" y2="40"
-                  stroke="rgba(129,140,248,0.16)" stroke-width="2" stroke-linecap="round"/>
-            <line id="edu-line"
-                  x1="0" y1="40" x2="100" y2="40"
-                  stroke="url(#edu-line-grad)" stroke-width="3" stroke-linecap="round"
-                  filter="url(#edu-glow-f)"/>
-            <circle class="edu-circle" id="edu-circle-0" r="9" fill="#0b0a1a" stroke="#22d3ee" stroke-width="2.5" cx="0" cy="40" opacity="0" filter="url(#edu-glow-f)"/>
-            <circle class="edu-circle" id="edu-circle-1" r="9" fill="#0b0a1a" stroke="#60a5fa" stroke-width="2.5" cx="0" cy="40" opacity="0" filter="url(#edu-glow-f)"/>
-            <circle class="edu-circle" id="edu-circle-2" r="9" fill="#0b0a1a" stroke="#818cf8" stroke-width="2.5" cx="0" cy="40" opacity="0" filter="url(#edu-glow-f)"/>
-            <circle class="edu-circle" id="edu-circle-3" r="9" fill="#0b0a1a" stroke="#c084fc" stroke-width="2.5" cx="0" cy="40" opacity="0" filter="url(#edu-glow-f)"/>
-            <circle class="edu-circle" id="edu-circle-4" r="9" fill="#0b0a1a" stroke="#f59e0b" stroke-width="2.5" cx="0" cy="40" opacity="0" filter="url(#edu-glow-f)"/>
-          </svg>
-
-          <div class="edu-cards-row">
-
-            <div class="edu-card-slot" data-slot="0">
-              <div class="edu-pin-line"></div>
-              <div class="edu-card-wrap">
-                <div class="timeline-content edu-card" id="edu-card-0">
-                  <span class="edu-year">01</span>
-                  <h3>Detect</h3>
-                  <p class="timeline-place">Sensors + daily check-in</p>
-                  <p class="edu-desc">11 metrics (vitals, sleep, exercise, reaction time, mood, dose, cabin air) are compared with each astronaut&rsquo;s own baseline. It only learns while nominal, so slow drift is not learned away.</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="edu-card-slot" data-slot="1">
-              <div class="edu-pin-line"></div>
-              <div class="edu-card-wrap">
-                <div class="timeline-content edu-card" id="edu-card-1">
-                  <span class="edu-year">02</span>
-                  <h3>Explain</h3>
-                  <p class="timeline-place">Plain-language alerts</p>
-                  <p class="edu-desc">Each alert says what changed, by how much, against whose baseline and since when &mdash; e.g. &ldquo;4.3&sigma; above Pilot&rsquo;s baseline, since D27 07:00 MET&rdquo;. No black box.</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="edu-card-slot" data-slot="2">
-              <div class="edu-pin-line"></div>
-              <div class="edu-card-wrap">
-                <div class="timeline-content edu-card" id="edu-card-2">
-                  <span class="edu-year">03</span>
-                  <h3>Act</h3>
-                  <p class="timeline-place">Step-by-step action cards</p>
-                  <p class="edu-desc">Checkable steps with progress and a Done button. The alert opens, escalates, eases and resolves on its own as values recover.</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="edu-card-slot" data-slot="3">
-              <div class="edu-pin-line"></div>
-              <div class="edu-card-wrap">
-                <div class="timeline-content edu-card" id="edu-card-3">
-                  <span class="edu-year">04</span>
-                  <h3>Log</h3>
-                  <p class="timeline-place">Offline health record</p>
-                  <p class="edu-desc">Every reading, alert and completed step is stored on the device (IndexedDB), with no network needed after the first load.</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="edu-card-slot" data-slot="4">
-              <div class="edu-pin-line"></div>
-              <div class="edu-card-wrap">
-                <div class="timeline-content edu-card" id="edu-card-4">
-                  <span class="edu-year">05</span>
-                  <h3>Sync</h3>
-                  <p class="timeline-place">Delay-tolerant link</p>
-                  <p class="edu-desc">An outbox waits for link windows (12-minute delay, blackouts handled), then sends. Export the log as CSV; the Ground View shows only what Earth has received.</p>
-                  <span class="edu-status-pill">Crew stays in control</span>
-                </div>
-              </div>
-            </div>
-
-          </div><!-- /edu-cards-row -->
-        </div><!-- /edu-timeline-wrap -->
-      </div><!-- /edu-inner -->
-    </section>
-
-    <!-- ═══════════════════════════════════════ PROOF STRIP (#proof) ═════
-         R2: every number verified from the repo (see plan.md R2 log). -->
-    <section id="proof" aria-label="The console in numbers">
-      <ul class="proof-inner">
-        <li class="proof-item"><b class="proof-num" data-target="11">11</b><span>metrics vs your own baseline</span></li>
-        <li class="proof-item"><b class="proof-num" data-target="5">5</b><span>RIDGE hazards covered</span></li>
-        <li class="proof-item"><b class="proof-num" data-target="7">7</b><span>working screens</span></li>
-        <li class="proof-item"><b class="proof-num" data-target="186">186</b><span>automated tests</span></li>
-        <li class="proof-item"><b class="proof-num" data-target="100">100</b><span>Lighthouse accessibility</span></li>
-        <li class="proof-item"><b class="proof-num proof-text">Offline</b><span>after the first load</span></li>
-      </ul>
-    </section>
-
-    <!-- ═══════════════════════════════════════ BUILT ON (#built) ═════════
-         L3: static section (no pin). Styles in built.css; reveal handled
-         by the small IntersectionObserver at the end of sim.js.
-    ══════════════════════════════════════════════════════════════ -->
-    <section id="built" aria-labelledby="built-title">
-      <div class="built-inner">
-        <header class="built-header">
-          <p class="built-eyebrow"><span class="bracket">&lt;</span>built-on<span class="bracket">/&gt;</span></p>
-          <h2 class="built-title" id="built-title">Built On</h2>
-          <p class="built-subtitle">Open web tech on both sides: this landing page and an offline-first console, grounded in NASA standards and open physiology data.</p>
-        </header>
-
-        <div class="built-grid">
-          <div class="built-card built-stack">
-            <h3>Landing page <span class="built-pill built-pill-live">Live</span></h3>
-            <ul class="built-chips">
-              <li>HTML / CSS / JS</li><li>Three.js r128</li><li>GSAP 3 + ScrollTrigger</li><li>Canvas 2D</li><li>SVG</li><li>Sketchfab embed (3D anatomy)</li><li>Netlify</li>
-            </ul>
-            <h3>Crew Console <span class="built-pill built-pill-live">Live</span></h3>
-            <ul class="built-chips">
-              <li>React + TypeScript</li><li>PWA (offline, installable)</li><li>IndexedDB / Dexie</li><li>Recharts</li><li>Zustand</li><li>Delay-tolerant outbox</li>
-            </ul>
-            <p class="built-foot">Detection: per-person baselines (Welford mean/sd, learned only while nominal), EWMA-smoothed z-scores, persistence (2&ndash;3 readings in a row), two-signal rules and cited limits, with hysteresis. A mini version runs in the <a href="#sim">Live Demo</a>.</p>
-          </div>
-
-          <ul class="built-sources">
-            <li class="built-card built-src">
-              <span class="bs-tag">Hazards &amp; risks</span>
-              <h3><a href="https://www.nasa.gov/hrp/" target="_blank" rel="noopener">NASA Human Research Program <span aria-hidden="true">&#8599;</span></a></h3>
-              <p>The RIDGE hazard framework and the human-health risks it maps to.</p>
-            </li>
-            <li class="built-card built-src">
-              <span class="bs-tag">Spaceflight data</span>
-              <h3><a href="https://osdr.nasa.gov/" target="_blank" rel="noopener">NASA OSDR <span aria-hidden="true">&#8599;</span></a></h3>
-              <p>Open Science Data Repository: spaceflight biology and physiology datasets.</p>
-            </li>
-            <li class="built-card built-src">
-              <span class="bs-tag">Long-duration evidence</span>
-              <h3><a href="https://www.nasa.gov/twins-study/" target="_blank" rel="noopener">NASA Twins Study <span aria-hidden="true">&#8599;</span></a></h3>
-              <p>A year in orbit compared with an identical twin on Earth.</p>
-            </li>
-            <li class="built-card built-src">
-              <span class="bs-tag">Signals</span>
-              <h3><a href="https://physionet.org/" target="_blank" rel="noopener">PhysioNet <span aria-hidden="true">&#8599;</span></a></h3>
-              <p>Open ECG / HRV recordings to shape realistic synthetic baselines.</p>
-            </li>
-          </ul>
+        <div class="hero-typerow adx-reveal" aria-live="polite">
+          <span class="prompt">~/astrodocx $</span>
+          <span id="hero-typed"></span><span class="hero-cursor" aria-hidden="true"></span>
         </div>
-
-        <aside class="built-card built-roadmap" aria-labelledby="roadmap-title">
-          <h3 id="roadmap-title">Roadmap <span class="built-pill">Not built yet</span></h3>
-          <ul class="built-chips">
-            <li>Wearable sensor integration</li><li>Real Supabase ground backend</li><li>Vision / SANS self-tests</li><li>Blood pressure</li><li>Bone density</li><li>Multi-device ground station</li>
-          </ul>
-        </aside>
+        <ol class="adx-steps adx-reveal" aria-label="How AstroDocX works">
+          <li><b>Detect</b><span>11 metrics against your own baseline</span></li>
+          <li><b>Explain</b><span>what changed, by how much, since when</span></li>
+          <li><b>Act</b><span>a checkable action card</span></li>
+          <li><b>Log</b><span>every step kept on the device</span></li>
+          <li><b>Sync later</b><span>12-minute delay, link windows, CSV</span></li>
+        </ol>
+        <div class="hero-actions adx-reveal">
+          <a href="/app/" class="btn btn-primary" data-cursor="LAUNCH">Launch Crew Console</a>
+          <a href="?tour=1" class="btn btn-secondary" data-cursor="WATCH">Watch the tour</a>
+          <a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener" class="btn btn-secondary" data-cursor="GITHUB">GitHub</a>
+        </div>
+        <p class="hero-tagline adx-reveal">Working PWA &middot; offline &middot; 4-crew demo mission inside.</p>
       </div>
     </section>
 
@@ -904,7 +367,7 @@
       <ul class="footer-links">
         <li><a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener">GitHub</a></li>
         <li><a href="https://www.spaceappschallenge.org/" target="_blank" rel="noopener">Space Apps</a></li>
-        <li><a href="#built">Data sources</a></li>
+        <li><a href="#twin">Health Twin</a></li>
         <li><a href="#universe">Top</a></li>
       </ul>
     </div>
@@ -943,8 +406,8 @@
   <script src="universe/engine.js"></script>
   <script src="universe/fx.js"></script>
   <script src="universe/universe.js"></script>
+  <script src="universe/reveal.js"></script>
   <script src="twin.js"></script>
-  <script src="sim.js"></script>
   <script src="team.js"></script>
   <script src="tour.js"></script>
   <script src="anatomy3d.js"></script>
