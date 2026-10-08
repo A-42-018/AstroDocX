@@ -1,4 +1,4 @@
-import { Bell, Download, Play, Radio, RadioTower, RotateCcw, WifiOff } from 'lucide-react'
+import { Bell, Download, House, Play, Radio, RadioTower, RotateCcw, WifiOff } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useBoard } from '../board/store'
@@ -15,7 +15,7 @@ import type { ShellData } from './useShellData'
 export function Rail() {
   return (
     <nav className="rail" aria-label="Crew Console">
-      <span className="brand-mark" aria-hidden="true" />
+      <a href="/" className="brand-mark" aria-label="Back to the AstroDocX landing page" title="Back to the landing page" />
       <ul>
         {ROUTES.map(({ path, label, tab, icon: Icon }) => (
           <li key={path}>
@@ -106,6 +106,9 @@ export function TopBar({ data, install }: { data: ShellData | null; install: (()
       </div>
       {data && who && (
         <div className="tb-right">
+          <a href="/" className="btn ghost home-btn" aria-label="Back to the AstroDocX landing page" title="Back to the landing page">
+            <House size={16} aria-hidden="true" /><span>Landing</span>
+          </a>
           <span className="tb-break" aria-hidden="true" />
           <CrewSwitcher crew={data.crew} crewId={data.crewId} onSelect={select} />
           <span className="chip met mono" title="Mission elapsed time"><span className="sr-only">Mission elapsed time </span>{met(data.now)}</span>
