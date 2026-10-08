@@ -543,10 +543,20 @@ Text on photo always on a scrim (≥ 4.5:1), status never by colour alone (icon 
 - **Status on the body:** brain takes the Isolation status, lungs Environment, leg bones Gravity, the whole-body aura Radiation.
 - **Checked:** 186 tests, `tsc`, `oxlint`, build clean; twin seen at 1440 and 375 px; all 7 screens at 3 sizes without overflow or console errors.
 
+## L4 Implementation Log: 3D anatomy viewer (done)
+- **What:** an opt-in "Explore real anatomy in 3D" button in the Health Twin header opens a modal with the Sketchfab model *Animated human body anatomy* by AVRcontent (UID `51ebbf617d4f4faeb099d70336e13a58`). The Health Twin itself is unchanged.
+- **New files (isolated, template JS untouched):** `landing/anatomy3d.js`, `landing/anatomy3d.css`. `index.html` gained the trigger button, the `#anat3d` dialog (before the CDN scripts) and the two includes.
+- **Performance:** the iframe is created on open and removed on close, so there is no extra WebGL context until a visitor asks for it, and it is freed afterwards. Nothing loads on page load.
+- **Accessibility:** `role="dialog"`, `aria-modal`, focus moves to × on open and back to the trigger on close, Tab is trapped, Esc / backdrop / × close it, page scroll locked while open. The site's custom cursor is hidden while open and the native cursor is restored inside the dialog (the custom cursor cannot follow the pointer over an iframe).
+- **Credit:** model title, author and Sketchfab linked in the dialog footer; "Sketchfab embed (3D anatomy)" added to the Built On landing-page chips. Footer note: "Reference model, not crew data · needs internet".
+- **Scope:** landing page only. The Crew Console stays offline-first and keeps its SVG twin (a Sketchfab iframe would be blank offline).
+- **Checked (headless Chromium, 1440×900 and 390×844):** button visible in the Twin header; open creates one iframe, focus on ×; Esc closes, removes the iframe, unlocks scroll, returns focus; no horizontal overflow; no new console or page errors. The Sketchfab model itself could not load in the sandbox (no network to sketchfab.com), so the live render still needs a look in a normal browser.
+
 ## Current Phase
-**C0–C12 done and deployed. Console v2: U0 to U7 done locally.** Next: push to deploy, then re-check the live URL.
+**C0–C12 done and deployed. Console v2: U0 to U7 done locally. L4 (3D anatomy viewer on the landing page) done locally.** Next: check the 3D modal with a real network, push to deploy, then re-check the live URL.
 
 ## Next Roadmap
+0. **L4 check:** open the landing page online, click "Explore real anatomy in 3D", confirm the model renders and closes cleanly at desktop and phone width. Optional L4.1: add organ toggles inside the modal with the Sketchfab Viewer API (same approach as the `sketchfab-sample` prototype).
 1. **Deploy:** live at https://astrodocx.netlify.app (console at `/app/`), auto-deploys from `main`. README, `og:url`, absolute `og:image` / `twitter:image` and canonical tag updated. Still to do: turn off Netlify site protection (visitor access) so the public can open it, re-run Lighthouse on the live URL, check install-to-home-screen on a phone.
 2. Optional: create the Supabase project, run `docs/supabase.sql`, set the two `VITE_SUPABASE_*` variables in Netlify, and test a real upload; move to authenticated policies before any real data.
 3. Content still open on the landing page: team cards 2–4, README video URL.

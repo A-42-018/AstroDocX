@@ -32,6 +32,7 @@
   <link rel="stylesheet" href="twin.css" />
   <link rel="stylesheet" href="sim.css" />
   <link rel="stylesheet" href="built.css" />
+  <link rel="stylesheet" href="anatomy3d.css" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -440,7 +441,11 @@
             <span class="bracket">&lt;</span>health-twin<span class="bracket">/&gt;</span>
           </p>
           <h2 class="twin-title" id="twin-title">Health Twin</h2>
-          <p class="twin-subtitle">One body scan. Six systems. One readiness score. <span class="twin-tag">Concept &middot; simulated data</span></p>
+          <p class="twin-subtitle">One body scan. Six systems. One readiness score. <span class="twin-tag">Concept &middot; simulated data</span>
+            <button type="button" class="anat3d-open" id="anat3dOpen" aria-haspopup="dialog" aria-controls="anat3d" aria-expanded="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/></svg>
+              Explore real anatomy in 3D
+            </button></p>
         </header>
 
         <div class="twin-stage" id="twinStage">
@@ -808,7 +813,7 @@
           <div class="built-card built-stack">
             <h3>Landing page <span class="built-pill built-pill-live">Live</span></h3>
             <ul class="built-chips">
-              <li>HTML / CSS / JS</li><li>Three.js r128</li><li>GSAP 3 + ScrollTrigger</li><li>Canvas 2D</li><li>SVG</li><li>Netlify</li>
+              <li>HTML / CSS / JS</li><li>Three.js r128</li><li>GSAP 3 + ScrollTrigger</li><li>Canvas 2D</li><li>SVG</li><li>Sketchfab embed (3D anatomy)</li><li>Netlify</li>
             </ul>
             <h3>Crew Console <span class="built-pill built-pill-live">Live</span></h3>
             <ul class="built-chips">
@@ -934,6 +939,27 @@
     </div>
   </footer>
 
+  <!-- ═══════════════════════════════════════ 3D ANATOMY MODAL ═════════
+       L4: opt-in Sketchfab viewer. Styles in anatomy3d.css, behaviour in
+       anatomy3d.js. The iframe is created on open and removed on close.
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="anat3d" id="anat3d" hidden role="dialog" aria-modal="true" aria-labelledby="anat3dTitle">
+    <div class="anat3d__box">
+      <div class="anat3d__head">
+        <span class="anat3d__title" id="anat3dTitle">3D anatomy viewer</span>
+        <span class="anat3d__hint">Drag to rotate &middot; scroll to zoom &middot; double-click to focus</span>
+        <button type="button" class="anat3d__close" id="anat3dClose" aria-label="Close 3D viewer">&times;</button>
+      </div>
+      <div class="anat3d__frame" id="anat3dFrame"></div>
+      <p class="anat3d__foot">
+        <span><a href="https://sketchfab.com/3d-models/animated-human-body-anatomy-51ebbf617d4f4faeb099d70336e13a58" target="_blank" rel="nofollow noopener">Animated human body anatomy</a>
+        by <a href="https://sketchfab.com/AVRcontent" target="_blank" rel="nofollow noopener">AVRcontent</a>
+        on <a href="https://sketchfab.com" target="_blank" rel="nofollow noopener">Sketchfab</a></span>
+        <span class="anat3d__note">Reference model, not crew data &middot; needs internet</span>
+      </p>
+    </div>
+  </div>
+
   <!-- CDN libs (unchanged) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -945,6 +971,7 @@
   <script src="twin.js"></script>
   <script src="sim.js"></script>
   <script src="tour.js"></script>
+  <script src="anatomy3d.js"></script>
 
 </body>
 
