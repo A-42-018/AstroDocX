@@ -197,7 +197,8 @@
   btn.addEventListener('click', e => { e.stopPropagation(); if (on) { stop(); store.set('off'); } else { start(); store.set('on'); } });
   /* a visitor who turned it on before: start at their first click / key on the page (browsers need a gesture) */
   if (store.get() === 'on') {
-    const resume = () => { if (!on && store.get() === 'on') start(); off(); };
+    /* the button handles its own press: if this also started the sound on pointerdown, the click that follows would switch it straight off again */
+    const resume = e => { if (e && e.target && btn.contains(e.target)) return; if (!on && store.get() === 'on') start(); off(); };
     const off = () => ['pointerdown', 'keydown'].forEach(ev => removeEventListener(ev, resume, true));
     ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, resume, true));
   }
