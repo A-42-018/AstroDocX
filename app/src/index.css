@@ -107,7 +107,7 @@ a.chip:hover { border-color: var(--line-hi); background: rgba(255, 255, 255, 0.0
   position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; display: grid; place-content: center;
   font-size: 0.7rem; line-height: 1; color: #160a02; background: var(--st, var(--watch)); border: 2px solid #12141a;
 }
-.home-btn { min-height: 40px; padding: 0 14px; font-size: 0.84rem; gap: 6px; white-space: nowrap; }
+.topbar .home-btn { display: none; min-height: 40px; padding: 0 14px; font-size: 0.84rem; gap: 6px; white-space: nowrap; } /* the rail has it from 768 px up; phones have no rail */
 .demo-btn { min-height: 40px; padding: 0 14px; font-size: 0.84rem; gap: 6px; white-space: nowrap; }
 .install-btn { min-height: 40px; padding: 0 16px; font-size: 0.84rem; }
 
@@ -132,7 +132,6 @@ a.chip:hover { border-color: var(--line-hi); background: rgba(255, 255, 255, 0.0
 .av.on .av-disc { background: #e6e8ee; color: #0b0c10; box-shadow: 0 0 0 2.5px var(--st), 0 0 0 4.5px rgba(255, 255, 255, 0.2); }
 
 @media (max-width: 1100px) {
-  .home-btn { padding: 0 12px; } .home-btn span { display: none; }
   .greet p { font-size: 0.95rem; }
   .lc-long { display: none; } .lc-short { display: inline; }
   /* The greeting already names the selected person, so the switcher drops the name to save room */
@@ -160,8 +159,8 @@ a.chip:hover { border-color: var(--line-hi); background: rgba(255, 255, 255, 0.0
   .chip { padding: 0 10px; font-size: 0.74rem; min-height: 44px; }
   .met { padding: 0 10px; }
   .install-btn { display: none; }
-  .demo-btn { display: none; }
-  .home-btn { order: 1; flex: 0 0 44px; min-height: 44px; padding: 0; justify-content: center; } .home-btn span { display: none; }
+  .topbar .demo-btn { display: none; }
+  .topbar .home-btn { display: inline-flex; order: 1; flex: 0 0 44px; min-height: 44px; padding: 0; justify-content: center; } .home-btn span { display: none; }
   .tabs {
     display: block; position: fixed; z-index: 8; left: 0; right: 0; bottom: 0;
     background: var(--glass-1); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); border-top: 1px solid var(--line);
