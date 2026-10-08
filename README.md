@@ -107,7 +107,7 @@ Open the landing page with `?tour=1` (for example `http://localhost:8000/?tour=1
 - HTML, CSS and vanilla JavaScript
 - [Three.js r128](https://threejs.org/) for the nebula and 3D astronaut
 - [GSAP 3.12 + ScrollTrigger](https://gsap.com/) for scroll animation
-- Canvas 2D + SVG for the Health Twin (no extra WebGL context)
+- One WebGL particle system (three.js) for the whole landing page, Health Twin included
 - Crew Console: React + TypeScript + Vite PWA, IndexedDB (Dexie), Zustand, Recharts, Vitest (simulated ground sync; Supabase is a stretch goal)
 
 ## Project structure
@@ -116,13 +116,11 @@ AstroDocX/
 ├── landing/        # landing page (static)
 │   ├── index.html
 │   ├── styles.css
-│   ├── script.js   # nebula, pins, carousel, timeline, nav
-│   ├── astronaut.js
-│   ├── twin.js / twin.css    # Health Twin section
-│   ├── sim.js / sim.css      # Live Mission Simulator (+ Built On reveal)
-│   ├── universe/             # particle intro (WIP: scenes.js, universe.js, universe.css)
-│   ├── built.css             # Built On + Roadmap
-│   ├── team.js               # TEAM array: the 6 member cards
+│   ├── script.js   # nav, typewriter, back-to-top
+│   ├── tour.js     # ?tour=1 self-scrolling video mode
+│   ├── universe/   # the particle journey: one canvas for intro -> Health Twin -> AstroDocX
+│   │               #   scenes.js (copy + chapter lengths), engine.js (8 shapes), universe.js (director),
+│   │               #   health-twin.js, reveal.js (chapter UI), stars.js, camera.js, fx.js, universe.css
 │   ├── fonts/
 │   └── assets/     # feature mockups, og-image
 ├── app/            # Crew Console PWA (React + TypeScript + Vite)

@@ -1,13 +1,18 @@
 /* ============================================================
-   ASTRODOCX — UNIVERSE INTRO · P1 particle engine (plan §12.4)
-   One THREE.Points system, one draw call. Six target shapes
-   live on the GPU as vertex attributes aP0..aP5; the vertex
-   shader mixes shape i -> i+1 from two uniforms (uSeg, uT), so
-   a particle's position is a pure function of scroll: fast
-   scrolling, reversing and jumping can never break it.
+   ASTRODOCX — the one particle system of the landing page
+   One THREE.Points system, one draw call, 24k particles for the
+   whole page. Eight target shapes live on the GPU as vertex
+   attributes aP0..aP7; the vertex shader mixes shape a -> b from
+   uniforms (uSeg, uSegB, uT), so a particle's position is a pure
+   function of scroll: fast scrolling, reversing and jumping can
+   never break it.
 
-   Shapes here are procedural stand-ins (P2 replaces astronaut,
-   Orion, TDRS and Earth with baked NASA-model bins).
+     0 dust  1 planet  2 astronaut  3 Orion  4 relay  5 Earth   (intro)
+     6 body  (Health Twin: regions in aReg light up per system)
+     7 ASTRODOCX wordmark  (the reveal)
+
+   The same particles are born as stardust and end as the wordmark.
+   Astronaut, Orion, TDRS and Earth load baked NASA-model bins.
 ============================================================ */
 (function () {
   'use strict';
@@ -47,7 +52,7 @@
 
   /* ── Morton (Z-order) sort: particle i lands in the same region of every shape -> clean morphs ── */
   function spread(v) { v &= 0x3ff; v = (v | (v << 16)) & 0x030000ff; v = (v | (v << 8)) & 0x0300f00f; v = (v | (v << 4)) & 0x030c30c3; return (v | (v << 2)) & 0x09249249; }
-  function mortonSort(a, n) {
+  function mortonSort(a, n, extra) {
     let min = [1e9, 1e9, 1e9], max = [-1e9, -1e9, -1e9];
     for (let i = 0; i < n; i++) for (let k = 0; k < 3; k++) { const v = a[i * 3 + k]; if (v < min[k]) min[k] = v; if (v > max[k]) max[k] = v; }
     const keys = new Float64Array(n), idx = new Uint32Array(n);
@@ -58,6 +63,7 @@
     const order = Array.from(idx).sort((x, y) => keys[x] - keys[y]);
     const out = new Float32Array(n * 3);
     order.forEach((o, i) => { out[i * 3] = a[o * 3]; out[i * 3 + 1] = a[o * 3 + 1]; out[i * 3 + 2] = a[o * 3 + 2]; });
+    if (extra) { const ex = extra.slice(); order.forEach((o, i) => { extra[i] = ex[o]; }); }   // a per-point value (body region) follows its point
     return out;
   }
 
@@ -158,7 +164,7 @@
     for (; k < n; k++) { const p = fib(Math.floor(r() * 5000), 5000); a[k * 3] = p[0] * 0.85; a[k * 3 + 1] = p[1] * 0.85; a[k * 3 + 2] = p[2] * 0.85; }
     return a;
   }
-  function genWordmark(n, r, fam) {                            // "ASTRODOCX" drawn to a canvas, lit pixels sampled (reveal mode only)
+  function genWordmark(n, r, fam) {                            // "ASTRODOCX" drawn to a canvas, lit pixels sampled 
     const W = 1400, H = 260, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
     const c = cv.getContext('2d'); c.fillStyle = '#000'; c.fillRect(0, 0, W, H);
     c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle';
@@ -175,36 +181,94 @@
     }
     return a;
   }
-  const WORD = { id: 'wordmark', sc: 1.6, off: [0, 0, 0], rot: 0, tint: [1, 1, 1], dis: 2.4 };
+  /* Health Twin body: skin shell, organs, skeleton, a transmitter on the right forearm and a floor ring.
+     Extent about y -2.1..1.9 at scale 1. reg (per point): 0 skin, 1 brain, 2 heart, 3 lungs, 4 gut,
+     5 legs, 6 skeleton, 7 forearm transmitter, 9 floor ring. Counts are tuned for 18k and scaled to n. */
+  function genBody(n, r) {
+    const a = new Float32Array(n * 3), reg = new Float32Array(n), f = n / 18000;
+    let k = 0;
+    const put = (x, y, z, g) => { if (k >= n) return; a[k * 3] = x; a[k * 3 + 1] = y; a[k * 3 + 2] = z; reg[k] = g; k++; };
+    function ell(cnt, c, rd, g, vol) {
+      cnt = Math.round(cnt * f);
+      for (let i = 0; i < cnt; i++) {
+        const v = [gauss(r), gauss(r), gauss(r)], l = Math.hypot(v[0], v[1], v[2]) || 1, q = vol ? Math.cbrt(r()) / l : 1 / l;
+        put(c[0] + v[0] * q * rd[0], c[1] + v[1] * q * rd[1], c[2] + v[2] * q * rd[2], g);
+      }
+    }
+    ell(900, [0, 1.55, 0], [0.30, 0.36, 0.30], 0);
+    ell(220, [0, 1.15, 0], [0.12, 0.16, 0.12], 0);
+    ell(1700, [0, 0.55, 0], [0.50, 0.76, 0.27], 0);
+    ell(700, [0, -0.25, 0], [0.42, 0.30, 0.25], 0);
+    ell(500, [-0.66, 0.75, 0], [0.13, 0.42, 0.13], 0);   ell(500, [0.66, 0.75, 0], [0.13, 0.42, 0.13], 0);
+    ell(450, [-0.78, 0.05, 0.05], [0.11, 0.42, 0.11], 0);
+    ell(520, [0.78, 0.05, 0.05], [0.11, 0.42, 0.11], 7);
+    ell(1100, [-0.2, -0.85, 0], [0.17, 0.55, 0.17], 5);  ell(1100, [0.2, -0.85, 0], [0.17, 0.55, 0.17], 5);
+    ell(950, [-0.2, -1.55, 0], [0.13, 0.50, 0.13], 5);   ell(950, [0.2, -1.55, 0], [0.13, 0.50, 0.13], 5);
+    ell(1300, [0, 1.58, 0.02], [0.20, 0.19, 0.18], 1, true);                                   // brain
+    ell(1100, [0.10, 0.70, 0.12], [0.12, 0.14, 0.10], 2, true);                                // heart
+    ell(1150, [-0.24, 0.80, 0.05], [0.16, 0.30, 0.14], 3, true); ell(1150, [0.26, 0.80, 0.05], [0.16, 0.30, 0.14], 3, true);
+    ell(1200, [0, 0.15, 0.08], [0.26, 0.24, 0.14], 4, true);                                   // gut
+    for (let i = 0, m = Math.round(520 * f); i < m; i++) put((r() - .5) * 0.04, 1.3 - r() * 1.65, -0.12 + (r() - .5) * 0.04, 6);    // spine
+    for (let j = 0; j < 7; j++) for (let i = 0, m = Math.round(90 * f); i < m; i++) { const t = r() * 6.2832, y = 1.0 - j * 0.09; put(Math.cos(t) * 0.38, y + Math.sin(t) * 0.015, Math.sin(t) * 0.19 - 0.02, 6); }
+    for (let i = 0, m = Math.round(160 * f); i < m; i++) { const t = r() * 6.2832; put(Math.cos(t) * 0.34, -0.28, Math.sin(t) * 0.18, 6); }
+    while (k < n) { const t = r() * 6.2832, rr = 0.55 + r() * 0.7; put(Math.cos(t) * rr, -2.12, Math.sin(t) * rr, 9); }
+    return { pos: a, reg: reg };
+  }
+
+  /* body and wordmark sit after the six intro shapes; sway = idle turn (rad) instead of a spin */
+  const BODY = { id: 'body', sc: 1, off: [0, 0, 0], rot: 0, sway: 0.32, tint: [1, 1, 1], dis: 1.3 };
+  const WORD = { id: 'wordmark', sc: 3.2, off: [0, 0, 0], rot: 0, tint: [1, 1, 1], dis: 2.4 };
+  const ALL = SHAPES.concat([BODY, WORD]);
+  const HEART = [0.10, 0.70, 0.12], CHEST = [-2.5, 0.95, 0];
+  const angle = (S, time) => S.sway ? S.sway * Math.sin(time * 0.22) : time * S.rot;
 
   /* ── shaders ── */
   const VS = [
-    'attribute vec3 aP0,aP1,aP2,aP3,aP4,aP5,aP6; attribute vec4 aSeed;',
-    'uniform float uSeg,uSegB,uT,uTime,uPR,uDis,uScA,uScB,uRotA,uRotB,uSize;',
+    'attribute vec3 aP0,aP1,aP2,aP3,aP4,aP5,aP6,aP7; attribute vec4 aSeed; attribute float aReg;',
+    'uniform float uSeg,uSegB,uT,uTime,uPR,uDis,uScA,uScB,uAngA,uAngB,uSize;',
     'uniform vec3 uOffA,uOffB,uTintA,uTintB,uChest,uMouse,uPlanetC,uLight;',
-    'uniform float uBeatR,uBeatAmp,uWAstro,uWPlanet,uRep;',
+    'uniform float uBeatR,uBeatAmp,uWAstro,uWPlanet,uRep,uBodyA,uBodyB,uScan,uAlert;',
+    'uniform float uLit[10]; uniform float uFocus[10];',
     'varying vec3 vC; varying float vA;',
-    'vec3 pick(float i){ if(i<.5) return aP0; if(i<1.5) return aP1; if(i<2.5) return aP2; if(i<3.5) return aP3; if(i<4.5) return aP4; if(i<5.5) return aP5; return aP6; }',
+    'vec3 pick(float i){ if(i<.5) return aP0; if(i<1.5) return aP1; if(i<2.5) return aP2; if(i<3.5) return aP3; if(i<4.5) return aP4; if(i<5.5) return aP5; if(i<6.5) return aP6; return aP7; }',
     'vec3 rotY(vec3 p,float a){ float c=cos(a),s=sin(a); return vec3(c*p.x+s*p.z,p.y,-s*p.x+c*p.z); }',
     'vec3 curl(vec3 p){ vec3 n=vec3(sin(p.y*1.7+uTime*.31)+sin(p.z*2.3-uTime*.17), sin(p.z*1.9+uTime*.26)+sin(p.x*2.1+uTime*.13), sin(p.x*1.6+uTime*.35)+sin(p.y*2.4-uTime*.21)); return vec3(n.y-n.z,n.z-n.x,n.x-n.y)*.5; }',
     'void main(){',
-    ' float i=floor(uSeg+.0001);',
-    ' vec3 pa=pick(i), pb=pick(uSegB);',
-    ' vec3 a=rotY(pa*uScA,uTime*uRotA)+uOffA, b=rotY(pb*uScB,uTime*uRotB)+uOffB;',
+    ' vec3 pa=pick(uSeg), pb=pick(uSegB);',
+    ' vec3 a=rotY(pa*uScA,uAngA)+uOffA, b=rotY(pb*uScB,uAngB)+uOffB;',
     ' float st=aSeed.w*.55+clamp(pa.y*.5+.5,0.,1.)*.30;',                          // stagger: random + height
     ' float t=clamp((uT-st*.4)/.6,0.,1.); float e=t*t*(3.-2.*t);',
+    ' float wb=uBodyA*(1.-e)+uBodyB*e; int ri=int(aReg+.5);',                       // wb: how much this particle is "body" right now
     ' vec3 pos=mix(a,b,e);',
     ' pos+=curl(pos*.7+aSeed.xyz*3.)*uDis*sin(3.14159*t);',                         // dissolve peaks mid-morph
-    ' pos+=curl(pos*1.3+aSeed.xyz*5.)*.025;',                                       // idle breathing
-    ' float dc=length(pos-uChest); float bw=uBeatAmp*uWAstro*exp(-pow((dc-uBeatR)*3.5,2.));',   // heartbeat ripple from the chest
-    ' pos+=normalize(pos-uChest+vec3(1e-4))*bw*.16;',
+    ' pos+=curl(pos*1.3+aSeed.xyz*5.)*mix(.025,.012,wb);',                          // idle breathing
+    ' if(ri==3) pos.y+=.025*sin(uTime*1.1+pos.x*2.)*wb;',                           // lungs breathe
+    ' float dc=length(pos-uChest); float bw=uBeatAmp*max(uWAstro,wb)*exp(-pow((dc-uBeatR)*mix(3.5,4.,wb),2.));',   // heartbeat ripple from the chest / heart
+    ' pos+=normalize(pos-uChest+vec3(1e-4))*bw*mix(.16,.09,wb);',
+    ' if(ri==2) pos=uChest+(pos-uChest)*(1.+uBeatAmp*.2*wb);',                      // the heart itself pumps
     ' if(uRep>0.){ vec3 dm=pos-uMouse; float md=length(dm); pos+=normalize(dm+vec3(1e-4))*(1.-smoothstep(0.,uRep,md))*.5; }',   // mouse repel (desktop)
     ' vec4 mv=modelViewMatrix*vec4(pos,1.);',
-    ' gl_PointSize=clamp((.9+aSeed.z*1.7)*uSize*uPR*(9./-mv.z),1.,10.);',
+    /* star look (intro shapes, wordmark) */
     ' vec3 base=aSeed.y<.70?vec3(.92,.95,1.):(aSeed.y<.90?vec3(.50,.66,1.):vec3(.96,.79,.48));',
-    ' vC=base*mix(uTintA,uTintB,e);',
-    ' vA=(.55+aSeed.z*.45)*(1.+sin(3.14159*t)*.35)*(1.+bw*5.);',
-    ' float lit=smoothstep(-.25,.65,dot(normalize(pos-uPlanetC),uLight)); vA*=mix(1.,.3+1.0*lit,uWPlanet);',   // planet terminator
+    ' vec3 cI=base*mix(uTintA,uTintB,e);',
+    ' float aI=(.55+aSeed.z*.45)*(1.+sin(3.14159*t)*.35)*(1.+bw*5.);',
+    ' float lit=smoothstep(-.25,.65,dot(normalize(pos-uPlanetC),uLight)); aI*=mix(1.,.3+1.0*lit,uWPlanet);',   // planet terminator
+    /* body look: colour per region, the scan line and the focused system glow */
+    ' vec3 col=vec3(.35,.75,1.); float ab=.5; float sz=.8;',
+    ' if(ri==1){ col=mix(vec3(.45,.9,1.),vec3(1.,.66,.2),uAlert); ab=.95; sz=1.1; }',
+    ' else if(ri==2){ col=vec3(1.,.45,.58); ab=1.; sz=1.2; }',
+    ' else if(ri==3){ col=vec3(.5,.86,1.); ab=.8; sz=.95; }',
+    ' else if(ri==4){ col=vec3(.4,.7,1.); ab=.7; }',
+    ' else if(ri==5){ col=vec3(.4,.82,1.); ab=.65; }',
+    ' else if(ri==6){ col=vec3(.9,.96,1.); ab=.85; sz=.9; }',
+    ' else if(ri==7){ col=vec3(.98,.84,.5); ab=.85; sz=1.; }',
+    ' else if(ri==9){ col=vec3(.25,.82,.95); ab=.8; }',
+    ' float by=uBodyA>.5?pa.y:pb.y, li=uLit[ri], fo=uFocus[ri];',
+    ' ab*=(.28+.72*li)*(1.+fo*1.7)*(1.+bw*5.)*(1.+2.4*exp(-pow((by-uScan)/.09,2.)));',
+    ' if(ri==1) ab*=1.+uAlert*.35*sin(uTime*3.2);',
+    ' ab*=(.55+aSeed.z*.45)*.78;',
+    ' vC=mix(cI,col,wb); vA=mix(aI,ab,wb);',
+    ' gl_PointSize=clamp((.9+aSeed.z*1.7)*mix(1.,sz*(1.+fo*.5)*.72,wb)*uSize*uPR*(9./-mv.z),1.,10.);',
     ' gl_Position=projectionMatrix*mv; }'
   ].join('\n');
   const FS = [
@@ -214,20 +278,16 @@
     ' gl_FragColor=vec4(vC*a*vA*uBright,a*vA); }'
   ].join('\n');
 
-  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;        // easeInOutCubic (used for text-free helpers)
-  void ease;
-
-  /* ── public: create(scene, {tier}) -> engine ── */
+  /* ── public: create(scene, {tier, family}) -> engine ── */
   function create(scene, opts) {
     const tier = (opts && opts.tier) || 'high';
     const r = rng(20261008), n = N_MAX;
     const gens = [genDust, genPlanet, genAstronaut, genOrion, genRelay, genEarth];
-    const reveal = !!(opts && opts.reveal);                                            // reveal mode: dust -> ASTRODOCX wordmark only
-    let shapes;
-    if (reveal) {
-      const dust = mortonSort(genDust(n, r), n), word = mortonSort(genWordmark(n, rng(99), (opts && opts.family) || 'Pulchella, sans-serif'), n);
-      shapes = [dust, dust, dust, dust, dust, dust, word];
-    } else shapes = gens.map(g => mortonSort(g(n, r), n));
+    const shapes = gens.map(g => mortonSort(g(n, r), n));
+    const body = genBody(n, rng(20261009)), bodyReg = body.reg;
+    shapes.push(mortonSort(body.pos, n, bodyReg));
+    const wordOf = fam => mortonSort(genWordmark(n, rng(99), fam), n);
+    shapes.push(wordOf((opts && opts.family) || 'Pulchella, sans-serif'));
 
     /* Slot j holds sorted particle perm[j] (seeded shuffle). The Morton order is kept per shape, and any prefix
        of the slots is a uniform subsample of every shape, so drawRange(0, k) lowers the tier without rebuilding. */
@@ -235,12 +295,14 @@
     for (let i = 0; i < n; i++) perm[i] = i;
     for (let i = n - 1; i > 0; i--) { const j = Math.floor(rp() * (i + 1)), t = perm[i]; perm[i] = perm[j]; perm[j] = t; }
     const geo = new THREE.BufferGeometry(), attrs = [];
-    for (let s = 0; s < 7; s++) {
-      const src = shapes[Math.min(s, shapes.length - 1)];
-      const arr = new Float32Array(count * 3);
-      for (let i = 0; i < count; i++) { const o = perm[i] * 3; arr[i * 3] = src[o]; arr[i * 3 + 1] = src[o + 1]; arr[i * 3 + 2] = src[o + 2]; }
+    function fill(arr, src) { for (let i = 0; i < count; i++) { const o = perm[i] * 3; arr[i * 3] = src[o]; arr[i * 3 + 1] = src[o + 1]; arr[i * 3 + 2] = src[o + 2]; } }
+    for (let s = 0; s < 8; s++) {
+      const arr = new Float32Array(count * 3); fill(arr, shapes[s]);
       const at = new THREE.BufferAttribute(arr, 3); geo.setAttribute('aP' + s, at); attrs.push(at);
     }
+    const reg = new Float32Array(count);
+    for (let i = 0; i < count; i++) reg[i] = bodyReg[perm[i]];
+    geo.setAttribute('aReg', new THREE.BufferAttribute(reg, 1));
     geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 3), 3));   // required by three; unused
     const seed = new Float32Array(count * 4), rs = rng(7);
     for (let i = 0; i < count * 4; i++) seed[i] = rs();
@@ -248,24 +310,25 @@
 
     const U = {
       uSeg: { value: 0 }, uSegB: { value: 1 }, uT: { value: 0 }, uTime: { value: 0 }, uPR: { value: 1 }, uDis: { value: 0 }, uSize: { value: 1.9 }, uBright: { value: 1.7 },
-      uScA: { value: 1 }, uScB: { value: 1 }, uRotA: { value: 0 }, uRotB: { value: 0 },
+      uScA: { value: 1 }, uScB: { value: 1 }, uAngA: { value: 0 }, uAngB: { value: 0 },
       uOffA: { value: new THREE.Vector3() }, uOffB: { value: new THREE.Vector3() },
-      uChest: { value: new THREE.Vector3(-2.5, 0.95, 0) }, uMouse: { value: new THREE.Vector3(99, 99, 0) }, uRep: { value: 0 },
+      uChest: { value: new THREE.Vector3(CHEST[0], CHEST[1], CHEST[2]) }, uMouse: { value: new THREE.Vector3(99, 99, 0) }, uRep: { value: 0 },
       uPlanetC: { value: new THREE.Vector3(2.6, 0, 0) }, uLight: { value: new THREE.Vector3(-0.7, 0.4, 0.6).normalize() },
       uBeatR: { value: 9 }, uBeatAmp: { value: 0 }, uWAstro: { value: 0 }, uWPlanet: { value: 0 },
+      uBodyA: { value: 0 }, uBodyB: { value: 0 }, uScan: { value: 9 }, uAlert: { value: 0 },
+      uLit: { value: new Float32Array(10) }, uFocus: { value: new Float32Array(10) },
       uTintA: { value: new THREE.Vector3(1, 1, 1) }, uTintB: { value: new THREE.Vector3(1, 1, 1) }
     };
     const mat = new THREE.ShaderMaterial({ uniforms: U, vertexShader: VS, fragmentShader: FS, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
     const points = new THREE.Points(geo, mat);
     points.frustumCulled = false;
     scene.add(points);
-    // initial tier is applied below once `api` exists
 
     /* baked targets (tools/bake-particles.mjs): Int16 x,y,z, 24k points, Morton-sorted. A missing or
        malformed bin is ignored and the procedural stand-in stays, so the page never breaks. */
     const BAKED = { 2: 'astronaut', 3: 'orion', 4: 'relay', 5: 'earth' };
-    if (!reveal) Object.keys(BAKED).forEach(function (k) {
-      fetch('universe/targets/' + BAKED[k] + '.bin').then(function (r) { return r.ok ? r.arrayBuffer() : Promise.reject(); }).then(function (buf) {
+    Object.keys(BAKED).forEach(function (k) {
+      fetch('universe/targets/' + BAKED[k] + '.bin').then(function (res) { return res.ok ? res.arrayBuffer() : Promise.reject(); }).then(function (buf) {
         if (buf.byteLength !== n * 6) return;                                          // wrong point count: keep the fallback
         const src = new Int16Array(buf), arr = attrs[k].array;
         for (let i = 0; i < count; i++) { const o = perm[i] * 3; arr[i * 3] = src[o] / 32767; arr[i * 3 + 1] = src[o + 1] / 32767; arr[i * 3 + 2] = src[o + 2] / 32767; }
@@ -274,11 +337,9 @@
       }).catch(function () {});
     });
 
-    /* morph windows from the scene config: into scene i = [end of hold i-1, start of hold i] */
+    /* intro morph windows from the scene config: into scene i = [end of hold i-1, start of hold i] */
     const S = window.ADX_SCENES;
     function windowInto(i) { return [S[i - 1].hold[1], S[i].hold[0]]; }
-
-    /* p (0..1) -> segment + t. Pure function of p. */
     function locate(p) {
       for (let i = S.length - 1; i >= 1; i--) {
         const w = windowInto(i);
@@ -287,8 +348,10 @@
       return { seg: 0, t: 0 };
     }
 
+    const heartW = new THREE.Vector3();
     const api = {
-      points: points, uniforms: U, count: count, onChange: null,
+      points: points, uniforms: U, count: count, onChange: null, weights: [0, 0, 0, 0, 0, 0, 0, 0], drawn: n,
+      BODY: 6, WORD: 7,
       /* lower / raise the particle count without rebuilding; dimmer-per-point is compensated a little */
       setTier: function (t) {
         const k = Math.min(TIER_N[t] || n, n);
@@ -296,38 +359,37 @@
         U.uBright.value = 1.7 * Math.pow(n / k, 0.3); U.uSize.value = 1.9 * Math.pow(n / k, 0.15);
         api.drawn = k;
       },
-      drawn: n,
-      setProgress: function (p, time) {
-        const L = locate(p), A = SHAPES[L.seg], B = SHAPES[L.seg + 1];
-        U.uSeg.value = L.seg; U.uSegB.value = L.seg + 1; U.uT.value = L.t; U.uTime.value = time;
-        U.uScA.value = A.sc; U.uScB.value = B.sc; U.uRotA.value = A.rot; U.uRotB.value = B.rot;
+      /* morph shape a -> b by t (0..1). overA / overB override a shape's scale / offset (the wordmark rises and shrinks) */
+      set: function (a, b, t, time, overA, overB) {
+        const A = overA ? Object.assign({}, ALL[a], overA) : ALL[a], B = overB ? Object.assign({}, ALL[b], overB) : ALL[b];
+        U.uSeg.value = a; U.uSegB.value = b; U.uT.value = t; U.uTime.value = time;
+        U.uScA.value = A.sc; U.uScB.value = B.sc; U.uAngA.value = angle(A, time); U.uAngB.value = angle(B, time);
         U.uOffA.value.set(A.off[0], A.off[1], A.off[2]); U.uOffB.value.set(B.off[0], B.off[1], B.off[2]);
         U.uTintA.value.set(A.tint[0], A.tint[1], A.tint[2]); U.uTintB.value.set(B.tint[0], B.tint[1], B.tint[2]);
-        U.uDis.value = B.dis;
-        /* scene weights 0..1 (how much of each shape is on screen), shared with fx.js */
-        const e = L.t * L.t * (3 - 2 * L.t), w = api.weights;
-        for (let k = 0; k < 6; k++) w[k] = (k === L.seg ? 1 - e : 0) + (k === L.seg + 1 ? e : 0);
+        U.uDis.value = a === b ? 0 : B.dis;
+        /* shape weights 0..1 (how much of each shape is on screen), shared with fx.js */
+        const e = t * t * (3 - 2 * t), w = api.weights;
+        for (let k = 0; k < 8; k++) w[k] = (k === a ? 1 - e : 0) + (k === b ? e : 0);
         U.uWAstro.value = w[2]; U.uWPlanet.value = w[1];
-        /* heartbeat: one pulse a second (lub, then a softer dub), ripple radius grows from the chest */
-        const ph = time % 1, dub = (time + 0.72) % 1;
-        U.uBeatR.value = ph * 2.4;
+        U.uBodyA.value = a === 6 ? 1 : 0; U.uBodyB.value = b === 6 ? 1 : 0;
+        /* heartbeat: one pulse a second (lub, then a softer dub), ripple radius grows from the chest / heart */
+        const ph = time % 1, dub = (time + 0.72) % 1, isBody = a === 6 || b === 6;
+        if (isBody) { const g = angle(BODY, time), c = Math.cos(g), s = Math.sin(g); U.uChest.value.copy(heartW.set(c * HEART[0] + s * HEART[2], HEART[1], -s * HEART[0] + c * HEART[2])); }
+        else U.uChest.value.set(CHEST[0], CHEST[1], CHEST[2]);
+        U.uBeatR.value = ph * (isBody ? 1.7 : 2.4);
         U.uBeatAmp.value = Math.max(0, 1 - ph * 1.6) * 0.9 + Math.max(0, 1 - dub * 3) * 0.25 * (dub < 0.33 ? 1 : 0);
       },
-      /* reveal mode: morph shape a -> b by t (0..1); `over` overrides the target's scale / offset (the wordmark rises and shrinks) */
-      setPair: function (a, b, t, time, over) {
-        const A = a === 6 ? WORD : SHAPES[a], B = Object.assign({}, b === 6 ? WORD : SHAPES[b], over || {});
-        U.uSeg.value = a; U.uSegB.value = b; U.uT.value = t; U.uTime.value = time;
-        U.uScA.value = A.sc; U.uScB.value = B.sc; U.uRotA.value = A.rot; U.uRotB.value = B.rot;
-        U.uOffA.value.set(A.off[0], A.off[1], A.off[2]); U.uOffB.value.set(B.off[0], B.off[1], B.off[2]);
-        U.uTintA.value.set(A.tint[0], A.tint[1], A.tint[2]); U.uTintB.value.set(B.tint[0], B.tint[1], B.tint[2]);
-        U.uDis.value = B.dis; U.uWAstro.value = 0; U.uWPlanet.value = 0; U.uBeatAmp.value = 0;
-      },
-      weights: [0, 0, 0, 0, 0, 0],
+      /* the intro: p (0..1) -> intro shape pair + t, a pure function of p */
+      setProgress: function (p, time) { const L = locate(p); api.set(L.seg, L.seg + 1, L.t, time); },
+      /* body turn at `time` (the Health Twin leader lines follow it) */
+      bodyAngle: time => angle(BODY, time),
+      /* the wordmark is sampled from a canvas: redraw it once the display font has loaded */
+      setWordFont: function (fam) { fill(attrs[7].array, wordOf(fam)); attrs[7].needsUpdate = true; if (api.onChange) api.onChange(); },
       dispose: function () { scene.remove(points); geo.dispose(); mat.dispose(); }
     };
     api.setTier(tier);
     return api;
   }
 
-  window.ADX_ENGINE = { create: create, SHAPES: SHAPES };
+  window.ADX_ENGINE = { create: create, SHAPES: ALL };
 })();

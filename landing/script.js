@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════════════════════════
    ASTRODOCX — LANDING MAIN SCRIPT
-   The page is: #universe (particle intro) → #twin (Health Twin)
-   → #astrodocx (reveal) → #contact (team) → footer.
-   The universe, twin, team and tour each have their own file; this
-   one holds the shared bits: nav, typewriter, reveals, small buttons.
+   The page is one particle journey (#journey: #universe intro →
+   #twin Health Twin → #astrodocx) → footer. The journey and the
+   tour have their own files; this one holds the shared bits: nav,
+   typewriter, back-to-top.
 ═══════════════════════════════════════════════════════════ */
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -13,7 +13,6 @@ window.addEventListener('load', () => ScrollTrigger.refresh());
 
 /* single source of truth for "does this visitor want reduced motion" */
 const REDUCE_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const REPO_URL = 'https://github.com/A-42-018/AstroDocX';
 
 let navVisible = true;
 
@@ -51,7 +50,8 @@ let navVisible = true;
   function sync() {
     const probe = window.innerHeight * 0.45;
     let cur = null;
-    if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4) cur = ids[ids.length - 1] || null;
+    if (window.ADX_JOURNEY && ADX_JOURNEY.live) cur = ADX_JOURNEY.section();       // the three sections are layers of one pin
+    else if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4) cur = ids[ids.length - 1] || null;
     else ids.forEach(id => { const el = document.getElementById(id); if (el && el.getBoundingClientRect().top <= probe) cur = id; });
     if (cur === last) return;
     last = cur;
@@ -119,43 +119,6 @@ document.getElementById('footer-year').textContent = new Date().getFullYear();
   }
   if (REDUCE_MOTION) { el.textContent = phrases[0]; return; }
   setTimeout(type, 1200);
-})();
-
-/* ── Scroll reveals: Team (the AstroDocX reveal is driven by universe/reveal.js) ── */
-(function () {
-  if (REDUCE_MOTION) {
-    gsap.set('.contact-title, .contact-subtitle, .contact-form-area, .contact-info', { opacity: 1, x: 0, y: 0, clearProps: 'transform' });
-    return;
-  }
-  gsap.fromTo('.contact-title', { opacity: 0, y: 28 }, {
-    scrollTrigger: { trigger: '.contact-title', start: 'top 88%' }, opacity: 1, y: 0, duration: 0.7, ease: 'power3.out'
-  });
-  gsap.fromTo('.contact-subtitle', { opacity: 0, y: 14 }, {
-    scrollTrigger: { trigger: '.contact-subtitle', start: 'top 90%' }, opacity: 1, y: 0, duration: 0.5, delay: 0.1, ease: 'power2.out'
-  });
-  gsap.fromTo('.contact-form-area', { opacity: 0, x: -30, y: 20 }, {
-    scrollTrigger: { trigger: '#contact', start: 'top 78%' }, opacity: 1, x: 0, y: 0, duration: 0.8, ease: 'power3.out'
-  });
-  gsap.fromTo('.contact-info', { opacity: 0, x: 30, y: 20 }, {
-    scrollTrigger: { trigger: '#contact', start: 'top 78%' }, opacity: 1, x: 0, y: 0, duration: 0.8, delay: 0.2, ease: 'power3.out'
-  });
-})();
-
-/* ── Team: copy the repo link ── */
-(function () {
-  const btn = document.getElementById('copy-email-btn');
-  if (!btn) return;
-  btn.addEventListener('click', async function () {
-    try { await navigator.clipboard.writeText(REPO_URL); }
-    catch (_err) {
-      const ta = document.createElement('textarea');
-      ta.value = REPO_URL; ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-    }
-    const original = btn.textContent;
-    btn.textContent = 'Copied!'; btn.classList.add('copied');
-    setTimeout(function () { btn.textContent = original; btn.classList.remove('copied'); }, 1800);
-  });
 })();
 
 });

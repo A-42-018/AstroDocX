@@ -854,8 +854,20 @@ Owner question: why did the particle Health Twin's background differ from the in
 - **Backgrounds:** `#twin` and the particle-mode `#astrodocx` are now the plain base `#02030a` (the cyan glow and the CSS dots are gone in particle mode; the dots stay for the no-WebGL fallback), with the same edge vignette as the intro (`::after` radial scrim).
 - **Checked (real Chrome pane):** twin at p .40 and .62 and the reveal at .92 show the same sky as the intro; intro still renders; no console errors. Not re-checked: phone widths and the tier drop with the shared module, frame rate (three canvases).
 
+## S4 Implementation Log: one particle journey for the whole page (done, 2026-10-08)
+Owner request: the whole landing page made from the same group of particles (they are born and vanish as one), no Team section after the hero, less text in the Health Twin, one type style across the page.
+- **One system:** `#journey` wraps `#universe`, `#twin`, `#astrodocx` as layers over one canvas (`#adxSky`), one starfield and one 24k-particle engine. The three old canvases (`uniCanvas`, `twinCanvas`, `adxCanvas`) and three WebGL contexts are gone. The same particles go stardust -> planet -> astronaut -> Orion -> relay -> Earth -> **Health Twin body** -> **ASTRODOCX wordmark**.
+- **Engine (`engine.js`):** 8 shapes (`aP0..aP7`): the intro six, the body (`genBody`, moved from health-twin.js, 18k counts scaled to 24k, region per point in `aReg`, carried through the Morton sort) and the wordmark (redrawn once Pulchella loads, `setWordFont`). `engine.set(a, b, t, time, overA, overB)` morphs any pair; body regions, scan line, focus glow, amber brain alert, breathing lungs and the beating heart blend in per particle by the body weight. Reveal mode and `setPair` removed.
+- **Timeline (`scenes.js` `ADX_FLOW`):** one pin, chapters intro 700 / toTwin 110 / twin 440 / toAdx 110 / adx 230 (% of viewport; phones 550/90/360/90/190). `universe.js` is the director: chapter -> particles, camera (intro path, then fixed framings blended across the morphs), chapter layer fades. `health-twin.js` and `reveal.js` are now chapter UI modules (`ADX_TWIN_UI`, `ADX_REVEAL_UI`) with no renderer of their own.
+- **Links:** nav / footer links and deep links (`#twin`, `#astrodocx`, `?skip=1`) scroll to their place in the pin (twin after the scan, AstroDocX with its content in). The nav's active link comes from `ADX_JOURNEY.section()`. Tour (`tour.js`) stops at every intro scene, the scan, each of the six systems, readiness and the reveal.
+- **Removed:** the Team section (`#contact`), `team.js`, the Special Elite font (the prompt line is mono now), the CSS star layer.
+- **Less text in the twin:** each label is one system + status + one value (Brain 4.7 h sleep, Air 2.11 mmHg CO₂, Radiation 32.4 µSv/h, Heart 59 bpm, Ground link 10.5 h, Legs 122 min); sub-line "One scan. Six systems. One readiness score."; action card is one sentence; the 3D anatomy button is "3D anatomy". Step chips in the reveal are labels only.
+- **One type style (`universe.css`):** `.ch-no` mono kicker, `.ch-title` display headline (solid + outlined line), `.ch-sub` body line, `.ch-pill` for every button (Skip, 3D anatomy, Launch / Tour / GitHub). Footer moved to the same near-black and mono.
+- **Checked (Chrome pane):** 1440×900 and ~800 px: intro scenes, Earth -> body morph, twin with labels and leader lines, readiness card, body -> wordmark, final reveal with buttons, footer after the pin; `?reduce=1` stacks the three sections (twin as a grid, CSS wordmark); `#twin` deep link and nav link land in the right place, active link correct. Only console errors are the four optional baked `.bin` 404s (pre-existing; procedural shapes are used).
+- **Not re-checked:** a full tour run, real-GPU frame rate, a real phone.
+
 ## Current Phase
-**C0–C12 done and deployed. Console v2 (U0–U7) and L4 (3D anatomy viewer) done locally. Landing sprint: R1, R2, P0 and P1 (particle engine + procedural shapes) done locally 2026-10-08. P2 (bake pipeline) done, waiting on real model files. P0 to P5, S1 (short page) and S2 (particle wordmark reveal) and S3 (particle Health Twin) done. Next: P6 (ship): check reduced-motion and the tour on the short page, Lighthouse, OG image, README screenshots, deploy, video. Nothing pushed yet (§13.4).**
+**C0–C12 done and deployed. Console v2 (U0–U7) and L4 (3D anatomy viewer) done locally. Landing sprint: R1, R2, P0 and P1 (particle engine + procedural shapes) done locally 2026-10-08. P2 (bake pipeline) done, waiting on real model files. P0 to P5, S1 (short page) and S2 (particle wordmark reveal), S3 (particle Health Twin) and S4 (one particle journey, Team removed) done. Next: P6 (ship): check reduced-motion and the tour on the short page, Lighthouse, OG image, README screenshots, deploy, video. Nothing pushed yet (§13.4).**
 
 ## Next Roadmap
 0. **Landing sprint rule:** no push until P1–P6 are done; zip after every phase, one push at the end (§13.4).
@@ -863,6 +875,6 @@ Owner question: why did the particle Health Twin's background differ from the in
 2. Open decisions (§12.11, defaults used): copy lines (AstroDocX-tied), real NASA models for Orion/TDRS.
 3. **L4 check:** open the landing page online, click "Explore real anatomy in 3D", confirm it renders and closes cleanly at desktop and phone width.
 4. **Deploy:** live at https://astrodocx.netlify.app (console at `/app/`), auto-deploys from `main`. To do: turn off Netlify site protection, re-run Lighthouse (performance) on the live URL, check install-to-home-screen on a phone. The console wording change (Prototype) ships with the push.
-5. Owner inputs: data for the 6 team members (edit `landing/team.js`), README video URL.
+5. Owner inputs: README video URL.
 6. Record the video after the intro ships (tour mode gets the 7 intro stops in P5).
 7. Optional: Supabase ground backend (`docs/supabase.sql`, `VITE_SUPABASE_*`), authenticated policies before any real data.

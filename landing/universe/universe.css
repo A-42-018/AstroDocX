@@ -1,70 +1,172 @@
 /* ============================================================
-   ASTRODOCX — UNIVERSE INTRO (#universe)  · P0 skeleton
-   Pinned, scrubbed section, opaque. Real DOM text for SEO / a11y;
-   the canvas is aria-hidden.
+   ASTRODOCX — THE JOURNEY (#journey): intro, Health Twin, AstroDocX
+   One pinned section, one canvas, one sky. The three chapters are
+   layers on top of the particles and share one type system:
+     .ch-no     mono kicker (scene number, section label)
+     .ch-title  display headline: solid line + outlined line
+     .ch-sub    one short body line
+     .ch-pill   every button / link chip
+   Real DOM text for SEO / a11y; the canvas is aria-hidden.
 ============================================================ */
-#universe { position:relative;z-index:2;height:100vh;height:100svh;background:#02030a;overflow:hidden;color:#fff; }
-#uniCanvas { position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0; }
-.uni-scrim { position:absolute;inset:0;z-index:1;pointer-events:none;
-  background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(2,3,10,.0) 0%,rgba(2,3,10,.55) 100%); }
+#journey { position:relative;z-index:2;background:#02030a;color:#fff; }
+#journey.is-live { height:100vh;height:100svh;overflow:hidden; }
+#adxSky { position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0; }
+.sky-scrim { position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(2,3,10,0) 0%,rgba(2,3,10,.55) 100%); }
+#journey.is-live > .chapter { position:absolute;inset:0;z-index:2;opacity:0;visibility:hidden;will-change:opacity; }
+#journey.is-live > #universe { opacity:1;visibility:visible; }
 
-/* ── scene text ─────────────────────────────────────────── */
-.uni-text { position:absolute;inset:0;z-index:2;pointer-events:none; }
+/* ── shared type ────────────────────────────────────────── */
+.ch-no { display:block;margin:0 0 14px;font-family:var(--font-mono);font-size:.72rem;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--holo,#22D3EE); }
+.ch-title { margin:0;font-family:var(--font-display);font-weight:800;line-height:.98;text-transform:uppercase;letter-spacing:var(--ls,.12em);color:#fff;
+  font-size:clamp(2.4rem,9vw,8.4rem);text-shadow:0 0 40px rgba(2,3,10,.9),0 0 90px rgba(127,168,255,.18); }
+.ch-title span { display:block; }
+.ch-title span + span { color:transparent;-webkit-text-stroke:1.5px rgba(234,242,255,.85); }
+.ch-sub { margin:18px 0 0;max-width:34ch;font-family:var(--font-body);font-size:clamp(.95rem,1.4vw,1.2rem);line-height:1.55;color:rgba(234,242,255,.78);text-shadow:0 2px 24px rgba(2,3,10,.9); }
+.ch-sub strong { color:#fff;font-weight:600; }
+.ch-pill { display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:99px;cursor:pointer;
+  font-family:var(--font-mono);font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;line-height:1.2;color:#E0FBFF;
+  background:rgba(6,16,30,.6);border:1px solid rgba(34,211,238,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  transition:opacity .3s,border-color .2s,background .2s,box-shadow .2s,transform .2s; }
+.ch-pill:hover, .ch-pill:focus-visible { background:rgba(34,211,238,.16);border-color:var(--holo,#22D3EE);color:#fff;text-decoration:none;box-shadow:0 0 18px var(--holo-glow,rgba(34,211,238,.35));transform:translateY(-1px); }
+.ch-pill:focus-visible { outline:2px solid #fff;outline-offset:3px; }
+.ch-pill.is-solid { background:var(--holo,#22D3EE);border-color:var(--holo,#22D3EE);color:#02131a; }
+.ch-pill.is-solid:hover, .ch-pill.is-solid:focus-visible { background:#67E8F9;color:#02131a; }
+.ch-pill svg { width:14px;height:14px;flex:none; }
+
+/* ═══ 01 · intro (#universe) ═══ */
+.uni-text { position:absolute;inset:0;pointer-events:none; }
 .uni-scene { position:absolute;max-width:min(92vw,980px);padding:0 var(--pad-x,24px);opacity:0;visibility:hidden;will-change:opacity,transform,filter; }
 .uni-scene.is-on { pointer-events:auto; }
-.uni-scene h2 { font-family:var(--font-display);font-weight:800;line-height:.98;margin:0;text-transform:uppercase;
-  font-size:clamp(2.4rem,9vw,8.4rem);letter-spacing:var(--ls,.12em);color:#fff;text-shadow:0 0 40px rgba(2,3,10,.9),0 0 90px rgba(127,168,255,.18); }
-.uni-scene h2 span { display:block; }
-.uni-scene h2 span + span { color:transparent;-webkit-text-stroke:1.5px rgba(234,242,255,.85); }
-.uni-scene p { margin:18px 0 0;font-family:var(--font-body);font-size:clamp(.95rem,1.4vw,1.2rem);line-height:1.55;color:rgba(234,242,255,.78);max-width:34ch;text-shadow:0 2px 24px rgba(2,3,10,.9); }
-.uni-scene .uni-no { display:block;font-family:var(--font-mono);font-size:.72rem;font-weight:700;letter-spacing:.24em;color:var(--holo,#22D3EE);margin-bottom:14px; }
 .uni-scene[data-pos="center"] { left:50%;top:50%;transform:translate(-50%,-50%);text-align:center; }
-.uni-scene[data-pos="center"] p { margin-left:auto;margin-right:auto; }
+.uni-scene[data-pos="center"] .ch-sub, .uni-scene[data-pos="top"] .ch-sub { margin-left:auto;margin-right:auto; }
 .uni-scene[data-pos="left"]   { left:calc(var(--pad-x,24px) + 56px);bottom:11vh; }
 .uni-scene[data-pos="right"]  { right:var(--pad-x,24px);top:20vh;text-align:right; }
-.uni-scene[data-pos="right"] p { margin-left:auto; }
+.uni-scene[data-pos="right"] .ch-sub { margin-left:auto; }
 .uni-scene[data-pos="top"]    { left:50%;top:14vh;transform:translateX(-50%);text-align:center; }
-.uni-scene[data-pos="top"] p  { margin-left:auto;margin-right:auto; }
-.uni-scene[data-pos="top"] h2, .uni-scene[data-pos="right"] h2 { font-size:clamp(2rem,6.4vw,6rem); }
+.uni-scene[data-pos="top"] .ch-title, .uni-scene[data-pos="right"] .ch-title { font-size:clamp(2rem,6.4vw,6rem); }
 
-/* ── chrome: skip link + progress rail ──────────────────── */
-.uni-skip { position:absolute;z-index:4;top:calc(var(--nav-h,64px) + 14px);right:var(--pad-x,24px);padding:8px 16px;border-radius:99px;
-  font-family:var(--font-mono);font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#E0FBFF;
-  background:rgba(6,16,30,.6);border:1px solid rgba(34,211,238,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  transition:opacity .3s,border-color .2s,background .2s; }
-.uni-skip:hover, .uni-skip:focus-visible { background:rgba(34,211,238,.16);border-color:var(--holo,#22D3EE);color:#fff;text-decoration:none; }
-.uni-skip:focus-visible, .uni-tick:focus-visible { outline:2px solid #fff;outline-offset:3px; }
+.uni-skip { position:absolute;z-index:4;top:calc(var(--nav-h,64px) + 14px);right:var(--pad-x,24px);padding:8px 16px;font-size:.7rem; }
 .uni-skip.is-hidden { opacity:0;pointer-events:none; }
 
 .uni-rail { position:absolute;z-index:4;left:var(--pad-x,24px);top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;list-style:none;margin:0;padding:0; }
 .uni-tick { display:flex;align-items:center;gap:10px;height:22px;padding:0;background:none;border:0;cursor:pointer;color:rgba(234,242,255,.55); }
+.uni-tick:focus-visible { outline:2px solid #fff;outline-offset:3px; }
 .uni-tick i { display:block;width:14px;height:2px;border-radius:2px;background:rgba(234,242,255,.3);transition:width .25s,background .25s; }
 .uni-tick b { font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;opacity:0;transform:translateX(-6px);transition:opacity .2s,transform .2s;white-space:nowrap; }
 .uni-tick:hover i, .uni-tick.is-current i { width:28px;background:var(--holo,#22D3EE); }
 .uni-tick:hover b, .uni-tick:focus-visible b { opacity:1;transform:none; }
 .uni-tick.is-current { color:#fff; }
 
-.uni-hint { position:absolute;z-index:3;left:50%;bottom:22px;transform:translateX(-50%);font-family:var(--font-mono);font-size:.68rem;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:rgba(234,242,255,.55);transition:opacity .4s; }
+.uni-hint { position:absolute;z-index:3;left:50%;bottom:22px;transform:translateX(-50%);margin:0;font-family:var(--font-mono);font-size:.68rem;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:rgba(234,242,255,.55);transition:opacity .4s; }
 .uni-hint.is-hidden { opacity:0; }
 
+/* ═══ 02 · Health Twin (#twin) ═══ */
+.tw-lines { position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible; }
+.tw-line { fill:none;stroke:rgba(34,211,238,.6);stroke-width:1;opacity:0; }
+.tw-dot { fill:#22D3EE;opacity:0; }
+.tw-line.is-act { stroke:rgba(245,166,35,.75); } .tw-dot.is-act { fill:#F5A623; }
+
+.tw-head { position:absolute;z-index:2;left:var(--pad-x,24px);top:calc(var(--nav-h,64px) + 24px);max-width:min(620px,46vw); }
+.tw-head .ch-title { font-size:clamp(1.8rem,3.4vw,3.3rem); }
+.tw-head .ch-sub { margin-bottom:18px; }
+
+.tw-labels { position:absolute;inset:0;z-index:2;pointer-events:none; }
+.tw-label { position:absolute;width:min(220px,22vw);opacity:0;will-change:opacity,translate;text-shadow:0 2px 18px rgba(2,3,10,.95); }
+.tw-label[data-side="left"] { left:var(--pad-x,24px); }
+.tw-label[data-side="right"] { right:var(--pad-x,24px); }
+.tw-label:nth-of-type(1) { top:47vh; } .tw-label:nth-of-type(2) { top:63vh; } .tw-label:nth-of-type(3) { top:79vh; }
+.tw-label:nth-of-type(4) { top:24vh; } .tw-label:nth-of-type(5) { top:44vh; } .tw-label:nth-of-type(6) { top:64vh; }
+.tw-kick { display:flex;align-items:center;gap:8px;margin:0 0 6px;font-family:var(--font-mono);font-size:.68rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#E0FBFF; }
+.tw-kick i { width:7px;height:7px;border-radius:50%;background:#3EE6A0;box-shadow:0 0 8px #3EE6A0;flex:none; }
+.tw-kick b { margin-left:auto;padding:2px 8px;border-radius:99px;font-size:.58rem;letter-spacing:.14em;color:#3EE6A0;border:1px solid rgba(62,230,160,.45); }
+[data-state="act"] > .tw-kick i, .tw-card .tw-kick i { background:#F5A623;box-shadow:0 0 8px #F5A623;animation:twPulse 1.3s ease-in-out infinite; }
+[data-state="act"] > .tw-kick b, .tw-card .tw-kick b { color:#F5A623;border-color:rgba(245,166,35,.55); }
+@keyframes twPulse { 50% { opacity:.4; } }
+.tw-val { margin:0;font-family:var(--font-display);font-weight:800;font-size:clamp(1.3rem,2vw,1.8rem);line-height:1.1;letter-spacing:.04em;color:#fff; }
+.tw-val small { font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(234,242,255,.6);margin-left:4px; }
+[data-state="act"] .tw-val small { color:#F5A623; }
+
+.tw-final { position:absolute;left:50%;bottom:4vh;transform:translateX(-50%);width:min(94vw,600px);display:flex;gap:22px;align-items:center;opacity:0;
+  padding:14px 20px;border-radius:16px;background:rgba(4,10,22,.72);border:1px solid rgba(34,211,238,.22);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px); }
+.tw-ready { flex:none; }
+.tw-ready .ch-no { margin-bottom:4px;font-size:.62rem;color:rgba(234,242,255,.6); }
+.tw-ready b { font-family:var(--font-display);font-size:2.4rem;line-height:1;font-weight:800;color:#fff; } .tw-ready b i { font-style:normal; }
+.tw-card { flex:1;min-width:0; }
+.tw-why { margin:0;font-family:var(--font-body);font-size:.92rem;line-height:1.45;color:rgba(234,242,255,.85); }
+
+/* ═══ 03 · AstroDocX (#astrodocx) ═══ */
+#astrodocx { display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;
+  padding:calc(var(--nav-h,64px) + 40px) var(--pad-x,24px) 90px; }
+.adx-inner { position:relative;z-index:2;width:min(100%,920px); }
+.adx-inner .ch-no { margin-bottom:10px; }
+.adx-wordmark { font-family:var(--font-display);font-weight:800;font-size:clamp(2.6rem,11vw,8.6rem);line-height:1;letter-spacing:.12em;margin:6px 0 10px;padding-left:.12em;
+  background:linear-gradient(180deg,#fff 20%,#9FC0FF 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 28px rgba(127,168,255,.35)); }
+.adx-wordmark .hero-x { background:linear-gradient(115deg,var(--cyan),var(--amber));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent; }
+.adx-pitch { margin:0 auto 18px;max-width:52ch; }
+#astrodocx .hero-typerow { justify-content:center;margin-bottom:22px;font-family:var(--font-mono);font-size:.82rem;letter-spacing:.04em; }
+#astrodocx #hero-typed { font-family:var(--font-mono); }
+#astrodocx .hero-typerow .prompt { color:rgba(234,242,255,.5);opacity:1; }
+.adx-steps { list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 24px;padding:0;counter-reset:adx; }
+.adx-steps li { counter-increment:adx;display:flex;align-items:baseline;gap:8px;padding:7px 14px;border-radius:99px;background:rgba(10,18,34,.55);border:1px solid rgba(127,168,255,.18); }
+.adx-steps li::before { content:'0' counter(adx);font-family:var(--font-mono);font-size:.58rem;font-weight:700;letter-spacing:.2em;color:var(--holo,#22D3EE); }
+.adx-steps b { font-family:var(--font-mono);font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#fff; }
+#astrodocx .hero-actions { display:flex;flex-wrap:wrap;justify-content:center;gap:10px; }
+
+/* particle mode: the wordmark is the particles, content sits below it */
+#astrodocx.is-particle { align-items:flex-end;padding:calc(var(--nav-h,64px) + 20px) var(--pad-x,24px) 7vh; }
+#astrodocx.is-particle .adx-wordmark { position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);margin:0;padding:0;white-space:nowrap; }
+#astrodocx.is-particle .adx-reveal { opacity:0; }
+
+/* ── phones ─────────────────────────────────────────────── */
 @media (max-width:900px) {
   .uni-rail { display:none; }
   .uni-scene[data-pos="left"], .uni-scene[data-pos="right"] { left:0;right:0;top:auto;bottom:9vh;text-align:left; }
-  .uni-scene[data-pos="right"] p { margin-left:0; }
-  .uni-scene h2 { letter-spacing:.08em; }
-}
+  .uni-scene[data-pos="right"] .ch-sub { margin-left:0; }
+  .ch-title { letter-spacing:.08em; }
 
-/* ── reduced motion / static mode: no pin, scenes stack ──── */
-#universe.is-static { height:auto;overflow:visible; }
-#universe.is-static #uniCanvas, #universe.is-static .uni-rail, #universe.is-static .uni-hint, #universe.is-static .uni-skip { display:none; }
-#universe.is-static .uni-text { position:relative;display:block; }
-#universe.is-static .uni-scene { position:relative;inset:auto;left:auto;right:auto;top:auto;bottom:auto;transform:none;opacity:1;visibility:visible;min-height:70vh;display:flex;flex-direction:column;justify-content:center;max-width:none;padding:12vh var(--pad-x,24px);text-align:left; }
-#universe.is-static .uni-scene h2 { font-size:clamp(2rem,7vw,5rem); }
+  .tw-head { max-width:none;right:var(--pad-x,24px);top:calc(var(--nav-h,64px) + 10px); }
+  .tw-head .ch-title { font-size:1.7rem; }
+  .tw-head .ch-sub { font-size:.86rem;margin:8px 0 10px; }
+  .tw-head .ch-no { margin-bottom:8px;font-size:.62rem; }
+  .tw-head .ch-pill { padding:7px 12px;font-size:.62rem; }
+  .tw-label, .tw-label:nth-of-type(n) { left:var(--pad-x,24px);right:var(--pad-x,24px);width:auto;top:auto;bottom:4vh;padding:12px 16px;border-radius:14px;background:rgba(4,10,22,.78);border:1px solid rgba(34,211,238,.22); }
+  .tw-final { width:auto;left:var(--pad-x,24px);right:var(--pad-x,24px);transform:none;gap:14px; }
+  .tw-ready b { font-size:1.8rem; }
+  .tw-why { font-size:.82rem; }
+
+  #astrodocx.is-particle { padding-bottom:4vh; }
+  #astrodocx.is-particle .adx-steps { display:none; }
+  .adx-pitch { font-size:.9rem; }
+  #astrodocx .hero-actions { display:grid;grid-template-columns:1fr 1fr;gap:8px; }
+  #astrodocx .hero-actions .is-solid { grid-column:1 / -1; }
+  #astrodocx .hero-actions .ch-pill { padding:11px 10px;font-size:.64rem; }
+}
+@media (max-height:700px) and (min-width:901px) { .tw-head .ch-sub { display:none; } #astrodocx.is-particle .adx-steps { display:none; } }
+
+/* ═══ static mode (reduced motion / no WebGL): no pin, the three sections stack ═══ */
+#journey.is-static #adxSky, #journey.is-static .sky-scrim { display:none; }
+#journey.is-static > .chapter { position:relative; }
+#journey.is-static .uni-rail, #journey.is-static .uni-hint, #journey.is-static .uni-skip { display:none; }
+#journey.is-static .uni-text { position:relative;display:block; }
+#journey.is-static .uni-scene { position:relative;inset:auto;left:auto;right:auto;top:auto;bottom:auto;transform:none;opacity:1;visibility:visible;min-height:70vh;display:flex;flex-direction:column;justify-content:center;max-width:none;padding:12vh var(--pad-x,24px);text-align:left; }
+#journey.is-static .uni-scene .ch-sub { margin-left:0; }
+#journey.is-static .uni-scene .ch-title { font-size:clamp(2rem,7vw,5rem); }
+#journey.is-static .uni-scene.has-poster { background:linear-gradient(rgba(2,3,10,.35),rgba(2,3,10,.55)),var(--poster) center/cover no-repeat; }
+
+#twin.is-static { padding:calc(var(--nav-h,64px) + 40px) var(--pad-x,24px) 80px; }
+#twin.is-static .tw-lines { display:none; }
+#twin.is-static .tw-head { position:relative;inset:auto;max-width:none;margin-bottom:28px; }
+#twin.is-static .tw-labels { position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px; }
+#twin.is-static .tw-label, #twin.is-static .tw-label:nth-of-type(n) { position:relative;inset:auto;width:auto;opacity:1;padding:14px 16px;border-radius:14px;background:rgba(10,18,34,.55);border:1px solid rgba(127,168,255,.18); }
+#twin.is-static .tw-final { position:relative;inset:auto;left:auto;transform:none;width:auto;opacity:1;grid-column:1 / -1; }
+#journey.is-static #astrodocx { min-height:100vh;min-height:100svh;background:radial-gradient(ellipse 60% 50% at 50% 38%,rgba(34,211,238,.10),transparent 72%); }
 
 /* the shared helper for visually hidden text */
 .uni-sr { position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap; }
 
-/* ── nav appears with scene 07 ───────────────────────────── */
+/* ── nav appears with the last intro scene ───────────────── */
 #navbar.nav-hidden { opacity:0;visibility:hidden;pointer-events:none;transition:opacity .4s,visibility 0s .4s; }
 
 /* ── cursor label over [data-cursor] ─────────────────────── */
@@ -72,139 +174,8 @@
 #cursor-ring.has-label::after { content:attr(data-label);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   font-family:var(--font-mono);font-size:.58rem;font-weight:700;letter-spacing:.16em;color:#E0FBFF; }
 
-
-/* static posters: each stacked scene shows its own rendered frame behind a dark scrim */
-#universe.is-static .uni-scene.has-poster { background:linear-gradient(rgba(2,3,10,.35),rgba(2,3,10,.55)),var(--poster) center/cover no-repeat; }
-#universe.is-static { background:#02030a; }
-
-/* ═══ the page after the intro: Health Twin, AstroDocX reveal, Team all sit on the same near-black ═══ */
-#contact { background:#02030a; }
-#contact .contact-overlay { background:radial-gradient(ellipse 60% 50% at 50% 30%,rgba(34,211,238,.07),transparent 70%); }
-
-#astrodocx { position:relative;z-index:1;min-height:100vh;min-height:100svh;display:flex;align-items:center;justify-content:center;overflow:hidden;
-  padding:calc(var(--nav-h,64px) + 40px) var(--pad-x,24px) 90px;text-align:center;color:#fff;scroll-margin-top:var(--nav-h,64px);
-  background:radial-gradient(ellipse 60% 50% at 50% 38%,rgba(34,211,238,.10),transparent 72%),radial-gradient(ellipse 40% 30% at 82% 80%,rgba(127,168,255,.08),transparent 70%),#02030a; }
-.adx-stars { position:absolute;inset:0;pointer-events:none;opacity:.9;animation:adxTwinkle 7s ease-in-out infinite alternate;
-  background-image:
-    radial-gradient(1.2px 1.2px at 8% 22%,#EAF2FF,transparent),radial-gradient(1px 1px at 17% 74%,#7FA8FF,transparent),
-    radial-gradient(1.5px 1.5px at 29% 12%,#fff,transparent),radial-gradient(1px 1px at 36% 58%,#EAF2FF,transparent),
-    radial-gradient(1.2px 1.2px at 47% 86%,#F5C97A,transparent),radial-gradient(1px 1px at 55% 18%,#EAF2FF,transparent),
-    radial-gradient(1.5px 1.5px at 66% 66%,#7FA8FF,transparent),radial-gradient(1px 1px at 73% 30%,#fff,transparent),
-    radial-gradient(1.2px 1.2px at 84% 54%,#EAF2FF,transparent),radial-gradient(1px 1px at 91% 12%,#F5C97A,transparent),
-    radial-gradient(1px 1px at 95% 82%,#EAF2FF,transparent),radial-gradient(1.3px 1.3px at 4% 52%,#7FA8FF,transparent); }
-@keyframes adxTwinkle { from { opacity:.55; } to { opacity:1; } }
-.adx-inner { position:relative;z-index:1;width:min(100%,980px); }
-.adx-wordmark { font-family:var(--font-display);font-weight:800;font-size:clamp(2.6rem,11vw,8.6rem);line-height:1;letter-spacing:.12em;margin:6px 0 22px;padding-left:.12em;
-  background:linear-gradient(180deg,#fff 20%,#9FC0FF 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-  filter:drop-shadow(0 0 28px rgba(127,168,255,.35)); }
-.adx-wordmark .hero-x { background:linear-gradient(115deg,var(--cyan),var(--amber));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent; }
-#astrodocx .hero-eyebrow { justify-content:center; }
-#astrodocx .hero-eyebrow::before { display:none; }
-.adx-pitch { margin:0 auto 16px;max-width:58ch;font-size:clamp(.95rem,1.4vw,1.1rem);line-height:1.65; }
-#astrodocx .hero-typerow { justify-content:center;margin-bottom:28px; }
-.adx-steps { list-style:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0 0 30px;padding:0;counter-reset:adx; }
-.adx-steps li { counter-increment:adx;text-align:left;padding:14px 14px 16px;border-radius:14px;background:rgba(10,18,34,.55);border:1px solid rgba(127,168,255,.18); }
-.adx-steps li::before { content:'0' counter(adx);display:block;font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.2em;color:var(--holo,#22D3EE);margin-bottom:8px; }
-.adx-steps b { display:block;font-size:.95rem;color:#fff;margin-bottom:4px; }
-.adx-steps span { display:block;font-size:.78rem;line-height:1.45;color:rgba(234,242,255,.68); }
-#astrodocx .hero-actions { justify-content:center;gap:12px;margin-bottom:16px; }
-#astrodocx .hero-tagline { margin:0 auto;max-width:none; }
-@media (max-width:900px) { .adx-steps { grid-template-columns:1fr 1fr; } .adx-steps li:last-child { grid-column:1 / -1; } }
-@media (max-width:560px) { #astrodocx .hero-actions { flex-direction:column;align-items:stretch; } }
-@media (prefers-reduced-motion:reduce) { .adx-stars { animation:none; } }
-
-/* ═══ #astrodocx in particle mode (reveal.js): pinned, wordmark is particles, content sits below it ═══ */
-#adxCanvas { position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0;pointer-events:none; }
-#astrodocx.is-particle { height:100vh;height:100svh;min-height:0;align-items:flex-end;padding:calc(var(--nav-h,64px) + 20px) var(--pad-x,24px) 5vh; }
-#astrodocx.is-particle .adx-wordmark { position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);margin:0;padding:0;white-space:nowrap; }
-#astrodocx.is-particle .adx-reveal { opacity:0; }
-#astrodocx.is-particle .adx-pitch { margin-bottom:12px;font-size:clamp(.88rem,1.2vw,1rem); }
-#astrodocx.is-particle .hero-typerow { margin-bottom:16px; }
-#astrodocx.is-particle .adx-steps { display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:18px; }
-#astrodocx.is-particle .adx-steps li { padding:7px 14px;border-radius:99px;display:flex;align-items:baseline;gap:8px; }
-#astrodocx.is-particle .adx-steps li::before { margin:0;font-size:.58rem; }
-#astrodocx.is-particle .adx-steps li:last-child { grid-column:auto; }
-#astrodocx.is-particle .adx-steps b { display:inline;margin:0;font-size:.82rem; }
-#astrodocx.is-particle .adx-steps span { display:none; }
-#astrodocx.is-particle .hero-actions { margin-bottom:10px; }
-@media (max-width:900px) {
-  #astrodocx.is-particle { padding-bottom:3vh; }
-  #astrodocx.is-particle .adx-pitch { font-size:.82rem;line-height:1.5; }
-  #astrodocx.is-particle .adx-steps, #astrodocx.is-particle .hero-tagline { display:none; }
-  #astrodocx.is-particle .hero-actions { display:grid;grid-template-columns:1fr 1fr;gap:8px; }
-  #astrodocx.is-particle .hero-actions .btn { padding:10px 12px;font-size:.86rem;text-align:center; }
-  #astrodocx.is-particle .hero-actions .btn-primary { grid-column:1 / -1; }
-}
-@media (max-height:700px) and (min-width:901px) { #astrodocx.is-particle .hero-tagline { display:none; } }
-
-/* ═══ #twin: the Health Twin made of particles (health-twin.js) ═══ */
-#twin { position:relative;z-index:1;height:100vh;height:100svh;overflow:hidden;color:#fff;scroll-margin-top:var(--nav-h,64px);background:#02030a; }
-#twin::after, #astrodocx.is-particle::after { content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
-  background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(2,3,10,0) 0%,rgba(2,3,10,.55) 100%); }
-#twinCanvas { position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0; }
-.tw-lines { position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;overflow:visible; }
-.tw-line { fill:none;stroke:rgba(34,211,238,.6);stroke-width:1;opacity:0; }
-.tw-dot { fill:#22D3EE;opacity:0; }
-.tw-line.is-act { stroke:rgba(245,166,35,.75); } .tw-dot.is-act { fill:#F5A623; }
-
-.tw-head { position:absolute;z-index:2;left:var(--pad-x,24px);top:calc(var(--nav-h,64px) + 22px);max-width:min(560px,44vw); }
-.tw-eyebrow { font-family:var(--font-mono);font-size:.66rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--holo,#22D3EE);margin:0 0 12px; }
-.tw-eyebrow .bracket { color:rgba(127,168,255,.8); }
-.tw-title { font-family:var(--font-display);font-weight:800;line-height:1;margin:0 0 14px;text-transform:uppercase;letter-spacing:.1em;font-size:clamp(1.9rem,4.4vw,3.8rem);
-  text-shadow:0 0 36px rgba(2,3,10,.9); }
-.tw-title span { display:block; }
-.tw-title span + span { color:transparent;-webkit-text-stroke:1.3px rgba(234,242,255,.85);font-size:.62em;letter-spacing:.14em;margin-top:6px; }
-.tw-sub { font-size:clamp(.82rem,1.1vw,.95rem);line-height:1.55;color:rgba(234,242,255,.72);max-width:44ch;margin:0 0 14px; }
-
-.tw-labels { position:absolute;inset:0;z-index:2;pointer-events:none; }
-.tw-label { position:absolute;width:min(270px,26vw);opacity:0;will-change:opacity,translate;text-shadow:0 2px 18px rgba(2,3,10,.95); }
-.tw-label[data-side="left"] { left:var(--pad-x,24px);text-align:left; }
-.tw-label[data-side="right"] { right:var(--pad-x,24px);text-align:left; }
-.tw-label:nth-of-type(1) { top:41vh; } .tw-label:nth-of-type(2) { top:60vh; } .tw-label:nth-of-type(3) { top:78vh; }
-.tw-label:nth-of-type(4) { top:20vh; } .tw-label:nth-of-type(5) { top:44vh; } .tw-label:nth-of-type(6) { top:66vh; }
-.tw-kick { display:flex;align-items:center;gap:8px;margin:0 0 7px;font-family:var(--font-mono);font-size:.64rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#E0FBFF; }
-.tw-kick i { width:7px;height:7px;border-radius:50%;background:#3EE6A0;box-shadow:0 0 8px #3EE6A0;flex:none; }
-.tw-kick b { margin-left:auto;padding:2px 8px;border-radius:99px;font-size:.58rem;letter-spacing:.14em;color:#3EE6A0;border:1px solid rgba(62,230,160,.45); }
-[data-state="act"] > .tw-kick i { background:#F5A623;box-shadow:0 0 8px #F5A623;animation:twPulse 1.3s ease-in-out infinite; }
-[data-state="act"] > .tw-kick b { color:#F5A623;border-color:rgba(245,166,35,.55); }
-@keyframes twPulse { 50% { opacity:.4; } }
-.tw-row { display:flex;justify-content:space-between;gap:12px;margin:0 0 4px;font-size:.82rem;line-height:1.35;color:rgba(234,242,255,.62); }
-.tw-row b { color:#fff;font-weight:600;white-space:nowrap; } .tw-row small { font-size:.7rem;color:#F5A623;font-weight:600; }
-.tw-note { margin:6px 0 0;font-size:.7rem;line-height:1.4;color:rgba(234,242,255,.5); }
-
-.tw-final { position:absolute;left:50%;bottom:3.5vh;transform:translateX(-50%);width:min(94vw,760px);display:flex;gap:22px;align-items:flex-start;opacity:0;
-  padding:14px 18px;border-radius:14px;background:rgba(4,10,22,.72);border:1px solid rgba(34,211,238,.22);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px); }
-.tw-ready { flex:none;display:flex;flex-direction:column;gap:4px;min-width:120px; }
-.tw-ready span { font-family:var(--font-mono);font-size:.6rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(234,242,255,.6); }
-.tw-ready b { font-size:2.1rem;line-height:1;font-weight:800;color:#fff; } .tw-ready b i { font-style:normal; }
-.tw-ready em { font-style:normal;font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.16em;color:#F5A623; }
-.tw-card .tw-why { margin:0 0 6px;font-size:.84rem;color:#fff;line-height:1.4; }
-.tw-card ol { margin:0 0 4px 18px;padding:0;font-size:.78rem;line-height:1.45;color:rgba(234,242,255,.75); }
-
-@media (max-width:900px) {
-  .tw-head { max-width:none;right:var(--pad-x,24px);top:calc(var(--nav-h,64px) + 10px); }
-  .tw-title { font-size:1.6rem;margin-bottom:8px; }
-  .tw-sub { display:none; }
-  .tw-eyebrow { margin-bottom:8px;font-size:.58rem; }
-  .tw-head .anat3d-open { transform:scale(.9);transform-origin:left center; }
-  .tw-label, .tw-label:nth-of-type(n) { left:var(--pad-x,24px);right:var(--pad-x,24px);width:auto;top:auto;bottom:3.5vh;padding:12px 14px;border-radius:12px;background:rgba(4,10,22,.78);border:1px solid rgba(34,211,238,.22); }
-  .tw-final { flex-direction:column;gap:8px;width:auto;left:var(--pad-x,24px);right:var(--pad-x,24px);transform:none;bottom:3.5vh; }
-  .tw-ready { flex-direction:row;align-items:baseline;gap:10px; } .tw-ready b { font-size:1.5rem; }
-  .tw-card ol { font-size:.74rem; }
-}
-
-@media (max-height:700px) and (min-width:901px) { .tw-sub { display:none; } .tw-title { margin-bottom:10px; } }
-
-/* static twin (reduced motion / no WebGL): a plain grid of the six systems */
-#twin.is-static { height:auto;overflow:visible;padding:calc(var(--nav-h,64px) + 40px) var(--pad-x,24px) 80px; }
-#twin.is-static #twinCanvas, #twin.is-static .tw-lines { display:none; }
-#twin.is-static .tw-head { position:relative;inset:auto;max-width:none;margin-bottom:28px; }
-#twin.is-static .tw-sub { display:block; }
-#twin.is-static .tw-labels { position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px; }
-#twin.is-static .tw-label, #twin.is-static .tw-label:nth-of-type(n) { position:relative;inset:auto;width:auto;opacity:1;padding:14px 16px;border-radius:12px;background:rgba(10,18,34,.55);border:1px solid rgba(127,168,255,.18); }
-#twin.is-static .tw-final { position:relative;inset:auto;transform:none;width:auto;opacity:1;grid-column:1 / -1;flex-direction:row; }
-
-/* same sky everywhere: with the real starfield the CSS glow and dots are not needed */
-#astrodocx.is-particle { background:#02030a; }
-#astrodocx.is-particle .adx-stars { display:none; }
-#astrodocx.is-particle .adx-inner { z-index:2; }
+/* the footer sits on the same near-black as the journey */
+#footer { background:#02030a;border-top:1px solid rgba(127,168,255,.12); }
+.footer-logo, .footer-copy, .footer-links a { font-family:var(--font-mono); }
+.footer-copy { color:rgba(234,242,255,.5);font-size:.74rem;letter-spacing:.04em; }
+.footer-links a { font-size:.7rem;letter-spacing:.16em;text-transform:uppercase; }

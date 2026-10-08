@@ -1,6 +1,32 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "console-preview", "runtimeExecutable": "npm", "runtimeArgs": ["--prefix", "app", "run", "preview", "--", "--port", "4173", "--strictPort"], "port": 4173 }
+    {
+      "name": "console-preview",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "app",
+        "run",
+        "preview",
+        "--",
+        "--port",
+        "4173",
+        "--strictPort"
+      ],
+      "port": 4173
+    },
+    {
+      "name": "landing",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5180",
+        "--directory",
+        "landing"
+      ],
+      "port": 5180
+    }
   ]
 }

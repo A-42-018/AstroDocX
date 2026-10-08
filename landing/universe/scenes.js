@@ -21,5 +21,13 @@ window.ADX_SCENES = [
   { id: 'earth',     name: 'Home',        tour: 3, hold: [0.93, 1.00], pos: 'top',
     head: ['ONE PLANET.', 'INFINITE POSSIBILITIES.'],  sub: 'Built for the crew, readable by flight surgeons on the ground.' }
 ];
-/* Pin length in % of the viewport height (plan §12.3: 800%, 600% on phones) */
-window.ADX_PIN = { desktop: 700, mobile: 550 };
+/* The whole landing page is one pinned journey made of the same particles. Each chapter's length is in
+   % of the viewport height (desktop, phone). The intro scenes above run over 'intro'; the two morphs
+   carry the Earth into the body and the body into the ASTRODOCX wordmark. */
+window.ADX_FLOW = [
+  { id: 'intro',  len: [700, 550] },   // stardust -> ... -> Earth (ADX_SCENES)
+  { id: 'toTwin', len: [110, 90] },    // Earth -> body
+  { id: 'twin',   len: [440, 360] },   // scan, six systems, readiness
+  { id: 'toAdx',  len: [110, 90] },    // body -> wordmark
+  { id: 'adx',    len: [230, 190] }    // wordmark rises, pitch and buttons
+];

@@ -22,8 +22,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
-  <!-- Special Elite: typewriter face for the hero prompt line -->
-  <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
   <!-- Pulchella (display font) — local files, see fonts/README.txt -->
   <link rel="preload" href="fonts/Pulchella.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -65,7 +63,7 @@
     ring.style.transform = `translate(${rx}px, ${ry}px)`;
     requestAnimationFrame(loop);
   })();
-  const targets = 'a, button, [role="button"], input, textarea, label, .btn, .project-card, .skill-category, .project-copy-btn, .copy-email-btn, .team-card';
+  const targets = 'a, button, [role="button"], input, textarea, label, .btn, .project-card, .skill-category, .project-copy-btn, .copy-email-btn';
   document.querySelectorAll(targets).forEach(el => {
     el.addEventListener('mouseenter', () => { ring.classList.add('hovered'); dot.classList.add('hovered'); });
     el.addEventListener('mouseleave', () => { ring.classList.remove('hovered'); dot.classList.remove('hovered'); });
@@ -79,8 +77,6 @@
 
 <body>
 
-  </div>
-
   <!-- ═══════════════════════════════════════ NAV ══════════ -->
   <nav id="navbar" aria-label="Primary navigation">
     <div class="nav-inner">
@@ -93,7 +89,6 @@
       <ul class="nav-links" id="nav-links">
         <li><a href="#twin">Health System</a></li>
         <li><a href="#astrodocx">AstroDocX</a></li>
-        <li><a href="#contact">Team</a></li>
         <li><a href="/app/" class="nav-cta">Launch Console</a></li>
       </ul>
     </div>
@@ -101,155 +96,95 @@
 
   <main>
 
-    <!-- ═══════════════════════════════════════ UNIVERSE INTRO (#universe) ═════
-         Particle Universe intro (plan §12): six scenes from stardust to Earth, text from
-         universe/scenes.js. It hands over to the Health Twin. -->
-    <section id="universe" aria-label="Introduction: from stardust to crew health">
-      <canvas id="uniCanvas" aria-hidden="true"></canvas>
-      <div class="uni-scrim" aria-hidden="true"></div>
-      <div class="uni-text"></div>
-      <ol class="uni-rail" aria-label="Intro scenes"></ol>
-      <a class="uni-skip" href="#twin">Skip intro</a>
-      <p class="uni-hint" aria-hidden="true">Scroll &darr;</p>
-    </section>
+    <!-- ═══════════════════════════════════════ THE JOURNEY (#journey) ═════
+         The whole page is one pinned journey made of the same particles (universe/universe.js):
+         stardust -> planet -> astronaut -> Orion -> relay -> Earth -> Health Twin body -> ASTRODOCX.
+         One canvas, one particle system. The three sections are layers on top of it; with reduced
+         motion or no WebGL they stack as normal sections. -->
+    <div id="journey">
+      <canvas id="adxSky" aria-hidden="true"></canvas>
+      <div class="sky-scrim" aria-hidden="true"></div>
 
-    <!-- ═══════════════════════════════════════ HEALTH TWIN (#twin) ═════════
-         The Health Twin made of particles (universe/health-twin.js): the starfield gathers into a
-         body, a scan lights each system, and its reading appears beside it. Readings are the demo
-         mission snapshot (Pilot). Static grid without WebGL / with reduced motion. -->
-    <section id="twin" aria-labelledby="twin-title">
-      <canvas id="twinCanvas" aria-hidden="true"></canvas>
-      <svg class="tw-lines" id="twLines" aria-hidden="true"></svg>
+      <!-- 01 · intro: six scenes from stardust to Earth, text from universe/scenes.js -->
+      <section id="universe" class="chapter" aria-label="Introduction: from stardust to crew health">
+        <div class="uni-text"></div>
+        <ol class="uni-rail" aria-label="Intro scenes"></ol>
+        <a class="uni-skip ch-pill" href="#twin">Skip intro</a>
+        <p class="uni-hint" aria-hidden="true">Scroll &darr;</p>
+      </section>
 
-      <header class="tw-head">
-        <p class="tw-eyebrow"><span class="bracket">&lt;</span>health-twin<span class="bracket">/&gt;</span> &middot; demo mission data &middot; Pilot</p>
-        <h2 class="tw-title" id="twin-title"><span>MEET OUR</span><span>HEALTH CARE SYSTEM</span></h2>
-        <p class="tw-sub">Astronauts have to look after their health, far from any doctor. Every crew member gets a Health Twin: one body scan, six systems, one readiness score.</p>
-        <button type="button" class="anat3d-open" id="anat3dOpen" aria-haspopup="dialog" aria-controls="anat3d" aria-expanded="false">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/></svg>
-          Explore real anatomy in 3D
-        </button>
-      </header>
+      <!-- 02 · Health Twin: the Earth's particles become a body; a scan lights each system (universe/health-twin.js).
+           Readings are the demo mission snapshot (Pilot). -->
+      <section id="twin" class="chapter" aria-labelledby="twin-title">
+        <svg class="tw-lines" aria-hidden="true"></svg>
 
-      <div class="tw-labels">
-        <article class="tw-label" data-side="left" data-state="act">
-          <p class="tw-kick"><i></i>Isolation &middot; Brain <b>ACT</b></p>
-          <p class="tw-row"><span>Sleep last night</span><b>4.7 h <small>&darr; 3.4&sigma;</small></b></p>
-          <p class="tw-row"><span>Reaction time</span><b>411 ms <small>&uarr; 4.3&sigma;</small></b></p>
-          <p class="tw-row"><span>Mood check-in</span><b>3 / 5</b></p>
-          <p class="tw-note">Own baseline: 6.3 h &middot; 317 ms</p>
-        </article>
-        <article class="tw-label" data-side="left" data-state="ok">
-          <p class="tw-kick"><i></i>Environment &middot; Air <b>OK</b></p>
-          <p class="tw-row"><span>Cabin CO&#8322;</span><b>2.11 <small>mmHg</small></b></p>
-          <p class="tw-row"><span>SpO&#8322;</span><b>96.3 <small>%</small></b></p>
-          <p class="tw-note">NASA-STD-3001 habitat limit: 3 mmHg CO&#8322;</p>
-        </article>
-        <article class="tw-label" data-side="left" data-state="ok">
-          <p class="tw-kick"><i></i>Radiation &middot; Whole body <b>OK</b></p>
-          <p class="tw-row"><span>Dose rate</span><b>32.4 <small>&micro;Sv/h</small></b></p>
-          <p class="tw-note">Own baseline 25.2 &micro;Sv/h &middot; event limit 250 mSv / 24 h</p>
-        </article>
-        <article class="tw-label" data-side="right" data-state="ok">
-          <p class="tw-kick"><i></i>Gravity &middot; Heart <b>OK</b></p>
-          <p class="tw-row"><span>Heart rate</span><b>59 <small>bpm</small></b></p>
-          <p class="tw-row"><span>HRV</span><b>59 <small>ms</small></b></p>
-          <p class="tw-note">The beat you see is the live ECG rhythm</p>
-        </article>
-        <article class="tw-label" data-side="right" data-state="ok">
-          <p class="tw-kick"><i></i>Distance &middot; Ground link <b>OK</b></p>
-          <p class="tw-row"><span>Since ground sync</span><b>10.5 <small>h</small></b></p>
-          <p class="tw-row"><span>Waiting in outbox</span><b>3 <small>entries</small></b></p>
-          <p class="tw-note">Watch at 24 h unsynced &middot; Act at 72 h</p>
-        </article>
-        <article class="tw-label" data-side="right" data-state="ok">
-          <p class="tw-kick"><i></i>Gravity &middot; Legs <b>OK</b></p>
-          <p class="tw-row"><span>Exercise load</span><b>122 <small>min</small></b></p>
-          <p class="tw-note">Own baseline 113 min &middot; Act below ~3&sigma;</p>
-        </article>
+        <header class="tw-head">
+          <span class="ch-no">Health Twin &middot; Pilot</span>
+          <h2 class="ch-title" id="twin-title"><span>MEET OUR</span><span>HEALTH CARE SYSTEM</span></h2>
+          <p class="ch-sub">One scan. Six systems. One readiness score.</p>
+          <button type="button" class="anat3d-open ch-pill" id="anat3dOpen" aria-haspopup="dialog" aria-controls="anat3d" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/></svg>
+            3D anatomy
+          </button>
+        </header>
 
-        <aside class="tw-final" aria-live="polite">
-          <div class="tw-ready"><span>Crew readiness</span><b><i id="twReadyVal">83</i>%</b><em>ACT</em></div>
-          <div class="tw-card">
-            <p class="tw-kick"><i></i>Action card &middot; Isolation &middot; Act</p>
-            <p class="tw-why">Sleep last night 4.70 h is 3.4&sigma; below Pilot&rsquo;s baseline (6.29 h).</p>
-            <ol><li>Swap safety-critical tasks to a rested crewmate</li><li>Take a scheduled rest period and a 20-minute nap</li><li>Notify the commander and the flight surgeon</li></ol>
-            <p class="tw-note">Logged on board &middot; syncs to ground later</p>
-          </div>
-        </aside>
-      </div>
-    </section>
+        <div class="tw-labels">
+          <article class="tw-label" data-side="left" data-state="act">
+            <p class="tw-kick"><i></i>Brain <b>ACT</b></p>
+            <p class="tw-val">4.7 h <small>sleep &darr; 3.4&sigma;</small></p>
+          </article>
+          <article class="tw-label" data-side="left" data-state="ok">
+            <p class="tw-kick"><i></i>Air <b>OK</b></p>
+            <p class="tw-val">2.11 <small>mmHg CO&#8322;</small></p>
+          </article>
+          <article class="tw-label" data-side="left" data-state="ok">
+            <p class="tw-kick"><i></i>Radiation <b>OK</b></p>
+            <p class="tw-val">32.4 <small>&micro;Sv/h</small></p>
+          </article>
+          <article class="tw-label" data-side="right" data-state="ok">
+            <p class="tw-kick"><i></i>Heart <b>OK</b></p>
+            <p class="tw-val">59 <small>bpm</small></p>
+          </article>
+          <article class="tw-label" data-side="right" data-state="ok">
+            <p class="tw-kick"><i></i>Ground link <b>OK</b></p>
+            <p class="tw-val">10.5 h <small>since sync</small></p>
+          </article>
+          <article class="tw-label" data-side="right" data-state="ok">
+            <p class="tw-kick"><i></i>Legs <b>OK</b></p>
+            <p class="tw-val">122 <small>min exercise</small></p>
+          </article>
 
-    <!-- ═══════════════════════════════════════ ASTRODOCX (#astrodocx) ═════
-         The reveal after the Health Twin. universe/reveal.js pins it and morphs particles into the
-         ASTRODOCX wordmark; without WebGL or with reduced motion it stays a normal section (the h1). -->
-    <section id="astrodocx" aria-labelledby="adx-title">
-      <canvas id="adxCanvas" aria-hidden="true"></canvas>
-      <div class="adx-stars" aria-hidden="true"></div>
-      <div class="adx-inner">
-        <p class="hero-eyebrow adx-reveal"><span class="bracket">&lt;</span>nasa space apps 2026<span class="bracket">/&gt;</span></p>
-        <h1 class="adx-wordmark adx-reveal" id="adx-title">ASTRODOC<span class="hero-x">X</span></h1>
-        <p class="hero-pitch adx-pitch adx-reveal">
-          Your <strong>doctor on board</strong> when Earth is minutes away. AstroDocX learns each
-          astronaut&rsquo;s <strong>personal baseline</strong>, spots health changes early and turns
-          every alert into a <strong>clear action</strong> the crew can take on their own.
-        </p>
-        <div class="hero-typerow adx-reveal" aria-live="polite">
-          <span class="prompt">~/astrodocx $</span>
-          <span id="hero-typed"></span><span class="hero-cursor" aria-hidden="true"></span>
+          <aside class="tw-final" aria-live="polite">
+            <div class="tw-ready"><span class="ch-no">Readiness</span><b><i id="twReadyVal">83</i>%</b></div>
+            <div class="tw-card">
+              <p class="tw-kick"><i></i>Action card <b>ACT</b></p>
+              <p class="tw-why">Short sleep. Rest, and hand safety-critical tasks to a crewmate.</p>
+            </div>
+          </aside>
         </div>
-        <ol class="adx-steps adx-reveal" aria-label="How AstroDocX works">
-          <li><b>Detect</b><span>11 metrics against your own baseline</span></li>
-          <li><b>Explain</b><span>what changed, by how much, since when</span></li>
-          <li><b>Act</b><span>a checkable action card</span></li>
-          <li><b>Log</b><span>every step kept on the device</span></li>
-          <li><b>Sync later</b><span>12-minute delay, link windows, CSV</span></li>
-        </ol>
-        <div class="hero-actions adx-reveal">
-          <a href="/app/" class="btn btn-primary" data-cursor="LAUNCH">Launch Crew Console</a>
-          <a href="?tour=1" class="btn btn-secondary" data-cursor="WATCH">Watch the tour</a>
-          <a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener" class="btn btn-secondary" data-cursor="GITHUB">GitHub</a>
-        </div>
-        <p class="hero-tagline adx-reveal">Working PWA &middot; offline &middot; 4-crew demo mission inside.</p>
-      </div>
-    </section>
+      </section>
 
-    <!-- ═══════════════════════════════════════ TEAM (#contact) ═══════════
-         Team cards: edit the TEAM array in team.js.
-    ══════════════════════════════════════════════════════════════ -->
-    <section id="contact">
-      <div class="contact-overlay" aria-hidden="true"></div>
-
-      <div class="section-inner">
-        <h2 class="section-title contact-title">The Team</h2>
-        <p class="section-subtitle contact-subtitle">Built in Dhaka, Bangladesh for the NASA Space Apps Challenge 2026.</p>
-
-        <div class="contact-wrapper">
-          <div class="contact-form-area team-area">
-            <!-- Cards are rendered from the TEAM array in team.js (edit that file, not this markup). -->
-            <ul class="team-grid" id="teamGrid" aria-label="Team members"></ul>
+      <!-- 03 · AstroDocX: the body's particles become the wordmark (universe/reveal.js) -->
+      <section id="astrodocx" class="chapter" aria-labelledby="adx-title">
+        <div class="adx-inner">
+          <span class="ch-no adx-reveal">NASA Space Apps 2026</span>
+          <h1 class="adx-wordmark adx-reveal" id="adx-title">ASTRODOC<span class="hero-x">X</span></h1>
+          <p class="ch-sub adx-pitch adx-reveal">Your <strong>doctor on board</strong> when Earth is minutes away: it learns each astronaut&rsquo;s own baseline and turns every alert into a clear action.</p>
+          <div class="hero-typerow adx-reveal" aria-live="polite">
+            <span class="prompt">~/astrodocx $</span>
+            <span id="hero-typed"></span><span class="hero-cursor" aria-hidden="true"></span>
           </div>
-
-          <div class="contact-info">
-            <h3>Project</h3>
-            <address>
-              <p class="contact-email-row">
-                <strong>Repo:</strong> <a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener">A-42-018/AstroDocX</a>
-                <button type="button" id="copy-email-btn" class="copy-email-btn" aria-label="Copy repository link">Copy</button>
-              </p>
-              <p><strong>Event:</strong> NASA Space Apps Challenge 2026</p>
-              <p><strong>Location:</strong> Dhaka, Bangladesh</p>
-            </address>
-            <h3>Links</h3>
-            <ul class="social-links">
-              <li><a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener">Source Code</a></li>
-              <li><a href="https://www.spaceappschallenge.org/" target="_blank" rel="noopener">Space Apps Challenge</a></li>
-            </ul>
-            <a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener" class="btn btn-primary team-repo-btn">Star on GitHub</a>
+          <ol class="adx-steps adx-reveal" aria-label="How AstroDocX works">
+            <li><b>Detect</b></li><li><b>Explain</b></li><li><b>Act</b></li><li><b>Log</b></li><li><b>Sync later</b></li>
+          </ol>
+          <div class="hero-actions adx-reveal">
+            <a href="/app/" class="ch-pill is-solid" data-cursor="LAUNCH">Launch Crew Console</a>
+            <a href="?tour=1" class="ch-pill" data-cursor="WATCH">Watch the tour</a>
+            <a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener" class="ch-pill" data-cursor="GITHUB">GitHub</a>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
 
   </main>
 
@@ -267,7 +202,7 @@
         <li><a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener">GitHub</a></li>
         <li><a href="https://www.spaceappschallenge.org/" target="_blank" rel="noopener">Space Apps</a></li>
         <li><a href="#twin">Health Twin</a></li>
-        <li><a href="#universe">Top</a></li>
+        <li><a href="#astrodocx">AstroDocX</a></li>
       </ul>
     </div>
   </footer>
@@ -305,10 +240,9 @@
   <script src="universe/camera.js"></script>
   <script src="universe/engine.js"></script>
   <script src="universe/fx.js"></script>
-  <script src="universe/universe.js"></script>
   <script src="universe/health-twin.js"></script>
   <script src="universe/reveal.js"></script>
-  <script src="team.js"></script>
+  <script src="universe/universe.js"></script>
   <script src="tour.js"></script>
   <script src="anatomy3d.js"></script>
 

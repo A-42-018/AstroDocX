@@ -21,10 +21,8 @@
      speed through the section (px/s) until the next section's top.
      Pinned sections are tall because of their pin spacer, so their speed sets the pace of the story. */
   var PLAN = [
-    { id: 'universe',  hold: 0,  pps: 320 },
-    { id: 'twin',      hold: 1,  pps: 200 },
-    { id: 'astrodocx', hold: 1,  pps: 210 },
-    { id: 'contact',   hold: 6,  pps: 300 }
+    { id: 'journey', hold: 0,  pps: 320 },
+    { id: 'footer',  hold: 3,  pps: 300 }
   ];
 
   var style = document.createElement('style');
@@ -54,13 +52,15 @@
       var next = PLAN[i + 1] && topOf(PLAN[i + 1].id);
       var end = next !== null && next !== undefined ? next : maxScroll();
       end = Math.min(end, maxScroll());
-      if (s.id === 'universe' && window.ADX_UNIVERSE && ADX_UNIVERSE.yAt(0) !== undefined && ADX_UNIVERSE.stops) {
-        /* the particle intro: stop at each scene's hold (dwell per scene in scenes.js `tour`), slow glides between so the morphs read */
-        var stops = ADX_UNIVERSE.stops();
+      if (s.id === 'journey' && window.ADX_JOURNEY && ADX_JOURNEY.live) {
+        /* the particle journey: stop at each intro scene, each Health Twin system and the AstroDocX reveal
+           (dwell in universe.js `stops`), slow glides between so the morphs read */
+        var stops = ADX_JOURNEY.stops();
+        end = ADX_JOURNEY.end;
         (function step(k) {
           if (stopped) return;
           if (k >= stops.length) return glide(scrollY, end, s.pps * speed, function () { i++; section(); });
-          glide(scrollY, ADX_UNIVERSE.yAt(stops[k].p), 330 * speed, function () { later(function () { step(k + 1); }, stops[k].hold / speed); });
+          glide(scrollY, ADX_JOURNEY.yAt(stops[k].id, stops[k].q), 330 * speed, function () { later(function () { step(k + 1); }, stops[k].hold / speed); });
         })(0);
         return;
       }
