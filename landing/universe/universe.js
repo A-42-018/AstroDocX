@@ -35,7 +35,6 @@ document.addEventListener('DOMContentLoaded', function () {
   const rail    = root.querySelector('.uni-rail');
   const skip    = root.querySelector('.uni-skip');
   const hint    = root.querySelector('.uni-hint');
-  const navbar  = document.getElementById('navbar');
   const REDUCE  = window.matchMedia('(prefers-reduced-motion: reduce)').matches || /[?&]reduce=1\b/.test(location.search);   // ?reduce=1 forces the static path for QA
   const clamp   = (v, a, b) => v < a ? a : v > b ? b : v;
   const sm      = t => t * t * (3 - 2 * t);
@@ -120,9 +119,8 @@ document.addEventListener('DOMContentLoaded', function () {
       current = bi;
       ticks.forEach((t, i) => { t.classList.toggle('is-current', i === bi); if (i === bi) t.setAttribute('aria-current', 'true'); else t.removeAttribute('aria-current'); });
     }
-    if (navbar) navbar.classList.toggle('nav-hidden', !!st && st.isActive && p < END_P - 0.03);   // nav appears with the last scene
     const inEnd = p >= END_P - 0.005;
-    if (inEnd !== wasEnd) { wasEnd = inEnd; if (inEnd && navbar) gsap.to(navbar, { yPercent: 0, duration: 0.45, ease: 'power2.out', overwrite: 'auto' }); }
+    if (inEnd !== wasEnd) wasEnd = inEnd;
     skip.classList.toggle('is-hidden', inEnd);
     hint.classList.toggle('is-hidden', p > 0.02);
   }
@@ -314,7 +312,6 @@ document.addEventListener('DOMContentLoaded', function () {
     sceneEls.forEach(el => { el.style.cssText = ''; });
     if (twinUI) twinUI.makeStatic();
     if (adxUI) adxUI.makeStatic(REDUCE);
-    if (navbar) navbar.classList.remove('nav-hidden');
     if (webgl) (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(schedulePosters);
   }
 

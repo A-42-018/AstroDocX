@@ -102,24 +102,13 @@ ul { list-style:none; }
 .btn-secondary:hover { background:rgba(129,140,248,.1);color:var(--violet);text-decoration:none; }
 
 /* ═══════════════════════════════════════════════════════════ NAVBAR */
-#navbar { position:fixed;top:0;left:0;right:0;z-index:100;height:var(--nav-h);background:transparent;transition:background .3s,box-shadow .3s; }
-#navbar.scrolled { background:rgba(12,10,30,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 1px 0 rgba(255,255,255,.06); }
+#navbar { position:fixed;top:0;left:0;right:0;z-index:100;height:var(--nav-h);background:rgba(12,10,30,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 1px 0 rgba(255,255,255,.06); }
 .nav-inner { max-width:1240px;margin:0 auto;padding:0 var(--pad-x);height:100%;display:flex;align-items:center;justify-content:space-between;gap:24px; }
 .nav-logo { font-family:'Courier New',monospace;font-size:1.05rem;font-weight:700;color:var(--cyan);letter-spacing:.04em;flex-shrink:0; }
 .nav-logo .bracket { color:var(--violet);opacity:.7; }
 .nav-logo:hover { color:var(--cyan);text-decoration:none; }
-.nav-links { display:flex;align-items:center;gap:6px;list-style:none; }
-.nav-links a { font-size:.88rem;font-weight:600;color:rgba(255,255,255,.65);padding:7px 11px;white-space:nowrap;border-radius:var(--r-sm);transition:color .2s,background .2s;display:inline-block; }
-.nav-links a:hover,.nav-links a.active { color:#ffffff;background:rgba(129,140,248,.15);text-decoration:none; }
 .nav-cta { background:linear-gradient(90deg,var(--indigo),var(--cyan),var(--indigo));background-size:200% auto;animation:moveGradient 4s linear infinite;color:#000000 !important;padding:7px 18px !important;box-shadow:0 3px 10px rgba(79,70,229,.35); }
 .nav-cta:hover { box-shadow:0 8px 24px rgba(0, 0, 0, 0.829) !important; color:#ffffff !important; }
-/* Priority-2 §6: hamburger → X, lightened to a quick single-easing
-   transform/opacity transition instead of relying on default timing. */
-.nav-toggle { display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px;width:30px;height:22px;justify-content:center; }
-.nav-toggle span { display:block;width:22px;height:2px;background:rgba(255,255,255,0.8);border-radius:99px;transition:transform .22s ease-out,opacity .16s ease-out; }
-.nav-toggle.is-open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
-.nav-toggle.is-open span:nth-child(2) { opacity:0; }
-.nav-toggle.is-open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
 
 /* ═══════════════════════════════════════════════════════════ HERO */
 
@@ -811,10 +800,6 @@ ul { list-style:none; }
 /* ═══ RESPONSIVE */
 @media (max-width:680px) {
   :root { --pad-y:64px;--pad-x:20px; }
-  .nav-toggle{display:flex}
-  .nav-links { position:fixed;top:var(--nav-h);left:0;right:0;background:rgba(12,10,30,.97);backdrop-filter:blur(12px);flex-direction:column;align-items:stretch;padding:12px 20px 20px;gap:4px;transform:translateY(-110%);opacity:0;transition:transform .28s ease,opacity .28s ease;pointer-events:none; }
-  .nav-links.open { transform:translateY(0);opacity:1;pointer-events:auto; }
-  .nav-links a { padding:12px 16px;font-size:1rem;border-radius:var(--r-md); }
   .hero-actions{flex-direction:column;align-items:flex-start}
   .contact-wrapper{grid-template-columns:1fr}
   .footer-inner{flex-direction:column;align-items:center;text-align:center}
@@ -839,20 +824,8 @@ ul { list-style:none; }
 .logo-x { color:var(--amber);text-shadow:0 0 12px rgba(245,158,11,.55); }
 .hero-x { background:linear-gradient(115deg,var(--cyan),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
 
-/* Nav: 8 links. Links never wrap (white-space:nowrap); below 1100px the
-   links collapse into the hamburger dropdown (same rules as the 680px block). */
-@media (min-width:1101px) and (max-width:1280px) {
-  .nav-links { gap:2px; }
-  .nav-links a { font-size:.82rem;padding-left:9px;padding-right:9px; }
-}
-@media (max-width:1100px) {
-  .nav-toggle { display:flex; }
-  .nav-links { position:fixed;top:var(--nav-h);left:0;right:0;background:rgba(12,10,30,.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);flex-direction:column;align-items:stretch;padding:12px 20px 20px;gap:4px;transform:translateY(-110%);opacity:0;transition:transform .28s ease,opacity .28s ease;pointer-events:none; }
-  .nav-links.open { transform:translateY(0);opacity:1;pointer-events:auto; }
-  .nav-links a { padding:12px 16px;font-size:1rem;border-radius:var(--r-md); }
-  .nav-links a { display:block; }
-  .nav-cta { text-align:center; margin-top:6px; }
-}
+/* Nav: logo + one Launch Console button, on every width */
+@media (max-width:480px) { .nav-cta { padding:7px 14px !important;font-size:.85rem; } }
 
 /* Mission patch (replaces the avatar photo) */
 .mission-patch { padding:6px; }
