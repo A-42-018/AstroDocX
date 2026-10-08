@@ -25,10 +25,10 @@
   const SHAPES = [
     { id: 'dust',      sc: 4.2, off: [0, 0, 0],       rot: 0.02, tint: [1, 1, 1],          dis: 0.0 },
     { id: 'planet',    sc: 2.5, off: [2.6, 0, 0],     rot: 0.10, tint: [1.0, 0.86, 0.62],  dis: 1.6 },
-    { id: 'astronaut', sc: 2.1, off: [-2.5, 0.4, 0],    rot: 0.12, tint: [1, 1, 1],          dis: 1.6 },
-    { id: 'orion',     sc: 2.7, off: [2.0, 0.2, 0],     rot: 0.0, tint: [0.95, 0.97, 1.0],  dis: 1.6 },
+    { id: 'astronaut', sc: 2.1, off: [-3.3, 0.4, 0],    rot: 0.12, tint: [1, 1, 1],          dis: 1.6 },
+    { id: 'orion',     sc: 2.7, off: [3.0, 0.3, 0],     rot: 0.0, tint: [0.95, 0.97, 1.0],  dis: 1.6 },
     { id: 'relay',     sc: 3.0, off: [-3.4, -0.3, 0],    rot: 0.02, tint: [1, 1, 1],          dis: 1.6 },
-    { id: 'earth',     sc: 2.5, off: [0, -1.7, 0],    rot: 0.08, tint: [0.62, 0.82, 1.15], dis: 1.6 }
+    { id: 'earth',     sc: 2.3, off: [0, -2.0, 0],    rot: 0.08, tint: [0.62, 0.82, 1.15], dis: 1.6 }
   ];
 
   /* ── deterministic PRNG so every load builds the same shapes ── */
@@ -381,7 +381,7 @@
   const BODY = { id: 'body', sc: 1, off: [0, 0, 0], rot: 0, sway: 0.32, tint: [1, 1, 1], dis: 1.3 };
   const WORD = { id: 'wordmark', sc: 3.2, off: [0, 0, 0], rot: 0, tint: [1, 1, 1], dis: 2.4 };
   const ALL = SHAPES.concat([BODY, WORD]);
-  const HEART = [0.06, 0.78, 0.07], CHEST = [-2.5, 0.95, 0];
+  const HEART = [0.06, 0.78, 0.07], CHEST = [-3.3, 0.95, 0];
   const angle = (S, time) => S.sway ? S.sway * Math.sin(time * 0.22) : time * S.rot;
 
   /* ── shaders ── */

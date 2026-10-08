@@ -51,7 +51,7 @@
 
   function create(scene, engine) {
     const S = engine.uniforms, W = engine.weights;
-    const ecgN = 360, ECG_X = -2.5, ECG_Y = -2.5, ECG_LEN = 2.6;
+    const ecgN = 360, ECG_X = -3.3, ECG_Y = -2.5, ECG_LEN = 2.6;
     const E = system(scene, ecgN, 0, function (pos, t, n) {
       for (let i = 0; i < n; i++) {
         const u = i / (n - 1), beats = 2.2, ph = (u * beats) % 1;

@@ -16,16 +16,16 @@ window.ADX_SCENES = [
     head: ['HUMAN', 'BEYOND LIMITS'],                  sub: 'Every heartbeat matters out here.' },
   { id: 'orion',     name: 'Journey',     tour: 3, hold: [0.60, 0.70], pos: 'left',
     head: ['GO', 'FURTHER'],                           sub: 'When Earth is up to 22 minutes away, the crew is the clinic.' },
-  { id: 'relay',     name: 'Link',        tour: 3.5, hold: [0.77, 0.87], pos: 'right',
+  { id: 'relay',     name: 'Link',        tour: 3.5, hold: [0.75, 0.83], pos: 'right',
     head: ['CONNECT THE', 'UNKNOWN'],                  sub: 'Health logs sync home whenever the link allows.' },
-  { id: 'earth',     name: 'Home',        tour: 3, hold: [0.93, 1.00], pos: 'top',
+  { id: 'earth',     name: 'Home',        tour: 3, hold: [0.94, 1.00], pos: 'top',
     head: ['ONE PLANET.', 'INFINITE POSSIBILITIES.'],  sub: 'Built for the crew, readable by flight surgeons on the ground.' }
 ];
 /* The whole landing page is one pinned journey made of the same particles. Each chapter's length is in
    % of the viewport height (desktop, phone). The intro scenes above run over 'intro'; the two morphs
    carry the Earth into the body and the body into the ASTRODOCX wordmark. */
 window.ADX_FLOW = [
-  { id: 'intro',  len: [700, 550] },   // stardust -> ... -> Earth (ADX_SCENES)
+  { id: 'intro',  len: [800, 620] },   // stardust -> ... -> Earth (ADX_SCENES)
   { id: 'toTwin', len: [110, 90] },    // Earth -> body
   { id: 'twin',   len: [440, 360] },   // scan, six systems, readiness
   { id: 'toAdx',  len: [110, 90] },    // body -> wordmark
