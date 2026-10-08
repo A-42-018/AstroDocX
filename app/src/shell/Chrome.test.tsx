@@ -18,10 +18,11 @@ const data: ShellData = {
 }
 
 describe('navigation', () => {
-  it('rail links to all seven screens and marks the current one', () => {
+  it('rail links to all seven screens (plus the way back to the landing page) and marks the current one', () => {
     render(<MemoryRouter initialEntries={['/trends']}><Rail /></MemoryRouter>)
     const nav = screen.getByRole('navigation', { name: 'Crew Console' })
-    expect(within(nav).getAllByRole('link')).toHaveLength(7)
+    expect(within(nav).getAllByRole('link')).toHaveLength(8)
+    expect(within(nav).getByRole('link', { name: 'Back to the AstroDocX landing page' }).getAttribute('href')).toBe('/')
     expect(within(nav).getByRole('link', { name: 'Trends' }).getAttribute('aria-current')).toBe('page')
     expect(within(nav).getByRole('link', { name: 'Ground Sync' }).getAttribute('href')).toBe('/sync')
   })
