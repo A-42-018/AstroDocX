@@ -107,11 +107,9 @@ document.addEventListener('DOMContentLoaded', function () {
       const vOut = i === SCENES.length - 1 ? 1 : clamp((outEnd - p) / FADE, 0, 1);
       const v = Math.min(vIn, vOut), el = sceneEls[i];
       el.style.opacity = v.toFixed(3);
-      el.style.setProperty('--ls', (0.12 + (1 - v) * 0.28).toFixed(3) + 'em');          // letter-spacing eases 0.4em -> 0.12em on enter
       el.style.visibility = v > 0.01 ? 'visible' : 'hidden';
       el.classList.toggle('is-on', v > 0.5);
-      el.style.filter = v < 1 ? 'blur(' + ((1 - v) * 8).toFixed(1) + 'px)' : 'none';
-      const k = (p < (a + b) / 2 ? 1 : -1) * 40 * (1 - v) * (i === 0 ? 0 : 1);         // enter from below, exit upward
+      const k = (p < (a + b) / 2 ? 1 : -1) * 18 * (1 - v) * (i === 0 ? 0 : 1);         // enter from below, exit upward
       el.style.translate = '0 ' + k.toFixed(1) + 'px';
       if (v > best) { best = v; bi = i; }
     });

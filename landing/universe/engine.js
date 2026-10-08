@@ -28,7 +28,7 @@
     { id: 'astronaut', sc: 2.1, off: [-3.3, 0.4, 0],    rot: 0.12, tint: [1, 1, 1],          dis: 1.6 },
     { id: 'orion',     sc: 2.7, off: [3.0, 0.3, 0],     rot: 0.0, tint: [0.95, 0.97, 1.0],  dis: 1.6 },
     { id: 'relay',     sc: 3.0, off: [-3.4, -0.3, 0],    rot: 0.02, tint: [1, 1, 1],          dis: 1.6 },
-    { id: 'earth',     sc: 2.3, off: [0, -2.0, 0],    rot: 0.08, tint: [0.62, 0.82, 1.15], dis: 1.6 }
+    { id: 'earth',     sc: 2.3, off: [0, -2.25, 0],    rot: 0.08, tint: [0.62, 0.82, 1.15], dis: 1.6 }
   ];
 
   /* ── deterministic PRNG so every load builds the same shapes ── */
