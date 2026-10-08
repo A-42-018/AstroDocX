@@ -6,17 +6,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { overflow-x: hidden; }
 
-/* FIX (locked-section scroll feel): snap only applies to #hero.
-   #about is intentionally excluded — it's a GSAP ScrollTrigger
-   pin:true section (150% scrubbed timeline, script.js ~L694) and
-   native CSS scroll-snap fights the pin-spacer's own repositioning,
-   causing jitter/stutter or breaking the scrub entirely. Desktop only:
-   on mobile #about unlocks to normal flow (see @media 900px below)
-   so it has no single "start" edge worth snapping to anyway. */
-@media (min-width:901px) {
-  html { scroll-snap-type: y proximity; }
-  #hero { scroll-snap-align: start; }
-}
+/* No CSS scroll-snap: #universe and #about are GSAP pins, and snapping fights the pin spacers. */
 
 /* ═══════════════════════════════════════════════════════════ CUSTOM CURSOR */
 *, *::before, *::after { cursor: none !important; }
@@ -80,7 +70,6 @@ html, body { overflow-x: hidden; }
    font's feature list first and opt in explicitly, e.g.:
    font-feature-settings:"liga" 1,"clig" 1,"ss01" 1; */
 .font-display,
-.hero-name, .section-title, .about-heading, .edu-title, .contact-title {
   font-family: var(--font-display);
   font-feature-settings: "liga" 1, "clig" 1;
   font-variant-ligatures: common-ligatures;
@@ -133,24 +122,11 @@ ul { list-style:none; }
 .nav-toggle.is-open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
 
 /* ═══════════════════════════════════════════════════════════ HERO */
-#hero { min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden;background:var(--void);padding-top:var(--nav-h); }
-#hero-canvas { position:absolute;inset:0;width:100%;height:100%;z-index:0; }
-#orb-canvas { position:absolute;right:7%;top:50%;transform:translateY(-50%);width:260px;height:260px;z-index:1;opacity:1;animation:orbPulse 5s ease-in-out infinite;pointer-events:none; }
 
-/* FIX 1: astronaut canvas z-index raised above about-wrap (z:2) and right col glass card */
-#astronaut-canvas { position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none;display:block;transition:opacity 0.25s ease; }
 
-@media (max-width:820px) { #astronaut-canvas{top:48%;height:52%} }
-@media (prefers-reduced-motion:reduce) { #astronaut-canvas{display:none} #orb-canvas{display:block} }
-@keyframes orbPulse { 0%,100%{filter:drop-shadow(0 0 18px rgba(79,70,229,0.45))} 50%{filter:drop-shadow(0 0 38px rgba(57,59,161,0.7))} }
-@media (max-width:820px) { #orb-canvas{opacity:0;pointer-events:none} }
-.hero-inner { max-width:min(var(--wrap),50%);margin:0;margin-left:max(var(--pad-x),calc((100% - var(--wrap)) / 2 + var(--pad-x)));padding:80px 0;position:relative;z-index:3; }
-.hero-inner > * { opacity:0; }
-@media (max-width:820px) { .hero-inner{max-width:var(--wrap);margin:0 var(--pad-x);box-sizing:border-box} }
 .hero-eyebrow { display:flex;align-items:center;gap:10px;font-size:.72rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin-bottom:16px;font-family:'Courier New',monospace; }
 .hero-eyebrow .bracket { color:var(--violet);opacity:.7; }
 .hero-eyebrow::before { content:'';display:block;width:28px;height:1.5px;background:var(--cyan);flex-shrink:0; }
-.hero-name { font-size:clamp(2.2rem,4.6vw,3.4rem);font-weight:900;line-height:1.08;letter-spacing:-.02em;margin-bottom:16px;background:linear-gradient(115deg,#ffffff 15%,var(--violet) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
 .hero-typerow { display:flex;align-items:center;gap:10px;margin-bottom:18px;font-family:var(--font-typewriter);font-size:clamp(.92rem,1.4vw,1.06rem); }
 .hero-typerow .prompt { color:var(--text-lo);opacity:.55;user-select:none; }
 #hero-typed { color:var(--cyan);font-weight:500;min-height:1.4em;font-family:var(--font-typewriter);letter-spacing:.01em;text-shadow:0 0 0 rgba(34,211,238,0);transition:text-shadow .15s ease; }
@@ -192,20 +168,7 @@ ul { list-style:none; }
 .trust-link { display:inline-flex;align-items:center;gap:7px;font-size:.85rem;font-weight:600;color:rgba(255,255,255,.6);transition:color .2s,transform .2s; }
 .trust-link svg { flex-shrink:0; }
 .trust-link:hover { color:var(--cyan);transform:translateY(-2px);text-decoration:none; }
-.hero-scroll-hint { position:absolute;bottom:82px;left:50%;transform:translateX(-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:6px;opacity:0; }
-.hero-scroll-hint span { font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text-lo);font-family:'Courier New',monospace; }
-.scroll-mouse { width:18px;height:28px;border:1.5px solid rgba(255,255,255,.2);border-radius:99px;display:flex;justify-content:center;padding-top:5px; }
-.scroll-dot { width:3px;height:6px;border-radius:99px;background:var(--cyan);animation:scrollDown 1.6s ease-in-out infinite; }
-@keyframes scrollDown { 0%{opacity:1;transform:translateY(0)}80%{opacity:0;transform:translateY(8px)}100%{opacity:0;transform:translateY(0)} }
 
-/* ═══ HERO TERMINAL */
-.ht-bar { display:flex;align-items:center;gap:6px;padding:10px 14px;background:rgba(26,23,64,0.5);border-bottom:1px solid rgba(129,140,248,0.1); }
-.ht-dot { width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.15); }
-.ht-dot:first-child{background:#ff5f57} .ht-dot:nth-child(2){background:#ffbd2e} .ht-dot:nth-child(3){background:#27c93f}
-.ht-fname { font-family:'JetBrains Mono',monospace;font-size:.72rem;color:rgba(255,255,255,.38);margin-left:6px;letter-spacing:.04em; }
-.ht-body { padding:14px 16px;margin:0;min-height:180px; }
-.ht-body code { font-family:'JetBrains Mono','Courier New',monospace;font-size:.73rem;line-height:1.75;color:#b4c3d8;white-space:pre;display:block; }
-@media (max-width:820px) { .hero-terminal{display:none} }
 
 /* ═══ MARQUEE */
 /* FIX (marquee color jump): was a flat var(--void-mid) (#1A1740) — visibly
@@ -262,7 +225,7 @@ ul { list-style:none; }
     radial-gradient(ellipse at 100% 100%,rgba(0,0,8,0.72) 0%,transparent 60%),
     radial-gradient(ellipse at 0% 0%,rgba(0,0,8,0.72) 0%,transparent 60%);
 }
-#hero, .marquee-band { z-index:2; }
+.marquee-band { z-index:2; }
 #footer { position:relative;z-index:2; }
 
 /* FIX 3: grid now uses the full wrap width — the astronaut is gone,
@@ -401,7 +364,6 @@ ul { list-style:none; }
   .quick-info-card { max-width:320px; }
   .avatar-ring-glow { width:108px;height:108px; }
   .avatar-initials-glass { font-size:1.55rem; }
-  #astronaut-canvas { display:none; }
 }
 @media (max-width:520px) {
   .about-left-col { flex-direction:column;align-items:center; }
@@ -858,14 +820,11 @@ ul { list-style:none; }
   .footer-inner{flex-direction:column;align-items:center;text-align:center}
   .footer-links{justify-content:center}
 }
-@media (max-width:440px) { .hero-name{font-size:2.6rem} }
 
 /* ═══ REDUCED MOTION */
 @media (prefers-reduced-motion:reduce) {
   *,*::before,*::after { transition:none !important;animation:none !important; }
   html { scroll-behavior:auto; }
-  .hero-inner>*,.hero-scroll-hint,.hero-terminal{opacity:1 !important;transform:none !important}
-  #orb-canvas{animation:none !important}
   .about-left-col,.about-right-col,.about-eyebrow,.about-heading,.about-body,.about-chips,.about-cta-row{opacity:1 !important;transform:none !important}
 }
 
@@ -941,4 +900,14 @@ ul { list-style:none; }
 .team-link { font-size:.74rem;font-weight:700;color:var(--cyan); }
 .team-link:hover { color:#fff;text-decoration:none; }
 .team-repo-btn { display:inline-flex;margin-top:22px;width:100%;justify-content:center; }
+@media (max-width:560px) { .team-grid { grid-template-columns:1fr; } }
+
+/* R1: team = 6 cards in a 3 x 2 grid (2 on tablet, 1 on phone); project info sits below */
+.contact-wrapper { grid-template-columns:1fr; gap:28px; }
+.team-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.team-links { display:flex;flex-wrap:wrap;gap:4px 12px;margin:0; }
+.team-photo { object-fit:cover;background:none; }
+.team-card.is-placeholder { border-style:dashed;opacity:.8; }
+.team-card.is-placeholder .team-avatar { opacity:.6; }
+@media (max-width:900px) { .team-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:560px) { .team-grid { grid-template-columns:1fr; } }

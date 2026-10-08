@@ -2,12 +2,15 @@
    ASTRODOCX — LIVE MISSION SIMULATOR (#sim)
    Isolated module. Synthetic data only.
 
-   Engine (same idea as the planned Crew Console):
+   Engine (a mini version of the Crew Console engine):
      value = baseline + direction * (shift + noise) * sd
      z     = EWMA-smoothed distance from the personal baseline,
              measured in the "bad" direction
      status: z >= 3.0 → ACT · z >= 1.8 → WATCH · else NOMINAL
              (hysteresis 0.4 so tiles don't flicker)
+   readiness: same formula as the console Status Board: mean of five
+             hazard scores, score = min(cap(status), 100 - 40*clamp(z/3,0,1)),
+             cap = 100 / 80 / 55 for Nominal / Watch / Act.
    Alert → explainable text → action card → logged on board →
    pending until the next ground link window.
 ============================================================ */
@@ -26,19 +29,19 @@ document.addEventListener('DOMContentLoaded', function () {
   /* ── Config ─────────────────────────────────────────────── */
   const METRICS = [
     { id:'R', name:'Radiation',   label:'Dose rate',          unit:'µSv/h', mean:25,  sd:3.5, bad:+1, dec:1,
-      event:5.0, steps:['Move crew to the storm shelter','Check personal dosimeters','Hold EVA until dose rate < 30 µSv/h'], clears:true,
+      event:5.0, steps:['Move the whole crew to the storm shelter','Cancel all EVA and log the time of exposure','Report the event to the ground at the next link window'], clears:true,
       done:'Shelter protocol completed' },
     { id:'I', name:'Isolation',   label:'Sleep last night',   unit:'h',    mean:7.1, sd:0.6, bad:-1, dec:1,
-      event:3.4, steps:['30-minute wind-down, cabin lights low','Move non-critical tasks to tomorrow','Re-run reaction-time test after waking'], clears:true,
+      event:3.4, steps:['Swap safety-critical tasks to a rested crewmate','Take a scheduled rest period and a 20-minute nap','Notify the commander and the flight surgeon'], clears:true,
       done:'Rest block scheduled' },
     { id:'D', name:'Distance',    label:'Since ground sync',  unit:'h',    mean:6,   sd:2,   bad:+1, dec:1,
-      event:4.6, steps:['Keep logging on board; nothing is lost','Follow offline action cards','Sync when the link window opens'], clears:false,
+      event:4.6, steps:['Keep logging on board; nothing is lost','Follow the offline action cards','Sync when the next link window opens'], clears:false,
       done:'Offline protocol acknowledged' },
     { id:'G', name:'Gravity',     label:'Exercise load',      unit:'min',  mean:120, sd:14,  bad:-1, dec:0,
-      event:3.8, steps:['30-minute resistive session','15-minute cycle ergometer','Re-check HR and BP afterwards'], clears:true,
+      event:3.8, steps:['Schedule a full exercise block with the commander today','Check the exercise hardware for faults','Review the plan with the flight surgeon at the next link window'], clears:true,
       done:'Make-up exercise completed' },
     { id:'E', name:'Environment', label:'Cabin CO₂',     unit:'mmHg', mean:2.4, sd:0.28, bad:+1, dec:2,
-      event:5.2, steps:['Switch to the backup CO₂ scrubber','Open cabin air circulation','Re-check CO₂ in 10 minutes'], clears:true,
+      event:5.2, steps:['Switch to the backup scrubber and notify the commander','Stop strenuous activity; move to the lowest-CO₂ module','Request ground support at the next link window'], clears:true,
       done:'Backup scrubber online' }
   ];
   const ORDER = { ok:0, watch:1, act:2 };
@@ -226,16 +229,20 @@ document.addEventListener('DOMContentLoaded', function () {
   let lastRing = -1;
   function paintMeta() {
     clockEl.textContent = metStr(met);
-    let pen = 0;
-    S.forEach(m => { pen += clamp((m.z - 1) * 5, 0, 22); });
-    const r = Math.round(clamp(99 - pen, 5, 99));
-    if (r !== lastRing) {
-      lastRing = r;
+    const CAP = { ok:100, watch:80, act:55 };
+    let sum = 0, worst = 'ok';
+    S.forEach(m => {
+      sum += Math.round(Math.min(CAP[m.status], 100 - 40 * clamp(Math.max(0, m.z) / 3, 0, 1)));
+      if (ORDER[m.status] > ORDER[worst]) worst = m.status;
+    });
+    const r = Math.round(sum / S.length);
+    if ((r + worst) !== lastRing) {
+      lastRing = r + worst;
       readyVal.textContent = r;
       readyRing.style.strokeDasharray = r + ' 100';
-      const st = r >= 80 ? 'ok' : r >= 60 ? 'watch' : 'act';
+      const st = worst;
       readyBox.className = 'sim-card sim-ready is-' + st;
-      readyStatus.innerHTML = '<i></i>' + (st === 'ok' ? 'Nominal' : st === 'watch' ? 'Degraded' : 'Critical');
+      readyStatus.innerHTML = '<i></i>' + LABEL[st];
     }
     if (doSync._hold) return;
     linkWrap.classList.toggle('is-down', linkDown);
@@ -293,4 +300,21 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!('IntersectionObserver' in window)) { els.forEach(e => e.classList.add('in')); return; }
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .1 });
   els.forEach(e => io.observe(e));
+});
+
+/* Proof strip (#proof): count up once when it scrolls into view; static numbers stay in the markup */
+document.addEventListener('DOMContentLoaded', function () {
+  const nums = document.querySelectorAll('#proof .proof-num[data-target]');
+  if (!nums.length || !('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return;
+    io.unobserve(e.target);
+    const el = e.target, to = +el.dataset.target, t0 = performance.now(), dur = 1100;
+    (function step(t) {
+      const k = Math.min(1, (t - t0) / dur);
+      el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+  }), { threshold: .6 });
+  nums.forEach(n => io.observe(n));
 });

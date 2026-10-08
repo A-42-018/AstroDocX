@@ -66,7 +66,7 @@ export default function App() {
         </Suspense>
         </ErrorBoundary>
       </main>
-      <footer className="disclaimer">Concept prototype, not a medical device.</footer>
+      <footer className="disclaimer">Prototype, not a medical device.</footer>
       </div>
       <BottomTabs />
     </div>

@@ -223,6 +223,198 @@ The video itself is recorded after L3.
 
 ---
 
+## 12. Particle Universe Intro — "From Stardust to Crew Health" (plan, not started)
+Source brief: owner's *Cinematic Particle Universe* prompt (2026-10-08). The brief was cut off at "13. UI / Keep…", so §12.9 fills that part from the existing landing-page rules. Below is the brief adapted to the real repo and improved for the AstroDocX story.
+
+### 12.1 What changes vs. the brief (and why)
+| Brief | This plan | Why |
+|---|---|---|
+| React + R3F + Drei | **Vanilla JS + three r128 + GSAP 3.12.5** (already on the page via CDN) | The landing page is plain HTML/JS; a second three copy or a React build just for the intro adds weight and risk. The brief itself says "adapt to the repo". |
+| CPU `lerp(current, target, morphProgress)` | **GPU morph, stateless:** every target shape is a vertex attribute; the vertex shader mixes shape *i* → *i+1* from one scroll value | Position is a pure function of scroll, so fast scrolling, reversing and jumping (tour mode, "Skip intro") can never leave particles in a broken state. Zero per-frame JS work for 20k+ particles. |
+| All particles morph at once | **Staggered morph:** per-particle delay (by height / distance) + curl-noise "dissolve" peaking mid-transition | Shapes visibly *sweep* apart and re-form instead of a uniform blur. This is the "wow" moment. |
+| Generic sci-fi spaceship / satellite | **Real NASA craft:** Orion spacecraft, TDRS relay satellite (fallback: procedural low-poly) | Fits a NASA challenge; TDRS literally relays crew data to Earth, which is our "sync later" idea. |
+| Visual-only story | **Each morph is one beat of the AstroDocX pitch** (§12.2) + a heartbeat / ECG pulse on the astronaut | The intro now explains the project, not just looks good; it becomes the opening of the submission video. |
+| Final CTA "EXPLORE →" | Particles form the **ASTRODOCX wordmark**; scene 07 **is the new hero**: pitch + CTAs **Launch Crew Console** / **Watch the tour** / **GitHub** | The particle astronaut replaces the old 3D astronaut, so the old hero is removed and its job moves here. |
+| Bloom post-processing | **No post-processing by default**; glow is faked in the fragment shader (soft Gaussian core + halo, additive) | Bloom in r128 needs extra example scripts and a full-screen pass; the shader glow is cheaper and looks the same on points. Bloom stays an optional Q-high extra. |
+| New custom cursor | **Reuse** the site's `#cursor-dot` / `#cursor-ring`, add a "VIEW"/"EXPLORE" state | Already exists and already disabled on touch. |
+
+### 12.2 Scene script (copy = video voice-over)
+Big line stays the brief's copy; the supporting line ties it to AstroDocX. Facts that need a source get one in the footer citations (plan rule 6); otherwise marked illustrative.
+
+| # | Form (same particles) | Headline | Supporting line | Signature effect |
+|---|---|---|---|---|
+| 01 | Scattered dust → gathering cloud | EXPLORE / BEYOND | A new experience is taking shape. | Particles drift in from the starfield toward the centre; camera far → slow approach |
+| 02 | **Mars-like planet** (soft gold-white, blue rim atmosphere) + thin orbit ring | BUILD THE FUTURE | The next crews will travel months from home. | Slow rotation, orbiting dust ring, light terminator (lit side brighter) |
+| 03 | **Astronaut** floating, gold visor highlight | HUMAN / BEYOND LIMITS | Every heartbeat matters out here. | **Heartbeat:** a pulse wave ripples out from the chest every ~1 s; an ECG line made of particles draws across below the figure |
+| 04 | **Orion-style spacecraft** | GO FURTHER | When Earth is up to 22 minutes away, the crew is the clinic. | Engine particles stream backward (trail), slight FOV kick + faster star parallax = acceleration |
+| 05 | **TDRS relay satellite** with solar panels; small Earth far behind | CONNECT THE UNKNOWN | Health logs sync home whenever the link allows. | **Data packets:** small bright particle bursts travel satellite → distant Earth along an arc |
+| 06 | **Earth** with particle continents + thin cloud shell + atmosphere halo | ONE PLANET. / INFINITE POSSIBILITIES. | Built for the crew, readable by flight surgeons on the ground. | Continents bright, oceans dim blue, slow rotation, cinematic zoom |
+| 07 | Converge to a bright core sphere → **ASTRODOCX wordmark** | YOUR JOURNEY / STARTS HERE | AstroDocX — your doctor on board. | Implosion flash (brief, low intensity), then wordmark resolves; hero pitch, action typewriter and CTAs fade in (§12.8) |
+
+### 12.3 Scroll timeline (one pinned section, `end: "+=800%"`, `scrub: 0.8`)
+Each scene gets a **hold** (shape stable, text readable) and a **morph** window, so text never sits on a half-formed shape.
+
+| Progress p | State |
+|---|---|
+| 0.00–0.08 | 01 hold (cloud gathering) |
+| 0.08–0.16 | morph → planet |
+| 0.16–0.28 | 02 hold |
+| 0.28–0.36 | morph → astronaut |
+| 0.36–0.48 | 03 hold (heartbeat) |
+| 0.48–0.55 | morph → spacecraft |
+| 0.55–0.64 | 04 hold (thrust) |
+| 0.64–0.71 | morph → satellite |
+| 0.71–0.80 | 05 hold (data packets) |
+| 0.80–0.86 | morph → Earth |
+| 0.86–0.93 | 06 hold |
+| 0.93–1.00 | converge → wordmark + hero pitch/CTAs, then unpin into `#about` |
+
+- One `master` value `p` drives everything: shader uniforms (`uSeg`, `uT`), camera, text, FX intensities. Upward scroll = exact reverse for free.
+- Optional **soft snap** to hold midpoints (`snap: {snapTo: holds, duration: {min:.3,max:.8}, delay:.15}`), on by default only in tour mode.
+- Timings live in one `SCENES` config array so the video length can be tuned without touching code.
+
+### 12.4 Particle engine (one system, one draw call)
+- **Geometry:** one `THREE.BufferGeometry` with `N` points. Attributes: `aP0…aP6` (vec3, 7 target shapes incl. dust cloud and wordmark), `aSeed` (vec4: random, size, colour pick, stagger), `aCol` (per-shape tint index). 9 attributes, under the WebGL1 limit of 16.
+- **Vertex shader:** `i = floor(uSeg)`, `t = smoothstep(stagger, stagger+0.6, uT)`; `pos = mix(P[i], P[i+1], easeInOutCubic(t)) + curlNoise(pos, uTime) * uDissolve * sin(π·t)`; plus idle motion (per-shape rotation, breathing, heartbeat ripple `uBeat`, engine stream), mouse repel (`uMouse`, radius ~0.6 world units, desktop only). Size = `aSize * uPixelRatio * (300 / -mvPosition.z)`, clamped.
+- **Fragment shader:** round soft sprite (`exp(-r²·k)` core + faint halo), depth-faded brightness, `AdditiveBlending`, `depthWrite:false`.
+- **Colours:** ~70% white `#EAF2FF`, 20% cool blue `#7FA8FF`, 10% warm gold `#F5C97A`, trace cyan `#22D3EE` (site `--holo`) for ECG/data packets only. Per-shape accent: planet warmer, Earth continents blue-white, astronaut visor gold. No rainbow.
+- **Correspondence:** each target array is ordered by a Morton (Z-order) sort of its normalized positions, so particle *i* lands near the "same" region in every shape → cleaner, less chaotic morphs. Option per transition: random order for a more explosive dissolve (used for 07 converge).
+- **Counts (quality tiers, reuse `script.js` adaptive logic):** high 24k · mid 14k · low/mobile 8k. Targets are baked at 24k and sub-sampled (every k-th point) for lower tiers.
+- **Starfield:** separate `Points`, 3 depth layers (≈3k/1.5k/600 stars), ≤35% of main brightness, twinkle via `sin(uTime*f + seed)`, parallax from camera movement. Same renderer, second draw call.
+
+### 12.5 Shape targets (geometry → particles)
+| Shape | Source | How |
+|---|---|---|
+| Dust cloud | procedural | random points in a thick shell + noise |
+| Planet | procedural | Fibonacci sphere + crater/height noise + separate orbit-ring subset (~8% of points) |
+| Astronaut | GLB (NASA 3D Resources or CC0, licence checked) → baked | area-weighted surface sampling; fallback: capsule-primitive figure |
+| Spacecraft | NASA Orion GLB → baked | same; 10% of points reserved for the engine trail |
+| Satellite | NASA TDRS GLB → baked | same; panels get denser sampling so they read clearly |
+| Earth | NASA Blue Marble land mask (public domain) → baked | Fibonacci sphere, keep point if land (dense) or ocean (sparse, dim); +4% cloud shell |
+| Wordmark | runtime | draw "ASTRODOCX" (Pulchella) to an offscreen canvas, sample lit pixels, extrude slightly in z |
+
+- **Bake tool:** `tools/bake-particles.mjs` (Node; `@gltf-transform/core` to read meshes, own area-weighted triangle sampler, normalize to unit box, Morton sort, quantize to Int16). Output: `landing/universe/targets/<shape>.bin` (24k × 3 × 2 B = 144 KB each, ~4 files ≈ 576 KB, gzip ~ 400 KB). GLB files never ship to the browser and are never shown.
+- Runtime: `fetch` the bins in parallel during the boot loader; procedural shapes are generated while waiting. Missing bin → procedural fallback, page never breaks.
+
+### 12.6 Camera (Catmull-Rom path, no shake)
+- Position and look-at each follow a `THREE.CatmullRomCurve3` with one key per scene; `p` maps to curve `u`. Smooth by construction, reversible.
+- 01 far (z≈14) → slow approach · 02 gentle orbit (±18°) · 03 3/4 side angle, slightly below · 04 trailing chase, small FOV kick 50→56 · 05 orbit around the satellite with Earth in the back · 06 slow push-in on Earth · 07 dead-centre, frontal.
+- Mouse adds ≤1.5° parallax (desktop). Total camera speed capped; no roll > 6°.
+
+### 12.7 Text system
+- Real DOM (`<h2>` + `<p>` per scene inside the pinned section) so screen readers and SEO get the story; the canvas is `aria-hidden`.
+- Font: **Pulchella** for headlines (site brand), Inter/JetBrains Mono for supporting lines. Headlines 9–12 vw desktop, intentional line breaks as in §12.2.
+- Enter: opacity 0→1, y 40→0, blur 8→0, letter-spacing 0.4em→0.12em. Exit: reverse with y −30. Driven by the same scrubbed timeline.
+- Layout keeps the object clear: text left-bottom for 02/04, right for 03/05, top for 06, centre only for 01 and 07.
+
+### 12.8 Integration with the existing page
+- **New isolated folder** `landing/universe/` (template JS stays untouched, like `twin.js`):
+  `universe.js` (boot, renderer, loop, tiers) · `engine.js` (geometry + material) · `shaders.js` · `targets.js` (procedural + bin loader + wordmark) · `scenes.js` (SCENES config, copy, timings) · `camera.js` · `timeline.js` (ScrollTrigger + text) · `fx.js` (heartbeat, ECG, packets, engine trail) · `universe.css` · `targets/*.bin`.
+- **Placement (owner decision 2026-10-08, final):** the universe **replaces the hero**. The old `#hero` section (3D astronaut canvas, orb canvas, typewriter block) is **removed** and `astronaut.js` is no longer loaded; the particle astronaut (scene 03) takes its place. Page order: `#universe` (pinned) → `#about` → rest of the page.
+- **Scene 07 = new hero:** after the wordmark forms, the hero content appears over the particle core: eyebrow `< nasa space apps 2026 />`, one-line pitch ("Your doctor on board when Earth is minutes away."), the action typewriter (Detecting drift… / Explaining… / Acting… / Syncing to Earth…), proof line ("Working PWA · offline · 4-crew demo mission inside"), CTAs **Launch Crew Console** (`/app/`) · **Watch the tour** · **GitHub**, and a "Scroll to explore ↓" hint. Hero copy follows §13.
+- **Short path for returning visitors / judges:** `?skip=1`, deep links and "Skip intro" jump to p = 0.93 (scene 07, hero state) instead of past it, so the CTAs are always one click away.
+- **WebGL contexts:** with `astronaut.js` gone there are two: universe + shared nebula. While `#universe` is in view the nebula (`#threeCanvas`) is paused and hidden; it fades in as the universe unpins and the universe loop stops. One small guarded hook in `script.js` (`window.ADX_NEBULA_PAUSED`); full-scroll nebula QA afterwards (known risk §10).
+- **Template code that referenced `#hero`** (nav highlight, tour stops, any ScrollTrigger using hero as trigger/start) is retargeted to `#universe`; checked with a grep for `hero` in `script.js`, `tour.js`, `styles.css` before deleting.
+- **Nav** hidden during scenes 01–06, appears at scene 07.
+- **Render loop:** `IntersectionObserver` stops rendering when the section is off-screen and on `visibilitychange`.
+- **Skip intro** link (top-right, keyboard-reachable) jumps to scene 07 (the hero state).
+- **Tour mode** (`tour.js`): add the 7 hold midpoints as stops so `?tour=1` records the intro perfectly.
+
+### 12.9 UI, accessibility, fallbacks (fills the cut-off "13. UI" part)
+- Minimal chrome during the intro: logo, Skip intro, a thin progress rail with 7 ticks (scene names on hover), nav hidden until scene 07.
+- Custom cursor: reuse site cursor; ring grows and shows "EXPLORE" over CTAs; off on touch (already).
+- **Reduced motion:** no pin, no morphing; each scene renders as a static frame (shape fully formed) with its text, stacked as normal sections.
+- **Mobile (≤900 px):** low tier, pin length 600%, no mouse repel, text bottom-aligned, camera path widened so shapes fit portrait.
+- **No WebGL / context lost:** static poster image per scene (rendered from the real canvas once, `assets/universe/*.webp`).
+- Contrast: text over particles gets a soft radial scrim; all CTAs ≥ 4.5:1, visible focus rings.
+
+### 12.10 Performance budget
+- 60 fps on a mid laptop iGPU at high tier, ≥45 fps on a mid Android at low tier; adaptive tier drop if the frame time stays > 22 ms for 2 s.
+- New JS ≤ 35 KB gzip; bins ≤ 450 KB gzip; first scene visible < 1.5 s on 4G (procedural shapes show before bins finish).
+- DPR capped at 1.75 (high) / 1.25 (low). No allocations in the render loop.
+
+### 12.11 Owner decisions (defaults used if no answer)
+1. ✅ Decided 2026-10-08 (final): universe **replaces** the hero; old hero + `astronaut.js` removed; scene 07 carries the hero pitch and CTAs.
+2. Copy: AstroDocX-tied supporting lines (default, §12.2) or the brief's original lines?
+3. Real NASA models for spacecraft/satellite (default) or generic sci-fi?
+4. ✅ Wordmark ending (needed: it is now the hero).
+
+### 12.12 Phases (each one session, ship + commit after each)
+| Phase | Work | Done when |
+|---|---|---|
+| **P0 — Skeleton** *(done 2026-10-08)* | `landing/universe/` files, pinned `#universe` section, renderer + starfield, loop pause, Skip intro, SCENES config, DOM text for 7 scenes | Section pins and scrolls with placeholder text; nebula still fine |
+| **P1 — Engine + procedural shapes** *(done 2026-10-08)* | Shader material, glow sprite, colour mix, GPU morph with stagger + curl noise, dust → planet → sphere → wordmark | Smooth, reversible morphs; fast-scroll / jump test passes |
+| **P2 — Bake pipeline** *(tool + loader done 2026-10-08; model files pending)* | `tools/bake-particles.mjs`, licence check, astronaut + Orion + TDRS bins, Earth land-mask bake, procedural fallbacks | All 7 shapes load; missing-bin fallback works |
+| **P3 — Camera + scene FX** *(done 2026-10-08)* | Catmull-Rom camera, heartbeat + ECG, engine trail + FOV kick, data packets, Earth clouds/halo, mouse repel | Each scene has its signature effect |
+| **P4 — Text, cursor, scene-07 hero, old hero removal** *(done 2026-10-08)* | Text animations, layout per scene, cursor EXPLORE state, scene 07 hero (pitch, typewriter, CTAs), skip-to-07, remove `#hero` + `astronaut.js` + unused hero CSS, retarget hero references, nebula pause hook, progress rail | Story reads end-to-end; no reference to `#hero` left; nebula QA passes |
+| **P5 — Fallbacks + perf + tour** *(done 2026-10-08)* | Reduced motion, mobile tier, no-WebGL posters, adaptive tier drop, tour-mode stops | 1440 / 1024 / 390 px, reduced motion, low tier all clean, no console errors |
+| **P6 — Ship** | Lighthouse, OG image refresh from scene 07, README screenshots, deploy, record the video intro | Live URL checked |
+
+### 12.13 Risks
+| Risk | Mitigation |
+|---|---|
+| Two WebGL contexts (universe, nebula) | Nebula paused during the intro, universe stopped after it; `astronaut.js` removed |
+| Judges can't find the CTAs behind a long intro | Skip intro + `?skip=1` land on scene 07 (hero state); nav CTA always visible from 07 |
+| Removing `#hero` breaks template JS | Grep and retarget every `hero` reference first; full-scroll QA |
+| NASA models too heavy / licence unclear | Bake offline, ship only bins; procedural fallback shapes; record licence in README credits |
+| Shapes unrecognisable at low particle counts | Denser sampling on silhouettes (panels, helmet); test at 8k first |
+| Long pin annoys judges | Skip intro, progress rail, soft snap, 800% max |
+| Text over bright particles | Scene-specific text placement + radial scrim |
+
+---
+
+## 13. Landing Content Refresh — "show what the finished console does" (plan, not started)
+The landing page copy was written before the Crew Console existed (concept mockups, invented panels, "console next"). The console is now complete (C0–C12, full-build pass, U0–U7), so every claim on the landing page must match the real app. Rule: **if the console doesn't do it, the landing page doesn't say it** (future ideas go in one clearly labelled Roadmap block).
+
+### 13.1 What the console really does (source of truth for all copy)
+| Area | Real feature (console) |
+|---|---|
+| Personal baselines | Learns each astronaut's own normal for 11 metrics (HR, HRV, SpO₂, sleep, exercise, reaction time, mood, CO₂, cabin temp, noise, radiation dose) with Welford + EWMA; only learns while nominal, so slow drift is not "learned away" |
+| Detection | Smoothed z-scores + cited absolute limits (NASA-STD-3001 CO₂, mission dose), persistence (2–3 readings in a row) and two-signal rules (sleep + reaction); Nominal / Watch / Act with hysteresis |
+| Explainable alerts | Each alert says what changed, by how much, against whose baseline and since when |
+| Action cards | Checkable countermeasure steps, progress, Done; open → escalate → ease → resolve lifecycle, all logged |
+| Status Board | Five RIDGE tiles, crew readiness score, crew overview, next action, live vitals strip (ECG-style waves, heart pulse) |
+| Health Twin (console) | Anatomical hologram: live heart beating with the ECG, organs/bones take their hazard status |
+| Trends | 11 charts with the personal baseline band, alert markers, 24 h / 7 d / 30 d |
+| Daily Check-in | Mood, sleep quality, hours slept, 8 symptom chips, 5-tap reaction test (PVT-style); symptoms and sleep quality raise alerts |
+| Mission Simulator | Mission clock, fast-forward, inject 4 scenarios (solar event, CO₂ fault, insomnia, deconditioning), watch the engine react |
+| Ground Sync | Delay-tolerant outbox: link windows, 12-min delay, blackout, auto-sync, CSV log export |
+| Ground View | Flight-surgeon view rebuilt only from synced entries (shows what Earth knows, and when) |
+| Platform | Offline-first PWA (works with no network after first load), installable, IndexedDB on device, 4-crew 30-day demo mission preloaded |
+| Quality | 165+ automated tests; Lighthouse 96 / 100 / 100 / 100 (mobile); WCAG-minded (44 px targets, reduced motion, screen-reader summaries) |
+
+### 13.2 Section-by-section changes
+| Section | Now (stale) | Change to |
+|---|---|---|
+| **Hero** | Separate section with 3D astronaut | **Removed.** Its content moves into particle scene 07 (§12.8): pitch, proof line "Working PWA · offline · 4-crew demo mission inside", action typewriter, CTAs Launch Crew Console / Watch the tour / GitHub |
+| **Problem** (`#about`) | Good, cited | Keep. Only change the closing line to point at the working answer: "Our answer is running now →" linking to the console |
+| **5 Hazards** | Lists things the console doesn't track (BP, vision self-test, shelter protocol, symptom links) | Each card lists **only real metrics + the real rule**: R dose + solar-event detection · I sleep, mood, reaction test, sleep+reaction rule · D outbox, link windows, Distance tile (Watch 24 h / Act 72 h unsynced) · G exercise load, HR, HRV · E CO₂ (NASA limit), temp, noise, symptoms. Vision/BP move to Roadmap |
+| **Features carousel** | SVG concept mockups (`assets/features/*.svg`) | **Real screenshots of console v2** (Board, Alerts, Trends, Check-in, Simulator, Ground Sync, Ground View — 7 cards, + Health Twin), each with one-line "what you can do" and a deep link (`/app/board`, `/app/alerts` …). Retake screenshots at 1440 px from the deployed build; webp, lazy-loaded |
+| **Health Twin** (`#twin`) | Invented panels: bone density −0.8 %/month, Amsler/vision, muscle loads, "142/600 mSv", "Concept · simulated data" | Align with the console twin: panels for the **real** systems — Brain (Isolation: mood, reaction, sleep), Heart (HR, HRV, live ECG), Lungs/air (Environment: CO₂, SpO₂), Legs (Gravity: exercise load), Whole-body aura (Radiation dose). Numbers taken from the demo mission snapshot (`demo-snapshot`), label "Demo mission data". Action card text copied from a real engine card. Readiness uses the real formula |
+| **Mission Simulator** (`#sim`) | Separate landing-only mini sim (`sim.js`) with 5 scenarios incl. "comms blackout" | Keep the mini sim (it's a good teaser) but match the console's 4 scenarios + blackout from Ground Sync, use the console's wording, and add **"Run the real simulator →"** (`/app/simulator`) |
+| **How It Works** | 5 steps, accurate | Keep. Add one real detail per step (e.g., Detect: "11 metrics vs your own baseline"; Sync: "12-min delay, link windows, CSV export") + a small animated packet flow |
+| **Proof strip** (NEW, after How It Works) | — | Counters: 11 metrics · 5 hazards · 7 screens · 165+ tests · 100 accessibility · works offline. Each verified from the repo before publishing |
+| **Built On** | "offline-first console next" | "Live" for both; real stack; detection method in one line; data sources kept. Remove "next" wording |
+| **Roadmap** (NEW, small) | — | Clearly "not built yet": wearable sensor integration, real Supabase ground backend, vision/SANS self-tests, BP, bone density, multi-device ground station |
+| **Team** (last section, before the footer) | 1 real + 3 placeholder cards | **6 member cards** in a 3 × 2 grid (2 columns tablet, 1 phone): photo/initials, name, role, GitHub + LinkedIn. Data lives in one `TEAM` array (`landing/team.js`) so the owner's data drops in without touching markup; placeholders until then. Repo card + event info stay below the grid |
+| **Footer / meta** | — | Keep "Concept prototype, not a medical device"; update meta description + OG text to the real feature set |
+| **README** | Partly concept wording | Same source-of-truth table (§13.1), real screenshots, live URL |
+
+### 13.3 Phases
+| Phase | Work | Done when |
+|---|---|---|
+| **R1 — Copy + data truth pass** *(done 2026-10-08)* | 6-member Team grid (placeholders, `TEAM` array), Hazards, Twin panels (from demo snapshot), Sim wording, How It Works details, Built On, Roadmap block, meta/OG, README | Every claim maps to a row in §13.1; no "concept/next/planned" left except in Roadmap |
+| **R2 — Real visuals** *(done 2026-10-08)* | Screenshot console v2 (7 screens + twin, 1440 px, webp), replace feature SVGs, deep links, proof strip with verified numbers | Carousel shows the real app; links open the right screen |
+
+### 13.4 Delivery rule for this landing sprint (owner, 2026-10-08)
+- **No push** to `A-42-018/AstroDocX` until the whole landing page is finished (R1, R2, P0–P6). After each phase: update this `plan.md` and deliver the full project as one zip; the single push happens at the end (author Alif Mahmud, no Claude co-author line).
+
+### 13.5 Owner inputs needed
+- Team data for all 6 members (name, role, GitHub, LinkedIn, photo) — owner will send later; placeholders until then.
+- Video URL once recorded.
+
+---
+
 ## L1 Implementation Log (done)
 - **Moved:** template → `landing/`. The original copy was removed from the repo because it contained personal data (photo, projects).
 - **Removed:** all personal data (name, bio, avatar, projects, education, email, social links, resume link, JSON-LD Person, canonical URL, Web3Forms key), the Typeka preload and `@font-face` (404 fixed), and the old project images.
@@ -552,12 +744,88 @@ Text on photo always on a scrim (≥ 4.5:1), status never by colour alone (icon 
 - **Scope:** landing page only. The Crew Console stays offline-first and keeps its SVG twin (a Sketchfab iframe would be blank offline).
 - **Checked (headless Chromium, 1440×900 and 390×844):** button visible in the Twin header; open creates one iframe, focus on ×; Esc closes, removes the iframe, unlocks scroll, returns focus; no horizontal overflow; no new console or page errors. The Sketchfab model itself could not load in the sandbox (no network to sketchfab.com), so the live render still needs a look in a normal browser.
 
+## R1 Implementation Log: Copy + data truth pass (done, 2026-10-08)
+- **Scope:** landing copy only; the console (`app/`) is untouched. Not pushed (§13.4).
+- **Hazards:** each card lists only real metrics and the real rule (R dose rate + 250 mSv/24 h event limit; I sleep, mood, reaction test, sleep+reaction rule; D outbox, link windows, Watch 24 h / Act 72 h; G exercise, HR, HRV; E CO₂ vs 3 mmHg, SpO₂, temp, noise, symptoms). BP and vision self-test removed (now Roadmap).
+- **Health Twin:** panels rebuilt for the real systems: Isolation·Brain, Environment·Air, Radiation·Whole body, Gravity·Heart (live ECG), Distance·Ground link, Gravity·Legs. Numbers are the **Pilot's** end state in the seeded demo mission, taken from the real engine (`loadSnapshot`): sleep 4.7 h (3.4σ), reaction 411 ms (4.3σ), mood 3, CO₂ 2.11, SpO₂ 96.3, dose 32.4 µSv/h, HR 59, HRV 59, exercise 122 min, 10.5 h since sync, 3 pending, **readiness 83 (Act)**. The brain panel is amber from the start (it is a true Act state); the action card is the engine's real Isolation/Act card. Tag changed to "Demo mission data · Pilot". Hotspots: eyes/bone removed, lungs + link added (`index.html`, `twin.js`, `twin.css`).
+- **Mission Simulator (landing mini sim):** buttons renamed to the console scenarios (+ link blackout), action-card steps copied from `engine/actions.ts`, readiness now uses the console formula (mean of five hazard scores, status caps 100/80/55) and Nominal/Watch/Act labels, "Run the real simulator →" links to `/app/simulator`, note explains what is cited vs illustrative.
+- **How It Works:** one real detail per step (11 metrics + learn-only-while-nominal; explainable wording; action card lifecycle; IndexedDB offline; outbox, 12-min delay, CSV, Ground View).
+- **Built On:** "next" wording removed (both stacks Live), real detection description, new dashed **Roadmap** block (wearables, Supabase ground backend, vision/SANS, BP, bone density, multi-device ground station).
+- **Team:** `landing/team.js` holds the `TEAM` array (6 entries: Alif Mahmud + 5 placeholders; fields name, role, github, linkedin, photo; empty fields hidden). 3×2 grid, 2 columns tablet, 1 phone; project info card below.
+- **Other:** meta description, OG and Twitter text, JSON-LD, hero proof line, marquee (only console metrics), problem closing line links to the console, typewriter phrase "tracking exercise load and HRV", footer "Prototype, not a medical device". README rewritten with the §13.1 table and a Roadmap line.
+- **Checked (headless Chromium, CDN libs served locally):** no page or console errors at 1440×900 and 390×844; 6 team cards, no horizontal overflow; Twin ends at 83% with the brain panel amber and the action card visible; mini sim reaches ACT after injecting insomnia (readiness drops to ~90). Counters for the proof strip are R2 work.
+
+## R2 Implementation Log: Real visuals (done, 2026-10-08)
+- **Screenshots:** the 8 concept SVGs in `landing/assets/features/` are deleted and replaced by webp (1200×750, ~30–55 KB each): Status Board, Alerts, Check-in, Trends, Simulator, Ground Sync, Ground View (console, Pilot selected, seeded demo mission, taken at 1440×900 from the production build with reduced motion) + Health Twin (landing, end state, readiness 83). Retake after any UI change: build, `vite preview`, shoot each route.
+- **Carousel:** `PROJECTS` in `script.js` is now 8 real-screenshot cards (Action Cards merged into "Alerts & Action Cards"; Ground View and Health Twin added), each with a one-line "what you can do" and an "Open in Console" deep link (`/app/board`, `alerts`, `checkin`, `trends`, `simulator`, `sync`, `ground`). Card, dot and count logic is DOM-driven, so nothing else changed.
+- **Proof strip (`#proof`, after How It Works):** 11 metrics · 5 hazards · 7 screens · 186 automated tests · Lighthouse accessibility 100 · works offline. **Verified:** metrics from `data/types.ts`; screens from `shell/nav.ts`; tests = `vitest run` (40 files, 186 tests, all pass; `AlertsPage.test.tsx` once failed only while the machine was loaded and passes alone); Lighthouse (mobile, local production build) accessibility 100, best practices 100, SEO 100. Performance (0.43) is not claimed: this sandbox renders the WebGL backdrop in software, so re-run it on the deployed URL.
+- **Console wording:** "Concept prototype" changed to "Prototype" in the footer, Ground View/Ground Sync notes, `index.html` meta and the PWA manifest (no test depended on it).
+- **README:** console and Health Twin screenshots refreshed (`docs/screenshots/`).
+- **Checked (headless Chromium):** 8 cards and 8 dots at 1440 and 390 px, images load (1200 px wide), no page or console errors, no horizontal overflow, proof counters finish at their targets.
+
+## P0 Implementation Log: Universe skeleton (done, 2026-10-08)
+- **New folder `landing/universe/`:** `scenes.js` (the `ADX_SCENES` config: 7 scenes with copy from §12.2, hold windows from §12.3, text position; `ADX_PIN` = 800% desktop / 600% mobile), `universe.js`, `universe.css`. `index.html` gets the stylesheet, the `#universe` section (before the old `#hero`, which stays until P4) and the two scripts. Template JS is untouched.
+- **Section:** pinned `#universe` (`+=800%`, scrub 0.8, `refreshPriority: 1`, then `ScrollTrigger.sort()` + refresh so About, Skills/Projects, Twin pins recompute). Opaque and `z-index: 2`, so it covers the always-on nebula exactly like the hero does; nebula pause hook stays P4.
+- **Master progress `p`:** a pure function of scroll. Drives scene text (real `<article><h2>` + `<p>` per scene, fade inside the morph window; scenes that abut fade inside their own hold so two never overlap), the progress rail (7 ticks, scene name on hover, click = jump to that hold, `aria-current`) and the camera (placeholder dolly 14 → 5; P3 swaps in the Catmull-Rom path).
+- **Renderer:** one three r128 WebGL context, 3-layer starfield (3000 / 1500 / 600 stars, 1500 / 750 / 300 on the low tier), shader sprites with twinkle and colour mix (white / blue / gold), additive, ≤35% brightness. DPR cap 1.75 / 1.25. Loop runs only while on screen and the tab is visible; context-lost handler; desktop mouse parallax ≤1.5°.
+- **Chrome:** Skip intro (lands on scene 07 at p = 0.97, keyboard reachable, hidden once in scene 07), "Scroll ↓" hint, `?skip=1`, `window.ADX_UNIVERSE.scrollToP(p)` for tests and the tour.
+- **Reduced motion:** no pin, no canvas, the 7 scenes stack as plain text sections (static shape frames come in P5). **No WebGL:** text-only pin (poster fallback is P5).
+- **Checked (headless Chromium with software WebGL, CDN libs served locally):** pin 0 → 7200 px; at p = 0, .22, .42, .595, .755, .895, .97 exactly scenes 1–7 are visible and the rail follows; jump back to the top and Skip intro both land in the right scene; About, nebula, Twin pins all still register and the page order is intact; 1440 and 390 px have no horizontal overflow; reduced motion stacks the text; no page errors. **Not measurable here:** frame rate (software WebGL gave ~6 fps for the whole page, so the 60 fps budget needs a real GPU check in P5).
+
+## P1 Implementation Log: Particle engine + procedural shapes (done, 2026-10-08)
+- **New `landing/universe/engine.js`** (`window.ADX_ENGINE.create(scene, {tier})`): one `THREE.Points`, one draw call. 7 target shapes are vertex attributes `aP0..aP6` plus `aSeed`; the vertex shader picks shape `uSeg` and `uSeg+1` and mixes them with `uT`, so position is a pure function of scroll (reverse, fast scroll and jumps cannot break it). Staggered morph (random + height), curl-style dissolve peaking mid-morph (`uDis`, stronger into the wordmark), idle breathing, per-shape scale / offset / spin / tint, soft Gaussian sprite with halo, additive, white / blue / gold mix.
+- **Shapes (procedural stand-ins, P2 replaces astronaut / Orion / TDRS / Earth with baked bins):** dust cloud, planet with tilted orbit ring (8% of points), ellipsoid astronaut, Orion-like cone + service module + 4 wings, TDRS-like bus + panels + dish, Earth with noise land mask (dense land, sparse ocean) + cloud shell, and the **ASTRODOCX wordmark** sampled from a canvas in Pulchella (rebuilt once the font has loaded; `onChange` re-renders).
+- **Morton (Z-order) sort** of every shape so particle i lands in the same region in every shape (cleaner morphs). Tiers: 24k high / 8k low by striding the sorted arrays (silhouette kept).
+- **Config:** `ADX_MORPH.hero = [0.93, 0.98]` (particles converge to the wordmark); the scene-07 text hold moved to `[0.985, 1.00]` so the hero text waits for the wordmark. Placeholder camera: approach z 14 to 9 over p 0 to 0.16, then fixed (P3 does the Catmull-Rom path).
+- **Wiring:** `universe.js` creates the engine after the starfield and calls `engine.setProgress(P, time)` in the loop and in `renderOnce`; `index.html` loads `engine.js` before `universe.js`. `.claude/launch.json` gets a `landing` static server (port 4180).
+- **Checked (real Chrome pane, GPU WebGL):** no shader or console errors; scenes 02 to 07 render at their hold points with the right text and rail state; shapes sit clear of the text side. Tuned brightness and scales after the first look (Orion wings, relay panels, astronaut size).
+- **Known / next:** the wordmark overlaps the scene-07 text until the P4 hero layout moves the text below it; shapes are crude until P2; no planet terminator shading, heartbeat, engine trail, data packets or mouse repel until P3. The pane reports `visibilityState: hidden` between screenshots, which pauses rAF, so scripted scroll tests need a screenshot first; frame rate still needs a real-GPU check in P5.
+
+## P2 Implementation Log: Bake pipeline (done, 2026-10-08; model files still needed)
+- **`tools/bake-particles.mjs`** (Node, no dependencies, so it runs offline): reads a binary `.glb` (own small parser: node transforms applied, indexed / non-indexed triangles; Draco, meshopt and sparse accessors are rejected with a clear message), area-weighted triangle sampling with a seeded PRNG, normalises to a Y-up unit box (`--axis x|y|z` for the source's up), Morton-sorts, writes Int16 x,y,z (24k points = 144,000 bytes). `--earth-mask <bmp>` bakes a Fibonacci-sphere Earth: dense on land, sparse (`--ocean 0.22`) on ocean, plus a cloud shell (`--cloud 0.04`); BMP made from a Blue Marble / land-mask image with `sips -s format bmp`.
+- **Runtime (`engine.js`):** fetches `universe/targets/{astronaut,orion,relay,earth}.bin` in parallel; a missing, 404 or wrong-size file leaves the procedural stand-in, so the page never breaks. Loaded bins swap into the GPU attribute and re-render.
+- **`landing/universe/targets/README.md`:** how to bake plus a credits / licence table to fill in.
+- **Checked:** a synthetic 12-triangle GLB (child node translated, parent scaled) baked to exactly +-1 x, +-0.5 y/z; a synthetic BMP mask baked; the box bin dropped into `targets/` replaced the Orion scene in the real page (then removed); scenes without a bin still use the fallbacks, no errors.
+- **Not done (needs you):** the real models and licence check. I did not download anything. Candidates to check: NASA 3D Resources (nasa3d.arc.nasa.gov, Orion, TDRS, a spacesuit/astronaut) and NASA Visible Earth Blue Marble / land mask (public domain). Put the files anywhere, or send me the links to download, then run the commands in `targets/README.md`; fill the licence table and the README credits. Until then the intro runs on the procedural shapes.
+
+## P3 Implementation Log: Camera + scene FX (done, 2026-10-08)
+- **`universe/camera.js`:** Catmull-Rom path, one key per scene (position, look-at, FOV) with smoothstep between keys, so motion is smooth, capped and reversible; `ADX_CAMERA.at(p)`. Scene 04 FOV kick 52 to 57, scene 06 push-in, scene 07 frontal. Replaces the P1 placeholder dolly. Mouse parallax stays <= 1.5 deg (desktop).
+- **`universe/fx.js`** (small extra Points systems, all pure functions of p and time): **ECG line** of particles under the astronaut with a sweeping bright head, **engine trail** streaming back from the Orion engine, **small far Earth + 4 data-packet bursts** travelling along an arc from the relay dish to it (scene 05).
+- **`engine.js` shader additions:** **heartbeat** (a ripple leaves the chest once a second, lub then a softer dub, brightening the ring), **mouse repel** (radius 0.6, desktop with a fine pointer only; the cursor ray hits the z = 0 plane), **planet terminator** (lit side brighter). Scene weights `engine.weights[]` shared with fx. Orion no longer spins (trail anchor); astronaut resized to 2.1 and raised so the ECG sits under the feet in frame.
+- **Reload fix (found while testing):** with the browser's restored scroll, a reload mid-intro made ScrollTrigger measure the pin while scrolled (start = -4638, every scene off). `universe.js` now sets `history.scrollRestoration = 'manual'` and starts at the top unless the URL has a hash.
+- **Checked (real Chrome pane):** astronaut with chest ripple and ECG line (03), Orion with trail (04), relay with data-packet arc and far Earth (05); no JS errors; the only 404s are the 4 `targets/*.bin` files that do not exist yet (fallbacks used). Reload at deep scroll now gives pin start 0.
+- **Not verified:** the pane reports `visibilityState: hidden` between screenshots, so requestAnimationFrame / the GSAP ticker pause and scripted scrolls often do not update; so mouse repel, planet shading (02), scene 06 push-in and the ECG tail were not seen, and frame rate is still unmeasured. Check these on a real GPU in P5.
+- **Repo note:** the app copied the session into the repo as `ex/` (the earlier zips and a nested copy); the working project was merged into the repo root. Delete `ex/` before committing.
+
+## P4 Implementation Log: Hero replaced by the universe (done, 2026-10-08)
+- **Old hero removed:** the `#hero` section (2D warp canvas, wireframe orb, 3D astronaut canvas, typewriter block), `landing/astronaut.js` and its script tag, the hero entrance (G1), the hero-canvas cross-fade (G5b), the warp and orb scripts, and the hero CSS (`#hero*`, `.hero-inner`, `.hero-name`, `.hero-scroll-hint`, `.scroll-mouse`, hero terminal, `#astronaut-canvas`, `#orb-canvas`) are gone. The CSS scroll-snap rule (it only snapped `#hero`) is removed too. Grep for `hero` in `script.js`, `tour.js`, `styles.css`, `index.html` is clean (only `#hero-typed` / `.hero-*` classes reused by scene 07 remain). Nav logo and footer "Top" now point at `#universe`; `tour.js` starts at `universe`.
+- **Scene 07 is the hero** (`#uniHero` in `index.html`, adopted by `universe.js`): the particles form the ASTRODOCX wordmark at the top, and below it the eyebrow, pitch, action typewriter (detecting drift / explaining the change / acting on the card / syncing to Earth), proof line "Working PWA · offline · 4-crew demo mission inside", CTAs **Launch Crew Console** (`/app/`), **Watch the tour** (`?tour=1`), **GitHub**, and "Scroll to explore". A visually hidden `<h1>` keeps the page heading for SEO and screen readers. Wordmark enlarged (sc 2.1, y 1.9) and the final camera looks lower so it sits above the block.
+- **Text polish:** headline letter-spacing eases 0.4em to 0.12em on enter (`--ls`), blur / rise as before.
+- **Nav:** hidden (`.nav-hidden`) while the pin is in scenes 01 to 06; shown from scene 07 (forced past the template's hide-on-scroll-down).
+- **Cursor:** the site cursor ring grows and shows SKIP / LAUNCH / WATCH / GITHUB / EXPLORE over `[data-cursor]` elements.
+- **Nebula pause hook:** `window.ADX_NEBULA_PAUSED` is set from the universe IntersectionObserver; `script.js` nebula `tick` skips rendering while it is true (one guarded line). The universe is opaque, so nothing visible changes; the nebula resumes as the intro scrolls out.
+- **Portrait:** the camera pulls back by 1.2 / aspect (max 2.4x) so shapes and the wordmark fit a phone; scene 07 looks lower on portrait; the hero block gets a compact mobile layout (tagline hidden, 2-up buttons).
+- **Checked (real Chrome pane, desktop + 375 px):** scene 01 with nav hidden and nebula paused; scene 07 with wordmark, copy, buttons and nav; scrolling out of the pin into the marquee and nebula; no horizontal overflow at 375 px; no script errors. **Not run:** full-page nebula QA down to the contact section, Lighthouse, mouse-label states, a real-GPU frame-rate check. The pane pauses animation when hidden, so scripted scroll checks need a screenshot first.
+- **Left for P5:** reduced-motion static posters, no-WebGL poster, adaptive tier drop, mid tier, tour stops for the 7 scenes, full QA at 1440 / 1024 / 390 px. The scene-07 entry in `scenes.js` (head / sub copy) is now unused by the DOM (the hero markup replaces it) but still drives the rail and timing.
+
+## P5 Implementation Log: Fallbacks, tiers, tour (done, 2026-10-08)
+- **Tiers (`engine.js`, `universe.js`):** high 24k / mid 14k / low 8k particles. Slots are now a seeded shuffle of the Morton-sorted shapes, so any prefix is a uniform subsample of every shape: `drawRange` changes the tier with no rebuild (baked bins and the wordmark rebuild use the same permutation). Stars draw a prefix too. DPR cap 1.75 / 1.5 / 1.25; brightness and size compensate a little for fewer points.
+- **Adaptive drop:** smoothed frame time above 22 ms for 2 s moves one tier down (high to mid to low), never back up (first 45 frames ignored). `ADX_UNIVERSE.tier` / `setTier()` for tests.
+- **Reduced motion (static mode):** no pin, no loop; the 7 scenes stack as sections and each gets a **poster rendered once from the real engine** (1280x720, shape fully formed, jpeg data URL as `--poster` behind a dark scrim), redrawn when the wordmark font or a baked bin finishes loading. Scene 07 is last in the DOM and padded so the wordmark shows above its copy. `?reduce=1` forces this path for QA.
+- **No WebGL:** the same stacked layout, text only (no poster files; the plan's `assets/universe/*.webp` posters were replaced by the runtime posters, which need WebGL). Context loss mid-session still leaves the pin with text only.
+- **Tour (`tour.js`, `scenes.js`):** `?tour=1` now stops at each of the 7 scene holds (dwell seconds per scene in `scenes.js` `tour`: 2, 3, 4.5, 3, 3.5, 3, 6) with 330 px/s glides between them so the morphs read, then continues down the page. `ADX_UNIVERSE.yAt(p)` and `.stops()` expose the positions.
+- **Checked (real Chrome pane):** `?reduce=1` gives no pin, 7 posters, scenes in order 01 to 07; manual `setTier('low')` on the astronaut scene still reads clearly; `?tour=1&delay=0&speed=2` scrolled through scenes 01, 02 (planet with lit side and terminator) and on to 03. No script errors.
+- **Not done / for P6 or a real-GPU pass:** 1024 px width and the full 1440 / 390 sweep with the final models, frame-rate and the adaptive drop on a real GPU (the pane pauses rAF when hidden), Lighthouse, a no-WebGL screenshot, a full tour recording.
+
 ## Current Phase
-**C0–C12 done and deployed. Console v2: U0 to U7 done locally. L4 (3D anatomy viewer on the landing page) done locally.** Next: check the 3D modal with a real network, push to deploy, then re-check the live URL.
+**C0–C12 done and deployed. Console v2 (U0–U7) and L4 (3D anatomy viewer) done locally. Landing sprint: R1, R2, P0 and P1 (particle engine + procedural shapes) done locally 2026-10-08. P2 (bake pipeline) done, waiting on real model files. P3, P4 and P5 (fallbacks, tiers, tour) done. Next: P6 (ship). Nothing pushed yet (§13.4).**
 
 ## Next Roadmap
-0. **L4 check:** open the landing page online, click "Explore real anatomy in 3D", confirm the model renders and closes cleanly at desktop and phone width. Optional L4.1: add organ toggles inside the modal with the Sketchfab Viewer API (same approach as the `sketchfab-sample` prototype).
-1. **Deploy:** live at https://astrodocx.netlify.app (console at `/app/`), auto-deploys from `main`. README, `og:url`, absolute `og:image` / `twitter:image` and canonical tag updated. Still to do: turn off Netlify site protection (visitor access) so the public can open it, re-run Lighthouse on the live URL, check install-to-home-screen on a phone.
-2. Optional: create the Supabase project, run `docs/supabase.sql`, set the two `VITE_SUPABASE_*` variables in Netlify, and test a real upload; move to authenticated policies before any real data.
-3. Content still open on the landing page: team cards 2–4, README video URL.
-4. Record the video (tour mode is ready; see README), after the deploy.
+0. **Landing sprint rule:** no push until P1–P6 are done; zip after every phase, one push at the end (§13.4).
+1. **P6 — Ship** (§12.12): Lighthouse, OG image from scene 07, README screenshots, deploy (one push at the end, §13.4), record the video. Owner: supply the NASA model files / links for the P2 bake (see P2 log). Then **P4 → P6**, one session each; old hero removed in P4.
+2. Open decisions (§12.11, defaults used): copy lines (AstroDocX-tied), real NASA models for Orion/TDRS.
+3. **L4 check:** open the landing page online, click "Explore real anatomy in 3D", confirm it renders and closes cleanly at desktop and phone width.
+4. **Deploy:** live at https://astrodocx.netlify.app (console at `/app/`), auto-deploys from `main`. To do: turn off Netlify site protection, re-run Lighthouse (performance) on the live URL, check install-to-home-screen on a phone. The console wording change (Prototype) ships with the push.
+5. Owner inputs: data for the 6 team members (edit `landing/team.js`), README video URL.
+6. Record the video after the intro ships (tour mode gets the 7 intro stops in P5).
+7. Optional: Supabase ground backend (`docs/supabase.sql`, `VITE_SUPABASE_*`), authenticated policies before any real data.

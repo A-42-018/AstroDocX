@@ -41,93 +41,105 @@ let navVisible = true;
 const REPO_URL = 'https://github.com/A-42-018/AstroDocX';
 
 /* FEATURES — rendered into the template's carousel (#projects).
-   Every entry is a working screen of the Crew Console (/app/). `live` opens
-   it; `badge` shows in the ribbon; thumbnails in assets/features/ are
-   illustrations, not screenshots. */
+   Every entry is a REAL screenshot of the Crew Console (Pilot selected, seeded
+   demo mission, 1440 px, webp in assets/features/). `live` deep-links to the
+   screen; `badge` shows in the ribbon. Retake the shots after UI changes. */
 const CONSOLE = '/app/';
 const PROJECTS = [
   {
     id: 1,
     title: 'Health Status Board',
-    thumbnail: 'assets/features/status-board.svg',
-    alt: 'Illustration: health status board with five hazard tiles',
+    thumbnail: 'assets/features/status-board.webp',
+    alt: 'Screenshot: Status Board with readiness dial 83%, anatomical twin and the next action',
     role: 'Covers: all 5 hazards',
-    description: 'One glance at each crew member: five RIDGE hazard tiles, each Nominal, Watch or Act against that person\'s own baseline, a readiness ring, the mission clock and the ground-link status.',
-    technologies: ['Personal baseline', 'EWMA z-score', 'Offline PWA'],
+    description: 'Open it and see where the crew stands: a readiness dial, five RIDGE tiles (Nominal, Watch or Act against each person\'s own baseline), the crew overview, the next action and a live vitals strip.',
+    technologies: ['Personal baseline', 'Readiness score', 'Offline PWA'],
     link: REPO_URL,
     live: CONSOLE + 'board',
     badge: 'Live'
   },
   {
     id: 2,
-    title: 'Explainable Alerts',
-    thumbnail: 'assets/features/explainable-alerts.svg',
-    alt: 'Illustration: alert explaining a change against the personal baseline',
+    title: 'Alerts & Action Cards',
+    thumbnail: 'assets/features/explainable-alerts.webp',
+    alt: 'Screenshot: Alerts page with a sleep alert, its chart and a three-step action card',
     role: 'Covers: all 5 hazards',
-    description: 'Every alert says what changed, by how much, against whose baseline and since when, for example "Reaction time 411 ms is 4.3σ above Pilot\'s baseline (317 ms). Started at D27 07:00 MET." NASA limits for CO₂ and radiation dose are applied too.',
-    technologies: ['Rules engine', 'NASA-STD-3001 limits', 'Plain language'],
+    description: 'Every alert says what changed, by how much, against whose baseline and since when. Tick the steps of its action card, press Done and it goes to the on-board log; the alert eases and resolves as values recover.',
+    technologies: ['Explainable rules', 'NASA-STD-3001 limits', 'Action log'],
     link: REPO_URL,
     live: CONSOLE + 'alerts',
     badge: 'Live'
   },
   {
     id: 3,
-    title: 'Action Cards',
-    thumbnail: 'assets/features/action-cards.svg',
-    alt: 'Illustration: step-by-step action card for radiation shelter',
-    role: 'Covers: Distance from Earth',
-    description: 'Each alert carries a step-by-step card the crew can follow on their own. Tick the steps, press Done and it goes to the on-board log; the engine keeps watching and clears the alert when values recover.',
-    technologies: ['Countermeasures', 'Action log', 'Crew autonomy'],
-    link: REPO_URL,
-    live: CONSOLE + 'alerts',
-    badge: 'Live'
-  },
-  {
-    id: 4,
     title: 'Daily Check-in',
-    thumbnail: 'assets/features/daily-check-in.svg',
-    alt: 'Illustration: daily check-in with reaction test',
+    thumbnail: 'assets/features/daily-check-in.webp',
+    alt: 'Screenshot: daily check-in wizard asking for mood',
     role: 'Covers: Isolation & Confinement',
-    description: 'Mood, sleep and symptoms plus a five-tap reaction test modelled on the PVT used on the ISS. Answers join the personal baseline; lasting symptoms, poor sleep or blurred vision (SANS) raise their own alerts.',
-    technologies: ['PVT reaction test', 'Symptoms', 'Sleep quality'],
+    description: 'Mood, sleep quality, hours slept, 8 symptom chips and a 5-tap reaction test modelled on the PVT. Answers join the personal baseline; symptoms and poor sleep raise their own alerts.',
+    technologies: ['PVT-style test', 'Symptoms', 'Sleep quality'],
     link: REPO_URL,
     live: CONSOLE + 'checkin',
     badge: 'Live'
   },
   {
-    id: 5,
+    id: 4,
     title: 'Trend Charts',
-    thumbnail: 'assets/features/trend-charts.svg',
-    alt: 'Illustration: trend chart with personal baseline band',
+    thumbnail: 'assets/features/trend-charts.webp',
+    alt: 'Screenshot: heart rate trend chart with the personal baseline band',
     role: 'Covers: all 5 hazards',
-    description: 'Eleven indicators over 24 hours, 7 days or 30 days, drawn against the astronaut\'s own baseline band with alert markers, so slow drift such as deconditioning stands out.',
+    description: 'Eleven charts over 24 hours, 7 days or 30 days, drawn against the astronaut\'s own baseline band with alert markers, so slow drift such as deconditioning stands out.',
     technologies: ['Baseline band', 'Alert markers', 'Recharts'],
     link: REPO_URL,
     live: CONSOLE + 'trends',
     badge: 'Live'
   },
   {
-    id: 6,
+    id: 5,
     title: 'Mission Simulator',
-    thumbnail: 'assets/features/mission-simulator.svg',
-    alt: 'Illustration: mission simulator with event triggers',
+    thumbnail: 'assets/features/mission-simulator.webp',
+    alt: 'Screenshot: simulator with four scenario cards and the engine event feed',
     role: 'Demo & testing',
-    description: 'A seeded 30-day, four-person synthetic mission. Inject a solar particle event, a CO₂ scrubber fault, an insomnia streak or deconditioning, fast-forward time and watch every screen respond.',
-    technologies: ['Synthetic data', 'Scenarios', 'Fast-forward'],
+    description: 'A seeded 30-day, four-person mission. Inject a solar particle event, a CO₂ scrubber fault, an insomnia streak or deconditioning, fast-forward the clock and watch every screen respond through the same engine.',
+    technologies: ['Synthetic data', '4 scenarios', 'Fast-forward'],
     link: REPO_URL,
     live: CONSOLE + 'simulator',
     badge: 'Live'
   },
   {
-    id: 7,
+    id: 6,
     title: 'Ground Sync',
-    thumbnail: 'assets/features/ground-sync.svg',
-    alt: 'Illustration: delay-tolerant sync queue to Earth',
+    thumbnail: 'assets/features/ground-sync.webp',
+    alt: 'Screenshot: ground sync with link window countdown and outbox',
     role: 'Covers: Distance from Earth',
-    description: 'The log queues on board and goes to Earth only in link windows, with blackouts you can simulate. A flight-surgeon Ground View shows only what has arrived. Optional real upload to Supabase.',
-    technologies: ['Delay-tolerant', 'Outbox', 'Flight surgeon view'],
+    description: 'The log queues in an outbox and goes to Earth only in link windows, with a 12-minute delay and blackouts you can simulate. Export the log as CSV.',
+    technologies: ['Delay-tolerant', 'Outbox', 'CSV export'],
     link: REPO_URL,
     live: CONSOLE + 'sync',
+    badge: 'Live'
+  },
+  {
+    id: 7,
+    title: 'Ground View',
+    thumbnail: 'assets/features/ground-view.webp',
+    alt: 'Screenshot: flight-surgeon view showing what Earth knows about each crew member',
+    role: 'Covers: Distance from Earth',
+    description: 'The flight surgeon\'s screen, rebuilt only from entries that have already synced. It shows what Earth knows, and how far behind the crew it is.',
+    technologies: ['Synced entries only', 'Flight surgeon', 'Time lag'],
+    link: REPO_URL,
+    live: CONSOLE + 'ground',
+    badge: 'Live'
+  },
+  {
+    id: 8,
+    title: 'Health Twin',
+    thumbnail: 'assets/features/health-twin.webp',
+    alt: 'Screenshot: landing-page Health Twin with six system panels and an action card',
+    role: 'Covers: all 5 hazards',
+    description: 'A body scan with one panel per system, filled with the demo mission\'s Pilot data. In the console the twin is anatomical: the heart beats with the ECG and organs take their hazard status.',
+    technologies: ['Demo mission data', 'Live ECG', 'Readiness 83'],
+    link: REPO_URL,
+    live: CONSOLE + 'board',
     badge: 'Live'
   }
 ];
@@ -187,20 +199,6 @@ const PROJECTS = [
 
   rail.innerHTML = PROJECTS.map(projectCard).join('');
   dots.innerHTML = PROJECTS.map(dotButton).join('');
-})();
-
-/* ── G1. HERO ENTRANCE ──────────────────────────────────── */
-(function () {
-  gsap.fromTo('.hero-inner > *',
-    { opacity: 0, y: 24 },
-    { opacity: 1, y: 0, stagger: 0.18, duration: 0.85, ease: 'power3.out', delay: 0.25,
-      clearProps: 'transform' }
-  );
-  gsap.to('.hero-scroll-hint', { opacity: 1, duration: 0.6, delay: 2.2, ease: 'power2.out' });
-  gsap.fromTo('#hero-terminal',
-    { opacity: 0, y: 22, scale: 0.96 },
-    { opacity: 1, y: 0, scale: 1, duration: 0.9, delay: 1.7, ease: 'power3.out' }
-  );
 })();
 
 /* ── G2. NAVBAR ─────────────────────────────────────────── */
@@ -406,31 +404,6 @@ const PROJECTS = [
   });
 })();
 
-/* ── G5b. HERO→MARQUEE CANVAS CROSS-FADE (Plan §5, optional polish) ──
-   Fades #hero-canvas out as the marquee band scrolls into view, instead
-   of it cutting hard against About's canvas at the seam.
-   FIX: was an IntersectionObserver flipping opacity 0/1 the instant the
-   marquee was just 15% visible — on a quick scroll this looked like the
-   starfield background vanishing abruptly while the hero text/robot were
-   still fully on screen. Replaced with a scroll-scrubbed GSAP tween so
-   the starfield fades out gradually, in step with how far the marquee
-   has actually scrolled into view, instead of snapping off early. */
-(function () {
-  if (REDUCE_MOTION) return;
-  const band       = document.querySelector('.marquee-band');
-  const heroCanvas = document.getElementById('hero-canvas');
-  if (!band || !heroCanvas || typeof gsap === 'undefined') return;
-  gsap.to(heroCanvas, {
-    opacity: 0,
-    ease: 'none',
-    scrollTrigger: {
-      trigger: band,
-      start: 'top bottom',
-      end: 'bottom center',
-      scrub: true
-    }
-  });
-})();
 
 /* ── G6. CODE TERMINAL ──────────────────────────────────── */
 (function () {
@@ -550,64 +523,9 @@ const PROJECTS = [
 /* ── Footer year ─────────────────────────────────────────── */
 document.getElementById('footer-year').textContent = new Date().getFullYear();
 
-/* ── 3D Warp Particle Field (Hero) ──────────────────────── */
-(function () {
-  const canvas = document.getElementById('hero-canvas');
-  if (!canvas) return;
-  if (REDUCE_MOTION) { canvas.style.display = 'none'; return; }
-  const ctx    = canvas.getContext('2d');
-  function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
-  resize(); window.addEventListener('resize', resize, { passive: true });
-  const NUM_STARS=280,DEPTH=1000,SPEED_BASE=2.2,FOV=320;
-  let mouseX=0,mouseY=0;
-  window.addEventListener('mousemove',e=>{mouseX=(e.clientX/window.innerWidth-0.5)*2;mouseY=(e.clientY/window.innerHeight-0.5)*2;},{passive:true});
-  function mkStar(){return{x:(Math.random()-.5)*canvas.width*2.5,y:(Math.random()-.5)*canvas.height*2.5,z:Math.random()*DEPTH,pz:0,hue:Math.random()<0.7?245:Math.random()<0.5?185:270};}
-  const stars=Array.from({length:NUM_STARS},mkStar);stars.forEach(s=>{s.z=Math.random()*DEPTH;s.pz=s.z;});
-  let speed=SPEED_BASE;
-  window.addEventListener('scroll',()=>{const r=Math.min(window.scrollY/(window.innerHeight*0.5),1);speed=SPEED_BASE+r*3;},{passive:true});
-  function project(s,W,H){const cx=W/2+mouseX*30,cy=H/2+mouseY*20,sc=FOV/(FOV+s.z);return{sx:cx+s.x*sc,sy:cy+s.y*sc,psx:cx+s.x*(FOV/(FOV+s.pz)),psy:cy+s.y*(FOV/(FOV+s.pz)),scale:sc};}
-  function drawDotGrid(W,H){ctx.fillStyle='rgba(79,70,229,0.12)';const gs=36;for(let x=0;x<W;x+=gs)for(let y=0;y<H;y+=gs){ctx.beginPath();ctx.arc(x,y,0.7,0,Math.PI*2);ctx.fill();}}
-  function drawGlow(W,H){const g1=ctx.createRadialGradient(W*0.75,H*0.2,0,W*0.75,H*0.2,300);g1.addColorStop(0,'rgba(79,70,229,0.13)');g1.addColorStop(1,'rgba(79,70,229,0)');ctx.fillStyle=g1;ctx.fillRect(0,0,W,H);const g2=ctx.createRadialGradient(W*0.1,H*0.85,0,W*0.1,H*0.85,200);g2.addColorStop(0,'rgba(34,211,238,0.08)');g2.addColorStop(1,'rgba(34,211,238,0)');ctx.fillStyle=g2;ctx.fillRect(0,0,W,H);}
-  function frame(){const W=canvas.width,H=canvas.height;ctx.fillStyle='rgba(5,4,12,0.55)';ctx.fillRect(0,0,W,H);drawDotGrid(W,H);
-    for(const s of stars){s.pz=s.z;s.z-=speed;if(s.z<=0){s.x=(Math.random()-.5)*W*2.5;s.y=(Math.random()-.5)*H*2.5;s.z=DEPTH;s.pz=DEPTH;}
-      const{sx,sy,psx,psy,scale}=project(s,W,H);if(sx<-200||sx>W+200||sy<-200||sy>H+200)continue;
-      const br=Math.min(1,(1-s.z/DEPTH)*1.6),r=Math.max(0.3,scale*2.2),tl=Math.hypot(sx-psx,sy-psy);
-      if(tl>0.5){ctx.beginPath();ctx.moveTo(psx,psy);ctx.lineTo(sx,sy);ctx.strokeStyle=`hsla(${s.hue},90%,72%,${br*0.85})`;ctx.lineWidth=r*0.9;ctx.stroke();}
-      ctx.beginPath();ctx.arc(sx,sy,r,0,Math.PI*2);ctx.fillStyle=`hsla(${s.hue},90%,85%,${br})`;ctx.fill();
-      if(br>0.55){const g=ctx.createRadialGradient(sx,sy,0,sx,sy,r*3.5);g.addColorStop(0,`hsla(${s.hue},80%,70%,${br*0.35})`);g.addColorStop(1,`hsla(${s.hue},80%,70%,0)`);ctx.beginPath();ctx.arc(sx,sy,r*3.5,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();}}
-    requestAnimationFrame(frame);}
-  requestAnimationFrame(frame);
-})();
-
-/* ── Rotating Wireframe Orb (Hero) ──────────────────────── */
-(function () {
-  const canvas=document.getElementById('orb-canvas');
-  if (!canvas) return;
-  const ctx=canvas.getContext('2d');
-  const SIZE=260;canvas.width=SIZE;canvas.height=SIZE;
-  const PHI=(1+Math.sqrt(5))/2,R=90;
-  function norm(v){const l=Math.hypot(v[0],v[1],v[2]);return[v[0]/l*R,v[1]/l*R,v[2]/l*R];}
-  const VR=[[-1,PHI,0],[1,PHI,0],[-1,-PHI,0],[1,-PHI,0],[0,-1,PHI],[0,1,PHI],[0,-1,-PHI],[0,1,-PHI],[PHI,0,-1],[PHI,0,1],[-PHI,0,-1],[-PHI,0,1]].map(norm);
-  const ED=[[0,1],[0,5],[0,7],[0,10],[0,11],[1,5],[1,7],[1,8],[1,9],[2,3],[2,6],[2,10],[2,11],[2,4],[3,4],[3,6],[3,8],[3,9],[4,5],[4,9],[4,11],[5,9],[5,11],[6,7],[6,8],[6,10],[7,8],[7,10],[8,9],[10,11]];
-  let rX=0.3,rY=0.1;const vX=0.003,vY=0.007;let mox=0,moy=0;
-  window.addEventListener('mousemove',e=>{const h=document.getElementById('hero').getBoundingClientRect();if(e.clientY<h.bottom){mox=(e.clientX/window.innerWidth-.5)*0.012;moy=(e.clientY/window.innerHeight-.5)*0.012;}},{passive:true});
-  function rx(v,a){const c=Math.cos(a),s=Math.sin(a);return[v[0],v[1]*c-v[2]*s,v[1]*s+v[2]*c];}
-  function ry(v,a){const c=Math.cos(a),s=Math.sin(a);return[v[0]*c+v[2]*s,v[1],-v[0]*s+v[2]*c];}
-  const F=340,CX=SIZE/2,CY=SIZE/2;
-  function proj(v){const sc=F/(F+v[2]);return[CX+v[0]*sc,CY+v[1]*sc,sc];}
-  function frame(){ctx.clearRect(0,0,SIZE,SIZE);rX+=vX+moy;rY+=vY+mox;
-    const v2=VR.map(v=>{let t=rx(v,rX);t=ry(t,rY);return proj(t);});
-    for(const[a,b]of ED){const[ax,ay,as_]=v2[a],[bx,by,bs]=v2[b];const al=((as_+bs)/2)*0.55;ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.strokeStyle=`rgba(129,140,248,${al.toFixed(3)})`;ctx.lineWidth=0.9;ctx.stroke();}
-    for(const[vx,vy,vs]of v2){const al=vs*0.9,r=vs*3.5;const g=ctx.createRadialGradient(vx,vy,0,vx,vy,r*2.8);g.addColorStop(0,`rgba(99,102,241,${(al*0.6).toFixed(3)})`);g.addColorStop(1,'rgba(99,102,241,0)');ctx.beginPath();ctx.arc(vx,vy,r*2.8,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();ctx.beginPath();ctx.arc(vx,vy,Math.max(0.5,r*0.55),0,Math.PI*2);ctx.fillStyle=`rgba(199,210,254,${al.toFixed(3)})`;ctx.fill();}
-    const rg=ctx.createRadialGradient(CX,CY,R*0.75,CX,CY,R*1.35);rg.addColorStop(0,'rgba(79,70,229,0.0)');rg.addColorStop(0.7,'rgba(79,70,229,0.07)');rg.addColorStop(1,'rgba(79,70,229,0.0)');ctx.beginPath();ctx.arc(CX,CY,R*1.35,0,Math.PI*2);ctx.fillStyle=rg;ctx.fill();
-    /* Priority-2 §5: reduced motion gets one static frame, no ongoing rotation */
-    if (!REDUCE_MOTION) requestAnimationFrame(frame);}
-  frame();
-})();
-
 /* ── Typewriter ──────────────────────────────────────────── */
 (function () {
-  const phrases=['monitoring radiation dose.','tracking bone & muscle loss.','spotting isolation stress.','checking cabin CO\u2082.','acting without waiting for Earth.'];
+  const phrases=['detecting drift\u2026','explaining the change\u2026','acting on the card\u2026','syncing to Earth\u2026'];
   let pi=0,ci=0,deleting=false,wait=0;
   const el=document.getElementById('hero-typed');
   if (!el) return;
@@ -889,6 +807,7 @@ document.getElementById('footer-year').textContent = new Date().getFullYear();
   function tick(now) {
     if (!active) return;
     requestAnimationFrame(tick);
+    if (window.ADX_NEBULA_PAUSED) { lastT = 0; return; }   /* the opaque #universe intro covers the nebula: skip rendering */
 
     /* Light damping so the camera never steps; reduced-motion /
        first frame snaps straight to the target. */
@@ -999,7 +918,7 @@ document.getElementById('footer-year').textContent = new Date().getFullYear();
 
       onUpdate: function(self) {
         var p = self.progress;
-        window.__aboutScrollProgress = p;   /* read by astronaut.js — About-local 0–1 */
+        window.__aboutScrollProgress = p;   /* About-local 0–1 */
 
         /* Camera (segment A — identical to the original single-scene motion) */
         target.z     = 30 + 250 * p;

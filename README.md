@@ -23,17 +23,24 @@ AstroDocX learns each astronaut's **personal baseline**, spots drift early, and 
 
 **Detect → Explain → Act → Log → Sync later**
 
-| Module | What it does |
+| Area | What the Crew Console really does |
 |---|---|
-| Health Status Board | Readiness dial, Health Twin with one hotspot per hazard, next action, live vitals, and five hazard cards with their own mini chart, measured against the personal baseline |
-| Explainable Alerts | List and detail: what changed, by how much, a chart of the trigger, and the alert's timeline |
-| Action Cards | Step-by-step countermeasures; tapping Done logs the action |
-| Daily Check-in | Four-step wizard: mood, sleep, symptoms and a reaction-time test |
-| Trend Charts | A focus chart with stats and a crew-median overlay, plus all 11 indicators against their baseline bands |
-| Mission Simulator | Mission control: scenarios, a time scrubber and a live feed of what the engine decided |
-| Ground Sync | Animated ship, relay and Earth link, outbox of packets, simulated windows and blackouts, filterable log; syncs when a window opens |
+| Personal baselines | Learns each astronaut's own normal for 11 metrics (HR, HRV, SpO₂, sleep, exercise, reaction time, mood, CO₂, cabin temperature, noise, radiation dose) with Welford + EWMA; it only learns while nominal, so slow drift is not "learned away" |
+| Detection | Smoothed z-scores plus cited absolute limits (NASA-STD-3001 CO₂ and dose), persistence (2–3 readings in a row) and two-signal rules (sleep + reaction); Nominal / Watch / Act with hysteresis |
+| Explainable alerts | Each alert says what changed, by how much, against whose baseline and since when |
+| Action cards | Checkable countermeasure steps with progress and Done; open → escalate → ease → resolve lifecycle, all logged |
+| Status Board | Five RIDGE tiles, crew readiness score, crew overview, next action, live vitals strip (ECG-style waves, heart pulse) |
+| Health Twin (console) | Anatomical hologram: a live heart beating with the ECG; organs and bones take their hazard status |
+| Trends | 11 charts with the personal baseline band, alert markers, 24 h / 7 d / 30 d |
+| Daily Check-in | Mood, sleep quality, hours slept, 8 symptom chips and a 5-tap reaction test (PVT-style); symptoms and sleep quality raise alerts |
+| Mission Simulator | Mission clock, fast-forward, 4 injectable scenarios (solar event, CO₂ fault, insomnia, deconditioning); watch the engine react |
+| Ground Sync | Delay-tolerant outbox: link windows, 12-minute delay, blackout, auto-sync, CSV log export |
+| Ground View | Flight-surgeon view rebuilt only from synced entries (shows what Earth knows, and when) |
+| Platform | Offline-first installable PWA, IndexedDB on the device, 4-crew 30-day demo mission preloaded |
 
-> **Status:** the landing page and the **Crew Console** (`app/`) are built. The console is an offline-first PWA (React, TypeScript, Dexie, Recharts) that runs the full loop on synthetic data: Status Board, Alerts + Action cards, Trends, Daily check-in with a reaction test, Mission Simulator, Ground Sync and a flight-surgeon Ground View. See [`plan.md`](plan.md) for the build log. AstroDocX is a concept prototype, **not a medical device**; all thresholds not cited in the code are illustrative.
+**Not built yet (Roadmap):** wearable sensor integration, a real Supabase ground backend with proper policies, vision/SANS self-tests, blood pressure, bone density, a multi-device ground station.
+
+> **Status:** the landing page and the **Crew Console** (`app/`) are built and run the full loop on synthetic data. See [`plan.md`](plan.md) for the build log. AstroDocX is a prototype, **not a medical device**; all thresholds not cited in the code are illustrative.
 
 ## Screenshots
 **Landing page**
@@ -42,7 +49,7 @@ AstroDocX learns each astronaut's **personal baseline**, spots drift early, and 
 |---|---|---|
 | ![Hero](docs/screenshots/hero.jpg) | ![Health Twin](docs/screenshots/health-twin.jpg) | ![Mission Simulator](docs/screenshots/mission-simulator.jpg) |
 
-**Crew Console** (synthetic demo data, Flight Engineer selected)
+**Crew Console** (synthetic demo data, Pilot selected)
 
 ![Mission Health board](docs/screenshots/console-board.jpg)
 
@@ -59,8 +66,8 @@ AstroDocX learns each astronaut's **personal baseline**, spots drift early, and 
 The live waves on the board (ECG, pulse oximeter, breathing) are **simulated telemetry** built around the latest real readings; they never change alerts.
 
 ## Try it
-- **Health Twin:** scroll through the section. The scan runs head to feet, six system panels appear, Crew Readiness counts up, then the heart turns amber and an action card appears.
-- **Mission Simulator (Live Demo):** inject a fault (CO₂ scrubber, solar event, poor sleep, skipped workout, comms blackout) or press *Play scenario*. Tick the action-card steps, press *Carry out & log*, then open the ground link window to sync the log.
+- **Health Twin:** scroll through the section. The scan runs head to feet, six system panels appear, Crew Readiness counts up, then the Pilot's real Act alert from the demo mission appears as an action card. Panel values are the demo mission's latest readings.
+- **Mission Simulator (Live Demo):** inject a fault (CO₂ scrubber fault, solar particle event, insomnia streak, skipped exercise, link blackout) or press *Play scenario*. Tick the action-card steps, press *Carry out & log*, then open the ground link window to sync the log.
 
 ## Links
 - **Landing page:** https://astrodocx.netlify.app
@@ -113,7 +120,9 @@ AstroDocX/
 │   ├── astronaut.js
 │   ├── twin.js / twin.css    # Health Twin section
 │   ├── sim.js / sim.css      # Live Mission Simulator (+ Built On reveal)
-│   ├── built.css             # Built On section
+│   ├── universe/             # particle intro (WIP: scenes.js, universe.js, universe.css)
+│   ├── built.css             # Built On + Roadmap
+│   ├── team.js               # TEAM array: the 6 member cards
 │   ├── fonts/
 │   └── assets/     # feature mockups, og-image
 ├── app/            # Crew Console PWA (React + TypeScript + Vite)
@@ -128,7 +137,7 @@ AstroDocX/
 - [NASA Twins Study](https://www.nasa.gov/twins-study/)
 - [PhysioNet](https://physionet.org/): public physiological signals (ECG / HRV)
 
-All values on the landing page and in the mockups are **sample data for illustration**.
+Landing-page numbers come from the console's seeded demo mission (synthetic data); the marquee values and the Live Demo are illustrative. Only the CO₂ and dose limits are cited (NASA-STD-3001).
 
 ## Credits
 The visual theme (nebula, 3D astronaut, scroll system) is adapted from team lead Alif Mahmud's own portfolio template.

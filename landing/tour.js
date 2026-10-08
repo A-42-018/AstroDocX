@@ -21,7 +21,7 @@
      speed through the section (px/s) until the next section's top.
      Pinned sections are tall because of their pin spacer, so their speed sets the pace of the story. */
   var PLAN = [
-    { id: 'hero',      hold: 5,  pps: 320 },
+    { id: 'universe', hold: 0,  pps: 320 },
     { id: 'about',     hold: 1,  pps: 260 },
     { id: 'nebula-offset', hold: 0, pps: 300 },
     { id: 'twin',      hold: 1,  pps: 230 },
@@ -58,6 +58,16 @@
       var next = PLAN[i + 1] && topOf(PLAN[i + 1].id);
       var end = next !== null && next !== undefined ? next : maxScroll();
       end = Math.min(end, maxScroll());
+      if (s.id === 'universe' && window.ADX_UNIVERSE && ADX_UNIVERSE.yAt(0) !== undefined && ADX_UNIVERSE.stops) {
+        /* the particle intro: stop at each scene's hold (dwell per scene in scenes.js `tour`), slow glides between so the morphs read */
+        var stops = ADX_UNIVERSE.stops();
+        (function step(k) {
+          if (stopped) return;
+          if (k >= stops.length) return glide(scrollY, end, s.pps * speed, function () { i++; section(); });
+          glide(scrollY, ADX_UNIVERSE.yAt(stops[k].p), 330 * speed, function () { later(function () { step(k + 1); }, stops[k].hold / speed); });
+        })(0);
+        return;
+      }
       if (s.action === 'sim') later(function () { var b = document.getElementById('simPlay'); if (b) b.click(); }, 1 / speed);
       later(function () { glide(scrollY, end, s.pps * speed, function () { i++; section(); }); }, s.hold / speed);
     }

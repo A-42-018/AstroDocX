@@ -84,7 +84,7 @@ export function GroundView({ now, lastSyncedAt, pending, crew, source, sourceErr
           )
         })}
       </ul>
-      <p className="muted note">Concept prototype, not a medical device. Simulated link; the ground sees only what the Ground Sync tab has sent.</p>
+      <p className="muted note">Prototype, not a medical device. Simulated link; the ground sees only what the Ground Sync tab has sent.</p>
     </div>
   )
 }

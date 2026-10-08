@@ -159,3 +159,8 @@
   .sim-title::after, .sim-tile.is-act .st-chip, .sl-link.is-down i { animation:none !important; }
   .sr-fg, .sim-tile, .sim-btn { transition:none; }
 }
+
+/* R1: link to the real simulator */
+.sim-real { display:inline-block;margin-left:10px;font-family:var(--font-mono);font-size:.74rem;font-weight:700;color:var(--holo,#22d3ee);text-decoration:underline;text-underline-offset:3px; }
+.sim-real:hover { color:#A5F3FC; }
+.sim-note a { color:var(--holo,#22d3ee);text-decoration:underline;text-underline-offset:2px; }

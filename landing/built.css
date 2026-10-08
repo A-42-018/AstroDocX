@@ -51,3 +51,17 @@
 
 .about-sources { margin: 14px 0 0; font-size: .74rem; line-height: 1.6; color: rgba(255,255,255,0.62); max-width: 52ch; }
 .about-sources a { color: var(--holo, #22d3ee); text-decoration: underline; text-underline-offset: 2px; }
+
+/* R1: Roadmap block (clearly "not built yet") */
+.built-roadmap { margin-top:20px;border-style:dashed;border-color:rgba(255,255,255,.22); }
+.built-roadmap h3 { display:flex;align-items:center;gap:10px;font-size:.92rem;font-weight:700;color:#fff;margin-bottom:12px; }
+.built-roadmap .built-chips li { color:rgba(255,255,255,.7);background:rgba(255,255,255,.04);border-style:dashed;border-color:rgba(255,255,255,.22); }
+
+/* R2: proof strip */
+#proof { position:relative;z-index:1;color:#fff; }
+.proof-inner { list-style:none;max-width:var(--wrap);margin:0 auto;padding:10px var(--pad-x) 30px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px; }
+.proof-item { text-align:center;padding:18px 12px;border-radius:var(--r-md);background:rgba(10,7,26,.62);border:1px solid rgba(129,140,248,.22);
+  backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat)); }
+.proof-num { display:block;font-family:var(--font-mono);font-size:2rem;font-weight:800;line-height:1.1;color:#E0FBFF; }
+.proof-num.proof-text { font-size:1.45rem;padding-top:.3rem; }
+.proof-item span { display:block;margin-top:6px;font-size:.78rem;color:rgba(255,255,255,.6);font-family:var(--font-body); }

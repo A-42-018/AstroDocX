@@ -16,7 +16,7 @@ export default defineConfig({
         name: 'AstroDocX Crew Console',
         short_name: 'AstroDocX',
         description:
-          'Offline-first astronaut health co-pilot: detect, explain, act, log, sync later. Concept prototype, not a medical device.',
+          'Offline-first astronaut health co-pilot: detect, explain, act, log, sync later. Prototype, not a medical device.',
         theme_color: '#0C0A1E',
         background_color: '#0C0A1E',
         display: 'standalone',

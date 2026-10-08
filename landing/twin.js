@@ -7,7 +7,7 @@
      0.20–0.60  scan line sweeps head → feet; each panel draws its
                 leader line and pops in when the scan passes it
      0.60–0.85  readiness gauge counts up, ECG goes live
-     0.85–1.00  heart hotspot turns amber + action card appears
+     0.85–1.00  action card appears (real engine card for the Pilot's Act alert)
 
    Modes (gsap.matchMedia):
      desktop  (>900px, motion OK)  pinned, scrubbed (+=150%)
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const action     = document.getElementById('twinAction');
 
   const VB_W = 300, VB_H = 660;
-  const READY = 87;
+  const READY = 83;   // Pilot, demo mission end state: mean of the five hazard scores (87+55+100+86+88)/5
   const SVGNS = 'http://www.w3.org/2000/svg';
 
   /* ── 1. Body silhouette (original, generated) ─────────────
@@ -148,6 +148,8 @@ document.addEventListener('DOMContentLoaded', function () {
     g.append(path, n1, n2); leadersSvg.appendChild(g);
     /* scan reaches this hotspot at t; panel sequence keyed to it */
     const t = 0.20 + 0.40 * (hot.y / VB_H);
+    /* Panels that carry a live alert in the demo data are amber from the start */
+    if (el.dataset.alert) { el.classList.add('is-watch'); hot.el.classList.add('is-watch'); g.classList.add('is-watch'); }
     return { el, side: el.dataset.side, hot, g, path, n1, n2, t };
   });
 
@@ -184,7 +186,6 @@ document.addEventListener('DOMContentLoaded', function () {
   let P = 0;            // displayed progress
   let scanY = -100;     // viewBox y of the scan line
   let ecgLive = false;
-  let watch = false;
 
   function applyState(p) {
     /* rings + outline */
@@ -235,19 +236,8 @@ document.addEventListener('DOMContentLoaded', function () {
     readyVal.textContent = Math.round(READY * r);
     ecgLive = p >= .6;
 
-    /* alert beat */
+    /* action card beat */
     const al = seg(p, .86, .94);
-    const w = al > 0;
-    if (w !== watch) {
-      watch = w;
-      heartPanel.classList.toggle('is-watch', w);
-      hotEls.heart.el.classList.toggle('is-watch', w);
-      const hp = panels.find(x => x.el === heartPanel);
-      if (hp) hp.g.classList.toggle('is-watch', w);
-      heartPanel.querySelector('.tp-state').textContent = w ? 'WATCH' : 'OK';
-      hrEl.textContent = w ? '71' : '62';
-      hrDelta.textContent = w ? '↑ 14%' : '';
-    }
     action.style.visibility = al > 0 ? 'visible' : 'hidden';
     action.style.opacity = easeOut(al).toFixed(3);
     action.style.transform = 'translateY(' + (12 * (1 - easeOut(al))).toFixed(2) + 'px) scale(' + (.97 + .03 * easeOut(al)).toFixed(4) + ')';
@@ -288,10 +278,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const W = ecg.width, H = ecg.height;
     ecgCtx.clearRect(0, 0, W, H);
     ecgCtx.lineWidth = 1.4 * dpr;
-    ecgCtx.strokeStyle = watch ? '#F59E0B' : '#EC4899';
+    ecgCtx.strokeStyle = '#EC4899';
     ecgCtx.shadowColor = ecgCtx.strokeStyle; ecgCtx.shadowBlur = 6 * dpr;
     ecgCtx.beginPath();
-    const beats = 3.2, bpm = watch ? 71 : 62;
+    const beats = 3.2, bpm = 59;   // Pilot's latest HR in the demo mission
     const shift = (ecgLive && !REDUCE) ? (time / 1000) * (bpm / 60) : 0;
     for (let x = 0; x <= W; x += 2) {
       let ph = (x / W) * beats + shift; ph -= Math.floor(ph);

@@ -82,7 +82,7 @@ export function SyncView({ now, link, pending, synced, lastSyncedAt, station, bl
         </div>
         {message && <p role="status" className="sync-ok">{message}</p>}
         {error && <p role="alert" className="form-error">{error}</p>}
-        <p className="muted note">Windows are illustrative: two 2-hour contacts per mission day (00:00 and 12:00 MET). Concept prototype, not a medical device.</p>
+        <p className="muted note">Windows are illustrative: two 2-hour contacts per mission day (00:00 and 12:00 MET). Prototype, not a medical device.</p>
       </section>
 
       <section aria-label="Outbox">

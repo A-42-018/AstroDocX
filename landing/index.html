@@ -5,18 +5,18 @@
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AstroDocX | Health Co-Pilot for Astronauts</title>
-  <meta name="description" content="AstroDocX is an offline-first health co-pilot that helps astronauts detect, understand and act on health changes on long-duration missions. NASA Space Apps Challenge 2026."/>
+  <meta name="description" content="AstroDocX is a working, offline-first health co-pilot for astronauts: it learns each crew member's own baseline across 11 metrics, explains every alert and turns it into an action card. Try the Crew Console. NASA Space Apps Challenge 2026."/>
   <meta name="robots" content="index, follow">
   <meta name="author" content="Team AstroDocX">
   <meta name="theme-color" content="#0a0e1a">
   <meta property="og:title"       content="AstroDocX | Health Co-Pilot for Astronauts">
-  <meta property="og:description" content="Detect. Explain. Act. Health monitoring for astronauts when Earth is minutes away. NASA Space Apps Challenge 2026.">
+  <meta property="og:description" content="Detect. Explain. Act. A working offline PWA with a 4-crew demo mission: personal baselines, explainable alerts, action cards and delayed ground sync. NASA Space Apps Challenge 2026.">
   <meta property="og:type"        content="website">
   <meta property="og:url"         content="https://astrodocx.netlify.app/">
   <meta property="og:image"       content="https://astrodocx.netlify.app/assets/og-image.png">
   <meta name="twitter:card"        content="summary_large_image">
   <meta name="twitter:title"       content="AstroDocX | Health Co-Pilot for Astronauts">
-  <meta name="twitter:description" content="Detect. Explain. Act. Health monitoring for astronauts when Earth is minutes away.">
+  <meta name="twitter:description" content="A working offline health co-pilot for astronauts: personal baselines, explainable alerts, action cards, delayed ground sync.">
   <meta name="twitter:image"       content="https://astrodocx.netlify.app/assets/og-image.png">
   <link rel="canonical" href="https://astrodocx.netlify.app/">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="sim.css" />
   <link rel="stylesheet" href="built.css" />
   <link rel="stylesheet" href="anatomy3d.css" />
+  <link rel="stylesheet" href="universe/universe.css" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -40,7 +41,7 @@
     "name": "AstroDocX",
     "applicationCategory": "HealthApplication",
     "operatingSystem": "Web (PWA)",
-    "description": "Offline-first health monitoring co-pilot for astronauts on long-duration space missions. NASA Space Apps Challenge 2026 project.",
+    "description": "Offline-first health monitoring co-pilot for astronauts on long-duration space missions: personal baselines, explainable alerts, action cards and delay-tolerant ground sync. NASA Space Apps Challenge 2026 project.",
     "codeRepository": "https://github.com/A-42-018/AstroDocX"
   }
   </script>
@@ -95,7 +96,7 @@
        reveal code in script.js is wired to them. Only labels changed. -->
   <nav id="navbar" aria-label="Primary navigation">
     <div class="nav-inner">
-      <a href="#hero" class="nav-logo" aria-label="AstroDocX home">
+      <a href="#universe" class="nav-logo" aria-label="AstroDocX home">
         <span class="bracket">&lt;</span>astrodoc<span class="logo-x">X</span><span class="bracket">/&gt;</span>
       </a>
       <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
@@ -116,65 +117,55 @@
 
   <main>
 
-    <!-- ═══════════════════════════════════════ HERO ═════ -->
-    <section id="hero">
-      <canvas id="hero-canvas" aria-hidden="true"></canvas>
-      <canvas id="orb-canvas" aria-hidden="true"></canvas>
-
-      <div class="hero-inner">
-        <p class="hero-eyebrow">
-          <span class="bracket">&lt;</span>nasa space apps 2026<span class="bracket">/&gt;</span>&nbsp;
-        </p>
-        <h1 class="hero-name">ASTRO<br>DOC<span class="hero-x">X</span>.</h1>
-        <div class="hero-typerow" aria-live="polite">
-          <span class="prompt">~/astrodocx $</span>
-          <span id="hero-typed"></span><span class="hero-cursor" aria-hidden="true"></span>
-        </div>
-        <p class="hero-pitch">
-          Your <strong>doctor on board</strong> when Earth is minutes away.
-          AstroDocX learns each astronaut&rsquo;s <strong>personal baseline</strong>,
-          spots health changes early, and turns every alert into a
-          <strong>clear action</strong> the crew can take on their own.
-        </p>
-        <p class="hero-tagline">
-          Health monitoring for long-duration missions &mdash; Moon, Mars and beyond.
-        </p>
-        <div class="hero-actions">
-          <a href="/app/" class="btn btn-primary">Launch Crew Console</a>
-          <a href="#about" class="btn btn-secondary">Explore the Mission</a>
-        </div>
-        <div class="hero-trust-links" aria-label="Quick links">
-          <a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener" class="trust-link">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.28-.01-1.02-.01-2-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.21.08 1.84 1.24 1.84 1.24 1.07 1.84 2.81 1.31 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02.01 2.04.14 3 .4 2.28-1.55 3.29-1.23 3.29-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.93.43.37.81 1.1.81 2.22 0 1.61-.01 2.9-.01 3.29 0 .32.21.7.82.58C20.56 21.8 24 17.3 24 12 24 5.37 18.63 0 12 0z"/></svg>
-            Source Code
-          </a>
-          <a href="https://www.spaceappschallenge.org/" target="_blank" rel="noopener" class="trust-link">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(-25 12 12)"/></svg>
-            Space Apps 2026
-          </a>
-          <a href="#contact" class="trust-link">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20c.8-3.4 3.2-5 6-5s5.2 1.6 6 5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 15.2c2.6-.2 4.4 1.3 5 4.8"/></svg>
-            Meet the Team
-          </a>
+    <!-- ═══════════════════════════════════════ UNIVERSE INTRO (#universe) ═════
+         Particle Universe intro (plan §12). Scenes 01 to 06 are generated from
+         universe/scenes.js; scene 07 is the page hero (the .uni-hero block below). -->
+    <section id="universe" aria-label="Introduction: from stardust to crew health">
+      <canvas id="uniCanvas" aria-hidden="true"></canvas>
+      <div class="uni-scrim" aria-hidden="true"></div>
+      <div class="uni-text">
+        <!-- scene 07 = the hero: particles form the ASTRODOCX wordmark above this block -->
+        <div class="uni-scene uni-hero" data-pos="hero" id="uniHero" aria-labelledby="uniH6">
+          <h1 id="uniH6" class="uni-sr">AstroDocX: your doctor on board when Earth is minutes away</h1>
+          <p class="hero-eyebrow"><span class="bracket">&lt;</span>nasa space apps 2026<span class="bracket">/&gt;</span></p>
+          <p class="hero-pitch">
+            Your <strong>doctor on board</strong> when Earth is minutes away. AstroDocX learns each
+            astronaut&rsquo;s <strong>personal baseline</strong>, spots health changes early and turns
+            every alert into a <strong>clear action</strong> the crew can take on their own.
+          </p>
+          <div class="hero-typerow" aria-live="polite">
+            <span class="prompt">~/astrodocx $</span>
+            <span id="hero-typed"></span><span class="hero-cursor" aria-hidden="true"></span>
+          </div>
+          <p class="hero-tagline">Working PWA &middot; offline &middot; 4-crew demo mission inside.</p>
+          <div class="hero-actions">
+            <a href="/app/" class="btn btn-primary" data-cursor="LAUNCH">Launch Crew Console</a>
+            <a href="?tour=1" class="btn btn-secondary" data-cursor="WATCH">Watch the tour</a>
+            <a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener" class="btn btn-secondary" data-cursor="GITHUB">GitHub</a>
+          </div>
+          <a class="uni-more" href="#about" data-cursor="EXPLORE">Scroll to explore &darr;</a>
         </div>
       </div>
+      <ol class="uni-rail" aria-label="Intro scenes"></ol>
+      <a class="uni-skip" href="#about">Skip intro</a>
+      <p class="uni-hint" aria-hidden="true">Scroll &darr;</p>
     </section>
 
     <!-- ═══════════════════════════════════════ MARQUEE ══
-         Telemetry ticker — sample values for illustration only. -->
+         Telemetry ticker: the 11 console metrics, sample values for illustration. -->
     <div class="marquee-band" aria-hidden="true">
       <div class="marquee-wrap">
         <div class="marquee-group">
           <span>HR 62 bpm</span><span class="sep">✦</span>
           <span>HRV 48 ms</span><span class="sep">✦</span>
           <span>SpO₂ 98%</span><span class="sep">✦</span>
-          <span>Dose 0.64 mSv/day</span><span class="sep">✦</span>
+          <span>Dose rate 25 &micro;Sv/h</span><span class="sep">✦</span>
           <span>CO₂ 2.4 mmHg</span><span class="sep">✦</span>
           <span>Sleep 6.8 h</span><span class="sep">✦</span>
           <span>Mood 4 / 5</span><span class="sep">✦</span>
           <span>Reaction 312 ms</span><span class="sep">✦</span>
-          <span>Exercise 2.1 h</span><span class="sep">✦</span>
-          <span>Body Mass 71.4 kg</span><span class="sep">✦</span>
+          <span>Exercise 120 min</span><span class="sep">✦</span>
+          <span>Noise 52 dBA</span><span class="sep">✦</span>
           <span>Cabin 22.5 °C</span><span class="sep">✦</span>
           <span>Status NOMINAL</span><span class="sep">✦</span>
         </div>
@@ -182,13 +173,13 @@
           <span>HR 62 bpm</span><span class="sep">✦</span>
           <span>HRV 48 ms</span><span class="sep">✦</span>
           <span>SpO₂ 98%</span><span class="sep">✦</span>
-          <span>Dose 0.64 mSv/day</span><span class="sep">✦</span>
+          <span>Dose rate 25 &micro;Sv/h</span><span class="sep">✦</span>
           <span>CO₂ 2.4 mmHg</span><span class="sep">✦</span>
           <span>Sleep 6.8 h</span><span class="sep">✦</span>
           <span>Mood 4 / 5</span><span class="sep">✦</span>
           <span>Reaction 312 ms</span><span class="sep">✦</span>
-          <span>Exercise 2.1 h</span><span class="sep">✦</span>
-          <span>Body Mass 71.4 kg</span><span class="sep">✦</span>
+          <span>Exercise 120 min</span><span class="sep">✦</span>
+          <span>Noise 52 dBA</span><span class="sep">✦</span>
           <span>Cabin 22.5 °C</span><span class="sep">✦</span>
           <span>Status NOMINAL</span><span class="sep">✦</span>
         </div>
@@ -290,7 +281,8 @@
             </p>
             <p class="currently-learning">
               <span class="cl-dot" aria-hidden="true"></span>
-              <strong>Our answer:</strong> AstroDocX &mdash; detect, explain, act, log, and sync with Earth later.
+              <strong>Our answer is running now:</strong> AstroDocX &mdash; detect, explain, act, log, and sync with Earth later.
+              <a href="/app/">Open the Crew Console &rarr;</a>
             </p>
           </div>
           <div class="about-chips">
@@ -338,7 +330,7 @@
           <span class="bracket">&lt;</span>hazards<span class="bracket">/&gt;</span>
         </p>
         <h2 class="section-title">The 5 Hazards</h2>
-        <p class="section-subtitle">NASA&rsquo;s RIDGE framework &mdash; every AstroDocX feature maps to one of them</p>
+        <p class="section-subtitle">NASA&rsquo;s RIDGE framework &mdash; each card lists what the console really tracks</p>
         <div class="skills-grid hazards-grid">
           <div class="skill-category hazard-card" data-hazard="R">
             <span class="hazard-letter" aria-hidden="true">R</span>
@@ -348,7 +340,7 @@
             <h3>Radiation</h3>
             <p class="hazard-effect">Immune changes, cancer risk, nervous-system effects</p>
             <ul class="skill-list">
-              <li>Daily &amp; cumulative dose</li><li>Solar event alerts</li><li>Shelter protocol</li>
+              <li>Dose rate vs your baseline</li><li>Event limit: 250 mSv / 24 h</li><li>Solar-event action card</li>
             </ul>
           </div>
           <div class="skill-category hazard-card" data-hazard="I">
@@ -359,7 +351,7 @@
             <h3>Isolation</h3>
             <p class="hazard-effect">Sleep loss, mood and behavioral health changes</p>
             <ul class="skill-list">
-              <li>Daily mood check-in</li><li>Sleep tracking</li><li>Reaction-time test</li>
+              <li>Sleep, mood, 5-tap reaction test</li><li>Rule: poor sleep + slow reaction</li><li>Symptom chips</li>
             </ul>
           </div>
           <div class="skill-category hazard-card" data-hazard="D">
@@ -370,7 +362,7 @@
             <h3>Distance</h3>
             <p class="hazard-effect">No real-time medical help from Earth</p>
             <ul class="skill-list">
-              <li>Offline action cards</li><li>Crew-led decisions</li><li>Delay-tolerant sync</li>
+              <li>Outbox + link windows</li><li>Watch at 24 h, Act at 72 h unsynced</li><li>Offline action cards</li>
             </ul>
           </div>
           <div class="skill-category hazard-card" data-hazard="G">
@@ -379,9 +371,9 @@
               <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11M7.5 9.5 12 14l4.5-4.5"/><path d="M4 19.5h16"/></svg>
             </div>
             <h3>Gravity</h3>
-            <p class="hazard-effect">Bone &amp; muscle loss, heart and vision changes</p>
+            <p class="hazard-effect">Bone &amp; muscle loss, heart changes</p>
             <ul class="skill-list">
-              <li>Exercise load</li><li>HR / HRV &amp; BP</li><li>Vision self-test</li>
+              <li>Exercise load</li><li>Heart rate</li><li>HRV</li>
             </ul>
           </div>
           <div class="skill-category hazard-card" data-hazard="E">
@@ -392,7 +384,7 @@
             <h3>Hostile Env.</h3>
             <p class="hazard-effect">CO&#8322; headaches, infection, noise in a closed cabin</p>
             <ul class="skill-list">
-              <li>Cabin CO&#8322; &amp; air</li><li>Noise &amp; temperature</li><li>Symptom links</li>
+              <li>CO&#8322; vs NASA limit (3 mmHg)</li><li>SpO&#8322;, cabin temperature, noise</li><li>Symptom alerts</li>
             </ul>
           </div>
         </div>
@@ -441,7 +433,7 @@
             <span class="bracket">&lt;</span>health-twin<span class="bracket">/&gt;</span>
           </p>
           <h2 class="twin-title" id="twin-title">Health Twin</h2>
-          <p class="twin-subtitle">One body scan. Six systems. One readiness score. <span class="twin-tag">Concept &middot; simulated data</span>
+          <p class="twin-subtitle">One body scan. Six systems. One readiness score. <span class="twin-tag">Demo mission data &middot; Pilot</span>
             <button type="button" class="anat3d-open" id="anat3dOpen" aria-haspopup="dialog" aria-controls="anat3d" aria-expanded="false">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/></svg>
               Explore real anatomy in 3D
@@ -451,37 +443,28 @@
         <div class="twin-stage" id="twinStage">
           <svg class="twin-leaders" id="twinLeaders" aria-hidden="true"></svg>
 
-          <!-- ── Left column ── -->
+          <!-- ── Left column ── (values: demo mission, Pilot, latest readings; baselines from the engine) -->
           <div class="twin-col twin-col-left">
-            <article class="twin-panel" data-hot="brain" data-side="left">
-              <header class="tp-head"><span class="tp-dot"></span><h3>Behavioral &amp; Cognitive</h3><span class="tp-state">OK</span></header>
-              <div class="tp-row"><span>Mood check-in</span><b>4 / 5</b></div>
-              <div class="tp-row"><span>Reaction time</span><b>312 ms <small class="tp-delta tp-up">&uarr; 6%</small></b></div>
-              <svg class="tp-spark" viewBox="0 0 120 26" preserveAspectRatio="none" aria-hidden="true">
-                <polyline points="0,18 12,16 24,17 36,14 48,15 60,13 72,14 84,11 96,12 108,9 120,10"/>
-              </svg>
+            <article class="twin-panel" data-hot="brain" data-side="left" data-alert="act">
+              <header class="tp-head"><span class="tp-dot"></span><h3>Isolation &middot; Brain</h3><span class="tp-state">ACT</span></header>
+              <div class="tp-row"><span>Sleep last night</span><b>4.7 h <small class="tp-delta tp-up">&darr; 3.4&sigma;</small></b></div>
+              <div class="tp-row"><span>Reaction time</span><b>411 ms <small class="tp-delta tp-up">&uarr; 4.3&sigma;</small></b></div>
+              <div class="tp-row"><span>Mood check-in</span><b>3 / 5</b></div>
+              <p class="tp-note">Own baseline: 6.3 h &middot; 317 ms</p>
+            </article>
+
+            <article class="twin-panel" data-hot="lungs" data-side="left">
+              <header class="tp-head"><span class="tp-dot"></span><h3>Environment &middot; Air</h3><span class="tp-state">OK</span></header>
+              <div class="tp-row"><span>Cabin CO&#8322;</span><b>2.11 <small>mmHg</small></b></div>
+              <div class="tp-row"><span>SpO&#8322;</span><b>96.3 <small>%</small></b></div>
+              <p class="tp-note">NASA-STD-3001 habitat limit: 3 mmHg CO&#8322;</p>
             </article>
 
             <article class="twin-panel" data-hot="radiation" data-side="left">
-              <header class="tp-head"><span class="tp-dot"></span><h3>Radiation &amp; Immune</h3><span class="tp-state">OK</span></header>
-              <div class="tp-split">
-                <svg class="tp-ring" viewBox="0 0 44 44" aria-hidden="true">
-                  <circle class="tp-ring-bg" cx="22" cy="22" r="18"/>
-                  <circle class="tp-ring-fg" cx="22" cy="22" r="18" pathLength="100" style="--val:23.7"/>
-                </svg>
-                <div>
-                  <b class="tp-big">142 <small>/ 600 mSv</small></b>
-                  <span class="tp-note">Mission dose budget</span>
-                </div>
-              </div>
-            </article>
-
-            <article class="twin-panel" data-hot="bone" data-side="left">
-              <header class="tp-head"><span class="tp-dot"></span><h3>Bone Density</h3><span class="tp-state">OK</span></header>
-              <div class="tp-bars" aria-hidden="true">
-                <i style="--h:100%"></i><i style="--h:94%"></i><i style="--h:88%"></i><i style="--h:83%"></i><i style="--h:77%"></i><i style="--h:72%"></i>
-              </div>
-              <div class="tp-row"><span>Hip BMD trend</span><b>&minus;0.8% <small>/ month</small></b></div>
+              <header class="tp-head"><span class="tp-dot"></span><h3>Radiation &middot; Whole body</h3><span class="tp-state">OK</span></header>
+              <b class="tp-big">32.4 <small>&micro;Sv/h</small></b>
+              <span class="tp-note">Dose rate &middot; own baseline 25.2 &micro;Sv/h</span>
+              <span class="tp-note">Event limit: 250 mSv / 24 h</span>
             </article>
           </div>
 
@@ -520,13 +503,14 @@
               <!-- anatomy hints, lit by the scan line -->
               <g class="twin-anatomy" id="twinAnatomy" clip-path="url(#twinClip)">
                 <g class="organ" data-hot="brain"><ellipse cx="150" cy="44" rx="20" ry="15"/><path d="M150 30v28M138 40q6 4 0 9M162 40q-6 4 0 9"/></g>
-                <g class="organ" data-hot="eyes"><circle cx="140" cy="60" r="3.4"/><circle cx="160" cy="60" r="3.4"/></g>
+                <g class="organ" data-hot="lungs"><ellipse cx="132" cy="162" rx="13" ry="27"/><ellipse cx="168" cy="158" rx="11" ry="23"/></g>
+                <g class="organ" data-hot="link"><circle cx="245" cy="366" r="9"/><path d="M241 366a4 4 0 0 1 8 0M238 366a7 7 0 0 1 14 0"/></g>
                 <g class="organ"><path d="M150 100v232" stroke-dasharray="6 4"/></g>
                 <g class="organ"><path d="M118 142q32 -14 64 0M114 160q36 -14 72 0M114 178q36 -13 72 0M117 196q33 -12 66 0M122 213q28 -10 56 0"/></g>
                 <g class="organ" data-hot="heart"><path d="M163 186c-10-7-17-13-17-20a7 7 0 0 1 13-4l4 4 4-4a7 7 0 0 1 13 4c0 7-7 13-17 20z"/></g>
                 <g class="organ" data-hot="radiation"><path d="M132 238h36M128 258h44M132 278h36" stroke-dasharray="2 5"/><circle cx="150" cy="262" r="16"/></g>
                 <g class="organ"><path d="M120 320q30 30 60 0M124 336q26 14 52 0"/></g>
-                <g class="organ" data-hot="bone"><path d="M128 346l-6 128M172 346l6 128"/><circle cx="122" cy="476" r="5"/><circle cx="178" cy="476" r="5"/><path d="M122 484l-2 112M178 484l2 112"/></g>
+                <g class="organ" data-hot="legs"><path d="M128 346l-6 128M172 346l6 128"/><circle cx="122" cy="476" r="5"/><circle cx="178" cy="476" r="5"/><path d="M122 484l-2 112M178 484l2 112"/></g>
                 <g class="organ" data-hot="muscle"><ellipse cx="184" cy="400" rx="13" ry="42"/></g>
               </g>
 
@@ -538,10 +522,10 @@
 
               <!-- hotspots -->
               <g class="twin-hot" data-hot="brain" transform="translate(150 42)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
-              <g class="twin-hot" data-hot="eyes" transform="translate(160 60)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
+              <g class="twin-hot" data-hot="lungs" transform="translate(132 162)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
               <g class="twin-hot" data-hot="heart" transform="translate(163 172)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
               <g class="twin-hot" data-hot="radiation" transform="translate(150 262)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
-              <g class="twin-hot" data-hot="bone" transform="translate(124 420)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
+              <g class="twin-hot" data-hot="link" transform="translate(245 366)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
               <g class="twin-hot" data-hot="muscle" transform="translate(184 400)"><circle class="pulse" r="5"/><circle class="core" r="3"/></g>
             </svg>
             <canvas class="twin-canvas" id="twinCanvas" aria-hidden="true"></canvas>
@@ -549,34 +533,32 @@
 
           <!-- ── Right column ── -->
           <div class="twin-col twin-col-right">
-            <article class="twin-panel" data-hot="eyes" data-side="right">
-              <header class="tp-head"><span class="tp-dot"></span><h3>Vision (SANS)</h3><span class="tp-state">OK</span></header>
-              <div class="tp-row"><span>Amsler grid self-test</span><b class="tp-ok">&#10003; Pass</b></div>
-              <div class="tp-row"><span>Acuity check</span><b class="tp-ok">&#10003; Pass</b></div>
-            </article>
-
             <article class="twin-panel" data-hot="heart" data-side="right" id="twinHeartPanel">
-              <header class="tp-head"><span class="tp-dot"></span><h3>Cardiovascular</h3><span class="tp-state">OK</span></header>
+              <header class="tp-head"><span class="tp-dot"></span><h3>Gravity &middot; Heart</h3><span class="tp-state">OK</span></header>
               <canvas class="tp-ecg" id="twinEcg" aria-hidden="true"></canvas>
               <div class="tp-row tp-row-duo">
-                <span>HR <b id="twinHr">62</b> bpm <small class="tp-delta tp-up" id="twinHrDelta"></small></span>
-                <span>HRV <b>48</b> ms</span>
+                <span>HR <b id="twinHr">59</b> bpm</span>
+                <span>HRV <b>59</b> ms</span>
               </div>
             </article>
 
+            <article class="twin-panel" data-hot="link" data-side="right">
+              <header class="tp-head"><span class="tp-dot"></span><h3>Distance &middot; Ground link</h3><span class="tp-state">OK</span></header>
+              <div class="tp-row"><span>Since ground sync</span><b>10.5 <small>h</small></b></div>
+              <div class="tp-row"><span>Waiting in outbox</span><b>3 <small>entries</small></b></div>
+              <p class="tp-note">Watch at 24 h unsynced &middot; Act at 72 h</p>
+            </article>
+
             <article class="twin-panel" data-hot="muscle" data-side="right">
-              <header class="tp-head"><span class="tp-dot"></span><h3>Muscle &amp; Exercise</h3><span class="tp-state">OK</span></header>
-              <ul class="tp-loads">
-                <li><span>Resistive</span><i style="--w:82%"></i><b>82%</b></li>
-                <li><span>Treadmill</span><i style="--w:64%"></i><b>64%</b></li>
-                <li><span>Cycle</span><i style="--w:45%"></i><b>45%</b></li>
-              </ul>
+              <header class="tp-head"><span class="tp-dot"></span><h3>Gravity &middot; Legs</h3><span class="tp-state">OK</span></header>
+              <div class="tp-row"><span>Exercise load</span><b>122 <small>min</small></b></div>
+              <p class="tp-note">Own baseline 113 min &middot; Act below ~3&sigma;</p>
             </article>
           </div>
 
           <!-- ── Bottom: readiness + action card ── -->
           <div class="twin-bottom">
-            <div class="twin-readiness" id="twinReadiness">
+            <div class="twin-readiness is-act" id="twinReadiness" title="Mean of the five hazard scores, as on the console Status Board">
               <svg class="tr-ring" viewBox="0 0 80 80" aria-hidden="true">
                 <circle class="tr-bg" cx="40" cy="40" r="33"/>
                 <circle class="tr-fg" id="twinReadyRing" cx="40" cy="40" r="33" pathLength="100"/>
@@ -584,16 +566,17 @@
               <div class="tr-text">
                 <span class="tr-label">Crew Readiness</span>
                 <b class="tr-value"><span id="twinReadyVal">0</span>%</b>
-                <span class="tr-status"><i></i>Nominal</span>
+                <span class="tr-status"><i></i>Act</span>
               </div>
             </div>
 
             <aside class="twin-action" id="twinAction" aria-live="polite">
-              <p class="ta-kicker">Action card &middot; Cardiovascular</p>
-              <p class="ta-why">Resting HR +14% vs your baseline</p>
+              <p class="ta-kicker">Action card &middot; Isolation &middot; Act</p>
+              <p class="ta-why">Sleep last night 4.70 h is 3.4&sigma; below Pilot&rsquo;s baseline (6.29 h).</p>
               <ol class="ta-steps">
-                <li>Hydrate: 500 ml water</li>
-                <li>Rest 20 min, then re-check HR</li>
+                <li>Swap safety-critical tasks to a rested crewmate</li>
+                <li>Take a scheduled rest period and a 20-minute nap</li>
+                <li>Notify the commander and the flight surgeon</li>
               </ol>
               <p class="ta-log">Logged on board &middot; syncs to ground later</p>
             </aside>
@@ -615,7 +598,8 @@
           <p class="sim-eyebrow"><span class="bracket">&lt;</span>live-demo<span class="bracket">/&gt;</span></p>
           <h2 class="sim-title" id="sim-title">Mission Simulator</h2>
           <p class="sim-subtitle">Break something. Watch AstroDocX detect it, explain it and tell the crew what to do &mdash; all on board.
-            <span class="sim-tag">Synthetic crew data</span></p>
+            <span class="sim-tag">Synthetic crew data</span>
+            <a class="sim-real" href="/app/simulator">Run the real simulator &rarr;</a></p>
         </header>
 
         <div class="sim-grid">
@@ -627,9 +611,9 @@
               <div class="sim-btns">
                 <button type="button" class="sim-btn" data-event="E"><i>E</i>CO&#8322; scrubber fault</button>
                 <button type="button" class="sim-btn" data-event="R"><i>R</i>Solar particle event</button>
-                <button type="button" class="sim-btn" data-event="I"><i>I</i>Poor sleep night</button>
-                <button type="button" class="sim-btn" data-event="G"><i>G</i>Skipped workout</button>
-                <button type="button" class="sim-btn" data-event="D"><i>D</i>Comms blackout</button>
+                <button type="button" class="sim-btn" data-event="I"><i>I</i>Insomnia streak</button>
+                <button type="button" class="sim-btn" data-event="G"><i>G</i>Skipped exercise</button>
+                <button type="button" class="sim-btn" data-event="D"><i>D</i>Link blackout</button>
               </div>
               <div class="sim-btns sim-btns-sub">
                 <button type="button" class="sim-btn sim-btn-ghost" id="simPlay">&#9654; Play scenario</button>
@@ -651,7 +635,7 @@
               </svg>
               <div class="sr-text">
                 <span class="sr-label">Crew Readiness</span>
-                <b class="sr-value"><span id="simReadyVal">99</span>%</b>
+                <b class="sr-value"><span id="simReadyVal">100</span>%</b>
                 <span class="sr-status" id="simReadyStatus"><i></i>Nominal</span>
               </div>
               <div class="sr-clock">
@@ -680,7 +664,7 @@
           </div>
         </div>
 
-        <p class="sim-note">Concept demo: thresholds and numbers are illustrative, not medical guidance.</p>
+        <p class="sim-note">A mini version of the console engine: same Watch 1.8&sigma; / Act 3.0&sigma; thresholds and readiness formula. Only the CO&#8322; and dose limits are cited (NASA-STD-3001); the other numbers are illustrative, not medical guidance. <a href="/app/simulator">Run the full simulator &rarr;</a></p>
       </div>
     </section>
 
@@ -738,7 +722,7 @@
                   <span class="edu-year">01</span>
                   <h3>Detect</h3>
                   <p class="timeline-place">Sensors + daily check-in</p>
-                  <p class="edu-desc">Vitals, sleep, exercise, dose and cabin air are compared with each astronaut&rsquo;s own baseline.</p>
+                  <p class="edu-desc">11 metrics (vitals, sleep, exercise, reaction time, mood, dose, cabin air) are compared with each astronaut&rsquo;s own baseline. It only learns while nominal, so slow drift is not learned away.</p>
                 </div>
               </div>
             </div>
@@ -750,7 +734,7 @@
                   <span class="edu-year">02</span>
                   <h3>Explain</h3>
                   <p class="timeline-place">Plain-language alerts</p>
-                  <p class="edu-desc">Each alert says what changed, by how much and since when &mdash; no black box.</p>
+                  <p class="edu-desc">Each alert says what changed, by how much, against whose baseline and since when &mdash; e.g. &ldquo;4.3&sigma; above Pilot&rsquo;s baseline, since D27 07:00 MET&rdquo;. No black box.</p>
                 </div>
               </div>
             </div>
@@ -762,7 +746,7 @@
                   <span class="edu-year">03</span>
                   <h3>Act</h3>
                   <p class="timeline-place">Step-by-step action cards</p>
-                  <p class="edu-desc">Countermeasures the crew can follow right away, without waiting for Earth.</p>
+                  <p class="edu-desc">Checkable steps with progress and a Done button. The alert opens, escalates, eases and resolves on its own as values recover.</p>
                 </div>
               </div>
             </div>
@@ -774,7 +758,7 @@
                   <span class="edu-year">04</span>
                   <h3>Log</h3>
                   <p class="timeline-place">Offline health record</p>
-                  <p class="edu-desc">Every reading, alert and completed action is stored on board, even with no signal.</p>
+                  <p class="edu-desc">Every reading, alert and completed step is stored on the device (IndexedDB), with no network needed after the first load.</p>
                 </div>
               </div>
             </div>
@@ -786,7 +770,7 @@
                   <span class="edu-year">05</span>
                   <h3>Sync</h3>
                   <p class="timeline-place">Delay-tolerant link</p>
-                  <p class="edu-desc">The record reaches flight surgeons on Earth whenever the link allows.</p>
+                  <p class="edu-desc">An outbox waits for link windows (12-minute delay, blackouts handled), then sends. Export the log as CSV; the Ground View shows only what Earth has received.</p>
                   <span class="edu-status-pill">Crew stays in control</span>
                 </div>
               </div>
@@ -795,6 +779,19 @@
           </div><!-- /edu-cards-row -->
         </div><!-- /edu-timeline-wrap -->
       </div><!-- /edu-inner -->
+    </section>
+
+    <!-- ═══════════════════════════════════════ PROOF STRIP (#proof) ═════
+         R2: every number verified from the repo (see plan.md R2 log). -->
+    <section id="proof" aria-label="The console in numbers">
+      <ul class="proof-inner">
+        <li class="proof-item"><b class="proof-num" data-target="11">11</b><span>metrics vs your own baseline</span></li>
+        <li class="proof-item"><b class="proof-num" data-target="5">5</b><span>RIDGE hazards covered</span></li>
+        <li class="proof-item"><b class="proof-num" data-target="7">7</b><span>working screens</span></li>
+        <li class="proof-item"><b class="proof-num" data-target="186">186</b><span>automated tests</span></li>
+        <li class="proof-item"><b class="proof-num" data-target="100">100</b><span>Lighthouse accessibility</span></li>
+        <li class="proof-item"><b class="proof-num proof-text">Offline</b><span>after the first load</span></li>
+      </ul>
     </section>
 
     <!-- ═══════════════════════════════════════ BUILT ON (#built) ═════════
@@ -806,7 +803,7 @@
         <header class="built-header">
           <p class="built-eyebrow"><span class="bracket">&lt;</span>built-on<span class="bracket">/&gt;</span></p>
           <h2 class="built-title" id="built-title">Built On</h2>
-          <p class="built-subtitle">Open web tech today, an offline-first console next, grounded in NASA and open physiology data.</p>
+          <p class="built-subtitle">Open web tech on both sides: this landing page and an offline-first console, grounded in NASA standards and open physiology data.</p>
         </header>
 
         <div class="built-grid">
@@ -817,9 +814,9 @@
             </ul>
             <h3>Crew Console <span class="built-pill built-pill-live">Live</span></h3>
             <ul class="built-chips">
-              <li>React + TypeScript</li><li>PWA (offline)</li><li>IndexedDB / Dexie</li><li>Recharts</li><li>Zustand</li><li>Simulated ground sync</li>
+              <li>React + TypeScript</li><li>PWA (offline, installable)</li><li>IndexedDB / Dexie</li><li>Recharts</li><li>Zustand</li><li>Delay-tolerant outbox</li>
             </ul>
-            <p class="built-foot">Detection logic: personal baselines, EWMA-smoothed z-scores, rule-based action cards. The same engine already runs in the <a href="#sim">Live Demo</a>.</p>
+            <p class="built-foot">Detection: per-person baselines (Welford mean/sd, learned only while nominal), EWMA-smoothed z-scores, persistence (2&ndash;3 readings in a row), two-signal rules and cited limits, with hysteresis. A mini version runs in the <a href="#sim">Live Demo</a>.</p>
           </div>
 
           <ul class="built-sources">
@@ -845,11 +842,18 @@
             </li>
           </ul>
         </div>
+
+        <aside class="built-card built-roadmap" aria-labelledby="roadmap-title">
+          <h3 id="roadmap-title">Roadmap <span class="built-pill">Not built yet</span></h3>
+          <ul class="built-chips">
+            <li>Wearable sensor integration</li><li>Real Supabase ground backend</li><li>Vision / SANS self-tests</li><li>Blood pressure</li><li>Bone density</li><li>Multi-device ground station</li>
+          </ul>
+        </aside>
       </div>
     </section>
 
     <!-- ═══════════════════════════════════════ TEAM (#contact) ═══════════
-         Edit the team cards below: name, role, links, initials.
+         Team cards: edit the TEAM array in team.js.
     ══════════════════════════════════════════════════════════════ -->
     <section id="contact">
       <div class="contact-overlay" aria-hidden="true"></div>
@@ -860,41 +864,8 @@
 
         <div class="contact-wrapper">
           <div class="contact-form-area team-area">
-            <ul class="team-grid">
-              <li class="team-card">
-                <span class="team-avatar" aria-hidden="true">AM</span>
-                <div class="team-meta">
-                  <h3>Alif Mahmud</h3>
-                  <p class="team-role">Team Lead &middot; Full-stack</p>
-                  <a href="https://github.com/A-42-018" target="_blank" rel="noopener" class="team-link">GitHub &#8599;</a>
-                </div>
-              </li>
-              <!-- TODO: replace with real team members -->
-              <li class="team-card">
-                <span class="team-avatar" aria-hidden="true">M2</span>
-                <div class="team-meta">
-                  <h3>Member Name</h3>
-                  <p class="team-role">Frontend &middot; UI</p>
-                  <a href="#" class="team-link">GitHub &#8599;</a>
-                </div>
-              </li>
-              <li class="team-card">
-                <span class="team-avatar" aria-hidden="true">M3</span>
-                <div class="team-meta">
-                  <h3>Member Name</h3>
-                  <p class="team-role">Data &amp; Science</p>
-                  <a href="#" class="team-link">GitHub &#8599;</a>
-                </div>
-              </li>
-              <li class="team-card">
-                <span class="team-avatar" aria-hidden="true">M4</span>
-                <div class="team-meta">
-                  <h3>Member Name</h3>
-                  <p class="team-role">Design &amp; Pitch</p>
-                  <a href="#" class="team-link">GitHub &#8599;</a>
-                </div>
-              </li>
-            </ul>
+            <!-- Cards are rendered from the TEAM array in team.js (edit that file, not this markup). -->
+            <ul class="team-grid" id="teamGrid" aria-label="Team members"></ul>
           </div>
 
           <div class="contact-info">
@@ -929,12 +900,12 @@
   <footer id="footer">
     <div class="footer-inner">
       <p class="footer-logo"><span class="bracket">&lt;</span>astrodoc<span class="logo-x">X</span><span class="bracket">/&gt;</span></p>
-      <p class="footer-copy">&copy; <span id="footer-year"></span> Team AstroDocX &middot; NASA Space Apps Challenge 2026 &middot; Concept prototype, not a medical device.</p>
+      <p class="footer-copy">&copy; <span id="footer-year"></span> Team AstroDocX &middot; NASA Space Apps Challenge 2026 &middot; Prototype, not a medical device.</p>
       <ul class="footer-links">
         <li><a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener">GitHub</a></li>
         <li><a href="https://www.spaceappschallenge.org/" target="_blank" rel="noopener">Space Apps</a></li>
         <li><a href="#built">Data sources</a></li>
-        <li><a href="#hero">Top</a></li>
+        <li><a href="#universe">Top</a></li>
       </ul>
     </div>
   </footer>
@@ -967,9 +938,14 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
 
   <script src="script.js"></script>
-  <script src="astronaut.js"></script>
+  <script src="universe/scenes.js"></script>
+  <script src="universe/camera.js"></script>
+  <script src="universe/engine.js"></script>
+  <script src="universe/fx.js"></script>
+  <script src="universe/universe.js"></script>
   <script src="twin.js"></script>
   <script src="sim.js"></script>
+  <script src="team.js"></script>
   <script src="tour.js"></script>
   <script src="anatomy3d.js"></script>
 

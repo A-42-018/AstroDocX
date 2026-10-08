@@ -187,3 +187,10 @@
   .twin-rings .ring, .twin-hot .pulse, .twin-title::after, .twin-panel.is-watch .tp-dot { animation:none !important; }
   .twin-panel, .twin-readiness, .twin-action { transition:none; }
 }
+
+/* R1: readiness reflects the real status (Pilot = Act in the demo mission) */
+.twin-readiness.is-act { border-color:rgba(245,158,11,.5); }
+.twin-readiness.is-act .tr-fg { stroke:var(--watch);filter:drop-shadow(0 0 4px rgba(245,158,11,.6)); }
+.twin-readiness.is-act .tr-status { color:var(--watch); }
+.twin-readiness.is-act .tr-status i { background:var(--watch);box-shadow:0 0 8px var(--watch); }
+.twin-panel .tp-note { display:block;margin-top:4px;font-size:.7rem;color:rgba(255,255,255,.5);font-family:var(--font-body); }
