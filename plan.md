@@ -866,6 +866,13 @@ Owner request: the whole landing page made from the same group of particles (the
 - **Checked (Chrome pane):** 1440×900 and ~800 px: intro scenes, Earth -> body morph, twin with labels and leader lines, readiness card, body -> wordmark, final reveal with buttons, footer after the pin; `?reduce=1` stacks the three sections (twin as a grid, CSS wordmark); `#twin` deep link and nav link land in the right place, active link correct. Only console errors are the four optional baked `.bin` 404s (pre-existing; procedural shapes are used).
 - **Not re-checked:** a full tour run, real-GPU frame rate, a real phone.
 
+## S5 Implementation Log: generated soundtrack (done locally, 2026-10-08)
+Owner asked for the Interstellar theme; it is copyrighted (Hans Zimmer), so the page gets its own generated music instead.
+- **`landing/universe/sound.js` (new):** Web Audio only, no audio files. Organ-like pad (fundamental + octave + twelfth per note, slight detune) -> lowpass -> dry + synthetic reverb -> compressor. One chord per intro scene (Am add9, F, C, G sus, Em, Fmaj7), A minor in the Health Twin, A major on the AstroDocX reveal; 2.5 s / 3.5 s crossfades. The filter opens through the intro and swells in the two morphs; sparse high "star" notes in the intro and the reveal; a lub-dub thump in the twin in phase with the particle heart.
+- **Follows the journey** through `ADX_JOURNEY.state()` (new: `{id, q}` of the smoothed progress; static mode uses the section in the middle of the screen).
+- **Opt-in:** the "Sound" pill (bottom-right beside back-to-top, icon only on phones) starts it; browsers need a click. The choice is kept in localStorage; a returning "on" visitor's sound starts at their first click or key. Suspended while the tab is hidden; hidden in `?tour=1` (click the page once to start it for a recording).
+- **Checked (Chrome pane):** on -> AudioContext running, 12 oscillators for the first chord; scrolling to the twin crossfades the chord and adds heartbeat thumps; off -> fades and suspends, "off" stored; no console errors; 375 px fits with no horizontal overflow. Not checked by ear in this session.
+
 ## Current Phase
 **C0–C12 done and deployed. Console v2 (U0–U7) and L4 (3D anatomy viewer) done locally. Landing sprint: R1, R2, P0 and P1 (particle engine + procedural shapes) done locally 2026-10-08. P2 (bake pipeline) done, waiting on real model files. P0 to P5, S1 (short page) and S2 (particle wordmark reveal), S3 (particle Health Twin) and S4 (one particle journey, Team removed) done. Next: P6 (ship): check reduced-motion and the tour on the short page, Lighthouse, OG image, README screenshots, deploy, video. Nothing pushed yet (§13.4).**
 

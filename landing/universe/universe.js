@@ -339,6 +339,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
   window.ADX_JOURNEY = {
     get live() { return !!st; },
+    /* where the journey is right now: { id, q } of the smoothed progress (sound.js follows it).
+       Static mode: the section in the middle of the screen, q = how far through it */
+    state: () => {
+      if (st) return chapterAt(P);
+      const mid = innerHeight / 2, ids = [['intro', root], ['twin', twinEl], ['adx', adxEl]];
+      for (const [id, el] of ids) { const r = el.getBoundingClientRect(); if (r.bottom > mid) return { id: id, q: clamp((mid - r.top) / Math.max(1, r.height), 0, 1) }; }
+      return { id: 'adx', q: 1 };
+    },
     /* the section the visitor is in (for the nav's active link) */
     section: () => {
       if (!st) return null;
