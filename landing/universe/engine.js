@@ -467,7 +467,7 @@
     const body = genBody(n, rng(20261009)), bodyReg = body.reg, bodyNrm = body.nrm;
     shapes.push(mortonSort(body.pos, n, [bodyReg, bodyNrm]));
     const wordOf = fam => mortonSort(genWordmark(n, rng(99), fam), n);
-    shapes.push(wordOf((opts && opts.family) || 'Pulchella, sans-serif'));
+    shapes.push(wordOf((opts && opts.family) || '"Space Grotesk", sans-serif'));
 
     /* Slot j holds sorted particle perm[j] (seeded shuffle). The Morton order is kept per shape, and any prefix
        of the slots is a uniform subsample of every shape, so drawRange(0, k) lowers the tier without rebuilding. */

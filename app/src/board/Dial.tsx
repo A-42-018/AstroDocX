@@ -34,7 +34,7 @@ export function ReadinessRing({ value, status, heldBy }: { value: number; status
         <StatusPill status={status} />
       </figcaption>
       {heldBy && (
-        <p className={`dial-held mono st-${heldBy.status}`}>
+        <p className={`dial-held st-${heldBy.status}`}>
           Held back by: {heldBy.name} (<b>{heldBy.status === 'act' ? 'Act' : 'Watch'}</b>)
         </p>
       )}

@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', function () {
     engine.onChange = () => { if (staticMode) schedulePosters(); else if (!running) renderOnce(); };
     fx = ADX_FX.create(scene, engine);
     /* the wordmark is drawn with the display font: redraw it once that font is in */
-    if (document.fonts && document.fonts.load) document.fonts.load('800 190px Pulchella').then(() => engine.setWordFont('Pulchella, sans-serif')).catch(() => {});
+    if (document.fonts && document.fonts.load) document.fonts.load('700 190px "Space Grotesk"').then(() => engine.setWordFont('"Space Grotesk", sans-serif')).catch(() => {});
   }
 
   function resize() {
