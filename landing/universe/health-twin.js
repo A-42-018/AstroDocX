@@ -42,12 +42,13 @@
     const tmp = new THREE.Vector3();
 
     /* body regions (engine uniforms) for chapter progress p */
-    function body(U, p) {
+    function body(U, p, rig) {
+      const centers = rig.centers || CENTERS;
       const morph = clamp(p / 0.20, 0, 1);
       const scan = p < 0.20 ? 3 : p > 0.31 ? -3 : 2.3 - (p - 0.20) / 0.11 * 4.6;           // sweeps 2.3 -> -2.3
       U.uScan.value = scan;
       const lit = U.uLit.value, foc = U.uFocus.value;
-      for (let r = 0; r < 10; r++) lit[r] = r === 0 || r === 8 || r === 9 ? clamp(morph * 1.6 - 0.2, 0, 1) : clamp((CENTERS[r] - scan) / 0.5 + 0.5, 0, 1) * (p > 0.20 ? 1 : 0);
+      for (let r = 0; r < 10; r++) lit[r] = r === 0 || r === 8 || r === 9 ? clamp(morph * 1.6 - 0.2, 0, 1) : clamp((centers[r] - scan) / 0.5 + 0.5, 0, 1) * (p > 0.20 ? 1 : 0);
       let cur = -1;
       for (let i = 0; i < STAGES.length; i++) if (p >= T0 + i * STEP) cur = i;
       for (let r = 0; r < 10; r++) foc[r] = 0;
@@ -84,13 +85,13 @@
        Lanes are in "distance from the label column" (k); lines going up nest outward top to bottom, lines going
        down nest outward bottom to top, so no two lines cross. */
     const GAP = 18, LANE = 14, CHAMFER = 8;
-    function drawLines(camera, ang) {
+    function drawLines(camera, ang, rig) {
       const box = root.getBoundingClientRect(), W = box.width, H = box.height, c = Math.cos(ang), s = Math.sin(ang);
       const obs = small() ? [] : obstacles(box), route = [];
       labels.forEach((el, i) => {
         const v = parseFloat(el.style.opacity) || 0, ln = lines[i], dt = dots[i];
         if (small() || v < 0.02) { ln.style.opacity = 0; dt.style.opacity = 0; return; }
-        const a = STAGES[i].at;
+        const a = (rig.at && rig.at[i]) || STAGES[i].at;                               // the baked body brings its own anchors
         tmp.set(c * a[0] + s * a[2], a[1], -s * a[0] + c * a[2]).project(camera);
         const ax = (tmp.x * 0.5 + 0.5) * W, ay = (-tmp.y * 0.5 + 0.5) * H;
         const r = el.getBoundingClientRect(), left = el.dataset.side === 'left', dir = left ? 1 : -1;
@@ -123,9 +124,9 @@
     return {
       /* p: chapter progress (0..1). Returns the current stage. */
       update: function (engine, camera, p, time) {
-        const cur = body(engine.uniforms, p);
+        const cur = body(engine.uniforms, p, engine.bodyRig);
         dom(p, cur);
-        drawLines(camera, engine.bodyAngle(time));
+        drawLines(camera, engine.bodyAngle(time), engine.bodyRig);
         return cur;
       },
       makeStatic: function () {

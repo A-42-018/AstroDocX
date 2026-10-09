@@ -12,7 +12,8 @@
      7 ASTRODOCX wordmark  (the reveal)
 
    The same particles are born as stardust and end as the wordmark.
-   Astronaut, Orion, TDRS and Earth load baked NASA-model bins.
+   Astronaut, Orion, TDRS and Earth load baked NASA-model bins; the
+   body loads a real human shape baked from a turntable video.
 ============================================================ */
 (function () {
   'use strict';
@@ -491,6 +492,7 @@
     geo.setAttribute('aReg', new THREE.BufferAttribute(reg, 1));
     const nrmA = new Float32Array(count * 3); fill(nrmA, bodyNrm);
     geo.setAttribute('aNrm', new THREE.BufferAttribute(nrmA, 3));                     // body skin normals (0 elsewhere)
+    const regAt = geo.getAttribute('aReg'), nrmAt = geo.getAttribute('aNrm');
     const tagAt = new THREE.BufferAttribute(new Float32Array(count), 1);
     geo.setAttribute('aTag', tagAt);                                                   // Crew scene parts (baked astronaut.bin tags, 0 elsewhere)
     geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 3), 3));   // required by three; unused
@@ -534,6 +536,25 @@
       }).catch(function () {});
     });
 
+    /* the Health Twin body (tools/bake-body.mjs): per point Int16 position (/8192), Int16 aNrm (/4096), Uint8 region,
+       plus body.json with the anchors in that body (heart, label anchors, region heights). Missing: the procedural body stays. */
+    Promise.all([
+      fetch('universe/targets/body.bin').then(res => res.ok ? res.arrayBuffer() : Promise.reject()),
+      fetch('universe/targets/body.json').then(res => res.ok ? res.json() : Promise.reject())
+    ]).then(function (got) {
+      const buf = got[0], rig = got[1];
+      if (buf.byteLength !== n * 13 || !rig || !rig.heart || !rig.at) return;
+      const dv = new DataView(buf), arr = attrs[6].array, na = nrmAt.array, ra = regAt.array;
+      for (let i = 0; i < count; i++) {
+        const o = perm[i];
+        for (let c = 0; c < 3; c++) { arr[i * 3 + c] = dv.getInt16(o * 6 + c * 2, true) / 8192; na[i * 3 + c] = dv.getInt16(n * 6 + o * 6 + c * 2, true) / 4096; }
+        ra[i] = dv.getUint8(n * 12 + o);
+      }
+      attrs[6].needsUpdate = nrmAt.needsUpdate = regAt.needsUpdate = true;
+      api.bodyRig = rig;
+      if (api.onChange) api.onChange();
+    }).catch(function () {});
+
     /* intro morph windows from the scene config: into scene i = [end of hold i-1, start of hold i] */
     const S = window.ADX_SCENES;
     function windowInto(i) { return [S[i - 1].hold[1], S[i].hold[0]]; }
@@ -549,6 +570,7 @@
     const api = {
       points: points, uniforms: U, count: count, onChange: null, weights: [0, 0, 0, 0, 0, 0, 0, 0], drawn: n,
       BODY: 6, WORD: 7,
+      bodyRig: { heart: HEART, at: null, centers: null },                              // replaced by body.json when the baked body loads
       /* lower / raise the particle count without rebuilding; dimmer-per-point is compensated a little */
       setTier: function (t) {
         const k = Math.min(TIER_N[t] || n, n);
@@ -571,7 +593,7 @@
         U.uBodyA.value = a === 6 ? 1 : 0; U.uBodyB.value = b === 6 ? 1 : 0;
         /* heartbeat: one pulse a second (lub, then a softer dub), ripple radius grows from the chest / heart */
         const ph = time % 1, dub = (time + 0.72) % 1, isBody = a === 6 || b === 6;
-        if (isBody) { const g = angle(BODY, time), c = Math.cos(g), s = Math.sin(g); U.uChest.value.copy(heartW.set(c * HEART[0] + s * HEART[2], HEART[1], -s * HEART[0] + c * HEART[2])); }
+        if (isBody) { const g = angle(BODY, time), c = Math.cos(g), s = Math.sin(g), h = api.bodyRig.heart; U.uChest.value.copy(heartW.set(c * h[0] + s * h[2], h[1], -s * h[0] + c * h[2])); }
         else { const A2 = ALL[2], g = angle(A2, time), c = Math.cos(g), s = Math.sin(g), q = A2.chest.map(v => v * A2.sc);   // the astronaut's chest, following its sway
           U.uChest.value.set(c * q[0] + s * q[2] + A2.off[0], q[1] + A2.off[1], -s * q[0] + c * q[2] + A2.off[2]); }
         U.uBeatR.value = ph * (isBody ? 1.7 : 2.4);
