@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Hazard, Status } from '../data/types'
 import { useHeartbeat } from '../live/heartbeat'
 import { useHidden, useReducedMotion } from '../live/usePaused'
@@ -6,6 +6,7 @@ import * as A from './anatomy'
 import { useBoard } from './store'
 import { HazardIcon, StatusPill } from '../shell/icons'
 import type { HazardTile } from './snapshot'
+import { HAZARD_INDEX, loadBody, toBox, twinRenderer, type Body3D } from './body3d'
 
 /** Body outline: control points for the right half (dx from the centre line, y), mirrored and smoothed with a closed Catmull-Rom spline. */
 const RIGHT: [number, number][] = [
@@ -46,9 +47,11 @@ function useBeatAnimation(hr: number) {
   const heart = useRef<SVGGElement>(null)
   const glow = useRef<SVGCircleElement>(null)
   const pulses = useRef<SVGGElement>(null)
+  const beatAt = useRef(-1e9)
   const reduced = useReducedMotion()
   const hidden = useHidden()
   useHeartbeat(hr, !reduced && !hidden, () => {
+    beatAt.current = performance.now()
     const period = 60_000 / Math.max(30, hr)
     heart.current?.animate?.(
       [{ transform: 'scale(1)' }, { transform: 'scale(1.13)', offset: 0.12 }, { transform: 'scale(0.97)', offset: 0.26 }, { transform: 'scale(1.07)', offset: 0.38 }, { transform: 'scale(1)' }],
@@ -59,7 +62,69 @@ function useBeatAnimation(hr: number) {
       p.animate?.([{ strokeDashoffset: 0, opacity: 1 }, { strokeDashoffset: -1000, opacity: 0.2 }], { duration: Math.min(1100, period * 1.1), easing: 'cubic-bezier(.3,.6,.4,1)' })
     }
   })
-  return { heart, glow, pulses }
+  return { heart, glow, pulses, beatAt, reduced }
+}
+
+/**
+ * The 3D twin: the baked human (body3d.ts) as a particle hologram that turns gently. Each hazard colours its
+ * own part, the heart beats with the ECG, and the hotspot dots follow their anchors as the body turns.
+ * Returns null until the body has loaded and WebGL works; the SVG twin shows until then (and in tests).
+ */
+function useParticleTwin(statuses: Record<Hazard, Status>, focus: Hazard | null, beatAt: { current: number }, reduced: boolean) {
+  const [body, setBody] = useState<Body3D | null>(null)
+  const [failed, setFailed] = useState(false)
+  const canvas = useRef<HTMLCanvasElement>(null)
+  const spots = useRef<Partial<Record<Hazard, SVGGElement | null>>>({})
+  const state = useRef({ statuses, focus })
+  const redraw = useRef<() => void>(() => {})
+  useEffect(() => { state.current = { statuses, focus } })
+  useEffect(() => { let on = true; void loadBody().then((b) => { if (on) setBody(b) }); return () => { on = false } }, [])
+  const statusKey = SPOTS.map((s) => statuses[s.id]).join()
+
+  useEffect(() => {
+    const el = canvas.current
+    if (!body || !el) return
+    let r: ReturnType<typeof twinRenderer>
+    try { r = twinRenderer(el, body) } catch { queueMicrotask(() => setFailed(true)); return }   // no WebGL: back to the SVG twin
+    r.resize()
+    const ro = new ResizeObserver(() => { r.resize(); frame(performance.now()) })
+    ro.observe(el)
+    let seen = true
+    const io = new IntersectionObserver((es) => { seen = es[es.length - 1].isIntersecting })
+    io.observe(el)
+    let applied = ''
+    const t0 = performance.now()
+    function frame(now: number) {
+      const { statuses: st, focus: fo } = state.current, key = SPOTS.map((s) => st[s.id]).join()
+      if (key !== applied) { r.setStatus(st); applied = key }
+      const t = (now - t0) / 1000, ang = reduced ? 0.12 : 0.12 + 0.3 * Math.sin(t * 0.3), c = Math.cos(ang), sn = Math.sin(ang)
+      r.draw(t, ang, reduced ? 9 : (now - beatAt.current) / 1000, fo ? HAZARD_INDEX[fo] : -1)
+      for (const s of SPOTS) {                                                   // dots ride on the turning body; y does not change
+        const g = spots.current[s.id], a = body!.anchors[s.id]
+        if (!g) continue
+        const x = toBox(c * a[0] + sn * a[2], 0)[0].toFixed(1)
+        g.querySelectorAll('circle').forEach((n) => n.setAttribute('cx', x))
+        g.querySelector('line')?.setAttribute('x1', x)
+      }
+    }
+    let raf = 0, last = 0
+    const loop = (now: number) => {
+      raf = requestAnimationFrame(loop)
+      if (document.hidden || !seen || now - last < 1000 / 30 - 2) return
+      last = now; frame(now)
+    }
+    frame(performance.now())
+    redraw.current = () => frame(performance.now())
+    if (!reduced) raf = requestAnimationFrame(loop)
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); r.dispose(); redraw.current = () => {} }
+  }, [body, reduced, beatAt])
+
+  /* reduced motion draws on demand: redraw when a status or the linked hazard changes */
+  useEffect(() => { redraw.current() }, [statusKey, focus])
+  const live = !!body && !failed
+  /* spot positions in the 300 x 660 box: from the 3D anchors when live, else the SVG twin's */
+  const spotAt = (s: (typeof SPOTS)[number]) => (live ? toBox(body!.anchors[s.id][0], body!.anchors[s.id][1]) : [s.x, s.y])
+  return { live, canvas, spots, spotAt }
 }
 
 /**
@@ -71,12 +136,15 @@ function useBeatAnimation(hr: number) {
 export function Twin({ tiles, overall, hr = 62 }: { tiles: HazardTile[]; overall: Status; hr?: number }) {
   const by = new Map(tiles.map((t) => [t.hazard, t]))
   const st = (h: Hazard) => by.get(h)?.status ?? 'nominal'
-  const { heart, glow, pulses } = useBeatAnimation(hr)
+  const { heart, glow, pulses, beatAt, reduced } = useBeatAnimation(hr)
   const focus = useBoard((s) => s.focusHazard)
   const setFocus = useBoard((s) => s.setFocusHazard)
+  const statuses = { I: st('I'), D: st('D'), E: st('E'), R: st('R'), G: st('G') } as Record<Hazard, Status>
+  const { live, canvas, spots, spotAt } = useParticleTwin(statuses, focus, beatAt, reduced)
   return (
     <div className="twin" role="group" aria-label="Health twin">
-      <div className={`twin-fig st-${overall}`}>
+      <div className={`twin-fig st-${overall}${live ? ' is-3d' : ''}`}>
+        <canvas ref={canvas} className="twin-canvas" aria-hidden="true" />
         <svg viewBox={`0 0 ${VB_W} ${VB_H}`} aria-hidden="true">
           <defs>
             <linearGradient id="twin-fill" x1="0" x2="0" y1="0" y2="1">
@@ -106,6 +174,7 @@ export function Twin({ tiles, overall, hr = 62 }: { tiles: HazardTile[]; overall
             <clipPath id="twin-clip"><path d={BODY_D} /></clipPath>
           </defs>
 
+          {!live && <>
           {/* holographic floor */}
           <g className="twin-floor">
             <ellipse cx="150" cy="642" rx="130" ry="22" fill="url(#twin-floor)" />
@@ -166,15 +235,17 @@ export function Twin({ tiles, overall, hr = 62 }: { tiles: HazardTile[]; overall
             {A.SPARKS.map((p, i) => <circle key={i} cx={p.cx} cy={p.cy} r={p.r} className="spark" style={{ animationDelay: `${p.delay}s` }} />)}
             <rect className="twin-scan" x="0" y="0" width={VB_W} height="46" />
           </g>
+          </>}
 
           {SPOTS.map((s) => {
             const status = st(s.id)
             const x2 = s.side === 'l' ? -14 : VB_W + 14
+            const [sx, sy] = spotAt(s)
             return (
-              <g key={s.id} className={`twin-spot st-${status}${focus === s.id ? ' is-linked' : ''}`}>
-                <line x1={s.x} y1={s.y} x2={x2} y2={s.y} className="twin-leader" />
-                <circle cx={s.x} cy={s.y} r="13" className="twin-halo" />
-                <circle cx={s.x} cy={s.y} r="5" className="twin-dot" data-spot={s.id} />
+              <g key={s.id} ref={(g) => { spots.current[s.id] = g }} className={`twin-spot st-${status}${focus === s.id ? ' is-linked' : ''}`}>
+                <line x1={sx} y1={sy} x2={x2} y2={sy} className="twin-leader" />
+                <circle cx={sx} cy={sy} r="13" className="twin-halo" />
+                <circle cx={sx} cy={sy} r="5" className="twin-dot" data-spot={s.id} />
               </g>
             )
           })}
@@ -183,7 +254,7 @@ export function Twin({ tiles, overall, hr = 62 }: { tiles: HazardTile[]; overall
           const t = by.get(s.id)
           if (!t) return null
           return (
-            <a key={s.id} href={`#hz-${s.id}`} className={`twin-chip ${s.side} st-${t.status}${focus === s.id ? ' is-linked' : ''}`} style={{ top: `${(s.y / VB_H) * 100}%` }}
+            <a key={s.id} href={`#hz-${s.id}`} className={`twin-chip ${s.side} st-${t.status}${focus === s.id ? ' is-linked' : ''}`} style={{ top: `${(spotAt(s)[1] / VB_H) * 100}%` }}
               onMouseEnter={() => setFocus(s.id)} onMouseLeave={() => setFocus(null)} onFocus={() => setFocus(s.id)} onBlur={() => setFocus(null)}>
               <span className="sr-only">{`Jump to ${t.name} card, ${WORD[t.status]}`}</span>
               <HazardIcon hazard={s.id} status={t.status} />

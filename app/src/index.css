@@ -486,6 +486,10 @@ button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible
 .twin { width: 100%; display: grid; place-items: center; }
 .twin-fig { position: relative; width: min(46%, 240px); aspect-ratio: 300 / 660; --st: var(--ok); }
 .twin-fig > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+/* 3D twin: the particle body draws on the canvas, the SVG above it keeps only the hotspots */
+.twin-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: none; pointer-events: none; }
+.twin-fig.is-3d .twin-canvas { display: block; }
+.mini-body { display: block; height: 130px; aspect-ratio: 300 / 660; margin: 6px auto; }
 .twin-body { stroke: rgba(127, 232, 255, 0.7); stroke-width: 1.3; filter: drop-shadow(0 0 6px rgba(45, 212, 232, 0.45)); }
 .twin-aura { fill: none; stroke: var(--st); stroke-width: 3; opacity: 0.3; filter: blur(7px); }
 .twin-aura.st-nominal { opacity: 0.1; }

@@ -2,12 +2,28 @@ import { met } from '../engine/actions'
 import { ONE_WAY_DELAY_MIN } from '../sync/link'
 import type { GroundAlert, GroundCrew } from './derive'
 import { StatusPill } from '../shell/icons'
+import { useEffect, useRef, useState } from 'react'
 import { BODY_D } from '../board/Twin'
+import { drawMiniBody, loadBody, type Body3D } from '../board/body3d'
 import { duration } from '../shell/format'
 import type { Status } from '../data/types'
 
-/** Small body silhouette whose glow is the worst status the ground knows about. */
+/** Small body figure whose colour is the worst status the ground knows about: the 3D twin's points seen from the
+    front, or the SVG outline until (or unless) the body loads. */
 function MiniTwin({ status }: { status: Status }) {
+  const [body, setBody] = useState<Body3D | null>(null)
+  const canvas = useRef<HTMLCanvasElement>(null)
+  useEffect(() => { let on = true; void loadBody().then((b) => { if (on) setBody(b) }); return () => { on = false } }, [])
+  useEffect(() => {
+    const el = canvas.current
+    if (!body || !el) return
+    const paint = () => drawMiniBody(el, body, getComputedStyle(el).getPropertyValue('--st').trim() || '#2dd4e8')
+    paint()
+    const ro = new ResizeObserver(paint)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [body, status])
+  if (body) return <canvas ref={canvas} className={`mini-body st-${status}`} aria-hidden="true" />
   return (
     <svg className={`mini-twin st-${status}`} viewBox="0 0 300 660" aria-hidden="true">
       <path d={BODY_D} className="twin-aura" />
