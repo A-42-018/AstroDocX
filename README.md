@@ -5,7 +5,7 @@
 > NASA Space Apps Challenge 2026 · Challenge: *Create Health Monitoring Software for Astronauts on Space Missions*
 > Team AstroDocX · Dhaka, Bangladesh
 
-![AstroDocX Health Twin](landing/assets/og-image.png)
+![AstroDocX Health Twin: a real human shape made of particles, with the brain, heart, lungs, skeleton and arteries inside](docs/screenshots/health-twin.jpg)
 
 ## The problem
 Long-duration missions expose astronauts to the five spaceflight hazards NASA groups as **RIDGE**:
@@ -30,12 +30,12 @@ AstroDocX learns each astronaut's **personal baseline**, spots drift early, and 
 | Explainable alerts | Each alert says what changed, by how much, against whose baseline and since when |
 | Action cards | Checkable countermeasure steps with progress and Done; open → escalate → ease → resolve lifecycle, all logged |
 | Status Board | Five RIDGE tiles, crew readiness score, crew overview, next action, live vitals strip (ECG-style waves, heart pulse) |
-| Health Twin (console) | Anatomical hologram: a live heart beating with the ECG; organs and bones take their hazard status |
+| Health Twin (console) | A 3D particle body (the same baked human as the landing page) turning gently: the heart beats with the live ECG, a pulse runs down the arteries, and each hazard colours its own part (brain, lungs, legs, skin, transmitter arm) amber or red |
 | Trends | 11 charts with the personal baseline band, alert markers, 24 h / 7 d / 30 d |
 | Daily Check-in | Mood, sleep quality, hours slept, 8 symptom chips and a 5-tap reaction test (PVT-style); symptoms and sleep quality raise alerts |
 | Mission Simulator | Mission clock, fast-forward, 4 injectable scenarios (solar event, CO₂ fault, insomnia, deconditioning); watch the engine react |
 | Ground Sync | Delay-tolerant outbox: link windows, 12-minute delay, blackout, auto-sync, CSV log export |
-| Ground View | Flight-surgeon view rebuilt only from synced entries (shows what Earth knows, and when) |
+| Ground View | Flight-surgeon view rebuilt only from synced entries (shows what Earth knows, and when); each crew card shows the 3D body in its status colour |
 | Platform | Offline-first installable PWA, IndexedDB on the device, 4-crew 30-day demo mission preloaded |
 
 **Not built yet (Roadmap):** wearable sensor integration, a real Supabase ground backend with proper policies, vision/SANS self-tests, blood pressure, bone density, a multi-device ground station.
@@ -43,11 +43,15 @@ AstroDocX learns each astronaut's **personal baseline**, spots drift early, and 
 > **Status:** the landing page and the **Crew Console** (`app/`) are built and run the full loop on synthetic data. See [`plan.md`](plan.md) for the build log. AstroDocX is a prototype, **not a medical device**; all thresholds not cited in the code are illustrative.
 
 ## Screenshots
-**Landing page**
+**Landing page:** one scroll-driven journey made of the same 24,000 particles: stardust, a planet, an astronaut saluting the flag on the Moon, Orion, a relay satellite and Earth, which then becomes the Health Twin and finally the AstroDocX wordmark.
 
-| Hero | Health Twin | Mission Simulator |
-|---|---|---|
-| ![Hero](docs/screenshots/hero.jpg) | ![Health Twin](docs/screenshots/health-twin.jpg) | ![Mission Simulator](docs/screenshots/mission-simulator.jpg) |
+| Intro | Crew: on the Moon |
+|---|---|
+| ![Intro: Explore Beyond](docs/screenshots/hero.jpg) | ![An astronaut saluting the flag on the Moon, Earth above, made of particles](docs/screenshots/crew-moon.jpg) |
+
+| Health Twin | AstroDocX |
+|---|---|
+| ![Health Twin with six systems and leader lines](docs/screenshots/health-twin.jpg) | ![The AstroDocX wordmark and pitch](docs/screenshots/astrodocx.jpg) |
 
 **Crew Console** (synthetic demo data, Pilot selected)
 
@@ -61,13 +65,16 @@ AstroDocX learns each astronaut's **personal baseline**, spots drift early, and 
 |---|---|
 | ![Check-in](docs/screenshots/console-checkin.jpg) | ![Simulator](docs/screenshots/console-simulator.jpg) |
 
-![Ground Sync](docs/screenshots/console-sync.jpg)
+| Ground Sync | Ground View |
+|---|---|
+| ![Ground Sync](docs/screenshots/console-sync.jpg) | ![Ground View crew cards with the 3D body in each status colour](docs/screenshots/console-ground.jpg) |
 
 The live waves on the board (ECG, pulse oximeter, breathing) are **simulated telemetry** built around the latest real readings; they never change alerts.
 
 ## Try it
 - **Health Twin:** scroll through the section. The scan runs head to feet, six system panels appear, Crew Readiness counts up, then the Pilot's real Act alert from the demo mission appears as an action card. Panel values are the demo mission's latest readings.
-- **Mission Simulator (Live Demo):** inject a fault (CO₂ scrubber fault, solar particle event, insomnia streak, skipped exercise, link blackout) or press *Play scenario*. Tick the action-card steps, press *Carry out & log*, then open the ground link window to sync the log.
+- **Run demo (Crew Console):** press *Run demo* in the top bar to inject a CO₂ scrubber fault and watch the board, twin and alerts react (about 20 s); *Reset demo* restores the mission data.
+- **Mission Simulator (Crew Console, `/app/simulator`):** inject a scenario (solar particle event, CO₂ scrubber fault, insomnia streak, skipped exercise) for one crew member or the whole crew, then tick the action-card steps on Alerts and sync the log from Ground Sync in the next link window.
 
 ## Links
 - **Landing page:** https://astrodocx.netlify.app
@@ -82,7 +89,7 @@ The live waves on the board (ECG, pulse oximeter, breathing) are **simulated tel
 cd app
 npm install
 npm run dev      # http://localhost:5173/app/
-npm test         # 100+ tests (engine, UI, DB)
+npm test         # 180+ tests (engine, UI, DB)
 npm run build && npm run preview   # production build with the service worker, to test install and offline
 ```
 
@@ -98,7 +105,7 @@ python3 -m http.server 8000
 By default Ground Sync is simulated and nothing leaves the device. To upload synced log entries to a real server, create a Supabase project, run [`docs/supabase.sql`](docs/supabase.sql), copy `app/.env.example` to `app/.env.local` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, then rebuild. Uploads happen only in link windows; a failed upload keeps entries queued like a blackout. The Ground View then reads from the server, so a flight surgeon can open `/app/ground` on another computer. **The provided policies are demo-grade (anonymous insert and read) and only suitable for synthetic data**; see the notes in the SQL file.
 
 ## Record the project video (tour mode)
-Open the landing page with `?tour=1` (for example `http://localhost:8000/?tour=1`) and it scrolls itself from hero to footer at a steady pace, so a screen recording is smooth. The cursor and back-to-top button are hidden, and the Live Demo's *Play scenario* starts on its own. Options: `&speed=1.25` (faster), `&delay=5` (lead-in seconds). Keys: Space pause, R restart, Esc stop; any mouse wheel or touch also stops it. Default run is roughly 3 to 4 minutes; check the Space Apps video length rules and tune `PLAN` in `landing/tour.js`.
+Open the landing page with `?tour=1` (for example `http://localhost:8000/?tour=1`) and it plays the journey by itself, pausing on every scene and Health Twin stage, so a screen recording is smooth. The cursor and back-to-top button are hidden. Options: `&speed=1.25` (faster), `&delay=5` (lead-in seconds). Keys: Space pause, R restart, Esc stop; any mouse wheel or touch also stops it. Check the Space Apps video length rules; hold times per scene are `tour` in `landing/universe/scenes.js`.
 
 ## Deploy (Netlify)
 `netlify.toml` builds the console (`cd app && npm ci && npm run build`), copies it to `landing/app/`, and publishes `landing/`. So one site serves the landing page at `/` and the Crew Console PWA at `/app/` (with an SPA fallback). Connect the repo in Netlify and deploy.
@@ -107,11 +114,9 @@ Open the landing page with `?tour=1` (for example `http://localhost:8000/?tour=1
 `vercel.json` does the same job: it installs and builds the console in `app/`, copies it to `landing/app/`, and serves `landing/` as the output, with the `/app/*` SPA fallback, the same security headers and no-cache for `sw.js`. Import the repo in Vercel with the root directory left at the repo root and the framework preset set to **Other**; set **Node.js 22.x** in Project Settings, General. No environment variables are needed (the Ground Server variables in `app/` are optional). The `og:image` and canonical URL in `landing/index.html` still name the Netlify site; update them to the Vercel URL if that becomes the main one.
 
 ## Tech
-- HTML, CSS and vanilla JavaScript
-- [Three.js r128](https://threejs.org/) for the nebula and 3D astronaut
-- [GSAP 3.12 + ScrollTrigger](https://gsap.com/) for scroll animation
-- One WebGL particle system (three.js) for the whole landing page, Health Twin included
-- Crew Console: React + TypeScript + Vite PWA, IndexedDB (Dexie), Zustand, Recharts, Vitest (simulated ground sync; Supabase is a stretch goal)
+- Landing page: HTML, CSS and vanilla JavaScript; one WebGL particle system ([Three.js r128](https://threejs.org/)) for the whole page, Health Twin included; [GSAP 3.12 + ScrollTrigger](https://gsap.com/) for the pinned scroll
+- 3D shapes are baked offline into small point clouds by dependency-free Node scripts in `tools/`: the Crew scene from the NASA Z2 spacesuit model (right arm re-posed into a salute), the human body carved from a 360° turntable video (visual hull)
+- Crew Console: React + TypeScript + Vite PWA, IndexedDB (Dexie), Zustand, Recharts, Vitest; its Health Twin draws the same baked body with plain WebGL (simulated ground sync; Supabase optional)
 
 ## Project structure
 ```
@@ -123,10 +128,13 @@ AstroDocX/
 │   ├── tour.js     # ?tour=1 self-scrolling video mode
 │   ├── universe/   # the particle journey: one canvas for intro -> Health Twin -> AstroDocX
 │   │               #   scenes.js (copy + chapter lengths), engine.js (8 shapes), universe.js (director),
-│   │               #   health-twin.js, reveal.js (chapter UI), stars.js, camera.js, fx.js, universe.css
+│   │               #   health-twin.js, reveal.js (chapter UI), stars.js, camera.js, fx.js, sound.js, universe.css
+│   │   └── targets/ # baked point clouds: astronaut.bin (Crew scene), body.bin + body.json (Health Twin)
+│   ├── anatomy3d.js # opt-in 3D anatomy viewer (Sketchfab)
 │   ├── fonts/
 │   └── assets/     # feature mockups, og-image
 ├── app/            # Crew Console PWA (React + TypeScript + Vite)
+├── tools/          # particle bakers: bake-moon.mjs, bake-body.mjs, bake-particles.mjs (+ undraco.mjs)
 ├── docs/           # design references + screenshots
 ├── plan.md         # roadmap
 └── netlify.toml
@@ -138,10 +146,12 @@ AstroDocX/
 - [NASA Twins Study](https://www.nasa.gov/twins-study/)
 - [PhysioNet](https://physionet.org/): public physiological signals (ECG / HRV)
 
-Landing-page numbers come from the console's seeded demo mission (synthetic data); the marquee values and the Live Demo are illustrative. Only the CO₂ and dose limits are cited (NASA-STD-3001).
+Landing-page numbers (the Health Twin panels and Crew Readiness) come from the console's seeded demo mission (synthetic data). Only the CO₂ and dose limits are cited (NASA-STD-3001).
 
 ## Credits
 The visual theme (nebula, 3D astronaut, scroll system) is adapted from team lead Alif Mahmud's own portfolio template.
+
+3D sources: the Crew scene's astronaut is the NASA Z2 spacesuit from [NASA 3D Resources](https://science.nasa.gov/3d-resources/); the Health Twin body is carved from a turntable render the team made in Tripo Studio. Details and licences: [`landing/universe/targets/README.md`](landing/universe/targets/README.md).
 
 ## License
 [MIT](LICENSE)
