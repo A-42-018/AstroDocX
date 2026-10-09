@@ -111,7 +111,16 @@
 
         <header class="tw-head">
           <span class="ch-no">Health Twin &middot; Pilot</span>
-          <h2 class="ch-title" id="twin-title"><span>MEET OUR <em>NASA</em> <em>CREW</em></span><span>HEALTH MONITOR SYSTEM</span></h2>
+          <h2 class="ch-title" id="twin-title"><span>MEET OUR <span class="nasa-mark" role="img" aria-label="NASA"><svg viewBox="8 0 270 112" style="height:1.6em;width:auto" aria-hidden="true" focusable="false">
+            <defs><linearGradient id="nasaMarkGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="300" y2="112"><stop offset="0" stop-color="#22D3EE"/><stop offset=".55" stop-color="#9FC0FF"/><stop offset="1" stop-color="#F59E0B"/></linearGradient></defs>
+            <g fill="none" stroke="url(#nasaMarkGrad)" stroke-linecap="round" stroke-linejoin="round">
+              <path class="nasa-orbit" d="M46 36C110 10 205 2 258 14l16-12" stroke-width="4"/>
+              <path class="nasa-orbit" d="M72 86C24 96 16 110 66 108c60-2 120-14 150-26" stroke-width="4"/>
+              <path class="nasa-glint" d="M46 36C110 10 205 2 258 14l16-12" pathLength="100" stroke="#fff" stroke-width="4"/>
+              <g stroke-width="3.5"><g transform="translate(252 50) rotate(-32)"><rect x="-24" y="-7" width="50" height="14" rx="3"/><rect x="-34" y="-4" width="10" height="8" rx="1.5"/><ellipse cx="26" cy="0" rx="3" ry="7"/></g><circle cx="252" cy="62" r="4"/><path d="M252 66 236 102M252 66v36M252 66l16 36"/></g>
+            </g>
+            <text x="12" y="86" textLength="212" lengthAdjust="spacingAndGlyphs" fill="url(#nasaMarkGrad)" stroke="url(#nasaMarkGrad)" stroke-width="2.5" stroke-linejoin="round">NASA</text>
+          </svg></span><br><em>CREW</em></span><span>HEALTH MONITOR SYSTEM</span></h2>
           <p class="ch-sub">One scan. Six systems. One readiness score.</p>
           <button type="button" class="anat3d-open ch-pill" id="anat3dOpen" aria-haspopup="dialog" aria-controls="anat3d" aria-expanded="false">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/></svg>
@@ -194,6 +203,10 @@
   <footer id="footer">
     <div class="footer-inner">
       <p class="footer-logo"><span class="bracket">&lt;</span>astrodoc<span class="logo-x">X</span><span class="bracket">/&gt;</span></p>
+      <a class="footer-spaceapps" href="https://www.spaceappschallenge.org/" target="_blank" rel="noopener">
+        <span>Built for</span>
+        <img src="assets/space-apps-logo-white.png" alt="NASA Space Apps Challenge" width="440" height="172" loading="lazy" decoding="async">
+      </a>
       <p class="footer-copy">&copy; <span id="footer-year"></span> Team AstroDocX &middot; NASA Space Apps Challenge 2026 &middot; Prototype, not a medical device.</p>
       <ul class="footer-links">
         <li><a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener">GitHub</a></li>

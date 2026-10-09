@@ -76,6 +76,13 @@
 .tw-head .ch-title { font-size:clamp(1.8rem,3.4vw,3.3rem); }
 .tw-head .ch-title span + span { font-size:.7em;letter-spacing:.14em;margin-top:6px; }   /* HEALTH MONITOR SYSTEM on one line */
 .tw-head .ch-sub { margin-bottom:18px; }
+/* "NASA" as a mark: same gradient + glow as the <em> words, an orbit swoosh with a glint and a telescope */
+.nasa-mark { display:inline-block !important;vertical-align:-.36em;text-shadow:none;filter:drop-shadow(0 0 18px rgba(34,211,238,.35)); }
+.nasa-mark svg { display:block;overflow:visible; }   /* height set inline so a stale cached stylesheet cannot blow it up */
+.nasa-mark text { font-family:var(--font-display);font-weight:800;font-size:80px; }
+.nasa-glint { stroke-dasharray:8 92;stroke-dashoffset:100;opacity:.9;animation:nasaGlint 4.5s cubic-bezier(.5,0,.3,1) infinite; }
+@keyframes nasaGlint { 0% { stroke-dashoffset:100;opacity:0; } 10% { opacity:.9; } 55%,100% { stroke-dashoffset:0;opacity:0; } }
+@media (prefers-reduced-motion:reduce) { .nasa-glint { display:none; } }
 
 .tw-labels { position:absolute;inset:0;z-index:2;pointer-events:none; }
 .tw-label { position:absolute;width:min(220px,22vw);opacity:0;will-change:opacity,translate;text-shadow:0 2px 18px rgba(2,3,10,.95); }

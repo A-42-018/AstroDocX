@@ -765,6 +765,9 @@ ul { list-style:none; }
 .footer-logo { font-family:var(--font-mono);font-size:1rem;font-weight:700;color:var(--cyan);letter-spacing:.04em; }
 .footer-logo .bracket { color:var(--violet);opacity:.7; }
 .footer-copy { font-size:.82rem;color:var(--text-lo); }
+.footer-spaceapps { display:inline-flex;align-items:center;gap:10px;font-family:var(--font-mono);font-size:.68rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--text-lo);opacity:.8;transition:opacity .2s; }
+.footer-spaceapps img { display:block;height:42px;width:auto; }
+.footer-spaceapps:hover { opacity:1;text-decoration:none; }
 .footer-links { display:flex;gap:20px;list-style:none; }
 .footer-links a { font-size:.85rem;font-weight:600;color:rgba(255,255,255,.45);transition:color .2s;display:inline-block; }
 .footer-links a:hover { color:var(--cyan);text-decoration:none; }
