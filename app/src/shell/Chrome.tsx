@@ -6,6 +6,7 @@ import { met } from '../engine/actions'
 import { DEMO_MAX_STEPS, resetDemo, runDemo, useDemo } from '../sim/demoRun'
 import { linkAt } from '../sync/link'
 import { useSync } from '../sync/store'
+import { BackdropPicker } from './BackdropPicker'
 import { CrewSwitcher } from './CrewSwitcher'
 import { greetingFor, linkSummary } from './format'
 import { MORE_ICON, ROUTES } from './nav'
@@ -134,6 +135,7 @@ export function TopBar({ data, install }: { data: ShellData | null; install: (()
               <RotateCcw size={15} aria-hidden="true" />{demo.phase === 'running' ? `Demo ${demo.step}/${DEMO_MAX_STEPS} · stop` : 'Reset demo'}
             </button>
           )}
+          <BackdropPicker crewId={who.id} crewName={who.name} />
           <Link to="/alerts" className={`bell st-${who.status}`} aria-label={open ? `${open} open alert${open > 1 ? 's' : ''} for ${who.name}` : `No open alerts for ${who.name}`}>
             <Bell size={20} strokeWidth={1.9} aria-hidden="true" />
             {open > 0 && <b aria-hidden="true">{open}</b>}
