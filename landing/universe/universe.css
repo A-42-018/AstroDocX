@@ -72,7 +72,7 @@
 .tw-dot { fill:#22D3EE;opacity:0; }
 .tw-line.is-act { stroke:rgba(245,166,35,.75); } .tw-dot.is-act { fill:#F5A623; }
 
-.tw-head { position:absolute;z-index:3;left:var(--pad-x,24px);top:calc(var(--nav-h,64px) + 24px);max-width:min(620px,46vw); }
+.tw-head { position:absolute;z-index:3;left:var(--pad-x,24px);top:calc(var(--nav-h,64px) + 24px);max-width:min(38.75rem,46vw); }   /* rem, not px: grows with the browser font-size setting like the text does */
 .tw-head .ch-title { font-size:clamp(1.8rem,3.4vw,3.3rem); }
 .tw-head .ch-title span + span { font-size:.7em;letter-spacing:.14em;margin-top:6px; }   /* HEALTH MONITOR SYSTEM on one line */
 .tw-head .ch-sub { margin-bottom:18px; }
@@ -85,7 +85,7 @@
 @media (prefers-reduced-motion:reduce) { .nasa-glint { display:none; } }
 
 .tw-labels { position:absolute;inset:0;z-index:2;pointer-events:none; }
-.tw-label { position:absolute;width:min(220px,22vw);opacity:0;will-change:opacity,translate;text-shadow:0 2px 18px rgba(2,3,10,.95); }
+.tw-label { position:absolute;width:min(13.75rem,22vw);opacity:0;will-change:opacity,translate;text-shadow:0 2px 18px rgba(2,3,10,.95); }
 .tw-label[data-side="left"] { left:var(--pad-x,24px); }
 .tw-label[data-side="right"] { right:var(--pad-x,24px); }
 /* the left column never starts above the bottom of the heading block (--tw-head-b, set from its real height), so the 3D anatomy button is never covered */
