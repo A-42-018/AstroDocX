@@ -71,18 +71,49 @@
       }
     }
 
-    /* leader lines: from each label's inner edge to its organ's projected screen position */
+    /* text the lines must not cross: the chapter heading (tight text boxes, not the block boxes), the labels, the readiness card */
+    const range = document.createRange();
+    const textBox = el => { if (el.tagName === 'BUTTON') return el.getBoundingClientRect(); range.selectNodeContents(el); return range.getBoundingClientRect(); };   // the pill's border counts
+    const head = Array.from(root.querySelectorAll('.tw-head .ch-no, .tw-head .ch-title > span, .tw-head .ch-sub, .tw-head .ch-pill'));
+    function obstacles(box) {
+      const rs = head.map(textBox).concat(labels.map(el => el.getBoundingClientRect()), final ? [final.getBoundingClientRect()] : []);
+      return rs.filter(r => r.width > 0).map(r => ({ l: r.left - box.left, r: r.right - box.left, t: r.top - box.top, b: r.bottom - box.top }));
+    }
+
+    /* leader lines: out of the label, along a vertical lane clear of every text block, then across to the organ.
+       Lanes are in "distance from the label column" (k); lines going up nest outward top to bottom, lines going
+       down nest outward bottom to top, so no two lines cross. */
+    const GAP = 18, LANE = 14, CHAMFER = 8;
     function drawLines(camera, ang) {
       const box = root.getBoundingClientRect(), W = box.width, H = box.height, c = Math.cos(ang), s = Math.sin(ang);
+      const obs = small() ? [] : obstacles(box), route = [];
       labels.forEach((el, i) => {
         const v = parseFloat(el.style.opacity) || 0, ln = lines[i], dt = dots[i];
         if (small() || v < 0.02) { ln.style.opacity = 0; dt.style.opacity = 0; return; }
         const a = STAGES[i].at;
         tmp.set(c * a[0] + s * a[2], a[1], -s * a[0] + c * a[2]).project(camera);
         const ax = (tmp.x * 0.5 + 0.5) * W, ay = (-tmp.y * 0.5 + 0.5) * H;
-        const r = el.getBoundingClientRect(), left = el.dataset.side === 'left';
-        const sx = (left ? r.right : r.left) - box.left + (left ? 10 : -10), sy = r.top - box.top + 10;
-        ln.setAttribute('points', sx + ',' + sy + ' ' + (sx + (ax - sx) * 0.45) + ',' + ay + ' ' + ax + ',' + ay);
+        const r = el.getBoundingClientRect(), left = el.dataset.side === 'left', dir = left ? 1 : -1;
+        const sx = (left ? r.right : r.left) - box.left + dir * 10, sy = r.top - box.top + 10;
+        /* k: how far out from sx the lane must sit to pass every obstacle spanning the line's vertical run */
+        const y0 = Math.min(sy, ay) - 6, y1 = Math.max(sy, ay) + 6;
+        let k = GAP;
+        obs.forEach(o => {
+          if (o.b < y0 || o.t > y1) return;
+          const edge = left ? o.r - sx : sx - o.l;                                        // obstacle's far edge, in k
+          if (edge > 0 && edge < dir * (ax - sx)) k = Math.max(k, edge + GAP);
+        });
+        route.push({ el, ln, dt, v, left, dir, sx, sy, ax, ay, k, up: ay < sy });
+      });
+      [true, false].forEach(left => [true, false].forEach(up => {
+        const g = route.filter(q => q.left === left && q.up === up).sort((p, q) => up ? p.sy - q.sy : q.sy - p.sy);
+        g.forEach((q, j) => { if (j) q.k = Math.max(q.k, g[j - 1].k + LANE); });
+      }));
+      route.forEach(q => {
+        const { ln, dt, el, v, dir, sx, sy, ax, ay } = q;
+        const lane = sx + dir * Math.min(q.k, Math.max(GAP, dir * (ax - sx) - GAP));   // never past the organ
+        const dy = ay - sy, ch = Math.min(CHAMFER, Math.abs(dy) / 2, Math.abs(lane - sx), Math.abs(ax - lane)), sg = Math.sign(dy);
+        ln.setAttribute('points', [[sx, sy], [lane - dir * ch, sy], [lane, sy + sg * ch], [lane, ay - sg * ch], [lane + dir * ch, ay], [ax, ay]].map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' '));
         dt.setAttribute('cx', ax); dt.setAttribute('cy', ay);
         ln.style.opacity = (v * 0.9).toFixed(2); dt.style.opacity = v.toFixed(2);
         ln.classList.toggle('is-act', el.dataset.state === 'act'); dt.classList.toggle('is-act', el.dataset.state === 'act');
