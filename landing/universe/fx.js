@@ -3,7 +3,7 @@
    Extra small Points systems, each driven only by (progress, time)
    and the engine's scene weights, so they are as reversible as the
    morph itself.
-     03  ECG line made of particles under the astronaut
+     03  ECG line made of particles across the lunar foreground
      04  engine trail streaming back from the Orion engine
      05  small far Earth + data packets (satellite -> Earth along an arc)
    (heartbeat ripple, mouse repel and planet shading live in engine.js)
@@ -51,11 +51,11 @@
 
   function create(scene, engine) {
     const S = engine.uniforms, W = engine.weights;
-    const ecgN = 360, ECG_X = -3.3, ECG_Y = -2.5, ECG_LEN = 2.6;
+    const ecgN = 360, ECG_X = -3.6, ECG_Y = -3.28, ECG_Z = 2.6, ECG_LEN = 3.2;
     const E = system(scene, ecgN, 0, function (pos, t, n) {
       for (let i = 0; i < n; i++) {
         const u = i / (n - 1), beats = 2.2, ph = (u * beats) % 1;
-        pos[i * 3] = ECG_X - ECG_LEN / 2 + u * ECG_LEN; pos[i * 3 + 1] = ECG_Y + ecg(ph) * 0.42; pos[i * 3 + 2] = 0; t[i] = u;
+        pos[i * 3] = ECG_X - ECG_LEN / 2 + u * ECG_LEN; pos[i * 3 + 1] = ECG_Y + ecg(ph) * 0.42; pos[i * 3 + 2] = ECG_Z; t[i] = u;
       }
     });
     const T = system(scene, 900, 1);

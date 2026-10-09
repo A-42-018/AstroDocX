@@ -13,7 +13,7 @@
     { p: 0.08, pos: [0, 0, 10.5],      look: [0, 0, 0],        fov: 50 },
     { p: 0.23, pos: [-1.4, 0.5, 9],    look: [1.6, 0, 0],      fov: 50 },   // 02 gentle orbit past the planet
     { p: 0.34, pos: [-0.6, 0.2, 9.4],  look: [0.2, 0, 0],      fov: 50 },
-    { p: 0.45, pos: [1.6, -0.9, 8],    look: [-1.6, 0.1, 0],   fov: 50 },   // 03 3/4 side angle, slightly below
+    { p: 0.45, pos: [1.6, 1.1, 8],     look: [-1.6, 0.1, 0],   fov: 50 },   // 03 3/4 side angle, a little above (the Moon reads as ground)
     { p: 0.56, pos: [0.3, -0.3, 9],    look: [0, 0, 0],        fov: 52 },
     { p: 0.65, pos: [-3.4, 0.7, 8],    look: [1.6, 0.1, 0],    fov: 57 },   // 04 trailing chase, FOV kick
     { p: 0.735, pos: [-1.0, 0.3, 9],   look: [0, 0, 0],        fov: 52 },

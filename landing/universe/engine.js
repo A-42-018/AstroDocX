@@ -21,11 +21,12 @@
   const TIER_N = { high: 24000, mid: 14000, low: 8000 };
 
   /* per-shape placement / look. off = world offset (keeps the form clear of the text side),
-     sc = scale, rot = idle spin (rad/s), tint = colour multiplier, dis = dissolve strength of the morph INTO this shape */
+     sc = scale, rot = idle spin (rad/s), sway = idle turn (rad) instead of a spin, yaw = base turn (rad), tint = colour multiplier,
+     dis = dissolve strength of the morph INTO this shape, chest = heartbeat origin in shape space */
   const SHAPES = [
     { id: 'dust',      sc: 4.2, off: [0, 0, 0],       rot: 0.02, tint: [1, 1, 1],          dis: 0.0 },
     { id: 'planet',    sc: 2.5, off: [2.6, 0, 0],     rot: 0.10, tint: [1.0, 0.86, 0.62],  dis: 1.6 },
-    { id: 'astronaut', sc: 2.1, off: [-3.3, 0.4, 0],    rot: 0.12, tint: [1, 1, 1],          dis: 1.6 },
+    { id: 'astronaut', sc: 3.3, off: [-3.9, -0.3, 0],   rot: 0, yaw: 0.52, sway: 0.15, tint: [1, 1, 1],  dis: 1.6, chest: [0.337, -0.191, 0.156] },   // Crew: salute, flag, Moon, Earth (tools/bake-moon.mjs)
     { id: 'orion',     sc: 2.7, off: [3.0, 0.3, 0],     rot: 0.0, tint: [0.95, 0.97, 1.0],  dis: 1.6 },
     { id: 'relay',     sc: 3.0, off: [-3.4, -0.3, 0],    rot: 0.02, tint: [1, 1, 1],          dis: 1.6 },
     { id: 'earth',     sc: 2.3, off: [0, -2.25, 0],    rot: 0.08, tint: [0.62, 0.82, 1.15], dis: 1.6 }
@@ -381,14 +382,14 @@
   const BODY = { id: 'body', sc: 1, off: [0, 0, 0], rot: 0, sway: 0.32, tint: [1, 1, 1], dis: 1.3 };
   const WORD = { id: 'wordmark', sc: 3.2, off: [0, 0, 0], rot: 0, tint: [1, 1, 1], dis: 2.4 };
   const ALL = SHAPES.concat([BODY, WORD]);
-  const HEART = [0.06, 0.78, 0.07], CHEST = [-3.3, 0.95, 0];
-  const angle = (S, time) => S.sway ? S.sway * Math.sin(time * 0.22) : time * S.rot;
+  const HEART = [0.06, 0.78, 0.07];
+  const angle = (S, time) => (S.yaw || 0) + (S.sway ? S.sway * Math.sin(time * 0.22) : time * S.rot);
 
   /* ── shaders ── */
   const VS = [
-    'attribute vec3 aP0,aP1,aP2,aP3,aP4,aP5,aP6,aP7; attribute vec4 aSeed; attribute float aReg; attribute vec3 aNrm;',
+    'attribute vec3 aP0,aP1,aP2,aP3,aP4,aP5,aP6,aP7; attribute vec4 aSeed; attribute float aReg; attribute vec3 aNrm; attribute float aTag;',
     'uniform float uSeg,uSegB,uT,uTime,uPR,uDis,uScA,uScB,uAngA,uAngB,uSize;',
-    'uniform vec3 uOffA,uOffB,uTintA,uTintB,uChest,uMouse,uPlanetC,uLight;',
+    'uniform vec3 uOffA,uOffB,uTintA,uTintB,uChest,uMouse,uPlanetC,uLight,uEarthC;',
     'uniform float uBeatR,uBeatAmp,uWAstro,uWPlanet,uRep,uBodyA,uBodyB,uScan,uAlert;',
     'uniform float uLit[10]; uniform float uFocus[10];',
     'varying vec3 vC; varying float vA;',
@@ -396,8 +397,12 @@
     'float n3(vec3 p){ return (sin(p.x*1.7+sin(p.y*2.3)+p.z)+sin(p.y*1.9+sin(p.z*2.1)+p.x*.7)+sin(p.z*2.2+sin(p.x*1.3)+p.y*.9))/3.; }',
     'vec3 rotY(vec3 p,float a){ float c=cos(a),s=sin(a); return vec3(c*p.x+s*p.z,p.y,-s*p.x+c*p.z); }',
     'vec3 curl(vec3 p){ vec3 n=vec3(sin(p.y*1.7+uTime*.31)+sin(p.z*2.3-uTime*.17), sin(p.z*1.9+uTime*.26)+sin(p.x*2.1+uTime*.13), sin(p.x*1.6+uTime*.35)+sin(p.y*2.4-uTime*.21)); return vec3(n.y-n.z,n.z-n.x,n.x-n.y)*.5; }',
+    /* Crew scene (shape 2) tags: 16..255 flag cloth at (u, v) ripples out from the pole, 1 the small Earth turns */
+    'vec3 crew(vec3 p){ if(aTag>15.5){ float id=aTag-16., u=mod(id,16.)/15., v=floor(id/16.)/14.; p.z+=.022*u*(.3+.7*v)*sin(u*6.5+v*1.4-uTime*2.1); }',
+    ' else if(aTag>.5){ vec3 q=p-uEarthC; float c=cos(uTime*.3),s=sin(uTime*.3); p=uEarthC+vec3(c*q.x+s*q.z,q.y,-s*q.x+c*q.z); } return p; }',
     'void main(){',
     ' vec3 pa=pick(uSeg), pb=pick(uSegB);',
+    ' if(abs(uSeg-2.)<.5) pa=crew(pa); if(abs(uSegB-2.)<.5) pb=crew(pb);',
     ' vec3 a=rotY(pa*uScA,uAngA)+uOffA, b=rotY(pb*uScB,uAngB)+uOffB;',
     ' float st=aSeed.w*.55+clamp(pa.y*.5+.5,0.,1.)*.30;',                          // stagger: random + height
     ' float t=clamp((uT-st*.4)/.6,0.,1.); float e=t*t*(3.-2.*t);',
@@ -423,6 +428,7 @@
     ' vec3 cI=mix(base*mix(uTintA,uTintB,e),earthC,ew);',
     ' float aI=(.55+aSeed.z*.45)*(1.+sin(3.14159*t)*.35)*(1.+bw*5.); aI*=mix(1.,mix(.95,1.35,land)*(1.+cloud*.2),ew);',
     ' float lit=smoothstep(-.25,.65,dot(normalize(pos-uPlanetC),uLight)); aI*=mix(1.,.3+1.0*lit,uWPlanet);',   // planet terminator
+    ' if(aTag>.5&&aTag<1.5){ vec3 ep=abs(uSegB-2.)<.5?pb:pa; float el=smoothstep(-.3,.45,dot(normalize(ep-uEarthC),vec3(-.62,.4,.67))); aI*=mix(1.,.12+1.1*el,uWAstro); cI=mix(cI,vec3(.5,.72,1.),.55*uWAstro); }',   // Crew: Earth half-lit, faintly blue
     /* body look: colour per region, the scan line and the focused system glow */
     /* X-ray look: translucent skin, white bones, red arteries with a pulse running out from the heart, a red beating heart, a live brain */
     ' vec3 bp=uBodyA>.5?pa:pb; float by=bp.y, li=uLit[ri], fo=uFocus[ri];',
@@ -485,6 +491,8 @@
     geo.setAttribute('aReg', new THREE.BufferAttribute(reg, 1));
     const nrmA = new Float32Array(count * 3); fill(nrmA, bodyNrm);
     geo.setAttribute('aNrm', new THREE.BufferAttribute(nrmA, 3));                     // body skin normals (0 elsewhere)
+    const tagAt = new THREE.BufferAttribute(new Float32Array(count), 1);
+    geo.setAttribute('aTag', tagAt);                                                   // Crew scene parts (baked astronaut.bin tags, 0 elsewhere)
     geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 3), 3));   // required by three; unused
     const seed = new Float32Array(count * 4), rs = rng(7);
     for (let i = 0; i < count * 4; i++) seed[i] = rs();
@@ -494,8 +502,8 @@
       uSeg: { value: 0 }, uSegB: { value: 1 }, uT: { value: 0 }, uTime: { value: 0 }, uPR: { value: 1 }, uDis: { value: 0 }, uSize: { value: 1.9 }, uBright: { value: 1.7 },
       uScA: { value: 1 }, uScB: { value: 1 }, uAngA: { value: 0 }, uAngB: { value: 0 },
       uOffA: { value: new THREE.Vector3() }, uOffB: { value: new THREE.Vector3() },
-      uChest: { value: new THREE.Vector3(CHEST[0], CHEST[1], CHEST[2]) }, uMouse: { value: new THREE.Vector3(99, 99, 0) }, uRep: { value: 0 },
-      uPlanetC: { value: new THREE.Vector3(2.6, 0, 0) }, uLight: { value: new THREE.Vector3(-0.7, 0.4, 0.6).normalize() },
+      uChest: { value: new THREE.Vector3() }, uMouse: { value: new THREE.Vector3(99, 99, 0) }, uRep: { value: 0 },
+      uPlanetC: { value: new THREE.Vector3(2.6, 0, 0) }, uEarthC: { value: new THREE.Vector3(9, 9, 9) }, uLight: { value: new THREE.Vector3(-0.7, 0.4, 0.6).normalize() },
       uBeatR: { value: 9 }, uBeatAmp: { value: 0 }, uWAstro: { value: 0 }, uWPlanet: { value: 0 },
       uBodyA: { value: 0 }, uBodyB: { value: 0 }, uScan: { value: 9 }, uAlert: { value: 0 },
       uLit: { value: new Float32Array(10) }, uFocus: { value: new Float32Array(10) },
@@ -506,15 +514,22 @@
     points.frustumCulled = false;
     scene.add(points);
 
-    /* baked targets (tools/bake-particles.mjs): Int16 x,y,z, 24k points, Morton-sorted. A missing or
-       malformed bin is ignored and the procedural stand-in stays, so the page never breaks. */
+    /* baked targets (tools/bake-particles.mjs, tools/bake-moon.mjs): Int16 x,y,z, 24k points, Morton-sorted,
+       optionally followed by one Uint8 tag per point. A missing or malformed bin is ignored and the
+       procedural stand-in stays, so the page never breaks. */
     const BAKED = { 2: 'astronaut', 3: 'orion', 4: 'relay', 5: 'earth' };
     Object.keys(BAKED).forEach(function (k) {
       fetch('universe/targets/' + BAKED[k] + '.bin').then(function (res) { return res.ok ? res.arrayBuffer() : Promise.reject(); }).then(function (buf) {
-        if (buf.byteLength !== n * 6) return;                                          // wrong point count: keep the fallback
-        const src = new Int16Array(buf), arr = attrs[k].array;
+        if (buf.byteLength !== n * 6 && buf.byteLength !== n * 7) return;             // wrong point count: keep the fallback
+        const src = new Int16Array(buf, 0, n * 3), arr = attrs[k].array;
         for (let i = 0; i < count; i++) { const o = perm[i] * 3; arr[i * 3] = src[o] / 32767; arr[i * 3 + 1] = src[o + 1] / 32767; arr[i * 3 + 2] = src[o + 2] / 32767; }
         attrs[k].needsUpdate = true;
+        if (buf.byteLength === n * 7 && +k === 2) {                                   // Crew tags; the Earth turns about its own centre
+          const tags = new Uint8Array(buf, n * 6), ta = tagAt.array, c = [0, 0, 0]; let ne = 0;
+          for (let i = 0; i < count; i++) { ta[i] = tags[perm[i]]; if (ta[i] === 1) { ne++; for (let q = 0; q < 3; q++) c[q] += arr[i * 3 + q]; } }
+          if (ne) U.uEarthC.value.set(c[0] / ne, c[1] / ne, c[2] / ne);
+          tagAt.needsUpdate = true;
+        }
         if (api.onChange) api.onChange();
       }).catch(function () {});
     });
@@ -557,7 +572,8 @@
         /* heartbeat: one pulse a second (lub, then a softer dub), ripple radius grows from the chest / heart */
         const ph = time % 1, dub = (time + 0.72) % 1, isBody = a === 6 || b === 6;
         if (isBody) { const g = angle(BODY, time), c = Math.cos(g), s = Math.sin(g); U.uChest.value.copy(heartW.set(c * HEART[0] + s * HEART[2], HEART[1], -s * HEART[0] + c * HEART[2])); }
-        else U.uChest.value.set(CHEST[0], CHEST[1], CHEST[2]);
+        else { const A2 = ALL[2], g = angle(A2, time), c = Math.cos(g), s = Math.sin(g), q = A2.chest.map(v => v * A2.sc);   // the astronaut's chest, following its sway
+          U.uChest.value.set(c * q[0] + s * q[2] + A2.off[0], q[1] + A2.off[1], -s * q[0] + c * q[2] + A2.off[2]); }
         U.uBeatR.value = ph * (isBody ? 1.7 : 2.4);
         U.uBeatAmp.value = Math.max(0, 1 - ph * 1.6) * 0.9 + Math.max(0, 1 - dub * 3) * 0.25 * (dub < 0.33 ? 1 : 0);
       },
