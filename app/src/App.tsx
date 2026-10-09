@@ -20,6 +20,23 @@ const SimulatorPage = lazyPage(() => import('./sim/SimulatorPage'))
 const SyncPage = lazyPage(() => import('./sync/SyncPage'))
 const GroundPage = lazyPage(() => import('./ground/GroundPage'))
 import { useBootDemo } from './board/hooks'
+import { useBoard } from './board/store'
+
+/** Once the board is showing and the browser is idle, fetch the other screens so the first visit to each one is instant. */
+function usePreloadPages() {
+  const ready = useBoard((s) => s.boot.state === 'ready')
+  useEffect(() => {
+    if (!ready) return
+    const pages = [AlertsPage, TrendsPage, CheckInPage, SimulatorPage, SyncPage, GroundPage]
+    const warm = () => pages.forEach((p) => p.preload())
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(warm, { timeout: 3000 })
+      return () => cancelIdleCallback(id)
+    }
+    const id = setTimeout(warm, 1500)
+    return () => clearTimeout(id)
+  }, [ready])
+}
 
 /** On navigation: name the page in the tab title and move focus to the new content, so screen-reader and keyboard users land on it. */
 function useRouteAnnounce(main: React.RefObject<HTMLElement | null>) {
@@ -35,6 +52,7 @@ function useRouteAnnounce(main: React.RefObject<HTMLElement | null>) {
 
 export default function App() {
   useBootDemo()
+  usePreloadPages()
   const main = useRef<HTMLElement>(null)
   useRouteAnnounce(main)
   const install = useInstallPrompt()

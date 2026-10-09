@@ -33,3 +33,28 @@ it('does not loop: after one reload the error reaches the error screen', async (
   expect((await screen.findByRole('alert')).textContent).toContain('Failed to fetch dynamically imported module')
   expect(reload).not.toHaveBeenCalled()
 })
+
+it('preload fetches the chunk once and the page reuses it', async () => {
+  const load = vi.fn(async () => ({ default: Page }))
+  const C = lazyPage(load)
+  C.preload()
+  C.preload()
+  mount(C)
+  expect(await screen.findByText('page ok')).toBeTruthy()
+  expect(load).toHaveBeenCalledTimes(1)
+})
+
+it('a failed preload does not reload; the real load retries', async () => {
+  const reload = vi.fn()
+  const load = vi.fn()
+    .mockRejectedValueOnce(new TypeError('offline'))
+    .mockResolvedValue({ default: Page })
+  const C = lazyPage(load, reload)
+  C.preload()
+  await vi.waitFor(() => expect(load).toHaveBeenCalledTimes(1))
+  await Promise.resolve()
+  mount(C)
+  expect(await screen.findByText('page ok')).toBeTruthy()
+  expect(load).toHaveBeenCalledTimes(2)
+  expect(reload).not.toHaveBeenCalled()
+})

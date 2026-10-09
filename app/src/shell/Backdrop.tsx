@@ -1,5 +1,6 @@
 import { liveQuery } from 'dexie'
 import { useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { db, openAlerts } from '../data/db'
 import type { Status } from '../data/types'
 import { useBoard } from '../board/store'
@@ -28,12 +29,18 @@ function useCrewStatus(): { id: string | undefined; status: Status } {
 /** Warm golden sunrise when nominal, paler when there is a Watch, cool and dimmer with an Act. */
 const MOOD: Record<Status, number> = { nominal: 1, watch: 0.55, act: 0 }
 
-/** Sharp pass: device pixels up to 4K (3840 × 2160). Soft surface pass: this fraction of the sharp pass. */
-const MAX_PIXELS = 3840 * 2160
+/**
+ * Sharp pass: one canvas pixel per CSS pixel (no Retina doubling; the sky sits under a scrim and glass, so the extra
+ * detail never shows), capped near 1080p. Soft surface pass: this fraction of the sharp pass.
+ */
+const MAX_DPR = 1
+const MAX_PIXELS = 1920 * 1200
 const SURFACE_SCALE = 0.5
 const FPS = 30
 /** Start mid-sunrise so the first frame already looks good. */
 const START = 40
+/** Hold the sky still while the page scrolls or changes screen, until this long after the last scroll or navigation. */
+const QUIET_MS = 200
 
 function compile(gl: WebGLRenderingContext, type: number, src: string) {
   const s = gl.createShader(type)!
@@ -129,6 +136,17 @@ export function Backdrop() {
   const target = useRef(MOOD[status])
   useEffect(() => { target.current = MOOD[status] }, [status])
 
+  // Scrolling and screen changes are when the glass panels have the most to redraw; a still sky keeps them smooth.
+  const quietUntil = useRef(0)
+  const { pathname } = useLocation()
+  useEffect(() => { quietUntil.current = performance.now() + QUIET_MS }, [pathname])
+  useEffect(() => {
+    const hush = () => { quietUntil.current = performance.now() + QUIET_MS }
+    // Capture, so scrolling inside a panel counts too.
+    addEventListener('scroll', hush, { capture: true, passive: true })
+    return () => removeEventListener('scroll', hush, { capture: true })
+  }, [])
+
   useEffect(() => {
     const el = canvas.current
     // jsdom (tests) has no WebGL; skip quietly.
@@ -150,7 +168,7 @@ export function Backdrop() {
       gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
 
       const resize = () => {
-        let dpr = Math.min(window.devicePixelRatio || 1, 2)
+        let dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR)
         let w = el.clientWidth * dpr, h = el.clientHeight * dpr
         const over = Math.sqrt((w * h) / MAX_PIXELS)
         if (over > 1) { w /= over; h /= over; dpr /= over }
@@ -181,12 +199,15 @@ export function Backdrop() {
       draw(START)
       let raf = 0
       let last = 0
-      const t0 = performance.now()
+      // Scene time stops while the sky is held, so it resumes where it paused instead of jumping ahead.
+      let sceneT = START
       const loop = (now: number) => {
         raf = requestAnimationFrame(loop)
-        if (document.hidden || now - last < 1000 / FPS - 2) return
+        if (document.hidden || now < quietUntil.current) { last = now; return }
+        if (now - last < 1000 / FPS - 2) return
+        sceneT += Math.min(now - last, 100) / 1000
         last = now
-        draw(START + (now - t0) / 1000)
+        draw(sceneT)
       }
       raf = requestAnimationFrame(loop)
       stop = () => { cancelAnimationFrame(raf); ro.disconnect() }
