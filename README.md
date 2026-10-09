@@ -27,7 +27,7 @@ AstroDocX learns each astronaut's **personal baseline**, spots drift early, and 
 |---|---|
 | Personal baselines | Learns each astronaut's own normal for 11 metrics (HR, HRV, SpO₂, sleep, exercise, reaction time, mood, CO₂, cabin temperature, noise, radiation dose) with Welford + EWMA; it only learns while nominal, so slow drift is not "learned away" |
 | Detection | Smoothed z-scores plus cited absolute limits (NASA-STD-3001 CO₂ and dose), persistence (2–3 readings in a row) and two-signal rules (sleep + reaction); Nominal / Watch / Act with hysteresis |
-| Explainable alerts | Each alert says what changed, by how much, against whose baseline and since when |
+| Explainable alerts | Each alert says what changed, by how much, against whose baseline and since when, and links the published NASA evidence behind it (OSDR studies with DOIs, Human Research Program reports on NTRS); context, never a diagnosis |
 | Action cards | Checkable countermeasure steps with progress and Done; open → escalate → ease → resolve lifecycle, all logged |
 | Status Board | Five RIDGE tiles, crew readiness score, crew overview, next action, live vitals strip (ECG-style waves, heart pulse) |
 | Health Twin (console) | A 3D particle body (the same baked human as the landing page) turning gently: the heart beats with the live ECG, a pulse runs down the arteries, and each hazard colours its own part (brain, lungs, legs, skin, transmitter arm) amber or red |
@@ -135,14 +135,18 @@ AstroDocX/
 │   └── assets/     # feature mockups, og-image
 ├── app/            # Crew Console PWA (React + TypeScript + Vite)
 ├── tools/          # particle bakers: bake-moon.mjs, bake-body.mjs, bake-particles.mjs (+ undraco.mjs)
-├── docs/           # design references + screenshots
+├── docs/           # design references, screenshots, AI_USE.md
 ├── plan.md         # roadmap
 └── netlify.toml
 ```
 
+## Use of AI
+No AI runs inside the product: every number, alert and explanation comes from tested, deterministic code. Claude Code helped write the code, and Tripo Studio generated the anatomy render behind the Health Twin body. Tools, prompts and the team's own work: [`docs/AI_USE.md`](docs/AI_USE.md).
+
 ## Data & references
 - [NASA Human Research Program](https://www.nasa.gov/hrp/): the five hazards of human spaceflight (RIDGE)
-- [NASA Open Science Data Repository (OSDR)](https://osdr.nasa.gov/)
+- [NASA Open Science Data Repository (OSDR)](https://osdr.nasa.gov/): studies cited in the alerts: [OSD-484](https://osdr.nasa.gov/bio/repo/data/studies/OSD-484) (heart), [OSD-942](https://osdr.nasa.gov/bio/repo/data/studies/OSD-942) (exercise and bed rest), [OSD-993](https://osdr.nasa.gov/bio/repo/data/studies/OSD-993) (space radiation)
+- [NASA Technical Reports Server (NTRS)](https://ntrs.nasa.gov/): Human Research Program reports cited in the alerts: cardiac rhythm ([20170005625](https://ntrs.nasa.gov/citations/20170005625)), sleep loss and performance ([20160003864](https://ntrs.nasa.gov/citations/20160003864)), behavioural health ([20160004365](https://ntrs.nasa.gov/citations/20160004365)), CO₂ and headaches on the ISS ([20160012725](https://ntrs.nasa.gov/citations/20160012725))
 - [NASA Twins Study](https://www.nasa.gov/twins-study/)
 - [PhysioNet](https://physionet.org/): public physiological signals (ECG / HRV)
 

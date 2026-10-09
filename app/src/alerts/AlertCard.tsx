@@ -1,4 +1,5 @@
 import { alertTitle, met } from '../engine/actions'
+import { evidenceFor } from '../engine/evidence'
 import type { Alert } from '../data/types'
 import { HazardIcon, StatusPill } from '../shell/icons'
 import { TrendPlot } from '../trends/TrendChart'
@@ -35,6 +36,7 @@ export function AlertDetail({ alert: a, detail, onStep, onDone, onBack }: Props)
   const title = alertTitle(a)
   const sigma = a.z
   const timeline = buildTimeline(a, detail?.alertId === id ? detail.log : [])
+  const evidence = evidenceFor(a.metric)
   return (
     <article className={`glass alert detail st-${a.status}`} aria-label={`${title}: ${LABEL[a.status]}`}>
       {onBack && <button type="button" className="btn ghost back-btn" onClick={onBack}>← All alerts</button>}
@@ -56,6 +58,20 @@ export function AlertDetail({ alert: a, detail, onStep, onDone, onBack }: Props)
         {a.kind !== 'checkin' && sigma > 0 && <p className="sigma-chip mono">{sigma.toFixed(1)}σ from baseline when it opened</p>}
         {detail && detail.alertId === id && detail.series.points.length > 1 && (
           <TrendPlot series={detail.series} rangeMs={detail.series.points[detail.series.points.length - 1].ts - detail.series.points[0].ts} height={190} highlightTs={detail.series.markers[0]?.ts} />
+        )}
+        {evidence.length > 0 && (
+          <div className="evidence">
+            <h4 className="evidence-title">Evidence <span className="muted">· context for what this change can mean, not a diagnosis</span></h4>
+            <ul>
+              {evidence.map((e) => (
+                <li key={e.url}>
+                  <a href={e.url} target="_blank" rel="noopener noreferrer">{e.title}<span className="sr-only"> (opens in a new tab)</span></a>
+                  <span className="mono muted ev-id">{e.source} · {e.id}</span>
+                  <span className="muted">{e.why}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </section>
 
