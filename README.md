@@ -77,9 +77,9 @@ The live waves on the board (ECG, pulse oximeter, breathing) are **simulated tel
 - **Mission Simulator (Crew Console, `/app/simulator`):** inject a scenario (solar particle event, CO₂ scrubber fault, insomnia streak, skipped exercise) for one crew member or the whole crew, then tick the action-card steps on Alerts and sync the log from Ground Sync in the next link window.
 
 ## Links
-- **Landing page:** https://astrodocx.netlify.app
-- **Crew Console:** https://astrodocx.netlify.app/app/
-- **Video:** _add video URL_
+- **Landing page:** https://astrodocx.vercel.app
+- **Crew Console:** https://astrodocx.vercel.app/app/
+- **Video:** https://youtu.be/RW1KRrJToUs
 - **Repo:** https://github.com/A-42-018/AstroDocX
 
 ## Run locally
@@ -111,7 +111,7 @@ Open the landing page with `?tour=1` (for example `http://localhost:8000/?tour=1
 `netlify.toml` builds the console (`cd app && npm ci && npm run build`), copies it to `landing/app/`, and publishes `landing/`. So one site serves the landing page at `/` and the Crew Console PWA at `/app/` (with an SPA fallback). Connect the repo in Netlify and deploy.
 
 ## Deploy (Vercel)
-`vercel.json` does the same job: it installs and builds the console in `app/`, copies it to `landing/app/`, and serves `landing/` as the output, with the `/app/*` SPA fallback, the same security headers and no-cache for `sw.js`. Import the repo in Vercel with the root directory left at the repo root and the framework preset set to **Other**; set **Node.js 22.x** in Project Settings, General. No environment variables are needed (the Ground Server variables in `app/` are optional). The `og:image` and canonical URL in `landing/index.html` still name the Netlify site; update them to the Vercel URL if that becomes the main one.
+`vercel.json` does the same job: it installs and builds the console in `app/`, copies it to `landing/app/`, and serves `landing/` as the output, with the `/app/*` SPA fallback, the same security headers and no-cache for `sw.js`. Import the repo in Vercel with the root directory left at the repo root and the framework preset set to **Other**; set **Node.js 22.x** in Project Settings, General. No environment variables are needed (the Ground Server variables in `app/` are optional).
 
 ## Tech
 - Landing page: HTML, CSS and vanilla JavaScript; one WebGL particle system ([Three.js r128](https://threejs.org/)) for the whole page, Health Twin included; [GSAP 3.12 + ScrollTrigger](https://gsap.com/) for the pinned scroll
