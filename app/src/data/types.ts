@@ -1,4 +1,4 @@
-/** Domain model for the Crew Console. Thresholds and baselines are illustrative until cited (see plan.md §9.3). */
+/** Domain model for the Crew Console. Thresholds and baselines are illustrative until cited. */
 
 export type Hazard = 'R' | 'I' | 'D' | 'G' | 'E'
 export type Status = 'nominal' | 'watch' | 'act'

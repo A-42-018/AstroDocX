@@ -40,7 +40,7 @@ AstroDocX learns each astronaut's **personal baseline**, spots drift early, and 
 
 **Not built yet (Roadmap):** wearable sensor integration, a real Supabase ground backend with proper policies, vision/SANS self-tests, blood pressure, bone density, a multi-device ground station.
 
-> **Status:** the landing page and the **Crew Console** (`app/`) are built and run the full loop on synthetic data. See [`plan.md`](plan.md) for the build log. AstroDocX is a prototype, **not a medical device**; all thresholds not cited in the code are illustrative.
+> **Status:** the landing page and the **Crew Console** (`app/`) are built and run the full loop on synthetic data. AstroDocX is a prototype, **not a medical device**; all thresholds not cited in the code are illustrative.
 
 ## Screenshots
 **Landing page:** one scroll-driven journey made of the same 24,000 particles: stardust, a planet, an astronaut saluting the flag on the Moon, Orion, a relay satellite and Earth, which then becomes the Health Twin and finally the AstroDocX wordmark.
@@ -135,8 +135,7 @@ AstroDocX/
 │   └── assets/     # feature mockups, og-image
 ├── app/            # Crew Console PWA (React + TypeScript + Vite)
 ├── tools/          # particle bakers: bake-moon.mjs, bake-body.mjs, bake-particles.mjs (+ undraco.mjs)
-├── docs/           # design references, screenshots, AI_USE.md
-├── plan.md         # roadmap
+├── docs/           # screenshots, AI_USE.md, supabase.sql
 └── netlify.toml
 ```
 
