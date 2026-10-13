@@ -27,6 +27,49 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="anatomy3d.css" />
   <link rel="stylesheet" href="universe/universe.css" />
+  <!-- Boot loader: critical CSS inline so the dark screen paints before styles.css/CDN scripts arrive -->
+  <script>document.documentElement.classList.add('is-loading');</script>
+  <noscript><style>#adx-loader{display:none !important}</style></noscript>
+  <style id="adx-loader-css">
+    html.is-loading{background:#0C0A1E}
+    html.is-loading,html.is-loading body{overflow:hidden !important}
+    #adx-loader{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+      background:radial-gradient(ellipse 60% 55% at 50% 45%,#1A1740 0%,#0C0A1E 62%);color:#F8FAFC;
+      transition:opacity .45s ease,transform .45s ease,visibility 0s linear .45s}
+    #adx-loader.is-done{opacity:0;transform:scale(1.04);visibility:hidden;pointer-events:none}
+    .adx-ld-mark{font-family:'Space Grotesk','Inter',system-ui,sans-serif;font-weight:600;font-size:clamp(1.5rem,4.2vw,2rem);letter-spacing:-.01em;line-height:1}
+    .adx-ld-mark .br{color:#818CF8;opacity:.7}
+    .adx-ld-mark .x{color:#22D3EE}
+    .adx-ld-ring{width:96px;height:96px;overflow:visible}
+    .adx-ld-ring g,.adx-ld-ring circle{transform-box:view-box;transform-origin:50px 50px}
+    .adx-ld-orbit{animation:adxLdSpin 16s linear infinite}
+    .adx-ld-breathe{animation:adxLdBreathe 3.2s ease-in-out infinite}
+    .adx-ld-ring circle{animation:adxLdTwinkle 2.4s ease-in-out infinite;animation-delay:calc(var(--i) * -.1s)}
+    .adx-ld-ecg-base{fill:none;stroke:#22D3EE;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.18}
+    .adx-ld-ecg{fill:none;stroke:#22D3EE;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:38 62;
+      filter:drop-shadow(0 0 3px rgba(34,211,238,.7));animation:adxLdEcg 2.2s linear infinite}
+    .adx-ld-bar{width:160px;height:1.5px;background:rgba(129,140,248,.18);overflow:hidden;border-radius:2px}
+    .adx-ld-bar i{display:block;height:100%;background:#22D3EE;box-shadow:0 0 10px rgba(34,211,238,.6);transform:scaleX(.04);transform-origin:left;transition:transform .4s ease}
+    .adx-ld-boot{list-style:none;width:190px;margin:0;padding:0;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#94A3B8}
+    .adx-ld-boot li{display:flex;justify-content:space-between;line-height:1.9;opacity:.35;transition:opacity .3s}
+    .adx-ld-boot li .v::before{content:'\00b7\00b7\00b7'}
+    .adx-ld-boot li.ok{opacity:1}
+    .adx-ld-boot li.ok .v{color:#34D399}
+    .adx-ld-boot li.ok .v::before{content:'\2713'}
+    .adx-ld-boot .adx-ld-ready{display:block;margin-top:6px;text-align:center;letter-spacing:.14em;color:#22D3EE;opacity:0;transition:opacity .3s}
+    #adx-loader.is-ready .adx-ld-ready{opacity:1}
+    @keyframes adxLdSpin{to{transform:rotate(360deg)}}
+    @keyframes adxLdBreathe{0%,100%{transform:scale(.94)}50%{transform:scale(1.04)}}
+    @keyframes adxLdTwinkle{0%,100%{opacity:.35}50%{opacity:1}}
+    @keyframes adxLdEcg{from{stroke-dashoffset:38}to{stroke-dashoffset:-100}}
+    @media (prefers-reduced-motion:reduce){
+      #adx-loader{transition:opacity .2s ease,visibility 0s linear .2s}
+      #adx-loader.is-done{transform:none}
+      .adx-ld-orbit,.adx-ld-breathe,.adx-ld-ring circle,.adx-ld-ecg{animation:none}
+      .adx-ld-ecg{stroke-dasharray:none}
+      .adx-ld-bar i,.adx-ld-boot li,.adx-ld-boot .adx-ld-ready{transition:none}
+    }
+  </style>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -39,6 +82,89 @@
   }
   </script>
 </head>
+
+<!-- ═══════════════════════════════════════ BOOT LOADER ══ -->
+<div id="adx-loader" role="status" aria-live="polite" aria-label="Loading AstroDocX">
+  <div class="adx-ld-mark" aria-hidden="true"><span class="br">&lt;</span>astrodoc<span class="x">X</span><span class="br">/&gt;</span></div>
+  <svg class="adx-ld-ring" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+    <g class="adx-ld-breathe"><g class="adx-ld-orbit">
+          <circle cx="88.0" cy="50.0" r="2.2" fill="#22D3EE" style="--i:0"/>
+          <circle cx="86.7" cy="59.8" r="1.2" fill="#818CF8" style="--i:1"/>
+          <circle cx="82.9" cy="69.0" r="1.6" fill="#22D3EE" style="--i:2"/>
+          <circle cx="76.9" cy="76.9" r="1.2" fill="#818CF8" style="--i:3"/>
+          <circle cx="69.0" cy="82.9" r="2.2" fill="#22D3EE" style="--i:4"/>
+          <circle cx="59.8" cy="86.7" r="1.2" fill="#818CF8" style="--i:5"/>
+          <circle cx="50.0" cy="88.0" r="1.6" fill="#22D3EE" style="--i:6"/>
+          <circle cx="40.2" cy="86.7" r="1.2" fill="#818CF8" style="--i:7"/>
+          <circle cx="31.0" cy="82.9" r="2.2" fill="#22D3EE" style="--i:8"/>
+          <circle cx="23.1" cy="76.9" r="1.2" fill="#818CF8" style="--i:9"/>
+          <circle cx="17.1" cy="69.0" r="1.6" fill="#22D3EE" style="--i:10"/>
+          <circle cx="13.3" cy="59.8" r="1.2" fill="#818CF8" style="--i:11"/>
+          <circle cx="12.0" cy="50.0" r="2.2" fill="#22D3EE" style="--i:12"/>
+          <circle cx="13.3" cy="40.2" r="1.2" fill="#818CF8" style="--i:13"/>
+          <circle cx="17.1" cy="31.0" r="1.6" fill="#22D3EE" style="--i:14"/>
+          <circle cx="23.1" cy="23.1" r="1.2" fill="#818CF8" style="--i:15"/>
+          <circle cx="31.0" cy="17.1" r="2.2" fill="#22D3EE" style="--i:16"/>
+          <circle cx="40.2" cy="13.3" r="1.2" fill="#818CF8" style="--i:17"/>
+          <circle cx="50.0" cy="12.0" r="1.6" fill="#22D3EE" style="--i:18"/>
+          <circle cx="59.8" cy="13.3" r="1.2" fill="#818CF8" style="--i:19"/>
+          <circle cx="69.0" cy="17.1" r="2.2" fill="#22D3EE" style="--i:20"/>
+          <circle cx="76.9" cy="23.1" r="1.2" fill="#818CF8" style="--i:21"/>
+          <circle cx="82.9" cy="31.0" r="1.6" fill="#22D3EE" style="--i:22"/>
+          <circle cx="86.7" cy="40.2" r="1.2" fill="#818CF8" style="--i:23"/>
+    </g></g>
+    <path class="adx-ld-ecg-base" d="M28 50H40L44 44L49 58L53 40L57 50H72"/>
+    <path class="adx-ld-ecg" pathLength="100" d="M28 50H40L44 44L49 58L53 40L57 50H72"/>
+  </svg>
+  <div class="adx-ld-bar" aria-hidden="true"><i></i></div>
+  <ul class="adx-ld-boot" aria-hidden="true">
+    <li data-step="fonts"><span>fonts</span><span class="v"></span></li>
+    <li data-step="engine"><span>engine</span><span class="v"></span></li>
+    <li data-step="sky"><span>sky</span><span class="v"></span></li>
+    <li class="adx-ld-ready">ready &middot; launching&hellip;</li>
+  </ul>
+</div>
+<script>
+(function () {
+  var root = document.documentElement, el = document.getElementById('adx-loader');
+  if (!el) { root.classList.remove('is-loading'); return; }
+  var bar = el.querySelector('.adx-ld-bar i');
+  var MIN = 600, MAX = 4000, t0 = performance.now(), done = {}, count = 0, closing = false;
+  var REDUCE = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function close() {
+    if (closing) return; closing = true;
+    el.classList.add('is-ready');
+    var wait = Math.max(280, MIN - (performance.now() - t0));
+    setTimeout(function () {
+      el.classList.add('is-done');
+      setTimeout(function () {
+        if (el.parentNode) el.parentNode.removeChild(el);
+        root.classList.remove('is-loading');
+        if (window.ScrollTrigger) { try { ScrollTrigger.refresh(); } catch (e) {} }
+        window.dispatchEvent(new Event('adx:ready'));
+      }, REDUCE ? 220 : 480);
+    }, wait);
+  }
+  function mark(k) {
+    if (done[k]) return; done[k] = true; count++;
+    var li = el.querySelector('[data-step="' + k + '"]'); if (li) li.classList.add('ok');
+    bar.style.transform = 'scaleX(' + (count / 3) + ')';
+    if (count === 3) close();
+  }
+
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { mark('fonts'); }); else mark('fonts');
+
+  function onLoad() {
+    mark('engine');                       /* three.js + GSAP (CDN) and every landing script have run */
+    requestAnimationFrame(function () { requestAnimationFrame(function () { mark('sky'); }); });   /* first canvas frame painted */
+  }
+  if (document.readyState === 'complete') onLoad(); else window.addEventListener('load', onLoad);
+
+  /* hard fallback: slow CDN / blocked request must never trap the visitor behind the loader */
+  setTimeout(function () { ['fonts', 'engine', 'sky'].forEach(mark); }, MAX);
+})();
+</script>
 
 <!-- ═══════════════════════════════════════ CUSTOM CURSOR ══ -->
 <div id="cursor-dot"  aria-hidden="true"></div>
