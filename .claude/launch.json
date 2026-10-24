@@ -27,6 +27,12 @@
         "landing"
       ],
       "port": 5180
+    },
+    {
+      "name": "mockups",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "5190"],
+      "port": 5190
     }
   ]
 }
