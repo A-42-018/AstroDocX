@@ -9,6 +9,7 @@ import { lazyPage } from './shell/lazyPage'
 import { BottomTabs, Rail, TopBar } from './shell/Chrome'
 import { ROUTES } from './shell/nav'
 import { ShellDataContext, useShellData } from './shell/useShellData'
+import { useSplashHandoff } from './shell/splash'
 
 // The board is the landing screen and loads eagerly; every other screen (Trends carries the chart
 // library) is its own chunk. The service worker precaches all chunks, so they still work offline;
@@ -52,6 +53,7 @@ function useRouteAnnounce(main: React.RefObject<HTMLElement | null>) {
 
 export default function App() {
   useBootDemo()
+  useSplashHandoff()
   usePreloadPages()
   const main = useRef<HTMLElement>(null)
   useRouteAnnounce(main)
