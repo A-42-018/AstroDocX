@@ -10,7 +10,7 @@
   /* p = where the key sits, pos / look in world units (shapes sit at x = +-2..2.6, see engine.js SHAPES) */
   const KEYS = [
     { p: 0.00, pos: [0, 0, 14],        look: [0, 0, 0],        fov: 50 },   // 01 far, slow approach
-    { p: 0.08, pos: [0, 0, 10.5],      look: [0, 0, 0],        fov: 50 },
+    { p: 0.08, pos: [0, 0, 12.2],      look: [0, 0, 0],        fov: 50 },   // slow push toward the singularity; the horizon stays round on screen
     { p: 0.23, pos: [-1.4, 0.5, 9],    look: [1.6, 0, 0],      fov: 50 },   // 02 gentle orbit past the planet
     { p: 0.34, pos: [-0.6, 0.2, 9.4],  look: [0.2, 0, 0],      fov: 50 },
     { p: 0.45, pos: [1.6, 1.1, 8],     look: [-1.6, 0.1, 0],   fov: 50 },   // 03 3/4 side angle, a little above (the Moon reads as ground)

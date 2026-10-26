@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const el = document.createElement('article');
     el.className = 'uni-scene';
     el.dataset.pos = s.pos;
+    el.dataset.scene = s.id;
     el.setAttribute('aria-labelledby', 'uniH' + i);
     el.innerHTML =
       '<span class="ch-no">' + String(i + 1).padStart(2, '0') + ' / ' + String(SCENES.length).padStart(2, '0') + '</span>' +
@@ -169,8 +170,29 @@ document.addEventListener('DOMContentLoaded', function () {
     engine.onChange = () => { if (staticMode) schedulePosters(); else if (!running) renderOnce(); };
     fx = ADX_FX.create(scene, engine);
     /* the wordmark is drawn with the display font: redraw it once that font is in */
-    if (document.fonts && document.fonts.load) document.fonts.load('700 190px "Space Grotesk"').then(() => engine.setWordFont('"Space Grotesk", sans-serif')).catch(() => {});
+    if (document.fonts && document.fonts.load) document.fonts.load('700 190px "Space Grotesk"').then(() => { engine.setWordFont('"Space Grotesk", sans-serif'); fitIris(); }).catch(() => {});
   }
+
+  /* ── singularity fit: the event horizon (dust shape scale = its radius) is sized so scene 01's headline,
+        kicker and line sit inside the black core at the opening camera distance; it only grows as the camera nears ── */
+  const IRIS = ADX_ENGINE.SHAPES[0], IRIS_MIN = 2.2, IRIS_MAX = 7.5;
+  function fitIris() {
+    if (!webgl || !sceneEls[0]) return;
+    const box = canvas.getBoundingClientRect(), cx = box.left + box.width / 2, cy = box.top + box.height / 2, rg = document.createRange();
+    let px = 0;
+    sceneEls[0].querySelectorAll('.ch-no, .ch-title span, .ch-sub').forEach(n => {
+      rg.selectNodeContents(n); const r = rg.getBoundingClientRect(); if (!r.width) return;
+      [[r.left, r.top], [r.right, r.top], [r.left, r.bottom], [r.right, r.bottom]].forEach(c => { px = Math.max(px, Math.hypot(c[0] - cx, c[1] - cy)); });
+    });
+    if (!px) return;
+    const k0 = ADX_CAMERA.KEYS[0], dist = k0.pos[2] * pullK(), half = dist * Math.tan(k0.fov * Math.PI / 360);
+    IRIS.sc = clamp(px * 1.1 / (box.height / 2) * half, IRIS_MIN, IRIS_MAX);
+  }
+  /* ignite: the singularity opens from a point once the boot loader has gone (adx:ready), over IGNITE s */
+  const IGNITE = 2.6;
+  let igniteAt = document.getElementById('adx-loader') ? null : -1e9;
+  window.addEventListener('adx:ready', () => { igniteAt = performance.now() / 1000; start(); }, { once: true });
+  const igniteAt_ = time => igniteAt === null ? 0 : clamp((time - igniteAt) / IGNITE, 0, 1);
 
   function resize() {
     if (!webgl) return;
@@ -180,6 +202,7 @@ document.addEventListener('DOMContentLoaded', function () {
     renderer.setSize(w, h, false);
     camera.aspect = w / h; camera.updateProjectionMatrix();
     stars.setPR(dpr); engine.uniforms.uPR.value = dpr; fx.setPR(dpr);
+    fitIris();
   }
 
   /* ── 5. camera: the intro's Catmull-Rom path, then a fixed framing per chapter, blended across the morphs ── */
@@ -220,6 +243,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function render(g, time) {
     const c = chapterAt(g), q = c.q;
     stars.setTime(time);
+    engine.uniforms.uIgn.value = igniteAt_(time);
     if (c.id === 'intro') { engine.setProgress(q, time); placeCamera(camIntro(q, cam)); }
     else if (c.id === 'toTwin') { engine.set(5, 6, q, time); placeCamera(blend(camIntro(1, camA), camTwin(camB), sm(q), cam)); }
     else if (c.id === 'twin') { engine.set(6, 6, 0, time); placeCamera(camTwin(cam)); }
@@ -247,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function () {
     render(P, time * 0.001);
   }
   function start() { if (webgl && !staticMode && !running && onScreen && !document.hidden) { running = true; lastT = 0; requestAnimationFrame(frame); } }
-  function renderOnce() { if (webgl && !staticMode) render(P, 3); }
+  function renderOnce() { if (webgl && !staticMode) render(P, igniteAt === null ? 3 : performance.now() / 1000); }
 
   new IntersectionObserver(es => { onScreen = es[es.length - 1].isIntersecting; if (onScreen) start(); }, { rootMargin: '80px 0px' }).observe(journey);
   document.addEventListener('visibilitychange', start);
@@ -293,17 +317,20 @@ document.addEventListener('DOMContentLoaded', function () {
         scene gets a poster rendered once from the real engine (shape fully formed) as its background ── */
   function drawPosters() {
     if (!webgl || !engine) return;
-    const W = 1280, H = 720;
+    const W = 1280, H = 720, scKeep = IRIS.sc;
+    IRIS.sc = 4.4;                                                         // posters: a fixed 16:9 framing, the horizon fully open
     renderer.setPixelRatio(1); renderer.setSize(W, H, false);
     stars.setPR(1); engine.uniforms.uPR.value = 1; fx.setPR(1);
     camera.aspect = W / H; camera.updateProjectionMatrix();
     mx = my = 0;
     SCENES.forEach((s, i) => {
       const p = mid(s);
+      engine.uniforms.uIgn.value = 1;
       engine.setProgress(p, 3); placeCamera(camIntro(p, cam)); fx.update(3);
       renderer.render(scene, camera);
       try { sceneEls[i].style.setProperty('--poster', 'url(' + canvas.toDataURL('image/jpeg', 0.82) + ')'); sceneEls[i].classList.add('has-poster'); } catch (e) {}
     });
+    IRIS.sc = scKeep;
   }
   function schedulePosters() { clearTimeout(posterT); posterT = setTimeout(drawPosters, 250); }
   function enterStatic() {

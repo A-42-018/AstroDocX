@@ -7,7 +7,7 @@
    function of scroll: fast scrolling, reversing and jumping can
    never break it.
 
-     0 dust  1 planet  2 astronaut  3 Orion  4 relay  5 Earth   (intro)
+     0 singularity (dust)  1 planet  2 astronaut  3 Orion  4 relay  5 Earth   (intro)
      6 body  (Health Twin: regions in aReg light up per system)
      7 ASTRODOCX wordmark  (the reveal)
 
@@ -25,7 +25,7 @@
      sc = scale, rot = idle spin (rad/s), sway = idle turn (rad) instead of a spin, yaw = base turn (rad), tint = colour multiplier,
      dis = dissolve strength of the morph INTO this shape, chest = heartbeat origin in shape space */
   const SHAPES = [
-    { id: 'dust',      sc: 4.2, off: [0, 0, 0],       rot: 0.02, tint: [1, 1, 1],          dis: 0.0 },
+    { id: 'dust',      sc: 4.4, off: [0, 0, 0],       rot: 0,    tint: [1, 1, 1],          dis: 0.0 },   // the singularity (genIris); sc = event-horizon radius in world units, universe.js fits it to the headline
     { id: 'planet',    sc: 2.5, off: [2.6, 0, 0],     rot: 0.10, tint: [1.0, 0.86, 0.62],  dis: 1.6 },
     { id: 'astronaut', sc: 3.3, off: [-3.9, -0.3, 0],   rot: 0, yaw: 0.52, sway: 0.15, tint: [1, 1, 1],  dis: 1.6, chest: [0.337, -0.191, 0.156] },   // Crew: salute, flag, Moon, Earth (tools/bake-moon.mjs)
     { id: 'orion',     sc: 2.7, off: [3.0, 0.3, 0],     rot: 0.0, tint: [0.95, 0.97, 1.0],  dis: 1.6 },
@@ -70,13 +70,53 @@
   }
 
   /* ── procedural shape generators: n points, extent about [-1, 1] ── */
-  function genDust(n, r) {
-    const a = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) {                              // thick shell, denser toward the middle
-      const v = [gauss(r), gauss(r), gauss(r)], l = Math.hypot(v[0], v[1], v[2]) || 1, k = (0.35 + Math.pow(r(), 0.7) * 0.65) / l * 1.15;
-      a[i * 3] = v[0] * k * 1.25; a[i * 3 + 1] = v[1] * k * 0.8; a[i * 3 + 2] = v[2] * k;
+  /* Scene 01 "Beginning": the singularity. A flat iris facing the camera: an empty core (the event horizon, radius 1,
+     the headline sits inside it), a dense corona of short curling strands rooted on the rim, streaming rays and a few
+     long beams, three shock rings that expand and fade, loose curly trails and fine specks. The shape stores rest
+     positions plus a kind per point; the vertex shader (iris()) animates every kind as a pure function of time.
+       kind 0 corona strand · 1 ray / beam · 2..4 shock ring (stored at radius ~1) · 5 curly trail · 6 speck      */
+  const IRIS_KIND = { CORONA: 0, RAY: 1, RING: 2, CURL: 5, SPECK: 6 };
+  function genIris(n, r) {
+    const a = new Float32Array(n * 3), kind = new Float32Array(n), TAU = 6.2831853;
+    let k = 0;
+    const put = (x, y, z, c) => { if (k >= n) return; a[k * 3] = x; a[k * 3 + 1] = y; a[k * 3 + 2] = z; kind[k] = c; k++; };
+    const polar = (rr, th, z, c) => put(Math.cos(th) * rr, Math.sin(th) * rr, z, c);
+    /* corona: 760 strands, length skewed short (a few long ones), each bends a little and wobbles; points crowd the root */
+    const nC = Math.floor(n * 0.40), strands = 760, per = Math.ceil(nC / strands);
+    for (let s = 0; s < strands && k < nC; s++) {
+      const th0 = r() * TAU, len = 0.06 + Math.pow(r(), 2.4) * 0.85, bend = (r() - 0.5) * 0.5, wob = r() * TAU, amp = 0.003 + r() * 0.018, fq = 9 + r() * 14;
+      for (let j = 0; j < per && k < nC; j++) {
+        const u = Math.pow(r(), 1.7);
+        polar(1.0 + Math.abs(gauss(r)) * 0.006 + u * len, th0 + bend * u * u * 0.3 + Math.sin(u * fq + wob) * amp * u, (r() - 0.5) * 0.02, IRIS_KIND.CORONA);
+      }
     }
-    return a;
+    /* rays: 75% scattered, 25% on five long beams (the bright spokes) */
+    const nR = Math.floor(n * 0.18), beams = [0.42, 1.31, 2.05, 3.6, 4.9];
+    for (let i = 0; i < nR; i++) {
+      const onBeam = i < nR * 0.25, th = onBeam ? beams[i % beams.length] + gauss(r) * 0.004 : r() * TAU;
+      polar(1.04 + r() * 3.2, th, (r() - 0.5) * 0.02, IRIS_KIND.RAY);
+    }
+    /* shock rings: stored at radius ~1 with a ragged edge; the shader carries each one outward on its own cycle */
+    const nG = Math.floor(n * 0.15);
+    for (let i = 0; i < nG; i++) {
+      const ring = i % 3, th = r() * TAU, edge = 1 + 0.018 * Math.sin(th * 7 + ring * 2) * Math.sin(th * 3.1 + ring) + gauss(r) * (0.01 + 0.012 * ring);
+      polar(edge, th, (r() - 0.5) * 0.02, IRIS_KIND.RING + ring);
+    }
+    /* curly trails: 110 random walks that mostly circle the core, each a smooth curve of points */
+    const nT = Math.floor(n * 0.12), trails = 110, tper = Math.ceil(nT / trails);
+    for (let t = 0; t < trails && k < 0.85 * n + 1; t++) {
+      let rr = 1.12 + Math.pow(r(), 1.5) * 1.9, th = r() * TAU, hd = r() * TAU;
+      const turn = (r() - 0.5) * 0.5, step = 0.006 + r() * 0.006;
+      for (let j = 0; j < tper; j++) {
+        hd += turn + Math.sin(j * 0.21 + t) * 0.18;
+        const x = Math.cos(th) * rr + Math.cos(hd) * step, y = Math.sin(th) * rr + Math.sin(hd) * step;
+        rr = Math.max(1.08, Math.hypot(x, y)); th = Math.atan2(y, x);
+        polar(rr, th, (r() - 0.5) * 0.03, IRIS_KIND.CURL);
+      }
+    }
+    /* specks: fine dust drifting out to the edges of the frame */
+    while (k < n) polar(1.1 + r() * 4, r() * TAU, (r() - 0.5) * 0.4, IRIS_KIND.SPECK);
+    return { pos: a, kind: kind };
   }
   function genPlanet(n, r) {
     const a = new Float32Array(n * 3), ringN = Math.floor(n * 0.08), tilt = 0.42;
@@ -388,10 +428,10 @@
 
   /* ── shaders ── */
   const VS = [
-    'attribute vec3 aP0,aP1,aP2,aP3,aP4,aP5,aP6,aP7; attribute vec4 aSeed; attribute float aReg; attribute vec3 aNrm; attribute float aTag;',
+    'attribute vec3 aP0,aP1,aP2,aP3,aP4,aP5,aP6,aP7; attribute vec4 aSeed; attribute float aReg; attribute vec3 aNrm; attribute float aTag; attribute float aKind;',
     'uniform float uSeg,uSegB,uT,uTime,uPR,uDis,uScA,uScB,uAngA,uAngB,uSize;',
     'uniform vec3 uOffA,uOffB,uTintA,uTintB,uChest,uMouse,uPlanetC,uLight,uEarthC;',
-    'uniform float uBeatR,uBeatAmp,uWAstro,uWPlanet,uRep,uBodyA,uBodyB,uScan,uAlert;',
+    'uniform float uBeatR,uBeatAmp,uWAstro,uWPlanet,uRep,uBodyA,uBodyB,uScan,uAlert,uIgn;',
     'uniform float uLit[10]; uniform float uFocus[10];',
     'varying vec3 vC; varying float vA;',
     'vec3 pick(float i){ if(i<.5) return aP0; if(i<1.5) return aP1; if(i<2.5) return aP2; if(i<3.5) return aP3; if(i<4.5) return aP4; if(i<5.5) return aP5; if(i<6.5) return aP6; return aP7; }',
@@ -401,8 +441,24 @@
     /* Crew scene (shape 2) tags: 16..255 flag cloth at (u, v) ripples out from the pole, 1 the small Earth turns */
     'vec3 crew(vec3 p){ if(aTag>15.5){ float id=aTag-16., u=mod(id,16.)/15., v=floor(id/16.)/14.; p.z+=.022*u*(.3+.7*v)*sin(u*6.5+v*1.4-uTime*2.1); }',
     ' else if(aTag>.5){ vec3 q=p-uEarthC; float c=cos(uTime*.3),s=sin(uTime*.3); p=uEarthC+vec3(c*q.x+s*q.z,q.y,-s*q.x+c*q.z); } return p; }',
+    /* Scene 01 singularity (shape 0): every kind moves as a pure function of time; irisA is its brightness, irisS its point size */
+    'float irisA=1., irisS=1.;',
+    'vec3 iris(vec3 p){',
+    ' float r=length(p.xy), th=atan(p.y,p.x)+uTime*.012, k=aKind, s=aSeed.x;',
+    ' float ign=1.-pow(1.-uIgn,3.);',                                                    // ignite: eases out from the centre after the loader
+    ' if(k<.5){ th+=uTime*.035/r; r=1.+(r-1.)*(1.+.08*sin(uTime*.9+aSeed.w*6.28))*(1.+.10*uBeatAmp);',   // corona: slow swirl, strands breathe, a faint heartbeat
+    '  irisA=1.15*(.6+.4*sin(uTime*(1.5+aSeed.y*3.)+aSeed.w*40.))*(1.3-.6*clamp(r-1.,0.,1.)); irisS=.85; }',
+    ' else if(k<1.5){ float life=fract(uTime*(.025+.045*aSeed.y)+s); r=1.03+pow(life,1.25)*3.4*(.45+.55*aSeed.z);',   // rays stream outward
+    '  irisA=smoothstep(0.,.06,life)*pow(1.-life,1.2)*1.2; irisS=.85; }',
+    ' else if(k<4.5){ float id=k-2., life=fract(uTime*.042+id/3.+.15); r*=1.08+life*2.7;',   // shock rings: born on the rim, expand, fade
+    '  irisA=pow(sin(3.14159*life),1.4)*(1.-.4*life)*1.8; irisS=1.; }',
+    ' else if(k<5.5){ th-=uTime*.02/r; p.xy+=.012*vec2(sin(uTime*.6+s*21.),cos(uTime*.5+s*17.)); irisA=.55*(.5+.5*sin(uTime*.8+s*9.)); irisS=.65; }',   // curls drift
+    ' else { float life=fract((r-1.1)/4.+uTime*.012); r=1.1+life*4.; irisA=sin(3.14159*life)*.5; irisS=.6; }',   // specks drift out
+    ' r*=mix(.08,1.,ign); irisA*=ign;',
+    ' return vec3(cos(th)*r,sin(th)*r,p.z); }',
     'void main(){',
     ' vec3 pa=pick(uSeg), pb=pick(uSegB);',
+    ' if(uSeg<.5) pa=iris(pa);',
     ' if(abs(uSeg-2.)<.5) pa=crew(pa); if(abs(uSegB-2.)<.5) pb=crew(pb);',
     ' vec3 a=rotY(pa*uScA,uAngA)+uOffA, b=rotY(pb*uScB,uAngB)+uOffB;',
     ' float st=aSeed.w*.55+clamp(pa.y*.5+.5,0.,1.)*.30;',                          // stagger: random + height
@@ -454,8 +510,10 @@
     ' ab*=(.28+.72*li)*(1.+fo*1.7)*(1.+bw*(ri==2||ri==8?1.:2.))*(1.+2.4*exp(-pow((by-uScan)/.09,2.)));',
     ' if(ri==1) ab*=1.+uAlert*.35*sin(uTime*3.2);',
     ' ab*=(.55+aSeed.z*.45)*.95;',
+    ' float wd=uSeg<.5?1.-e:0.;',                                                        // how much this particle is still the singularity
+    ' cI=mix(cI,mix(vec3(.94,.96,1.),vec3(1.,.93,.82),smoothstep(1.25,1.,length(pa.xy))*.5),wd*.8); aI*=mix(1.,irisA,wd);',
     ' vC=mix(cI,col,wb); vA=mix(aI,ab,wb);',
-    ' gl_PointSize=clamp((.9+aSeed.z*1.7)*mix(1.,sz*(1.+fo*.5)*.72,wb)*uSize*uPR*(9./-mv.z),1.,10.);',
+    ' gl_PointSize=clamp((.9+aSeed.z*1.7)*mix(1.,sz*(1.+fo*.5)*.72,wb)*mix(1.,irisS,wd)*uSize*uPR*(9./-mv.z),1.,10.);',
     ' gl_Position=projectionMatrix*mv; }'
   ].join('\n');
   const FS = [
@@ -469,8 +527,9 @@
   function create(scene, opts) {
     const tier = (opts && opts.tier) || 'high';
     const r = rng(20261008), n = N_MAX;
-    const gens = [genDust, genPlanet, genAstronaut, genOrion, genRelay, genEarth];
-    const shapes = gens.map(g => mortonSort(g(n, r), n));
+    const iris = genIris(n, r), irisKind = iris.kind;
+    const gens = [genPlanet, genAstronaut, genOrion, genRelay, genEarth];
+    const shapes = [mortonSort(iris.pos, n, [irisKind])].concat(gens.map(g => mortonSort(g(n, r), n)));
     const body = genBody(n, rng(20261009)), bodyReg = body.reg, bodyNrm = body.nrm;
     shapes.push(mortonSort(body.pos, n, [bodyReg, bodyNrm]));
     const wordOf = fam => mortonSort(genWordmark(n, rng(99), fam), n);
@@ -487,6 +546,9 @@
       const arr = new Float32Array(count * 3); fill(arr, shapes[s]);
       const at = new THREE.BufferAttribute(arr, 3); geo.setAttribute('aP' + s, at); attrs.push(at);
     }
+    const kindA = new Float32Array(count);
+    for (let i = 0; i < count; i++) kindA[i] = irisKind[perm[i]];
+    geo.setAttribute('aKind', new THREE.BufferAttribute(kindA, 1));                   // singularity kinds (shape 0 only)
     const reg = new Float32Array(count);
     for (let i = 0; i < count; i++) reg[i] = bodyReg[perm[i]];
     geo.setAttribute('aReg', new THREE.BufferAttribute(reg, 1));
@@ -507,7 +569,7 @@
       uChest: { value: new THREE.Vector3() }, uMouse: { value: new THREE.Vector3(99, 99, 0) }, uRep: { value: 0 },
       uPlanetC: { value: new THREE.Vector3(2.6, 0, 0) }, uEarthC: { value: new THREE.Vector3(9, 9, 9) }, uLight: { value: new THREE.Vector3(-0.7, 0.4, 0.6).normalize() },
       uBeatR: { value: 9 }, uBeatAmp: { value: 0 }, uWAstro: { value: 0 }, uWPlanet: { value: 0 },
-      uBodyA: { value: 0 }, uBodyB: { value: 0 }, uScan: { value: 9 }, uAlert: { value: 0 },
+      uBodyA: { value: 0 }, uBodyB: { value: 0 }, uScan: { value: 9 }, uAlert: { value: 0 }, uIgn: { value: 1 },
       uLit: { value: new Float32Array(10) }, uFocus: { value: new Float32Array(10) },
       uTintA: { value: new THREE.Vector3(1, 1, 1) }, uTintB: { value: new THREE.Vector3(1, 1, 1) }
     };
