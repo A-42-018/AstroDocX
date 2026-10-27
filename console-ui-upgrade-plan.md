@@ -394,3 +394,25 @@ At each width, check:
 - **StatusTag default words stay `NOMINAL / WATCH / ACT`** (screen text and tests use them); `short` gives the mockup's `NOM`.
 - **Tests on this machine:** the full suite can time out `AlertsPage` / `SimulatorPage` under load (20k-reading seed); they pass alone. Phase 1 and 2 runs were fully green.
 - **Not pushed:** `git push origin feat/console-ui-v3` returned 403 for the GitHub user `morsad01` (no write access to `A-42-018/AstroDocX`). The commits are local until someone with access pushes them.
+
+### 2026-10-27: Phases 3–4
+
+**Done (2 commits on `feat/console-ui-v3`, pushed):**
+- **Phase 3** (`b57e4fa`): the shell. A top bar with the octagon logo and wordmark, tabs grouped crew │ mission (`ROUTES` gained `group` and a phone `mini` label) with the glowing underline and the Alerts count, a mission strip (MET │ link lamp + time │ queue) that links to Ground Sync, round crew avatars with status rings, the bell and a `⋯` menu. Phones get the two-row bar from mockup 4 and 64 px bottom tabs; the More sheet is a dialog. The 28 px status bar is on every screen. The icon rail is gone. New: `shell/Overflow.tsx`, `shell/usePopover.ts` (shared by both popovers: focus in, Escape back to the trigger, outside click, arrow keys, closes on navigation).
+- **Phase 4** (`22122b3`): the Status Board per §4.2. Crew ID panel with the visible h1; the readiness dial with the KPI 2×2 and 7 bars; the twin bay with floor rings, five callouts, ringed markers and leader lines that follow the turning body, and a scan line; heart rate, SpO₂ and Resp tiles; Next Action as a tone panel; five hazard modules. Board loading, empty and error states use `StateView` with the real boot %.
+- Checks after each phase: lint clean, tests 210/210, build OK. In the preview build at 390, 768, 1024, 1440 and 1920 wide: no horizontal scroll, and no page scroll at 1440×900 or 1920×1080. 1280×800 scrolls, as planned (the one-screen layout needs a height ≥ 820).
+
+**Left:** Phases 5–10 as planned, starting with Phase 5 (Alerts per §4.4).
+
+**Decisions:**
+- **Run demo lives in the `⋯` menu.** While a demo runs (or has finished), a ghost `Demo n/8` / `Reset demo` button also shows next to the bell, so it can be stopped in one click. Install, Back to landing and the backdrop choice are in the same menu; the standalone backdrop button is gone (`BackdropPicker.tsx` now exports `BackdropChoices`).
+- **Top bar compaction needs a 1440 px step.** The full mockup bar only just fits at 1440 (1430 px with a scrollbar). Below 1440 the wordmark and the word "queued" go; below 1280 the mission tabs become icons and the link time becomes the lamp; below 1024 all tabs are icons (§4.1). The 1440 query is shell-only; pages still use the §3.3 breakpoints. At 1920 the bar and status bar contents line up with the 1760 px main column.
+- **Callouts collapse with a container query on the bay** (`@container bay (max-width: 560px)`), not a viewport breakpoint. The bay is only about 360 px wide at 1024 and 546 px at 1280, where full callouts overlapped each other and the head; they become `I · ACT`-style code chips there and on phones. Full callouts show at 1440 and up (and at 768, where the bay is full width).
+- **Leader lines:** `body3d.ts` exports `turned(anchor, ang)` (the shader's rotY + `toBox`). The twin measures the figure and callout boxes on resize and moves the markers, lines and scan line through refs every frame; there's no React render per frame. Each line runs from the callout edge, through an 18 px knee, to the marker. Without WebGL (and in tests) the markers sit on the SVG twin's fixed spots.
+- **Scan line:** a new `uScan` uniform brightens the particles within about 3% of the line's height, and an SVG line is drawn at the same height. The sweep takes 5.5 s and is off under reduced motion.
+- **Crew avatars keep a small status flag for Watch/Act**, which the mockup doesn't have, so the ring colour isn't the only cue. The selected avatar is filled with its status colour, as in the mockup.
+- **The Isolation chart marks nights outside the Watch band (mean ± 1.8 sd) in red.** That needed the sleep sd, so `MiniData` gained `sleepSd` (an added field; the loading logic is unchanged).
+- **The bay bar's left label is "◇ Live hologram"**, since there's no drag-rotate (§4.2 said to drop `ROTATE · DRAG` in that case). Next Action's count reads `n / m done`.
+- **The Distance backlog bar keeps its real 0–96 h scale**, so the Act mark sits at 75%, not at the right end as in the mockup.
+- **CSS budget:** the bundle is 66.4 kB (15.0 kB gzip) against the Phase 0 baseline of 45.0 kB (10.5 kB gzip), over §8's +20%. It was already 61.2 kB after Phase 2, because the v2 rules are still there next to v3. Phase 10's legacy removal has to bring it back within budget.
+- **Preview tip:** the PWA service worker serves the previous build after `npm run build`. Unregister it (DevTools → Application, or `navigator.serviceWorker.getRegistrations()`) and clear caches before checking a new build. The preview serves the app under `/app/`.
