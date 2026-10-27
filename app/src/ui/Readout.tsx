@@ -2,9 +2,9 @@ import type { ReactNode } from 'react'
 import type { Status } from '../data/types'
 
 /** KPI cell: a dark well with a corner tick, a mono label and a display-face value. Use inside `<KpiGrid>` (a `<dl>`). */
-export function KpiCell({ label, value, status, sub }: { label: ReactNode; value: ReactNode; status?: Status; sub?: ReactNode }) {
+export function KpiCell({ label, value, status, sub, className }: { label: ReactNode; value: ReactNode; status?: Status; sub?: ReactNode; className?: string }) {
   return (
-    <div className={status ? `kpi st-${status}` : 'kpi'}>
+    <div className={['kpi', status && `st-${status}`, className].filter(Boolean).join(' ')}>
       <dt>{label}</dt>
       <dd>{value}{sub !== undefined && <small>{sub}</small>}</dd>
     </div>

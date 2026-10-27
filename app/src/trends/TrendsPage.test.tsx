@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto'
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, it } from 'vitest'
 import App from '../App'
@@ -10,6 +10,9 @@ import { buildSeries } from './series'
 import { DAY } from '../data/synthetic'
 
 afterEach(cleanup)
+// Every wait here reads the whole app over the 20k-reading demo seed in fake IndexedDB; with test files
+// running in parallel, a database reload or a lazy route can take longer than the 1 s default.
+configure({ asyncUtilTimeout: 15_000 })
 
 it('shows a chart for every metric from the demo mission and has an insomnia marker for the pilot', async () => {
   render(<MemoryRouter initialEntries={['/trends']}><App /></MemoryRouter>)

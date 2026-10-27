@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Mockup · Ground Sync v3</title>
+<link rel="stylesheet" href="hud.css">
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+  body { width: 1440px; height: 900px; }
+  main { min-width: 0; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 400px; grid-template-rows: auto auto minmax(0, 1fr); gap: 14px; padding: 14px 18px; }
+  h1 { margin: 0; font-family: var(--disp); font-size: 32px; font-weight: 600; letter-spacing: -0.02em; }
+
+  /* Link hero */
+  .hero { grid-column: 1; padding: 16px 30px 18px; }
+  .hero-top { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+  .hero-top .tag { height: 26px; font-size: 12px; }
+  .hero-sub { margin: 0; font-size: 14px; color: var(--t2); }
+  .bay { display: grid; grid-template-columns: minmax(0, 1fr) 170px; gap: 24px; align-items: center; margin-top: 10px; }
+  .ld svg { display: block; width: 100%; height: auto; }
+  .ld .line { stroke: rgba(70, 225, 245, 0.35); stroke-width: 2; stroke-dasharray: 3 7; fill: none; }
+  .ld .node { fill: rgba(4, 14, 20, 0.95); stroke: var(--edge-hi); stroke-width: 1.5; filter: drop-shadow(0 0 8px rgba(54, 226, 245, 0.35)); }
+  .ld .node.on { stroke: var(--cy); }
+  .ld .lbl { font: 600 11px var(--mono); letter-spacing: 0.16em; fill: var(--t3); text-transform: uppercase; }
+  .ld .lbl.v { fill: var(--cy); }
+  .ld .pk { fill: var(--watch); filter: drop-shadow(0 0 5px var(--watch)); }
+  .ring { position: relative; width: 170px; height: 170px; display: grid; place-content: center; text-align: center; }
+  .ring svg { position: absolute; inset: 0; }
+  .ring .big { font-size: 28px; color: var(--watch); text-shadow: 0 0 18px rgba(255, 197, 61, 0.35); }
+  .ring .eb { font-size: 11px; }
+
+  .kpis { grid-column: 1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+  .kpis .kpi b { font-size: 20px; }
+  .kpis .kpi small { display: block; margin-top: 2px; font-family: var(--mono); font-size: 11px; color: var(--t3); letter-spacing: 0.06em; }
+
+  /* Log table */
+  .log { grid-column: 1; display: grid; grid-template-rows: auto auto minmax(0, 1fr); min-height: 0; }
+  .filters { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .seg { display: flex; border: 1px solid var(--edge); }
+  .seg span { height: 34px; display: grid; place-content: center; padding: 0 14px; font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; color: var(--t3); }
+  .seg span + span { border-left: 1px solid var(--edge); }
+  .seg span.on { color: var(--cy-hi); background: rgba(54, 226, 245, 0.14); box-shadow: inset 0 0 0 1px var(--edge-hi); }
+  .dd { height: 34px; display: flex; align-items: center; gap: 10px; padding: 0 10px; font-size: 13px; border: 1px solid var(--edge-hi); background: rgba(2, 8, 12, 0.8); }
+  .dd .eb { font-size: 11px; }
+  .tw { overflow: hidden; border: 1px solid rgba(70, 225, 245, 0.12); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { position: sticky; top: 0; padding: 9px 12px; text-align: left; font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cy); background: rgba(6, 18, 26, 0.98); border-bottom: 1px solid var(--edge-hi); }
+  td { padding: 8px 12px; color: var(--t2); border-bottom: 1px solid rgba(70, 225, 245, 0.08); vertical-align: top; }
+  td.m { font-family: var(--mono); font-size: 12px; color: var(--t3); white-space: nowrap; }
+  .kind { display: inline-block; padding: 2px 6px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--cy); border: 1px solid rgba(70, 225, 245, 0.3); }
+  .st { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; white-space: nowrap; }
+  .st svg { width: 14px; height: 14px; }
+
+  /* Right column */
+  .side { grid-column: 2; grid-row: 1 / span 3; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 14px; min-height: 0; }
+  .ctl .btn { width: 100%; height: 46px; }
+  .ctl .btn[disabled] { opacity: 0.42; box-shadow: none; }
+  .hint { margin: 8px 0 14px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--t3); text-transform: uppercase; }
+  .sw { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; font-size: 14px; color: var(--t1); border-top: 1px dashed rgba(70, 225, 245, 0.14); }
+  .sw small { display: block; margin-top: 2px; font-size: 12px; color: var(--t3); }
+  .tg { flex: none; position: relative; width: 44px; height: 24px; border: 1px solid var(--edge-hi); background: rgba(2, 8, 12, 0.8); }
+  .tg::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: var(--t3); transition: left 0.2s; }
+  .tg.on { border-color: var(--cy); background: rgba(54, 226, 245, 0.16); box-shadow: 0 0 12px -4px var(--cy); }
+  .tg.on::after { left: 23px; background: var(--cy); box-shadow: 0 0 8px var(--cy); }
+  .ctl .ghost { margin-top: 12px; height: 42px; }
+  .note { margin: 12px 0 0; font-size: 12px; line-height: 1.5; color: var(--t3); }
+  .out { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; }
+  .pk-list { list-style: none; margin: 0; padding: 0; overflow: hidden; }
+  .pkt { position: relative; display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; padding: 10px 12px 10px 16px; margin-bottom: 8px; background: rgba(5, 14, 22, 0.7); border: 1px solid rgba(70, 225, 245, 0.14); }
+  .pkt::before { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; background: var(--cy); box-shadow: 0 0 10px var(--cy); }
+  .pkt .m { font-family: var(--mono); font-size: 11px; color: var(--t3); letter-spacing: 0.06em; align-self: center; }
+  .pkt p { grid-column: 1 / -1; margin: 0; font-size: 13px; line-height: 1.45; color: var(--t2); }
+  .sent { padding-top: 10px; border-top: 1px dashed rgba(70, 225, 245, 0.14); }
+  .sent div { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 12px; color: var(--t3); }
+</style></head>
+<body>
+<div class="stage app">
+  <header id="top"></header>
+  <main>
+    <section class="hp hero">
+      <span class="br tl"></span><span class="br tr"></span><span class="br bl"></span><span class="br brr"></span>
+      <div class="ph"><span class="dot"></span><span class="eb">Ground link // ship → relay → earth</span><span class="meta">ONE-WAY DELAY ~12 MIN</span></div>
+      <div class="hero-top"><h1>Ground sync</h1><span class="tag watch">WAITING FOR WINDOW</span></div>
+      <p class="hero-sub">Next window opens <b style="color:var(--t1)">D30 00:00 MET</b> (in 1.0 h) for 2 h. Everything keeps working on board meanwhile.</p>
+      <div class="bay">
+        <div class="ld"><svg viewBox="0 0 720 170">
+          <path d="M124 86H326" class="line"/><path d="M394 86H596" class="line"/>
+          <g transform="translate(90 86)"><polygon class="node" points="-20,-34 20,-34 34,-20 34,20 20,34 -20,34 -34,20 -34,-20"/></g>
+          <g transform="translate(360 86)"><polygon class="node" points="-20,-34 20,-34 34,-20 34,20 20,34 -20,34 -34,20 -34,-20"/></g>
+          <g transform="translate(630 86)"><polygon class="node" points="-20,-34 20,-34 34,-20 34,20 20,34 -20,34 -34,20 -34,-20"/></g>
+          <foreignObject x="70" y="66" width="40" height="40"><i data-lucide="rocket" style="width:40px;height:40px;color:#36e2f5;stroke-width:1.6"></i></foreignObject>
+          <foreignObject x="340" y="66" width="40" height="40"><i data-lucide="radio" style="width:40px;height:40px;color:#36e2f5;stroke-width:1.6"></i></foreignObject>
+          <foreignObject x="610" y="66" width="40" height="40"><i data-lucide="globe" style="width:40px;height:40px;color:rgba(170,214,232,.6);stroke-width:1.6"></i></foreignObject>
+          <circle class="pk" cx="140" cy="86" r="4"/><circle class="pk" cx="156" cy="86" r="4" opacity=".7"/><circle class="pk" cx="172" cy="86" r="4" opacity=".45"/>
+          <text x="90" y="146" text-anchor="middle" class="lbl v">Ship · 3 queued</text><text x="360" y="146" text-anchor="middle" class="lbl">Relay</text><text x="630" y="146" text-anchor="middle" class="lbl">Earth</text>
+        </svg></div>
+        <div class="ring"><svg viewBox="0 0 170 170"><circle cx="85" cy="85" r="74" fill="none" stroke="rgba(70,225,245,.12)" stroke-width="8"/>
+          <circle cx="85" cy="85" r="74" fill="none" stroke="#ffc53d" stroke-width="8" pathLength="100" stroke-dasharray="90 100" transform="rotate(-90 85 85)" style="filter:drop-shadow(0 0 6px #ffc53d)"/>
+          <circle cx="85" cy="85" r="62" fill="none" stroke="rgba(70,225,245,.3)" stroke-dasharray="1 5"/></svg>
+          <div><div class="big">1H 00M</div><div class="eb">Next window</div></div></div>
+      </div>
+    </section>
+
+    <div class="kpis">
+      <div class="kpi"><div class="eb">Next window</div><b class="wt">D30 00:00</b><small>2 H CONTACT</small></div>
+      <div class="kpi"><div class="eb">Queued</div><b>3</b><small>ENTRIES ON BOARD</small></div>
+      <div class="kpi"><div class="eb">Last sync</div><b>D29 12:40</b><small>10.3 H AGO</small></div>
+      <div class="kpi"><div class="eb">Auto-sync</div><b class="cy">ON</b><small>IN WINDOWS</small></div>
+      <div class="kpi"><div class="eb">Station</div><b style="font-size:16px">Simulated</b><small>LOCAL ONLY</small></div>
+    </div>
+
+    <section class="hp log">
+      <div class="ph"><span class="dot"></span><span class="eb">On-board log</span><span class="meta">NEWEST FIRST · 412 ENTRIES</span></div>
+      <div class="filters">
+        <div class="seg"><span class="on">ALL</span><span>PENDING</span><span>SYNCED</span></div>
+        <div class="dd"><span class="eb">Kind</span>All kinds <i data-lucide="chevron-down" style="width:14px;color:var(--t3)"></i></div>
+        <div class="dd"><span class="eb">Person</span>Whole crew <i data-lucide="chevron-down" style="width:14px;color:var(--t3)"></i></div>
+      </div>
+      <div class="tw"><table>
+        <thead><tr><th>Time</th><th>Person</th><th>Kind</th><th>Entry</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td class="m">D29 21:00</td><td>Commander</td><td><span class="kind">alert</span></td><td>WATCH: Cabin CO₂ 5.40 mmHg is 2.3σ above baseline.</td><td><span class="st wt"><i data-lucide="clock"></i>PENDING</span></td></tr>
+          <tr><td class="m">D29 19:00</td><td>Pilot</td><td><span class="kind">checkin</span></td><td>Daily check-in: mood 4, sleep 2, 2 symptoms, reaction 307 ms.</td><td><span class="st wt"><i data-lucide="clock"></i>PENDING</span></td></tr>
+          <tr><td class="m">D29 14:00</td><td>Pilot</td><td><span class="kind">step</span></td><td>Step done: Swap safety-critical tasks to a rested crewmate.</td><td><span class="st wt"><i data-lucide="clock"></i>PENDING</span></td></tr>
+          <tr><td class="m">D29 12:00</td><td>Flight Engineer</td><td><span class="kind">resolve</span></td><td>Cabin temperature back inside the band.</td><td><span class="st ok"><i data-lucide="circle-check"></i>SYNCED D29 12:40</span></td></tr>
+          <tr><td class="m">D28 07:00</td><td>Pilot</td><td><span class="kind">alert</span></td><td>ACT: Sleep last night 4.70 h is 3.4σ below baseline.</td><td><span class="st ok"><i data-lucide="circle-check"></i>SYNCED D28 12:20</span></td></tr>
+          <tr><td class="m">D27 07:00</td><td>Pilot</td><td><span class="kind">alert</span></td><td>WATCH: Reaction time 412 ms is 2.6σ above baseline.</td><td><span class="st ok"><i data-lucide="circle-check"></i>SYNCED D27 12:15</span></td></tr>
+          <tr><td class="m">D26 18:00</td><td>Medical Officer</td><td><span class="kind">checkin</span></td><td>Daily check-in: mood 4, sleep 4, no symptoms.</td><td><span class="st ok"><i data-lucide="circle-check"></i>SYNCED D27 00:30</span></td></tr>
+        </tbody></table></div>
+    </section>
+
+    <div class="side">
+      <section class="hp ctl">
+        <div class="ph"><span class="dot"></span><span class="eb">Controls</span><span class="meta">LINK CLOSED</span></div>
+        <button class="btn" disabled>Sync 3 entries now</button>
+        <div class="hint">Opens with the next window · D30 00:00</div>
+        <div class="sw"><div>Simulate comms blackout<small>No uplink or downlink until it ends.</small></div><span class="tg"></span></div>
+        <div class="sw"><div>Auto-sync in windows<small>The simulator sends the queue when a window opens.</small></div><span class="tg on"></span></div>
+        <button class="btn ghost" style="width:100%"><i data-lucide="download" style="width:16px"></i>Download log (CSV)</button>
+        <p class="note">Windows are illustrative: two 2-hour contacts per mission day (00:00 and 12:00 MET).</p>
+      </section>
+      <section class="hp out">
+        <div class="ph"><span class="dot"></span><span class="eb">Outbox</span><span class="meta">3 PENDING</span></div>
+        <ul class="pk-list">
+          <li class="pkt"><span class="kind">alert</span><span class="m">D29 21:00 MET</span><p>WATCH: Cabin CO₂ 5.40 mmHg is 2.3σ above Commander's baseline.</p></li>
+          <li class="pkt"><span class="kind">checkin</span><span class="m">D29 19:00 MET</span><p>Pilot daily check-in: mood 4, sleep 2, 2 symptoms, reaction 307 ms.</p></li>
+          <li class="pkt"><span class="kind">step</span><span class="m">D29 14:00 MET</span><p>Pilot: Swap safety-critical tasks to a rested crewmate (done).</p></li>
+        </ul>
+        <div class="sent"><div class="eb" style="display:block;color:var(--ok);padding:0 0 4px">Recently synced</div>
+          <div><span>Cabin temperature back inside the band.</span><span class="mono">→ D29 12:40</span></div>
+          <div><span>ACT: Sleep last night 4.70 h…</span><span class="mono">→ D28 12:20</span></div></div>
+      </section>
+    </div>
+  </main>
+  <footer class="foot2"><span class="wt">● WAITING FOR WINDOW · 3 QUEUED</span><span>D29 23:00 MET · PROTOTYPE, NOT A MEDICAL DEVICE</span></footer>
+</div>
+<script src="body-data.js"></script>
+<script src="hud.js"></script>
+<script>renderTop('Sync'); lucide.createIcons();</script>
+</body></html>

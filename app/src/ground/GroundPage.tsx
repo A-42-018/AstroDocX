@@ -6,6 +6,7 @@ import { db } from '../data/db'
 import type { ActionLogEntry } from '../data/types'
 import { getTransport } from '../sync/transport'
 import { deriveGround } from './derive'
+import { StateView } from '../ui/StateView'
 import { GroundView } from './GroundView'
 
 export default function GroundPage() {
@@ -34,9 +35,12 @@ export default function GroundPage() {
     void load()
   }
 
-  if (boot.state === 'error') return <p role="alert" className="glass">Could not open the local database: {boot.error}</p>
-  if (!ready || snap === undefined || log === null) return <p className="glass muted" role="status">Initializing demo mission data…</p>
-  if (snap === null) return <p className="glass muted">No crew data yet.</p>
+  if (boot.state === 'error') return <StateView kind="error" title="Could not open the local database"><p>{boot.error}</p></StateView>
+  if (!ready || snap === undefined || log === null) {
+    const pct = boot.state === 'seeding' && boot.total > 0 ? (boot.done / boot.total) * 100 : undefined
+    return <StateView kind="loading" label="Initializing demo mission data" progress={pct} />
+  }
+  if (snap === null) return <StateView kind="empty" label="No crew data yet." />
 
   const fromServer = remote.rows !== null
   const source = fromServer ? remote.rows! : log

@@ -10,6 +10,7 @@ import { downloadCsv, logToCsv } from './exportLog'
 import { loadOutbox, syncNow, type Outbox } from './outbox'
 import { useSync } from './store'
 import { getTransport } from './transport'
+import { StateView } from '../ui/StateView'
 import { SyncView } from './SyncView'
 
 export default function SyncPage() {
@@ -29,9 +30,12 @@ export default function SyncPage() {
     return () => { sub.unsubscribe(); sub2.unsubscribe() }
   }, [ready])
 
-  if (boot.state === 'error') return <p role="alert" className="glass">Could not open the local database: {boot.error}</p>
-  if (!ready || snap === undefined || box === null) return <p className="glass muted" role="status">Initializing demo mission data…</p>
-  if (snap === null) return <p className="glass muted">No crew data yet.</p>
+  if (boot.state === 'error') return <StateView kind="error" title="Could not open the local database"><p>{boot.error}</p></StateView>
+  if (!ready || snap === undefined || box === null) {
+    const pct = boot.state === 'seeding' && boot.total > 0 ? (boot.done / boot.total) * 100 : undefined
+    return <StateView kind="loading" label="Initializing demo mission data" progress={pct} />
+  }
+  if (snap === null) return <StateView kind="empty" label="No crew data yet." />
 
   const lastSyncedAt = box.synced.reduce<number | null>((m, e) => (e.syncedAt !== undefined && (m === null || e.syncedAt > m) ? e.syncedAt : m), null)
   const sync = async () => {
