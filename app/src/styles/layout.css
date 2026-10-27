@@ -156,6 +156,8 @@
   /* ---- Phone bottom tabs (hidden from 768 px up) ---- */
   .tabs { display: none; }
 
+  /* Up to 1599 a two-digit queue would push the full bar past the edge: tighten the tabs a little */
+  @media (max-width: 1599px) { .toptabs a { padding: 0 7px; } }
   /* Below 1440 the full bar no longer fits: the wordmark and the "queued" word go first */
   @media (max-width: 1439px) {
     .brand-text, .strip-ql { display: none; }
