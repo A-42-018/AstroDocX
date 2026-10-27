@@ -21,7 +21,7 @@ it('alert -> tick a step -> Done writes the action to the on-board log', async (
   await waitFor(() => expect((within(card).getAllByRole('checkbox')[0] as HTMLInputElement).checked).toBe(true))
   expect(await db.actionLog.count()).toBe(before + 1)
 
-  fireEvent.click(within(card).getByRole('button', { name: 'Done' }))
+  fireEvent.click(within(card).getByRole('button', { name: 'Mark done' }))
   await waitFor(() => expect(within(card).getByRole('button', { name: 'Done · logged' })).toBeTruthy())
   const entries = await db.actionLog.toArray()
   expect(entries.filter((e) => e.kind === 'step-done' && e.sync === 'pending').length).toBeGreaterThanOrEqual(2)

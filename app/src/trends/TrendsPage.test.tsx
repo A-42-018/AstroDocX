@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, it } from 'vitest'
 import App from '../App'
@@ -14,10 +14,13 @@ afterEach(cleanup)
 it('shows a chart for every metric from the demo mission and has an insomnia marker for the pilot', async () => {
   render(<MemoryRouter initialEntries={['/trends']}><App /></MemoryRouter>)
   const list = await screen.findByRole('list', { name: 'Metric trends' }, { timeout: 120_000 })
-  expect(list.querySelectorAll(':scope > li')).toHaveLength(11)
+  // six small multiples; every metric stays reachable from the channel list
+  expect(list.querySelectorAll(':scope > li')).toHaveLength(6)
+  expect(within(screen.getByRole('group', { name: 'Metric' })).getAllByRole('button')).toHaveLength(11)
 
   fireEvent.click(screen.getByRole('button', { name: /^Pilot/ }))
-  await waitFor(() => expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('Pilot'))
+  await waitFor(() => expect(screen.getByRole('region', { name: 'Biometric channels' }).textContent).toContain('Pilot'))
+  expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
   fireEvent.click(screen.getByRole('button', { name: '30 days' }))
 
   const data = await loadTrendData('pilot', db)
