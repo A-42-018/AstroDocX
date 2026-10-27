@@ -30,12 +30,13 @@
   .twin-chip-text { display: grid; gap: 3px; justify-items: start; font-size: 0.74rem; line-height: 1.1; }
   .twin-chip.l .twin-chip-text { justify-items: end; }
   .twin-chip-text .badge { font-size: 0.56rem; padding: 2px 7px 2px 5px; }
+  .twin-chip-text .tag { height: 18px; font-size: 10px; padding: 0 5px; }
   @media (max-width: 479px) {
     .twin-fig { width: 34%; }
     .twin-chip { gap: 5px; min-height: 40px; }
     .twin-chip.l { right: calc(100% + 10px); } .twin-chip.r { left: calc(100% + 10px); }
     .twin-chip-text b { font-size: 0.66rem; }
-    .twin-chip-text .badge { font-size: 0; gap: 0; padding: 3px; } /* icon only; the word is in the link's accessible name */
+    .twin-chip-text .badge, .twin-chip-text .tag { font-size: 0; gap: 0; padding: 3px; } /* lamp only; the word is in the link's accessible name */
     .twin-chip .hz { width: 26px; height: 26px; }
   }
   .twin-spot.is-linked .twin-halo { fill: color-mix(in srgb, var(--st) 38%, transparent); stroke-width: 2; }

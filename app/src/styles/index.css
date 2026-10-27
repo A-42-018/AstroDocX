@@ -6,6 +6,14 @@
 @import './tokens.css';
 @import './base.css';
 @import './components.css';
+@import './components/hud-panel.css';
+@import './components/tag.css';
+@import './components/button.css';
+@import './components/readout.css';
+@import './components/gauge.css';
+@import './components/seg.css';
+@import './components/state.css';
+@import './components/switch.css';
 @import './layout.css';
 @import './pages/board.css';
 @import './pages/twin.css';

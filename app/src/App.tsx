@@ -9,6 +9,7 @@ import { lazyPage } from './shell/lazyPage'
 import { BottomTabs, Rail, TopBar } from './shell/Chrome'
 import { ROUTES } from './shell/nav'
 import { ShellDataContext, useShellData } from './shell/useShellData'
+import { StateView } from './ui/StateView'
 
 // The board is the landing screen and loads eagerly; every other screen (Trends carries the chart
 // library) is its own chunk. The service worker precaches all chunks, so they still work offline;
@@ -69,7 +70,7 @@ export default function App() {
       <main id="main" ref={main} tabIndex={-1}>
         {/* key: a crash on one screen clears when the crew moves to another */}
         <ErrorBoundary key={pathname} onReset={() => seedDemo().then(() => undefined)}>
-        <Suspense fallback={<p className="glass muted" role="status">Loading…</p>}>
+        <Suspense fallback={<StateView kind="loading" label="Loading screen" />}>
         <Routes>
           <Route path="/" element={<Navigate to="/board" replace />} />
           <Route path="/board" element={<BoardPage />} />

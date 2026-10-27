@@ -1,0 +1,20 @@
+/* KpiCell / KpiGrid and Readout (src/ui/Readout.tsx). */
+@layer components {
+  .kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; }
+  .kpi { position: relative; min-width: 0; padding: 9px 10px 8px; background: rgba(54, 226, 245, 0.05); border: 1px solid rgba(70, 225, 245, 0.16); }
+  .kpi::before { content: ''; position: absolute; left: -1px; top: -1px; width: 6px; height: 6px; border: solid var(--cy); border-width: 1px 0 0 1px; }
+  .kpi dt { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--t3); }
+  .kpi dd { margin: 4px 0 0; font-family: var(--disp); font-size: 22px; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; color: var(--t1); overflow-wrap: anywhere; }
+  .kpi.st-watch dd, .kpi.st-act dd { color: var(--st); }
+  .kpi dd small { margin-left: 6px; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; color: var(--t3); }
+
+  .readout { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; margin: 0; min-width: 0; }
+  .ro-value { font-family: var(--disp); font-weight: 600; line-height: 1; letter-spacing: -0.02em; color: var(--t1); font-variant-numeric: tabular-nums; }
+  .readout.st-watch .ro-value, .readout.st-act .ro-value { color: var(--st); }
+  .readout-hero .ro-value { font-size: clamp(58px, 5vw, 72px); line-height: 0.9; letter-spacing: -0.04em; text-shadow: 0 0 24px rgba(54, 226, 245, 0.25); }
+  .readout-l .ro-value { font-size: 30px; }
+  .readout-m .ro-value { font-size: 22px; }
+  .ro-unit, .ro-delta { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); }
+  .ro-delta { font-weight: 600; color: var(--t2); text-transform: none; }
+  .ro-meta { flex-basis: 100%; font-family: var(--ui); font-size: 13px; color: var(--t3); letter-spacing: 0; }
+}

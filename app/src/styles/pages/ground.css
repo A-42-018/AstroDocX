@@ -7,7 +7,7 @@
   .ground-role { margin: 0 0 10px; font-size: 0.8rem; }
   .ground-alerts { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 10px; }
   .ground-alert { display: grid; gap: 6px; font-size: 0.88rem; padding: 12px 14px; border-radius: var(--r-md); background: var(--glass-3); border: 1px solid var(--line); }
-  .ground-alert .badge { justify-self: start; }
+  .ground-alert .badge, .ground-alert .tag { justify-self: start; }
   .ground-card p { margin: 4px 0; font-size: 0.82rem; }
   .await { color: var(--watch); }
   .behind { margin: 4px 0 10px; font-size: 1.15rem; }

@@ -65,7 +65,7 @@
   .tile { display: flex; flex-direction: column; gap: 2px; transition: transform 0.25s var(--ease), border-color 0.25s; }
   .tile:hover { transform: translateY(-2px); border-color: var(--line-hi); }
   .tile header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-  .tile .badge { margin-left: auto; }
+  .tile .badge, .tile .tag { margin-left: auto; }
   .tile h2 { flex-basis: 100%; margin: 8px 0 0; font-size: 0.92rem; font-weight: 600; color: var(--text-mid); }
   .val { margin: 4px 0 0; font-size: 0.85rem; color: var(--text-mid); font-family: var(--font-body); }
   .val b { font-size: 2.1rem; font-weight: 700; color: var(--text-hi); letter-spacing: -0.03em; line-height: 1.15; }

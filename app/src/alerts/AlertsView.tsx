@@ -65,7 +65,7 @@ export function AlertsView({ crew, crewId, active, resolved, detail, onSelect, o
                       <b>{alertTitle(a)}</b>
                       <span className="mono muted">{filter === 'resolved' ? `peak ${a.peakStatus.toUpperCase()} · ${met(a.openedAt)}` : `opened ${met(a.openedAt)}`}</span>
                     </span>
-                    {filter === 'resolved' ? <span className="badge st-nominal">RESOLVED</span> : <StatusPill status={a.status} />}
+                    {filter === 'resolved' ? <StatusPill status="nominal" label="RESOLVED" /> : <StatusPill status={a.status} />}
                   </button>
                 </li>
               ))}
