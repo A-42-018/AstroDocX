@@ -73,7 +73,7 @@ The live waves on the board (ECG, pulse oximeter, breathing) are **simulated tel
 
 ## Try it
 - **Health Twin:** scroll through the section. The scan runs head to feet, six system panels appear, Crew Readiness counts up, then the Pilot's real Act alert from the demo mission appears as an action card. Panel values are the demo mission's latest readings.
-- **Run demo (Crew Console):** press *Run demo* in the top bar to inject a CO₂ scrubber fault and watch the board, twin and alerts react (about 20 s); *Reset demo* restores the mission data.
+- **Run demo (Crew Console):** press *Run demo* in the top bar's `⋯` menu to inject a CO₂ scrubber fault and watch the board, twin and alerts react (about 20 s); *Reset demo* restores the mission data.
 - **Mission Simulator (Crew Console, `/app/simulator`):** inject a scenario (solar particle event, CO₂ scrubber fault, insomnia streak, skipped exercise) for one crew member or the whole crew, then tick the action-card steps on Alerts and sync the log from Ground Sync in the next link window.
 
 ## Links

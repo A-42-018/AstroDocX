@@ -1,3 +1,4 @@
+import '../styles/pages/sync.css'
 import { liveQuery } from 'dexie'
 import { useEffect, useState } from 'react'
 import { useSnapshot } from '../board/hooks'

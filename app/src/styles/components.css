@@ -1,84 +1,13 @@
-/* Shared v2 components still in use: glass card, status, hazard chip, badge, buttons, chips, fields, steps.
-   Phase 2 adds the v3 primitives (src/ui) next to these; Phase 10 removes what is no longer used. */
+/* Status colour roles and the hazard chip (src/shell/icons.tsx). The v3 primitives live in components/*.css. */
 @layer components {
-  /* ---- Smoked glass card ---- */
-  .glass {
-    position: relative; background: var(--glass-2); border: 1px solid var(--line); border-radius: var(--r-lg);
-    padding: 20px 22px; box-shadow: var(--shadow);
-  }
-  main > p.glass[role='status'] { font-size: 0.9rem; color: var(--text-mid); }
-
-  /* ---- Status ---- */
   .st-nominal { --st: var(--ok); } .st-watch { --st: var(--watch); } .st-act { --st: var(--act); }
-  .glass.st-watch { border-color: rgba(255, 197, 61, 0.3); }
-  .glass.st-act {
-    border-color: rgba(255, 90, 110, 0.45);
-    background: linear-gradient(180deg, rgba(255, 90, 110, 0.10), rgba(255, 90, 110, 0.02) 60%), var(--glass-2);
-    box-shadow: var(--shadow), 0 0 0 1px rgba(255, 90, 110, 0.08), 0 10px 40px -10px rgba(255, 90, 110, 0.35);
-  }
   .hz {
     width: 34px; height: 34px; display: grid; place-content: center; border-radius: 10px; flex-shrink: 0;
-    color: var(--st, var(--data)); background: color-mix(in srgb, var(--st, var(--data)) 14%, transparent);
-    border: 1px solid color-mix(in srgb, var(--st, var(--data)) 28%, transparent);
+    color: var(--st, var(--cy)); background: color-mix(in srgb, var(--st, var(--cy)) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--st, var(--cy)) 28%, transparent);
   }
-  .hz-data { --st: var(--data); }
-  .badge {
-    display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 8px; border-radius: 999px; white-space: nowrap;
-    font-size: 0.66rem; font-weight: 700; letter-spacing: 0.08em; color: var(--st);
-    background: color-mix(in srgb, var(--st) 14%, transparent); border: 1px solid color-mix(in srgb, var(--st) 30%, transparent);
-  }
-
-  /* ---- Steps (Action card, Next action) ---- */
-  .steps { border: 1px solid var(--line); border-radius: var(--r-md); margin: 14px 0; padding: 6px 16px 8px; background: var(--glass-3); }
-  .steps legend { padding: 0 8px; font-size: 0.74rem; font-weight: 600; letter-spacing: 0.04em; color: var(--text-mid); }
-  .step { display: flex; gap: 12px; align-items: flex-start; min-height: 44px; padding: 10px 0; cursor: pointer; line-height: 1.45; }
-  .step + .step { border-top: 1px solid var(--line); }
-  .step input { width: 20px; height: 20px; margin: 1px 0 0; flex-shrink: 0; accent-color: var(--accent); }
-  .step.done span { color: var(--text-lo); text-decoration: line-through; }
-
-  /* ---- Buttons ---- */
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    min-height: 44px; padding: 0 22px; border-radius: 999px; border: 1px solid transparent;
-    background: var(--accent); color: var(--on-accent); font: inherit; font-weight: 600; font-size: 0.9rem; cursor: pointer;
-    box-shadow: 0 6px 20px -6px rgba(255, 122, 47, 0.6);
-    transition: background 0.18s, box-shadow 0.18s, transform 0.18s var(--ease);
-  }
-  .btn:hover:not(:disabled) { background: var(--accent-hi); transform: translateY(-1px); box-shadow: 0 10px 26px -6px rgba(255, 122, 47, 0.7); }
-  .btn:active:not(:disabled) { transform: none; }
-  .btn:disabled { opacity: 0.45; cursor: default; box-shadow: none; }
-  .btn:focus-visible, .step input:focus-visible { outline: 2px solid var(--accent-hi); outline-offset: 2px; }
-  .btn.ghost { border-color: var(--line-hi); background: rgba(255, 255, 255, 0.04); color: var(--text-hi); box-shadow: none; }
-  .btn.ghost:hover:not(:disabled) { background: rgba(255, 255, 255, 0.09); box-shadow: none; }
-  .btn.danger { border-color: rgba(255, 90, 110, 0.5); background: rgba(255, 90, 110, 0.12); color: #ffd1d7; box-shadow: none; }
-  .btn.danger:hover:not(:disabled) { background: rgba(255, 90, 110, 0.22); box-shadow: none; }
-  .mini-btn { min-height: 44px; padding: 0 14px; font-size: 0.78rem; }
-  .sec-title { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-mid); margin: 16px 0 8px; }
-  .sim-steps { display: flex; flex-wrap: wrap; gap: 8px; }
-
-  /* ---- Chips: filter and toggle pills (one definition; it used to be split over three places) ---- */
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip {
-    position: relative; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 0;
-    min-height: 40px; padding: 0 16px; border-radius: 999px; white-space: nowrap; text-align: center; cursor: pointer;
-    font-size: 0.85rem; color: var(--text-hi); background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line);
-    transition: border-color 0.18s, background 0.18s, color 0.18s;
-  }
-  .chips .chip { min-height: 44px; gap: 7px; }
-  .chip:hover { border-color: var(--line-hi); background: rgba(255, 255, 255, 0.06); }
-  a.chip:hover { background: rgba(255, 255, 255, 0.07); }
-  .chip.on { border-color: var(--accent); color: #fff; background: var(--accent-soft); }
-  .chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-  .chip:focus-within { outline: 2px solid var(--accent-hi); outline-offset: 2px; }
-
-  /* ---- Fields ---- */
-  .field { display: grid; gap: 6px; max-width: 280px; font-weight: 500; font-size: 0.9rem; }
-  .field input, .field select {
-    min-height: 44px; padding: 0 12px; border-radius: var(--r-sm); border: 1px solid var(--line);
-    background: rgba(0, 0, 0, 0.35); color: var(--text-hi); font: inherit; transition: border-color 0.18s, box-shadow 0.18s;
-  }
-  .field select { padding: 0 10px; }
-  .field input:focus, .field select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); outline: none; }
-  .check { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; font-size: 0.9rem; }
-  .check input { width: 20px; height: 20px; accent-color: var(--accent); }
+  .hz-data { --st: var(--cy); }
+  /* Shared by the Simulator, Sync, Ground and Check-in forms */
+  .note { margin: 8px 0 0; font-size: 0.78rem; }
+  .form-error { color: var(--act); margin: 0; font-weight: 600; }
 }

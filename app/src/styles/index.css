@@ -17,10 +17,4 @@
 @import './layout.css';
 @import './pages/board.css';
 @import './pages/twin.css';
-@import './pages/alerts.css';
-@import './pages/trends.css';
-@import './pages/checkin.css';
-@import './pages/sim.css';
-@import './pages/sync.css';
-@import './pages/ground.css';
 @import './utilities.css';

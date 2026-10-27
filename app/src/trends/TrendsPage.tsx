@@ -1,3 +1,4 @@
+import '../styles/pages/trends.css'
 import { liveQuery } from 'dexie'
 import { useEffect, useMemo, useState } from 'react'
 import { useSnapshot } from '../board/hooks'

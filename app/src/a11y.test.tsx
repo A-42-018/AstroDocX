@@ -25,3 +25,15 @@ it('has a skip link to the main region, names each page in the title and moves f
   expect(document.activeElement).toBe(main)
   expect(screen.getAllByRole('link', { name: 'Trends' })[0].getAttribute('aria-current')).toBe('page')
 }, 20_000)
+
+it('gives every route exactly one h1 and keeps names on the icon-only shell controls', async () => {
+  render(<MemoryRouter initialEntries={['/board']}><App /></MemoryRouter>)
+  expect(await screen.findByRole('button', { name: 'More options' }, { timeout: 15_000 })).toBeTruthy()
+  expect(await screen.findByRole('link', { name: /^No open alerts for |^\d+ open alerts? for / }, { timeout: 15_000 })).toBeTruthy()
+  for (const name of ['Status Board', 'Alerts', 'Trends', 'Check-in', 'Simulator', 'Ground Sync', 'Ground View']) {
+    const tab = screen.getAllByRole('link', { name: new RegExp(`^${name}`) })[0]
+    fireEvent.click(tab)
+    await waitFor(() => expect(document.title).toBe(`${name} · AstroDocX Crew Console`), { timeout: 15_000 })
+    await waitFor(() => expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1), { timeout: 15_000 })
+  }
+}, 120_000)
