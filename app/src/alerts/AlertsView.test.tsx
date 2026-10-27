@@ -30,6 +30,17 @@ it('shows the most urgent alert in the detail pane with why, progress, and repor
   expect(onDone).toHaveBeenCalledWith(1)
 })
 
+it('shows a tick at once, then follows the database when the alert next arrives', () => {
+  const { rerender } = render(<AlertsView {...props} active={[base, watch]} />)
+  const box = () => within(screen.getByLabelText('Sleep last night: ACT')).getByLabelText('Dim the cabin lights') as HTMLInputElement
+  fireEvent.click(box())
+  expect(box().checked).toBe(true) // before the database has answered
+  expect(screen.getByText(/2 of 2 steps done/)).toBeTruthy()
+  // a newer copy of the alert (the write failed, say) is the truth again
+  rerender(<AlertsView {...props} active={[{ ...base }, watch]} />)
+  expect(box().checked).toBe(false)
+})
+
 it('picks another alert from the list and reports the selection', () => {
   const onSelect = vi.fn()
   render(<AlertsView {...props} active={[base, watch]} onSelect={onSelect} />)

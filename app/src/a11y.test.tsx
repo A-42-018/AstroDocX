@@ -1,11 +1,14 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, configure, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, expect, it } from 'vitest'
 import App from './App'
 
 afterEach(cleanup)
+// Every wait here reads the whole app over the 20k-reading demo seed in fake IndexedDB; with test files
+// running in parallel, a database reload or a lazy route can take longer than the 1 s default.
+configure({ asyncUtilTimeout: 15_000 })
 
 it('has a skip link to the main region, names each page in the title and moves focus on navigation', async () => {
   render(<MemoryRouter initialEntries={['/board']}><App /></MemoryRouter>)

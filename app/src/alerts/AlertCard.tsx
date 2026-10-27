@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { alertTitle, met } from '../engine/actions'
 import { evidenceFor } from '../engine/evidence'
 import { METRICS, type Alert } from '../data/types'
@@ -44,15 +44,25 @@ export function AlertDetail({ alert: a, detail, onStep, onDone, onBack }: Props)
   const id = a.id!
   const resolved = a.state === 'resolved'
   const acknowledged = a.state === 'acknowledged'
-  const doneCount = a.steps.filter((s) => s.done).length
-  const total = a.steps.length
+  // A tick shows at once; the database write and the snapshot reload that confirms it can take a moment.
+  // Any newer alert from the database is the truth again, so the override only lives until then.
+  const [ticked, setTicked] = useState<{ of: Alert; done: Record<number, boolean> }>({ of: a, done: {} })
+  if (ticked.of !== a) setTicked({ of: a, done: {} })
+  const over = ticked.of === a ? ticked.done : {}
+  const steps = a.steps.map((s, i) => (i in over ? { ...s, done: over[i] } : s))
+  const tick = (i: number, done: boolean) => {
+    setTicked((t) => ({ of: a, done: { ...(t.of === a ? t.done : {}), [i]: done } }))
+    onStep(id, i, done)
+  }
+  const doneCount = steps.filter((s) => s.done).length
+  const total = steps.length
   const title = alertTitle(a)
   const sigma = a.z
   const timeline = buildTimeline(a, detail?.alertId === id ? detail.log : [])
   const evidence = evidenceFor(a.metric)
   const hz = HAZARDS.find((h) => h.id === a.hazard)
   const series = detail && detail.alertId === id && detail.series.points.length > 1 ? detail.series : null
-  const current = a.steps.findIndex((s) => !s.done)
+  const current = steps.findIndex((s) => !s.done)
   const pct = total ? (doneCount / total) * 100 : 0
   return (
     <article className={`al-detail st-${a.status}`} aria-label={`${title}: ${LABEL[a.status]}`}>
@@ -116,10 +126,10 @@ export function AlertDetail({ alert: a, detail, onStep, onDone, onBack }: Props)
           </div>
           <fieldset className="al-steps" disabled={acknowledged || resolved}>
             <legend className="sr-only">Action card · {doneCount} of {total} steps done</legend>
-            {a.steps.map((s, i) => (
+            {steps.map((s, i) => (
               <label key={i} className={`al-step${s.done ? ' done' : ''}${i === current && !resolved ? ' cur' : ''}`}>
                 {/* the number is drawn by CSS (data-n), so the checkbox's name is the step text alone */}
-                <span className="al-n" data-n={i + 1}><input type="checkbox" checked={s.done} onChange={(e) => onStep(id, i, e.target.checked)} /></span>
+                <span className="al-n" data-n={i + 1}><input type="checkbox" checked={s.done} onChange={(e) => tick(i, e.target.checked)} /></span>
                 <span>{s.text}</span>
               </label>
             ))}
