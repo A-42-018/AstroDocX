@@ -60,7 +60,7 @@ export function SyncView({ now, link, pending, synced, lastSyncedAt, station, bl
   return (
     <div className="board">
       <section className={`glass link ${s.cls}`} aria-label="Ground link status">
-        <h1 style={{ margin: 0 }}>Ground sync</h1>
+        <h1 className="flush">Ground sync</h1>
         <LinkDiagram link={link} now={now} queued={pending.length} burst={burst} />
         <p className="link-state mono"><s.Icon size={18} strokeWidth={2.2} aria-hidden="true" /> {s.text}</p>
         <p className="muted">

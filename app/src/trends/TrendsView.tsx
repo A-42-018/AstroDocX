@@ -35,8 +35,8 @@ export function TrendsView({ crew, crewId, range, series, onRange, focus, onFocu
       <section className="glass" aria-label="Trend summary">
         <div className="trend-top">
           <div>
-            <h1 style={{ margin: 0 }}>Trends · {who?.name}</h1>
-            <p className="muted" style={{ marginBottom: 0 }}>
+            <h1 className="flush">Trends · {who?.name}</h1>
+            <p className="muted flush-bottom">
               Each line is measured against {who?.name}’s own baseline. The shaded band is the baseline ± 1.8σ (the Watch threshold); dots mark alerts (amber Watch, red Act).
             </p>
           </div>

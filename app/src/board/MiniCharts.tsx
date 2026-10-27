@@ -73,8 +73,8 @@ export function BacklogBar({ hours }: { hours: number | null | undefined }) {
   return (
     <div className="backlog" aria-hidden="true">
       <span className="backlog-fill" style={{ width: `${pct}%` }} />
-      <i style={{ left: '25%' }} />
-      <i style={{ left: '75%' }} />
+      <i className="mark-watch" />
+      <i className="mark-act" />
     </div>
   )
 }

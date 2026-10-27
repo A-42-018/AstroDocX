@@ -25,7 +25,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode; onReset?: ()
     const { onReset } = this.props
     return (
       <section className="glass" role="alert">
-        <h1 style={{ marginTop: 0 }}>This screen hit an error</h1>
+        <h1>This screen hit an error</h1>
         <p className="muted">The on-board data is still on this device. Try the screen again; if it keeps failing, reset the demo data.</p>
         <p className="mono muted">{error.message}</p>
         <div className="sim-steps">

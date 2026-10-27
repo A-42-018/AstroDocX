@@ -52,8 +52,8 @@ export function SimulatorView({ crew, now, injections, last, busy, error, events
     <div className="board">
       <section className="glass mc-head">
         <div>
-          <h1 style={{ margin: 0 }}>Mission simulator</h1>
-          <p className="muted" style={{ marginBottom: 0 }}>
+          <h1 className="flush">Mission simulator</h1>
+          <p className="muted flush-bottom">
             Demo tool. Inject a scenario, then move mission time forward and watch the board, alerts and trends respond. Everything runs through the same engine as real readings.
           </p>
         </div>
@@ -91,7 +91,7 @@ export function SimulatorView({ crew, now, injections, last, busy, error, events
           </section>
 
           <section className="glass" aria-label="Active scenarios">
-            <h2 className="sec-title" style={{ marginTop: 0 }}>Running now</h2>
+            <h2 className="sec-title flush-top">Running now</h2>
             {injections.length === 0 ? <p className="muted">No scenario running.</p> : (
               <ul className="resolved-list">
                 {injections.map((i, idx) => (
@@ -105,7 +105,7 @@ export function SimulatorView({ crew, now, injections, last, busy, error, events
           </section>
 
           <section className="glass" aria-label="Time controls">
-            <h2 className="sec-title" style={{ marginTop: 0 }}>Fast-forward mission time</h2>
+            <h2 className="sec-title flush-top">Fast-forward mission time</h2>
             <div className={`scrub${busy ? ' busy' : ''}`}>
               <div className="scrub-track" aria-hidden="true"><span className="scrub-run" /></div>
               <div className="sim-steps" role="group" aria-label="Advance time">
@@ -126,7 +126,7 @@ export function SimulatorView({ crew, now, injections, last, busy, error, events
         </div>
 
         <section className="glass feed" aria-label="Engine event feed">
-          <h2 className="sec-title" style={{ marginTop: 0 }}><Activity size={14} aria-hidden="true" /> Engine event feed</h2>
+          <h2 className="sec-title flush-top"><Activity size={14} aria-hidden="true" /> Engine event feed</h2>
           {events.length === 0 ? <p className="muted">No alert activity yet. Inject a scenario and move time forward.</p> : (
             <ol className="feed-list">
               {events.map((ev) => {
@@ -148,7 +148,7 @@ export function SimulatorView({ crew, now, injections, last, busy, error, events
       </div>
 
       <section className="glass" aria-label="Reset">
-        <h2 className="sec-title" style={{ marginTop: 0 }}>Reset</h2>
+        <h2 className="sec-title flush-top">Reset</h2>
         <p className="muted">Replaces all local data (readings, alerts, log, check-ins) with the starting demo mission.</p>
         {confirm ? (
           <div className="sim-steps">
