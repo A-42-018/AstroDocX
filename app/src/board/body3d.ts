@@ -15,6 +15,8 @@ export interface Body3D { n: number; pos: Float32Array; nrm: Float32Array; reg: 
 export const K = 147
 export const Y_MID = 330 + ((1.92 - 2.12) / 2) * K                          // the body's mid height (y -0.1) at the box centre
 export const toBox = (x: number, y: number): [number, number] => [150 + x * K, Y_MID - y * K]
+/** A body point turned about the vertical axis by `ang` (the shader's rotY), in the twin box: leader lines use the same maths as the particles. */
+export const turned = (p: readonly [number, number, number], ang: number): [number, number] => toBox(Math.cos(ang) * p[0] + Math.sin(ang) * p[2], p[1])
 
 let loading: Promise<Body3D | null> | null = null
 /** Loads once; null where it cannot (no fetch, a test DOM, a bad file): callers keep the SVG twin. */
@@ -47,7 +49,7 @@ const HZ: Hazard[] = ['I', 'D', 'E', 'R', 'G']
 
 const VS = `
 attribute vec3 aPos; attribute vec3 aNrm; attribute float aReg; attribute float aSeed;
-uniform float uAng, uTime, uBeat, uPR, uK, uYMid, uFocus;
+uniform float uAng, uTime, uBeat, uPR, uK, uYMid, uFocus, uScan;
 uniform float uS0, uS1, uS2, uS3, uS4;
 uniform vec3 uHeart;
 varying vec3 vC; varying float vA;
@@ -81,8 +83,12 @@ void main() {
   }
   if (hz > -.5 && abs(hz - uFocus) < .5) { a *= 1.9; sz *= 1.2; }
   a *= .65 + .35 * aSeed;
-  vC = c; vA = a;
   vec2 box = vec2(150. + p.x * uK, uYMid - p.y * uK);
+  if (uScan >= 0.) {                                                           // scan line: the points it passes light up
+    float sd = (box.y / 660. - uScan) * 34., s = exp(-sd * sd);
+    c = mix(c, vec3(.78, .98, 1.), .65 * s); a *= 1. + 2.4 * s;
+  }
+  vC = c; vA = a;
   gl_Position = vec4(box.x / 150. - 1., 1. - box.y / 330., 0., 1.);
   gl_PointSize = (1.1 + aSeed * 1.1) * sz * uPR;
 }`
@@ -90,7 +96,10 @@ const FS = `
 precision mediump float; varying vec3 vC; varying float vA;
 void main() { vec2 d = gl_PointCoord - .5; float r = dot(d, d) * 4.; float a = exp(-r * 4.) * vA; gl_FragColor = vec4(vC * a, a); }`
 
-export interface TwinRenderer { draw(t: number, ang: number, beatAge: number, focus: number): void; resize(): void; setStatus(s: Partial<Record<Hazard, Status>>): void; dispose(): void }
+export interface TwinRenderer {
+  /** `scan` is the scan line's height in the box, 0 (top) to 1, or -1 for none. */
+  draw(t: number, ang: number, beatAge: number, focus: number, scan?: number): void
+  resize(): void; setStatus(s: Partial<Record<Hazard, Status>>): void; dispose(): void }
 
 /** WebGL point renderer for the twin canvas. Throws when WebGL is missing (the caller keeps the SVG twin). */
 export function twinRenderer(canvas: HTMLCanvasElement, body: Body3D): TwinRenderer {
@@ -109,7 +118,7 @@ export function twinRenderer(canvas: HTMLCanvasElement, body: Body3D): TwinRende
   }
   attr('aPos', body.pos, 3); attr('aNrm', body.nrm, 3); attr('aReg', body.reg, 1); attr('aSeed', seed, 1)
   const U = (n: string) => gl.getUniformLocation(prog, n)
-  const uAng = U('uAng'), uTime = U('uTime'), uBeat = U('uBeat'), uPR = U('uPR'), uFocus = U('uFocus')
+  const uAng = U('uAng'), uTime = U('uTime'), uBeat = U('uBeat'), uPR = U('uPR'), uFocus = U('uFocus'), uScan = U('uScan')
   gl.uniform1f(U('uK'), K); gl.uniform1f(U('uYMid'), Y_MID); gl.uniform3fv(U('uHeart'), body.heart)
   gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE)
   let pr = 1
@@ -121,8 +130,8 @@ export function twinRenderer(canvas: HTMLCanvasElement, body: Body3D): TwinRende
       gl.uniform1f(uPR, pr * Math.min(1.4, canvas.clientWidth / 200))
     },
     setStatus(s) { HZ.forEach((h, i) => gl.uniform1f(U('uS' + i), ST[s[h] ?? 'nominal'])) },
-    draw(t, ang, beatAge, focus) {
-      gl.uniform1f(uTime, t); gl.uniform1f(uAng, ang); gl.uniform1f(uBeat, beatAge); gl.uniform1f(uFocus, focus)
+    draw(t, ang, beatAge, focus, scan = -1) {
+      gl.uniform1f(uTime, t); gl.uniform1f(uAng, ang); gl.uniform1f(uBeat, beatAge); gl.uniform1f(uFocus, focus); gl.uniform1f(uScan, scan)
       gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT)
       gl.drawArrays(gl.POINTS, 0, body.n)
     },

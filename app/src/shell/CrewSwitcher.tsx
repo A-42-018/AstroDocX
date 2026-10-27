@@ -32,8 +32,8 @@ export function CrewSwitcher({ crew, crewId, onSelect }: { crew: ShellCrew[]; cr
             {/* The name is real text (not an aria-label), so the visible initials and the accessible name never disagree. */}
             <span className="sr-only">{`${c.name}, ${STATUS_WORD[c.status]}${c.alerts ? `, ${c.alerts} open alert${c.alerts > 1 ? 's' : ''}` : ''}`}</span>
             <span className="av-disc" aria-hidden="true">{initials(c.name)}</span>
-            <span className="av-flag" aria-hidden="true"><Icon size={11} strokeWidth={3} /></span>
-            {on && <span className="av-name" aria-hidden="true">{c.name}</span>}
+            {/* Watch and Act also get a shape, so the ring colour is not the only cue */}
+            {c.status !== 'nominal' && <span className="av-flag" aria-hidden="true"><Icon size={9} strokeWidth={3} /></span>}
           </button>
         )
       })}

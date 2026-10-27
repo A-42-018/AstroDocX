@@ -1,47 +1,93 @@
-/* Health Twin: the 3D particle body (canvas), the SVG hotspots and the callout chips. Also the 2D mini body Ground uses. */
+/* Health Twin bay (board/Twin.tsx): the 3D particle body (canvas) on floor rings, markers and leader lines, the callouts
+   and the bay bar. Also the SVG hologram used without WebGL, and the 2D mini body Ground uses. */
 @layer pages {
-  .twin-card { display: grid; place-items: center; padding: 22px 12px 30px; min-height: 420px; overflow: hidden; background: radial-gradient(60% 55% at 50% 45%, rgba(45, 212, 232, 0.09), transparent 70%), var(--glass-2); }
-  @media (min-width: 1280px) { .twin-card { min-height: 560px; } }
-  .twin { width: 100%; display: grid; place-items: center; }
-  .twin-fig { position: relative; width: min(46%, 240px); aspect-ratio: 300 / 660; --st: var(--ok); --bone: rgba(225, 240, 255, 0.62); --st-ok: var(--data); }
-  .twin-fig > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-  /* 3D twin: the particle body draws on the canvas, the SVG above it keeps only the hotspots */
-  .twin-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: none; pointer-events: none; }
+  .bay { padding: 0; overflow: hidden; }
+  .bay::before { background: radial-gradient(55% 60% at 50% 52%, rgba(20, 120, 150, 0.22), transparent 70%), linear-gradient(180deg, rgba(3, 12, 18, 0.9), rgba(2, 8, 12, 0.95)); }
+  .bay > .ph { position: absolute; z-index: 4; top: 16px; left: 18px; right: 18px; margin: 0; }
+  .twin { position: absolute; inset: 46px 0 40px; }
+  .twin-fig { position: absolute; top: 1%; bottom: 8%; left: 50%; transform: translateX(-50%); aspect-ratio: 300 / 660; --bone: rgba(225, 240, 255, 0.62); }
+  .twin-svg, .twin-canvas { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  /* 3D twin: the particle body draws on the canvas */
+  .twin-canvas { display: none; pointer-events: none; }
   .twin-fig.is-3d .twin-canvas { display: block; }
+  .twin-floor { position: absolute; left: -22%; right: -22%; bottom: -6%; width: 144%; overflow: visible; pointer-events: none; }
+  .floor-ring { fill: none; stroke: rgba(54, 226, 245, 0.5); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .floor-ring.outer { stroke: rgba(54, 226, 245, 0.35); }
+  .floor-ring.spin { stroke: rgba(54, 226, 245, 0.7); stroke-dasharray: 26 10; filter: drop-shadow(0 0 5px var(--cy)); animation: floorspin 12s linear infinite; }
+  .floor-ring.disc { fill: rgba(54, 226, 245, 0.08); }
+  .floor-ring.inner { stroke: rgba(159, 244, 255, 0.8); stroke-dasharray: 4 4; }
+  @keyframes floorspin { to { stroke-dashoffset: -360; } }
   .mini-body { display: block; height: 130px; aspect-ratio: 300 / 660; margin: 6px auto; }
-  .twin-body { stroke: rgba(127, 232, 255, 0.7); stroke-width: 1.3; filter: drop-shadow(0 0 6px rgba(45, 212, 232, 0.45)); }
-  .twin-aura { fill: none; stroke: var(--st); stroke-width: 4; opacity: 0.3; filter: blur(7px); }
-  .twin-aura.st-nominal { opacity: 0.1; }
-  .twin-scan { fill: url(#twin-scan-g); animation: scan 7s linear infinite; }
-  @keyframes scan { from { transform: translateY(-60px); } to { transform: translateY(680px); } }
-  .twin-leader { stroke: var(--st); stroke-width: 1; stroke-dasharray: 3 4; opacity: 0.6; }
+
+  /* Markers, leader lines and the scan line, in the bay's pixels */
+  .twin-lines { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .twin-scanline { stroke: rgba(159, 244, 255, 0.75); stroke-width: 1.5; filter: drop-shadow(0 0 6px var(--cy)); }
+  .twin-leader { fill: none; stroke: var(--st); stroke-width: 1; stroke-dasharray: 3 4; opacity: 0.7; }
+  .twin-spot.st-act .twin-leader { stroke-dasharray: none; opacity: 0.85; }
+  .twin-end { fill: var(--st); }
+  .twin-halo { fill: color-mix(in srgb, var(--st) 14%, transparent); }
+  .twin-ring { fill: color-mix(in srgb, var(--st) 22%, transparent); stroke: var(--st); stroke-width: 1.5; filter: drop-shadow(0 0 4px var(--st)); }
   .twin-dot { fill: var(--st); }
-  .twin-halo { fill: color-mix(in srgb, var(--st) 20%, transparent); stroke: var(--st); stroke-width: 1; }
-  .twin-spot.st-watch .twin-halo, .twin-spot.st-act .twin-halo { animation: halo 1.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-  @keyframes halo { 50% { transform: scale(1.5); opacity: 0.35; } }
-  .twin-chip {
-    position: absolute; transform: translateY(-50%); display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 10px 4px 5px; width: max-content;
-    border-radius: 999px; background: var(--glass-pill); border: 1px solid color-mix(in srgb, var(--st) 40%, transparent); color: var(--text-hi);
-    transition: border-color 0.18s, background 0.18s;
-  }
-  .twin-chip:hover { background: rgba(255, 255, 255, 0.09); border-color: var(--st); }
-  .twin-chip.l { right: calc(100% + 14px); flex-direction: row-reverse; padding: 4px 5px 4px 10px; }
-  .twin-chip.r { left: calc(100% + 14px); }
-  .twin-chip-text { display: grid; gap: 3px; justify-items: start; font-size: 0.74rem; line-height: 1.1; }
-  .twin-chip.l .twin-chip-text { justify-items: end; }
-  .twin-chip-text .badge { font-size: 0.56rem; padding: 2px 7px 2px 5px; }
-  .twin-chip-text .tag { height: 18px; font-size: 10px; padding: 0 5px; }
-  @media (max-width: 479px) {
-    .twin-fig { width: 34%; }
-    .twin-chip { gap: 5px; min-height: 40px; }
-    .twin-chip.l { right: calc(100% + 10px); } .twin-chip.r { left: calc(100% + 10px); }
-    .twin-chip-text b { font-size: 0.66rem; }
-    .twin-chip-text .badge, .twin-chip-text .tag { font-size: 0; gap: 0; padding: 3px; } /* lamp only; the word is in the link's accessible name */
-    .twin-chip .hz { width: 26px; height: 26px; }
-  }
-  .twin-spot.is-linked .twin-halo { fill: color-mix(in srgb, var(--st) 38%, transparent); stroke-width: 2; }
+  .twin-spot.st-watch .twin-halo, .twin-spot.st-act .twin-halo { animation: ping 1.8s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes ping { from { transform: scale(0.6); opacity: 1; } to { transform: scale(1.9); opacity: 0; } }
   .twin-spot.is-linked .twin-leader { opacity: 1; stroke-width: 1.6; }
-  .twin-chip.is-linked { background: rgba(255, 255, 255, 0.1); border-color: var(--st); }
+  .twin-spot.is-linked .twin-ring { stroke-width: 2.4; }
+
+  /* Callouts: chamfered chips in the hazard's status colour */
+  .tc {
+    position: absolute; z-index: 5; width: 196px; display: grid; gap: 4px; padding: 9px 11px; color: var(--t1);
+    background: rgba(3, 14, 20, 0.88); border: 1px solid color-mix(in srgb, var(--st) 55%, transparent);
+    box-shadow: 0 0 18px -6px var(--st), inset 0 0 18px -10px var(--st);
+    clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px));
+    transition: background var(--dur-2) var(--ease), border-color var(--dur-2) var(--ease);
+  }
+  .tc:hover, .tc.is-linked { background: rgba(6, 26, 36, 0.94); border-color: var(--st); }
+  .tc:focus-visible { outline: 2px solid var(--cy-hi); outline-offset: -3px; }
+  .tc-l { left: 22px; } .tc-r { right: 22px; }
+  .tc-I { top: 7%; } .tc-R { top: 50%; } .tc-E { top: 22%; } .tc-D { top: 47%; } .tc-G { top: 72%; }
+  .tc-row { display: flex; align-items: center; gap: 8px; }
+  .tc-code { display: none; }
+  .tc-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t2); }
+  .tc.st-act .tc-name, .tc.st-watch .tc-name { color: var(--st); }
+  .tc-val { font-family: var(--disp); font-size: 22px; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tc-val small { margin-left: 6px; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: var(--t3); }
+  .tc-sub { font-size: 12px; color: var(--t3); }
+
+  .baybar {
+    position: absolute; z-index: 4; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; gap: 16px; padding: 11px 22px;
+    border-top: 1px solid var(--edge); background: linear-gradient(0deg, rgba(2, 8, 12, 0.9), transparent);
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--t3); white-space: nowrap;
+  }
+  .baybar-hot { color: var(--st); overflow: hidden; text-overflow: ellipsis; }
+
+  @media (max-width: 1279px) {
+    .tc { width: 172px; padding: 8px 10px; } .tc-l { left: 18px; } .tc-r { right: 18px; }
+    .tc-val { font-size: 19px; }
+    .baybar > span:first-child { display: none; }
+  }
+  @media (max-width: 1023px) { .baybar > span:first-child { display: inline; } }
+  /* A narrow bay (lg's middle column, phones): the callouts become code chips (the link keeps the full name and status) */
+  .bay { container: bay / inline-size; }
+  @container bay (max-width: 560px) {
+    .bay > .ph .ph-meta { display: none; }
+    .tc { width: auto; display: flex; padding: 5px 7px; gap: 0; clip-path: none; }
+    .tc-l { left: 14px; } .tc-r { right: 14px; }
+    .tc-I { top: 6%; } .tc-R { top: 46%; } .tc-E { top: 34%; } .tc-D { top: 14%; } .tc-G { top: 74%; }
+    .tc-code { display: inline; font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--st); }
+    .tc-name, .tc-val, .tc-sub { display: none; }
+    .tc-row { gap: 4px; }
+    .tc .tag { height: auto; padding: 0; gap: 4px; border: 0; background: none; text-shadow: none; color: var(--st); }
+    .tc .tag::before { content: '·'; width: auto; height: auto; background: none; box-shadow: none; animation: none; }
+    .tc.st-nominal .tag { display: none; }
+  }
+  /* Phones: no header or bar, the figure fills the bay */
+  @media (max-width: 767px) {
+    .bay > .ph, .baybar, .bay .ruler { display: none; }
+    .twin { inset: 6px 0; }
+    .twin-fig { top: 0; bottom: 4%; }
+    .tc-l { left: 10px; } .tc-r { right: 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .floor-ring.spin, .twin-spot .twin-halo { animation: none; } }
 
   /* ---- Anatomy (hologram layers in the SVG twin) ---- */
   .bone { fill: rgba(225, 240, 255, 0.07); stroke: var(--bone); stroke-width: 1.3; stroke-linejoin: round; }
@@ -73,8 +119,5 @@
   .heart-line { fill: none; stroke: rgba(110, 0, 20, 0.6); stroke-width: 1.1; stroke-linecap: round; }
   .spark { fill: #bff6ff; opacity: 0.2; animation: spark 4s ease-in-out infinite; }
   @keyframes spark { 50% { opacity: 0.85; } }
-  .floor-ring { fill: none; stroke: rgba(127, 232, 255, 0.45); stroke-width: 1.2; }
-  .floor-ring.spin { stroke-dasharray: 18 10; animation: floorspin 14s linear infinite; }
-  @keyframes floorspin { to { stroke-dashoffset: -280; } }
-  @media (prefers-reduced-motion: reduce) { .twin-scan, .twin-spot .twin-halo, .veins path, .spark, .floor-ring.spin { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .twin-scan, .veins path, .spark { animation: none; } }
 }

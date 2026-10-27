@@ -18,7 +18,7 @@ interface Props {
 }
 
 /**
- * Scrolling canvas trace with a glowing leading dot. Decorative (aria-hidden): the numbers next to it carry
+ * Scrolling canvas trace that glows, with a bright leading dot. Decorative (aria-hidden): the numbers next to it carry
  * the information. Draws at 30 fps, only while on screen and the tab is visible; with reduced motion it
  * draws one still frame.
  */
@@ -70,6 +70,8 @@ export function LiveWave({ kind, rate, variability = 0.025, seed, height = 64, o
       ctx.strokeStyle = g
       ctx.lineWidth = 1.8
       ctx.lineJoin = 'round'
+      ctx.shadowColor = color                                                  // v3: the trace glows
+      ctx.shadowBlur = 6
       ctx.beginPath()
       for (let i = 0; i < w; i++) {
         const v = buf[(head + i) % w]

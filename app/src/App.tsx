@@ -6,8 +6,8 @@ import { Backdrop } from './shell/Backdrop'
 import { ErrorBoundary } from './shell/ErrorBoundary'
 import { useInstallPrompt } from './shell/install'
 import { lazyPage } from './shell/lazyPage'
-import { BottomTabs, Rail, TopBar } from './shell/Chrome'
-import { ROUTES } from './shell/nav'
+import { BottomTabs, StatusBar, TopBar } from './shell/Chrome'
+import { routeFor } from './shell/nav'
 import { ShellDataContext, useShellData } from './shell/useShellData'
 import { StateView } from './ui/StateView'
 
@@ -44,7 +44,7 @@ function useRouteAnnounce(main: React.RefObject<HTMLElement | null>) {
   const { pathname } = useLocation()
   const first = useRef(true)
   useEffect(() => {
-    const label = ROUTES.find((r) => pathname.startsWith(r.path))?.label
+    const label = routeFor(pathname)?.label
     document.title = label ? `${label} · AstroDocX Crew Console` : 'AstroDocX Crew Console'
     if (first.current) { first.current = false; return }
     main.current?.focus()
@@ -64,7 +64,6 @@ export default function App() {
     <div className="shell">
       <Backdrop />
       <a href="#main" className="skip-link">Skip to content</a>
-      <Rail />
       <div className="frame">
         <TopBar data={shell} install={install} />
       <main id="main" ref={main} tabIndex={-1}>
@@ -85,9 +84,9 @@ export default function App() {
         </Suspense>
         </ErrorBoundary>
       </main>
-      <footer className="disclaimer">Prototype, not a medical device.</footer>
+      <StatusBar data={shell} />
       </div>
-      <BottomTabs />
+      <BottomTabs alerts={shell?.crew.find((c) => c.id === shell.crewId)?.alerts ?? 0} />
     </div>
     </ShellDataContext.Provider>
   )
