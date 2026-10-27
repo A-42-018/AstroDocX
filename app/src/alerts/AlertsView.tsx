@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
+import { ChevronRight } from 'lucide-react'
 import { alertTitle, met } from '../engine/actions'
 import type { Alert, CrewMember } from '../data/types'
-import { HazardIcon, StatusPill } from '../shell/icons'
+import { HudPanel, PanelHeader, Segmented, StateView, StatusTag, type SegOption } from '../ui'
 import { AlertDetail } from './AlertCard'
 import type { AlertDetailData } from './detail'
 
@@ -20,7 +21,12 @@ interface Props {
   onDone: (alertId: number) => void
 }
 
-/** Master/detail: urgent-first list with filter chips on the left, the chosen alert on the right. On phones the list and the detail take turns. */
+const short = (ts: number) => met(ts).replace(' MET', '')
+
+/**
+ * Alerts (plan §4.4, mockup 3): the urgent-first queue with counted filters on the left, the chosen alert's
+ * detail, action card and timeline beside it. Below 1024 px the queue and the detail take turns.
+ */
 export function AlertsView({ crew, crewId, active, resolved, detail, onSelect, onStep, onDone }: Props) {
   const who = crew.find((c) => c.id === crewId)
   const [filter, setFilter] = useState<Filter>('all')
@@ -33,53 +39,62 @@ export function AlertsView({ crew, crewId, active, resolved, detail, onSelect, o
   useEffect(() => { onSelect?.(shown) }, [shownId, shown?.state, shown?.openedAt]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const count = (f: Filter) => (f === 'resolved' ? resolved.length : f === 'all' ? active.length : active.filter((a) => a.status === f).length)
-  const FILTERS: { id: Filter; label: string }[] = [{ id: 'all', label: 'All active' }, { id: 'act', label: 'Act' }, { id: 'watch', label: 'Watch' }, { id: 'resolved', label: 'Resolved' }]
+  const FILTERS: SegOption<Filter>[] = [
+    { id: 'all', label: 'Active', count: count('all') },
+    { id: 'act', label: 'Act', count: count('act'), status: 'act' },
+    { id: 'watch', label: 'Watch', count: count('watch'), status: 'watch' },
+    { id: 'resolved', label: 'Resolved', count: count('resolved') },
+  ]
+  const pick = (a: Alert) => { setPicked(a.id!); setOpen(true) }
 
   return (
-    <div className="board">
-      <section className="glass" aria-label="Alert summary">
-        <h1 className="flush">Alerts · {who?.name}</h1>
-        <p className="muted flush-bottom">
-          {active.length === 0 ? 'No active alerts. Everything is within this person’s own baseline.' : `${active.length} active alert${active.length > 1 ? 's' : ''}, most urgent first. Pick one to see why it fired, tick the steps you carry out, then press Done.`}
-        </p>
-      </section>
-
-      <div className={`md${open && shown ? ' show-detail' : ''}`}>
-        <div className="md-list">
-          <div role="group" aria-label="Filter alerts" className="chips">
-            {FILTERS.map((f) => (
-              <button key={f.id} type="button" className={`chip${filter === f.id ? ' on' : ''}`} aria-pressed={filter === f.id} onClick={() => { setFilter(f.id); setPicked(null) }}>
-                {f.label} <span className="mono">{count(f.id)}</span>
-              </button>
+    <div className={`alerts${open && shown ? ' show-detail' : ''}`}>
+      <HudPanel className="al-queue" title={<>Alert queue // {who?.name}</>} meta="Most urgent first">
+        <Segmented label="Filter alerts" options={FILTERS} value={filter} onChange={(f) => { setFilter(f); setPicked(null) }} />
+        {visible.length === 0 ? (
+          <p className="al-empty">
+            {filter === 'resolved' ? 'Nothing resolved yet.' : active.length === 0 ? 'No active alerts. Everything is within this person’s own baseline.' : 'No alerts match this filter.'}
+          </p>
+        ) : (
+          <ul className="al-list" aria-label={filter === 'resolved' ? 'Resolved alerts' : 'Active alerts'}>
+            {visible.map((a) => (
+              <li key={a.id}>
+                <button type="button" className={`qrow st-${filter === 'resolved' ? 'nominal' : a.status}${a.id === shown?.id ? ' on' : ''}`} aria-current={a.id === shown?.id ? 'true' : undefined} onClick={() => pick(a)}>
+                  <span className="q-code" aria-hidden="true">{a.hazard}</span>
+                  <b>{alertTitle(a)}</b>
+                  {filter === 'resolved' ? <StatusTag status="nominal" label="RESOLVED" /> : <StatusTag status={a.status} />}
+                  <span className="q-meta">{filter === 'resolved' ? `peak ${a.peakStatus.toUpperCase()} · ${met(a.openedAt)}` : `opened ${met(a.openedAt)}`}</span>
+                  <ChevronRight className="q-chev" size={18} aria-hidden="true" />
+                </button>
+              </li>
             ))}
-          </div>
-          {visible.length === 0 ? (
-            <p className="muted md-empty">{filter === 'resolved' ? 'Nothing resolved yet.' : 'No alerts match this filter.'}</p>
-          ) : (
-            <ul className="alert-list" aria-label={filter === 'resolved' ? 'Resolved alerts' : 'Active alerts'}>
-              {visible.map((a) => (
+          </ul>
+        )}
+        {filter !== 'resolved' && resolved.length > 0 && (
+          <div className="al-res">
+            <PanelHeader level={3} title="Resolved" meta={resolved.length} />
+            <ul aria-label="Recently resolved">
+              {resolved.slice(0, 6).map((a) => (
                 <li key={a.id}>
-                  <button type="button" className={`glass md-item st-${a.status}${a.id === shown?.id ? ' on' : ''}`} aria-current={a.id === shown?.id ? 'true' : undefined} onClick={() => { setPicked(a.id!); setOpen(true) }}>
-                    <HazardIcon hazard={a.hazard} status={a.status} />
-                    <span className="md-text">
-                      <b>{alertTitle(a)}</b>
-                      <span className="mono muted">{filter === 'resolved' ? `peak ${a.peakStatus.toUpperCase()} · ${met(a.openedAt)}` : `opened ${met(a.openedAt)}`}</span>
-                    </span>
-                    {filter === 'resolved' ? <StatusPill status="nominal" label="RESOLVED" /> : <StatusPill status={a.status} />}
+                  <button type="button" onClick={() => { setFilter('resolved'); pick(a) }}>
+                    <span>{a.hazard} · {alertTitle(a)}</span>
+                    <span className="q-meta">peak {a.peakStatus.toUpperCase()} · {short(a.openedAt)}</span>
                   </button>
                 </li>
               ))}
             </ul>
-          )}
+          </div>
+        )}
+      </HudPanel>
+
+      {shown ? (
+        <AlertDetail key={shown.id} alert={shown} detail={detail} onStep={onStep} onDone={onDone} onBack={() => setOpen(false)} />
+      ) : (
+        <div className="al-none">
+          <h1 className="sr-only">Alerts · {who?.name}</h1>
+          <StateView kind="empty" label={filter === 'resolved' ? 'Nothing resolved to look back on yet.' : 'Nothing needs doing. New alerts open here, most urgent first.'} />
         </div>
-        <div className="md-detail">
-          {shown ? (
-            <AlertDetail key={shown.id} alert={shown} detail={detail} onStep={onStep} onDone={onDone} onBack={() => setOpen(false)} />
-          ) : (
-            <p className="glass muted">Select an alert to see why it fired.</p>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   )
 }
