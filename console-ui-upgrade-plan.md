@@ -416,3 +416,32 @@ At each width, check:
 - **The Distance backlog bar keeps its real 0–96 h scale**, so the Act mark sits at 75%, not at the right end as in the mockup.
 - **CSS budget:** the bundle is 66.4 kB (15.0 kB gzip) against the Phase 0 baseline of 45.0 kB (10.5 kB gzip), over §8's +20%. It was already 61.2 kB after Phase 2, because the v2 rules are still there next to v3. Phase 10's legacy removal has to bring it back within budget.
 - **Preview tip:** the PWA service worker serves the previous build after `npm run build`. Unregister it (DevTools → Application, or `navigator.serviceWorker.getRegistrations()`) and clear caches before checking a new build. The preview serves the app under `/app/`.
+
+### 2026-10-27: Phases 5–6
+
+**Done (2 commits on `feat/console-ui-v3`, pushed):**
+- **Phase 5** (`6bb6c58`): Alerts per §4.4. The queue panel has the counted 4-up filter, QueueRows (status edge, hazard code, tag, opened MET, chevron) and a recently resolved list (up to 6; a click opens it under the Resolved filter). The detail is a hero panel in the alert's tone: icon box, eyebrow, the title as the h1, a big tag, the σ box beside the explanation with its figures bolded, the alert-window bar chart and evidence. The action card (progress ring, numbered steps that are still real checkboxes in a `fieldset`, `MARK DONE`, engine note) and the timeline (diamond nodes coloured by level) sit beside it. Loading, empty and error use `StateView`. New: `alerts/AlertChart.tsx`.
+- **Phase 6** (`d878c71`): Trends per §4.3. Biometric channels grouped by hazard (sparkline, latest value, a dot for Watch/Act/out of band, `›››` on the selected row); the focus hero with the metric as the h1, the range Segmented and a legend where Crew median is the compare toggle; the Latest ring gauge with IN / ABOVE / BELOW BAND and the KPI 2×2; the Body region panel; six small multiples. The Recharts restyle is in `TrendChart.tsx`. New: `trends/parts.tsx` (Spark, BodyRegion), `trends/levels.ts` (+ test).
+- Checks after each phase: lint clean, build OK. Tests 211 after Phase 5 (the Alerts tests pass; the full run timed out `SyncPage` once under load and it passes alone) and 213/213 after Phase 6. In the preview build at 390, 768, 1024, 1440 and 1920 wide: no horizontal scroll, no page scroll at 1440×900 or 1920×1080 on either screen, touch targets ≥ 44 px on phones, console clean.
+
+**Left:** Phases 7–10 as planned, starting with Phase 7 (Check-in: mockup first, then §4.5).
+
+**Decisions:**
+- **The alert-window chart is plain SVG, not Recharts.** It's a bar chart with per-bar band colouring and one label, so SVG sized by a ResizeObserver is simpler, and the Alerts chunk drops Recharts (16 kB now). One bar per reading; for hourly metrics over a long alert the bars get thin rather than being binned, so spikes stay visible.
+- **The chart's baseline label uses the band at the trigger point,** so it matches the baseline in the explanation rather than the band as it has adapted since.
+- **The trigger label shows the plotted reading at the crossing,** which can differ from the value in the explanation (the engine's text is written when the alert opens or escalates; the marker snaps to the first reading at or after `openedAt`).
+- **The alert detail is one `<article>`** that spans the detail panel and the right column, so the steps, Done and the timeline stay inside the alert's accessible name, as before.
+- **The action card has its own progress ring** (mockup 3's simple ring) instead of `Gauge kind="ring"`, whose ticks and status-word box don't fit "0/3 STEPS DONE". The old `Progress` is gone.
+- **"Done" is now "Mark done"** (the mockup's label); the acknowledged state still reads "Done · logged". Tests updated.
+- **The timeline adds a "Waiting for steps · NOW" row** while an alert is open (mockup 3). It's a state, not a log entry.
+- **Below 1024 the queue and the detail still take turns** (the existing behaviour, plan §6's matrix); §4.4 said 900 px, but 1023 matches the v3 breakpoints.
+- **The body region is drawn once per change, with no animation loop.** It's the twin renderer at a fixed front angle with the focused hazard lit (`uFocus` + `setStatus`) and one leader line to the region's anchor; without WebGL it falls back to `drawMiniBody`. Nothing runs when nothing changes, so it needs no offscreen pause. The callout has its own grid column so it never leaves the panel.
+- **A metric's level on Trends** is its open alert's level (the two-signal rule counts for sleep and reaction), else **OUT** (amber) when the latest value is outside its band, else NOM. OUT colours the dot, tag and sparkline but not the value (mockup 2). `TrendsView` gained an optional `alertStatus` prop; `TrendsPage` derives it from the alerts it already loads.
+- **Small multiples:** Act, then Watch, then OUT, then the focused hazard's siblings, then metric order; six tiles. Each tile is a `Focus <metric>` button with the text summary inside for screen readers. The list keeps the name "Metric trends"; all 11 metrics stay reachable from the channel list.
+- **Ring gauge fill** is where the latest value sits in the baseline ± 3σ span (so the band edges sit at 20% and 80%). The status word comes from the latest band.
+- **Focus chart ticks are on whole mission days** (3 h steps for 24 h, 5 days for 30 days); Recharts' own ticks repeated day labels.
+- **The focus and Alerts hero panels hide the side rulers** (the mockups show brackets only).
+- **At md the channel list is a horizontal chip row** (no sparklines). The `<select>` fallback at xs from §4.3 wasn't needed: the chip row scrolls at 390 and keeps 44 px targets.
+- **`.resolved-list` moved to `sim.css`;** the Simulator's "Running now" list still uses it until Phase 8.
+- **CSS budget:** 79.3 kB (17.3 kB gzip), up from 66.4 kB after Phase 4. The v2 Alerts and Trends rules were replaced, not kept beside v3, so most of the growth is the new screens. Phase 10's target (within +20% of 45.0 kB) is getting harder; the shared v2 rules in `components.css` and the unconverted screens are where to cut.
+- **Preview tip:** the browser pane in this session was 640×480, so wide viewports were checked with layout measurements plus screenshots of each quarter of the page (a temporary `transform` on `body`, removed after).
