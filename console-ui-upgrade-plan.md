@@ -309,7 +309,7 @@ Each phase ends with:
 | 7 | Check-in: mockup first (`mockups/checkin.html` + PNG, quick approval), then build §4.5 | Approved mockup matched; Check-in + PVT tests green | 1½ d |
 | 8 | Simulator: mockup, then §4.6 | Same | 1½ d |
 | 9 | Sync + Ground: mockups, then §4.7 | Same; `.ld-burst` intact | 2 d |
-| 10 | Remove the aliases and legacy CSS; responsive and a11y pass (§6–7); performance pass (§8); refresh `docs/screenshots/console-*.jpg` for the README | All acceptance criteria (§9) met | 1½ d |
+| 10 | Remove the aliases and legacy CSS; responsive and a11y pass (§6–7); performance pass (§8), including bringing the CSS bundle back within +20% of the Phase 0 baseline (66.4 kB now vs 45.0 kB; see the 2026-10-27 log); refresh `docs/screenshots/console-*.jpg` for the README | All acceptance criteria (§9) met | 1½ d |
 
 **Total ≈ 18 working days.** Phases 4–6 are the highest value; if time is short, ship 0–6 and keep Check-in/Sim/Sync/Ground on the v3 tokens + HudPanel only (they'll look consistent, just less bespoke).
 
@@ -411,7 +411,7 @@ At each width, check:
 - **Leader lines:** `body3d.ts` exports `turned(anchor, ang)` (the shader's rotY + `toBox`). The twin measures the figure and callout boxes on resize and moves the markers, lines and scan line through refs every frame; there's no React render per frame. Each line runs from the callout edge, through an 18 px knee, to the marker. Without WebGL (and in tests) the markers sit on the SVG twin's fixed spots.
 - **Scan line:** a new `uScan` uniform brightens the particles within about 3% of the line's height, and an SVG line is drawn at the same height. The sweep takes 5.5 s and is off under reduced motion.
 - **Crew avatars keep a small status flag for Watch/Act**, which the mockup doesn't have, so the ring colour isn't the only cue. The selected avatar is filled with its status colour, as in the mockup.
-- **The Isolation chart marks nights outside the Watch band (mean ± 1.8 sd) in red.** That needed the sleep sd, so `MiniData` gained `sleepSd` (an added field; the loading logic is unchanged).
+- **The Isolation chart marks nights outside the Watch band (mean ± 1.8 sd) in red.** That needed the sleep sd, so `MiniData` gained `sleepSd`. `board/mini` is on the §2 keep-as-is list, so this is a deliberate exception: one added field, and the existing fields and loading logic are unchanged.
 - **The bay bar's left label is "◇ Live hologram"**, since there's no drag-rotate (§4.2 said to drop `ROTATE · DRAG` in that case). Next Action's count reads `n / m done`.
 - **The Distance backlog bar keeps its real 0–96 h scale**, so the Act mark sits at 75%, not at the right end as in the mockup.
 - **CSS budget:** the bundle is 66.4 kB (15.0 kB gzip) against the Phase 0 baseline of 45.0 kB (10.5 kB gzip), over §8's +20%. It was already 61.2 kB after Phase 2, because the v2 rules are still there next to v3. Phase 10's legacy removal has to bring it back within budget.
