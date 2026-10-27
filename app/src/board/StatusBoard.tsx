@@ -5,27 +5,40 @@ import { CO2_LIMIT_MMHG } from '../engine/limits'
 import { useHidden, useReducedMotion } from '../live/usePaused'
 import { LiveVitals } from '../live/LiveVitals'
 import { useLiveTelemetry } from '../live/useLiveTelemetry'
-import { HazardIcon, StatusPill } from '../shell/icons'
+import { HudPanel } from '../ui/HudPanel'
+import { KpiCell, KpiGrid } from '../ui/Readout'
+import { STATUS_SHORT, STATUS_WORD } from '../ui/status'
+import { StatusTag } from '../ui/StatusTag'
 import { ReadinessRing } from './Dial'
-import { AreaMini, BacklogBar, BarsMini, LineLimitMini, StepMini } from './MiniCharts'
+import { AreaMini, BacklogBar, BarsMini, LineLimitMini, SleepBars } from './MiniCharts'
 import type { MiniData } from './mini'
 import { NextAction } from './NextAction'
-import type { Snapshot } from './snapshot'
+import type { HazardTile, Snapshot } from './snapshot'
 import { useBoard } from './store'
+import { initials } from '../shell/format'
 import { Twin } from './Twin'
 
 export { ReadinessRing }
 
-const LABEL: Record<Status, string> = { nominal: 'NOMINAL', watch: 'WATCH', act: 'ACT' }
+/** What each module's chart shows, after the metric's own label. */
+function caption(t: HazardTile): string {
+  switch (t.hazard) {
+    case 'R': return `${t.label} · cumulative 7 d`
+    case 'I': return `${t.label} · 14 nights`
+    case 'D': return 'Since ground sync · Watch 24 h, Act 72 h'
+    case 'G': return `${t.label} · 7 days`
+    case 'E': return `${t.label} · 48 h vs ${CO2_LIMIT_MMHG.toFixed(1)} limit`
+  }
+}
 
-/** The small chart that fits each hazard's metric, with a one-line caption. */
+/** The small chart that fits each hazard's metric. */
 function Mini({ hazard, mini, oldestPendingH }: { hazard: Hazard; mini: MiniData; oldestPendingH: number | null | undefined }) {
   switch (hazard) {
-    case 'R': return <><AreaMini values={mini.dose} /><span className="mini-cap">Cumulative dose, 7 days</span></>
-    case 'I': return <><StepMini values={mini.sleep} mean={mini.sleepMean} /><span className="mini-cap">Sleep per night, 14 nights</span></>
-    case 'D': return <><BacklogBar hours={oldestPendingH} /><span className="mini-cap">Oldest unsynced entry (Watch 24 h, Act 72 h)</span></>
-    case 'G': return <><BarsMini values={mini.exercise} mean={mini.exerciseMean} /><span className="mini-cap">Exercise per day, 7 days</span></>
-    case 'E': return <><LineLimitMini values={mini.co2} limit={CO2_LIMIT_MMHG} /><span className="mini-cap">CO₂, 48 h, against the {CO2_LIMIT_MMHG.toFixed(1)} mmHg limit</span></>
+    case 'R': return <AreaMini values={mini.dose} />
+    case 'I': return <SleepBars values={mini.sleep} mean={mini.sleepMean} sd={mini.sleepSd} />
+    case 'D': return <BacklogBar hours={oldestPendingH} />
+    case 'G': return <BarsMini values={mini.exercise} mean={mini.exerciseMean} />
+    case 'E': return <LineLimitMini values={mini.co2} limit={CO2_LIMIT_MMHG} />
   }
 }
 
@@ -65,90 +78,124 @@ function useAlertPulse(host: React.RefObject<HTMLDivElement | null>, hazard: Haz
 }
 
 const CHECKIN_DUE_H = 12
-
-/** 7-day readiness sparkline and a prompt to check in when the last one is old. */
-function ReadinessTrend({ values, lastCheckIn, now }: { values: number[]; lastCheckIn: number | null; now: number }) {
-  const ago = lastCheckIn === null ? null : Math.max(0, (now - lastCheckIn) / 3_600_000)
-  const due = ago === null || ago >= CHECKIN_DUE_H
-  return (
-    <div className="rd-trend">
-      <div className="mini-box"><StepMini values={values} mean={null} /><span className="mini-cap">Readiness, last 7 days · {Math.min(...values)}–{Math.max(...values)}%</span></div>
-      <Link to="/checkin" className="rd-checkin">
-        {ago === null ? 'No check-in yet' : `Last check-in ${ago.toFixed(0)} h ago`}{due && <b> · due</b>}
-      </Link>
-    </div>
-  )
-}
-
 const sigmaText = (s: number) => `${s < 0 ? '−' : '+'}${Math.abs(s).toFixed(1)}σ`
 
-interface Props {
-  snap: Snapshot
-  /** Chart data for the hazard cards; the cards render without charts until it arrives. */
-  mini?: MiniData
-}
-
 /** The hazard dragging readiness down the most (lowest score among Watch/Act tiles), or null when all are nominal. */
-function heldBy(tiles: Props['snap']['tiles']) {
+function heldBy(tiles: HazardTile[]) {
   const bad = tiles.filter((t) => t.status !== 'nominal').sort((a, b) => a.score - b.score)[0]
   return bad ? { name: bad.name, status: bad.status } : null
 }
 
+/** Hexagon portrait outlined in the status colour, with the initials. */
+function Portrait({ initials, status }: { initials: string; status: Status }) {
+  return (
+    <span className={`portrait st-${status}`} aria-hidden="true">
+      <svg viewBox="0 0 74 74">
+        <polygon points="37,2 70,20 70,54 37,72 4,54 4,20" className="pt-hex" />
+        <polygon points="37,9 64,24 64,50 37,65 10,50 10,24" className="pt-inner" />
+      </svg>
+      <b>{initials}</b>
+    </span>
+  )
+}
+
+interface Props {
+  snap: Snapshot
+  /** Chart data for the hazard modules and readiness; they render without charts until it arrives. */
+  mini?: MiniData
+}
+
+/**
+ * Status Board (plan §4.2, mockups 1 and 4). Desktop: crew ID and readiness on the left, the twin bay in the
+ * middle, live vitals and Next Action on the right, five hazard modules along the bottom, all in one screen.
+ */
 export function StatusBoard({ snap, mini }: Props) {
-  const who = snap.crew.find((c) => c.id === snap.crewId)
-  // One telemetry stream feeds both the vitals strip and the twin's heartbeat.
+  const index = snap.crew.findIndex((c) => c.id === snap.crewId)
+  const who = snap.crew[index]
+  // One telemetry stream feeds both the vitals and the twin's heartbeat.
   const telemetry = useLiveTelemetry(snap.crewId)
-  const top = useRef<HTMLDivElement>(null)
+  const host = useRef<HTMLDivElement>(null)
   const focus = useBoard((s) => s.focusHazard)
   const setFocus = useBoard((s) => s.setFocusHazard)
-  useAlertPulse(top, snap.alerts[0]?.status === 'act' ? snap.alerts[0].hazard : null)
+  const top = snap.alerts[0]
+  useAlertPulse(host, top?.status === 'act' ? top.hazard : null)
+  const held = heldBy(snap.tiles)
+  const worstTile = held ? snap.tiles.find((t) => t.name === held.name) : null
+  const n = snap.alerts.length
+  const ago = mini?.lastCheckIn == null ? null : Math.max(0, (snap.now - mini.lastCheckIn) / 3_600_000)
+  const due = mini !== undefined && (ago === null || ago >= CHECKIN_DUE_H)
+  const name = who?.name ?? 'Crew member'
+
   return (
-    <div className="board board-home">
-      <div className="board-top" ref={top}>
-        <section className="glass readiness" aria-label={`Readiness for ${who?.name ?? 'crew member'}`}>
-          <ReadinessRing value={snap.readiness} status={snap.overall} heldBy={heldBy(snap.tiles)} />
+    <div className="board" ref={host}>
+      <div className="bd-left">
+        <section className="hp bd-id" aria-label="Crew member">
+          <Portrait initials={initials(name)} status={snap.overall} />
           <div>
-            <h1 className="sr-only">{who?.name}</h1>
-            <p className="muted">{who?.role} · readiness combines all five RIDGE hazards against this person’s own baseline.</p>
-            <p className="mono muted" aria-live="polite">
-              {snap.alerts.length === 0 ? 'No active alerts' : `${snap.alerts.length} active alert${snap.alerts.length > 1 ? 's' : ''}`}
-            </p>
-            {mini && <ReadinessTrend values={mini.readiness} lastCheckIn={mini.lastCheckIn} now={snap.now} />}
+            <p className="bd-eb">Crew {String(index + 1).padStart(2, '0')} · {who?.role}</p>
+            <h1>{name}</h1>
+            <StatusTag status={snap.overall} label={`${STATUS_WORD[snap.overall]} · ${n ? `${n} alert${n > 1 ? 's' : ''}` : 'no alerts'}`} />
           </div>
         </section>
-        <section className={`glass twin-card st-${snap.overall}`} aria-label="Health twin">
-          <Twin tiles={snap.tiles} overall={snap.overall} hr={telemetry.targets.hr} />
-        </section>
+        <HudPanel className="bd-ready" title="Readiness" meta="RIDGE · 5 hazards" aria-label={`Readiness for ${name}`}>
+          <ReadinessRing value={snap.readiness} status={snap.overall} />
+          <p className="bd-held">
+            {held ? <>Held back by <b className={`st-${held.status}`}>{held.name}</b></> : 'All five hazards nominal'}
+          </p>
+          <p className="sr-only" aria-live="polite">{n === 0 ? 'No active alerts' : `${n} active alert${n > 1 ? 's' : ''}`}</p>
+          <div className="bd-kpis">
+            <KpiGrid>
+              <KpiCell label="7-day range" value={mini ? `${Math.min(...mini.readiness)}–${Math.max(...mini.readiness)}%` : '—'} />
+              <KpiCell label="Active alerts" value={n} status={n ? snap.overall : undefined} />
+              <KpiCell label="Last check-in" value={<Link to="/checkin">{ago === null ? 'None' : `${ago.toFixed(0)} h ago`}{due && ' · due'}</Link>} status={due ? 'watch' : undefined} />
+              <KpiCell label="Worst hazard" value={worstTile ? worstTile.name : 'None'} />
+            </KpiGrid>
+          </div>
+          {mini && (
+            <div className="bd-bars" role="img" aria-label={`Readiness, last 7 days: ${mini.readiness.join(', ')} percent`}>
+              {mini.readiness.map((v, i) => <i key={i} style={{ height: `${Math.max(4, v)}%` }} />)}
+            </div>
+          )}
+          {/* Phones: the two facts that sit beside the gauge in mockup 4 */}
+          <dl className="bd-ph-facts">
+            <div><dt>Held back by</dt><dd className={held ? `st-${held.status}` : undefined}>{held ? held.name : 'Nothing'}</dd></div>
+            <div><dt>Check-in</dt><dd className={due ? 'st-watch' : undefined}>{mini === undefined ? '—' : due ? 'Due' : `${ago!.toFixed(0)} h ago`}</dd></div>
+          </dl>
+        </HudPanel>
+      </div>
+
+      <Twin tiles={snap.tiles} overall={snap.overall} hr={telemetry.targets.hr} name={name}
+        top={top ? { name: snap.tiles.find((t) => t.hazard === top.hazard)?.name ?? top.hazard, status: top.status } : null} />
+
+      <div className="bd-right">
+        <LiveVitals crewId={snap.crewId} telemetry={telemetry} />
         <NextAction snap={snap} />
       </div>
 
-      <LiveVitals crewId={snap.crewId} telemetry={telemetry} />
-
-      <ul className="tiles" aria-label="Hazard status">
+      <ul className="hz-row" aria-label="Hazard status">
         {snap.tiles.map((t) => (
-          <li key={t.hazard} id={`hz-${t.hazard}`} className={`glass tile st-${t.status}${focus === t.hazard ? ' is-linked' : ''}`} tabIndex={0}
+          <li key={t.hazard} id={`hz-${t.hazard}`} tabIndex={0}
+            className={`hp hz-mod st-${t.status}${t.status !== 'nominal' ? ` tone-${t.status}` : ''}${focus === t.hazard ? ' is-linked' : ''}`}
             onMouseEnter={() => setFocus(t.hazard)} onMouseLeave={() => setFocus(null)} onFocus={() => setFocus(t.hazard)} onBlur={() => setFocus(null)}
-            aria-label={`${t.name}: ${LABEL[t.status]}. ${t.label} ${t.value} ${t.unit}`}>
-            <header>
-              <HazardIcon hazard={t.hazard} status={t.status} />
-              <StatusPill status={t.status} />
-              <h2>{t.name}</h2>
+            aria-label={`${t.name}: ${STATUS_WORD[t.status]}. ${t.label} ${t.value} ${t.unit}`}>
+            <header className="hz-head">
+              <span className="hz-code" aria-hidden="true">{t.hazard}</span>
+              <h2 className="hz-name">{t.name}</h2>
+              <StatusTag status={t.status} short />
             </header>
-            <p className="val mono">
-              <b>{t.value}</b> <small>{t.unit}</small>
-              {t.sigma !== undefined && <span className="delta" title="Against this person’s own baseline">{sigmaText(t.sigma)}</span>}
+            <p className="hz-val">
+              <b>{t.value}</b><span className="hz-unit">{t.unit}</span>
+              {t.hazard === 'D'
+                ? <span className="hz-sig">{snap.pendingSync} pending</span>
+                : t.sigma !== undefined && <span className="hz-sig" title="Against this person’s own baseline">{sigmaText(t.sigma)}</span>}
             </p>
-            <p className="muted lbl">{t.label}</p>
-            {mini && <div className="mini-box"><Mini hazard={t.hazard} mini={mini} oldestPendingH={snap.oldestPendingH} /></div>}
-            {t.alerts.length > 0 ? (
-              <p className="why">{t.alerts[0].explanation}</p>
-            ) : (
-              <p className="muted why">{t.tracks}</p>
-            )}
+            <p className="hz-lbl">{caption(t)}</p>
+            {mini && <div className="hz-chart"><Mini hazard={t.hazard} mini={mini} oldestPendingH={snap.oldestPendingH} /></div>}
+            <p className="hz-ph" aria-hidden="true">{STATUS_SHORT[t.status]}</p>
+            <p className="sr-only">{t.alerts.length > 0 ? t.alerts[0].explanation : t.tracks}</p>
           </li>
         ))}
       </ul>
-
     </div>
   )
 }

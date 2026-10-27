@@ -1,5 +1,6 @@
 import { db, readingsFor, type ConsoleDB } from '../data/db'
 import { DAY } from '../data/synthetic'
+import { sdOf } from '../engine/baseline'
 import type { MetricId } from '../data/types'
 import { loadSnapshot } from './snapshot'
 
@@ -7,9 +8,10 @@ import { loadSnapshot } from './snapshot'
 export interface MiniData {
   /** Cumulative dose (µSv) at each hour of the last 7 days. */
   dose: number[]
-  /** Sleep per night, last 14 nights, and the personal mean. */
+  /** Sleep per night, last 14 nights, and the personal mean and sd (for the Watch band). */
   sleep: number[]
   sleepMean: number | null
+  sleepSd: number | null
   /** Exercise minutes per day, last 7 days, and the personal mean. */
   exercise: number[]
   exerciseMean: number | null
@@ -32,5 +34,5 @@ export async function loadMini(crewId: string, now: number, d: ConsoleDB = db): 
   ])
   let sum = 0
   // Readings are hourly, so the running total of the dose rate is the dose in µSv.
-  return { dose: dose.map((v) => (sum += v)), sleep, sleepMean: sb?.mean ?? null, exercise, exerciseMean: eb?.mean ?? null, co2, readiness, lastCheckIn: lastCI }
+  return { dose: dose.map((v) => (sum += v)), sleep, sleepMean: sb?.mean ?? null, sleepSd: sb && sb.n > 1 ? sdOf(sb) : null, exercise, exerciseMean: eb?.mean ?? null, co2, readiness, lastCheckIn: lastCI }
 }
