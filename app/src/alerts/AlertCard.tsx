@@ -43,7 +43,7 @@ export function AlertDetail({ alert: a, detail, onStep, onDone, onBack }: Props)
       <header>
         <HazardIcon hazard={a.hazard} status={a.status} />
         <h2>{title}</h2>
-        {resolved ? <span className="badge st-nominal">RESOLVED</span> : <StatusPill status={a.status} />}
+        {resolved ? <StatusPill status="nominal" label="RESOLVED" /> : <StatusPill status={a.status} />}
       </header>
       <p className="mono muted since">
         Opened {met(a.openedAt)}

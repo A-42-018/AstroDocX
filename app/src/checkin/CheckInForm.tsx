@@ -85,8 +85,8 @@ export function CheckInForm({ crew, crewId, now, onSubmit, baselineMs, reactionT
   return (
     <div className="board board-form">
       <section className="glass">
-        <h1 style={{ margin: 0 }}>Daily check-in · {who?.name}</h1>
-        <p className="muted" style={{ marginBottom: 0 }}>
+        <h1 className="flush">Daily check-in · {who?.name}</h1>
+        <p className="muted flush-bottom">
           Two minutes. Your answers join your own baseline, so the console can spot drift in how you feel and react before it becomes a problem.
         </p>
       </section>

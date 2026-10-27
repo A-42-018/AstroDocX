@@ -1,0 +1,26 @@
+/* AstroDocX Crew Console styles, design system v3 "Holo HUD" (console-ui-upgrade-plan.md §3).
+   Cascade layers, lowest to highest: generic components come before the shell and pages so that
+   a shell or page rule can refine a component without fighting its specificity. */
+@layer tokens, base, components, layout, pages, utilities;
+
+@import './tokens.css';
+@import './base.css';
+@import './components.css';
+@import './components/hud-panel.css';
+@import './components/tag.css';
+@import './components/button.css';
+@import './components/readout.css';
+@import './components/gauge.css';
+@import './components/seg.css';
+@import './components/state.css';
+@import './components/switch.css';
+@import './layout.css';
+@import './pages/board.css';
+@import './pages/twin.css';
+@import './pages/alerts.css';
+@import './pages/trends.css';
+@import './pages/checkin.css';
+@import './pages/sim.css';
+@import './pages/sync.css';
+@import './pages/ground.css';
+@import './utilities.css';

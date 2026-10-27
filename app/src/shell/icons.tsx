@@ -1,9 +1,8 @@
-import { Brain, CircleCheck, Dumbbell, OctagonAlert, Radiation, Satellite, TriangleAlert, Wind, type LucideIcon } from 'lucide-react'
+import { Brain, Dumbbell, Radiation, Satellite, Wind, type LucideIcon } from 'lucide-react'
 import type { Hazard, Status } from '../data/types'
+import { StatusTag } from '../ui/StatusTag'
 
 const HAZARD_ICON: Record<Hazard, LucideIcon> = { R: Radiation, I: Brain, D: Satellite, G: Dumbbell, E: Wind }
-const STATUS_ICON: Record<Status, LucideIcon> = { nominal: CircleCheck, watch: TriangleAlert, act: OctagonAlert }
-const STATUS_LABEL: Record<Status, string> = { nominal: 'NOMINAL', watch: 'WATCH', act: 'ACT' }
 
 /** Hazard chip: the RIDGE icon, with the letter kept for screen readers and as a tooltip. */
 export function HazardIcon({ hazard, status }: { hazard: Hazard; status?: Status }) {
@@ -16,13 +15,5 @@ export function HazardIcon({ hazard, status }: { hazard: Hazard; status?: Status
   )
 }
 
-/** Status pill: never colour alone, always an icon plus the word. */
-export function StatusPill({ status, label = STATUS_LABEL[status] }: { status: Status; label?: string }) {
-  const Icon = STATUS_ICON[status]
-  return (
-    <span className={`badge st-${status}`}>
-      <Icon size={12} strokeWidth={2.5} aria-hidden="true" />
-      {label}
-    </span>
-  )
-}
+/** v2 name for the status tag; every screen still imports it from here until Phase 10. */
+export const StatusPill = StatusTag

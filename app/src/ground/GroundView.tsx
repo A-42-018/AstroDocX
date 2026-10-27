@@ -61,7 +61,7 @@ export function GroundView({ now, lastSyncedAt, pending, crew, source, sourceErr
   return (
     <div className="board">
       <section className="glass" aria-label="Ground view status">
-        <h1 style={{ margin: 0 }}>Ground view · flight surgeon</h1>
+        <h1 className="flush">Ground view · flight surgeon</h1>
         <p className="muted">
           What Earth can see. Everything here is rebuilt from log entries the crew has already synced, about {ONE_WAY_DELAY_MIN} min after each contact. The crew's own console is always ahead of this page.
         </p>

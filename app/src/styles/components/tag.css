@@ -1,0 +1,14 @@
+/* StatusTag (src/ui/StatusTag.tsx): rectangular, mono caps, lit. The word is always present. */
+@layer components {
+  .tag {
+    display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 7px; white-space: nowrap; flex: none;
+    font-family: var(--mono); font-size: 11px; font-weight: 700; line-height: 1; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--st, var(--cy)); border: 1px solid currentColor; background: color-mix(in srgb, currentColor 14%, transparent);
+    text-shadow: 0 0 8px color-mix(in srgb, currentColor 70%, transparent);
+  }
+  .tag::before { content: ''; flex: none; width: 5px; height: 5px; background: currentColor; box-shadow: 0 0 6px currentColor; }
+  .tag.st-act::before { animation: tag-blink 1.1s steps(2, start) infinite; }
+  @keyframes tag-blink { to { visibility: hidden; } }
+  @media (prefers-reduced-motion: reduce) { .tag.st-act::before { animation: none; } }
+  .lamp { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 10px currentColor, 0 0 2px #fff inset; }
+}

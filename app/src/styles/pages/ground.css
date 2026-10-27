@@ -1,0 +1,17 @@
+/* Ground view (flight surgeon): one card per crew member. */
+@layer pages {
+  .ground-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); align-items: start; }
+  @media (min-width: 1280px) { .ground-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .ground-card header { display: flex; align-items: center; gap: 10px; }
+  .ground-card h2 { margin: 0; font-size: 1.05rem; font-weight: 600; flex: 1; }
+  .ground-role { margin: 0 0 10px; font-size: 0.8rem; }
+  .ground-alerts { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 10px; }
+  .ground-alert { display: grid; gap: 6px; font-size: 0.88rem; padding: 12px 14px; border-radius: var(--r-md); background: var(--glass-3); border: 1px solid var(--line); }
+  .ground-alert .badge, .ground-alert .tag { justify-self: start; }
+  .ground-card p { margin: 4px 0; font-size: 0.82rem; }
+  .await { color: var(--watch); }
+  .behind { margin: 4px 0 10px; font-size: 1.15rem; }
+  .behind b { color: var(--watch); }
+  .mini-twin { display: block; height: 130px; margin: 6px auto; --st: var(--ok); }
+  .mini-twin .twin-aura { stroke-width: 6; }
+}

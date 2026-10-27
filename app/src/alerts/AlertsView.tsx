@@ -38,8 +38,8 @@ export function AlertsView({ crew, crewId, active, resolved, detail, onSelect, o
   return (
     <div className="board">
       <section className="glass" aria-label="Alert summary">
-        <h1 style={{ margin: 0 }}>Alerts · {who?.name}</h1>
-        <p className="muted" style={{ marginBottom: 0 }}>
+        <h1 className="flush">Alerts · {who?.name}</h1>
+        <p className="muted flush-bottom">
           {active.length === 0 ? 'No active alerts. Everything is within this person’s own baseline.' : `${active.length} active alert${active.length > 1 ? 's' : ''}, most urgent first. Pick one to see why it fired, tick the steps you carry out, then press Done.`}
         </p>
       </section>
@@ -65,7 +65,7 @@ export function AlertsView({ crew, crewId, active, resolved, detail, onSelect, o
                       <b>{alertTitle(a)}</b>
                       <span className="mono muted">{filter === 'resolved' ? `peak ${a.peakStatus.toUpperCase()} · ${met(a.openedAt)}` : `opened ${met(a.openedAt)}`}</span>
                     </span>
-                    {filter === 'resolved' ? <span className="badge st-nominal">RESOLVED</span> : <StatusPill status={a.status} />}
+                    {filter === 'resolved' ? <StatusPill status="nominal" label="RESOLVED" /> : <StatusPill status={a.status} />}
                   </button>
                 </li>
               ))}

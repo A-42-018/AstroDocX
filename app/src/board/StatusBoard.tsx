@@ -131,8 +131,8 @@ export function StatusBoard({ snap, mini }: Props) {
             aria-label={`${t.name}: ${LABEL[t.status]}. ${t.label} ${t.value} ${t.unit}`}>
             <header>
               <HazardIcon hazard={t.hazard} status={t.status} />
-              <h2>{t.name}</h2>
               <StatusPill status={t.status} />
+              <h2>{t.name}</h2>
             </header>
             <p className="val mono">
               <b>{t.value}</b> <small>{t.unit}</small>

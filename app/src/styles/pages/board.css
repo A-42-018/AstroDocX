@@ -1,0 +1,128 @@
+/* Status Board: readiness, twin, next action, live vitals, hazard tiles. */
+@layer pages {
+  /* Small muted card labels stay in Inter; numbers that are read at a glance use the display face */
+  .tile h2, .vital h2 { font-family: var(--font-body); letter-spacing: 0; }
+  .val b { font-family: var(--font-display); }
+
+  .board { display: grid; gap: 18px; }
+  .board > * { min-width: 0; } /* grid children may shrink below their content, so wide tables scroll inside their card */
+  .board-head { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; }
+  .crew-tabs {
+    display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px;
+    background: var(--glass-pill); border: 1px solid var(--line);
+  }
+  .crew-tabs button {
+    min-height: 38px; padding: 0 16px; border-radius: 999px; border: 0;
+    background: transparent; color: var(--text-mid); font: inherit; font-weight: 500; font-size: 0.88rem; cursor: pointer; transition: color 0.18s, background 0.18s;
+  }
+  .crew-tabs button:hover { color: var(--text-hi); background: rgba(255, 255, 255, 0.05); }
+  .crew-tabs button.on { color: var(--bg); background: var(--text-hi); font-weight: 600; }
+  .meta { display: flex; gap: 8px; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-mid); }
+  .meta span {
+    display: inline-flex; align-items: center; gap: 8px; padding: 7px 13px; border-radius: 999px;
+    background: var(--glass-pill); border: 1px solid var(--line);
+  }
+  .meta span:first-child { color: var(--text-hi); font-family: var(--font-mono); font-size: 0.78rem; }
+  .meta span:first-child::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgba(61, 220, 151, 0.2); }
+
+  /* ---- Readiness (one definition; it used to be split in two) ---- */
+  .readiness { display: flex; flex-direction: column; flex-wrap: wrap; align-items: stretch; justify-content: center; gap: 14px; padding: 24px; }
+  .readiness > div { flex: 0 0 auto; min-width: 0; }
+  .readiness h1 { margin: 0; font-size: clamp(1.7rem, 3vw, 2.2rem); font-weight: 700; letter-spacing: -0.025em; }
+  .readiness p { margin: 6px 0; max-width: 58ch; }
+  .readiness p[aria-live] {
+    display: inline-flex; margin-top: 12px; padding: 6px 12px; border-radius: 999px; font-size: 0.8rem; font-family: var(--font-body);
+    color: var(--text-hi); background: var(--glass-3); border: 1px solid var(--line);
+  }
+  .readiness .ring { align-self: center; }
+  .ring { margin: 0; position: relative; width: 150px; height: 150px; flex-shrink: 0; }
+  .ring svg { width: 100%; height: 100%; overflow: visible; }
+  .ring-track { fill: none; stroke: rgba(255, 255, 255, 0.08); stroke-width: 10; }
+  .ring-fill { fill: none; stroke: var(--st); stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 0.9s var(--ease); }
+  .ring-ticks { display: none; }
+  .ring figcaption { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; text-align: center; gap: 6px; }
+  .ring figcaption b { font-family: var(--font-display); font-size: 2.3rem; font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
+  .ring figcaption .badge { font-size: 0.6rem; }
+  .rd-trend { display: grid; gap: 10px; margin-top: 10px; }
+  .rd-trend .mini { height: 38px; }
+  .rd-checkin { font-size: 0.82rem; color: var(--text-mid); }
+  .rd-checkin b { color: var(--watch); font-weight: 600; }
+  .ring.dial { width: 230px; height: auto; aspect-ratio: 6 / 5; margin-bottom: 56px; }
+  .ring.dial svg { height: 100%; }
+  .ring.dial .ring-track, .ring.dial .ring-fill { stroke-width: 9; }
+  .ring.dial .ring-fill { stroke: var(--cy); }
+  .dial-held { position: absolute; left: 0; right: 0; top: calc(100% + 10px); margin: 0; text-align: center; font-size: 0.78rem; font-weight: 500; line-height: 1.35; color: var(--text-lo); }
+  .dial-held b { color: var(--st); font-weight: 600; }
+  .ring.dial figcaption { inset: auto 0 0 0; top: 68%; align-content: start; gap: 4px; }
+  .ring.dial figcaption b { font-size: 2rem; }
+  .dial-tick { stroke: var(--text-lo); stroke-width: 1.2; stroke-linecap: round; }
+  .dial-needle { transition: transform 0.9s var(--ease); }
+  .dial-needle line { stroke: var(--text-hi); stroke-width: 2.4; stroke-linecap: round; }
+  .dial-hub { fill: var(--text-hi); stroke: var(--bg); stroke-width: 2; }
+
+  /* ---- Hazard tiles ---- */
+  .tiles { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .tile { display: flex; flex-direction: column; gap: 2px; transition: transform 0.25s var(--ease), border-color 0.25s; }
+  .tile:hover { transform: translateY(-2px); border-color: var(--line-hi); }
+  .tile header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .tile .badge, .tile .tag { margin-left: auto; }
+  .tile h2 { flex-basis: 100%; margin: 8px 0 0; font-size: 0.92rem; font-weight: 600; color: var(--text-mid); }
+  .val { margin: 4px 0 0; font-size: 0.85rem; color: var(--text-mid); font-family: var(--font-body); }
+  .val b { font-size: 2.1rem; font-weight: 700; color: var(--text-hi); letter-spacing: -0.03em; line-height: 1.15; }
+  .lbl, .why { margin: 0; font-size: 0.8rem; }
+  .lbl { color: var(--text-lo); }
+  .why { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); line-height: 1.5; }
+  .tile:focus-visible { outline: 2px solid var(--st); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .ring-fill { transition: none; } }
+
+  /* ---- Live layer ---- */
+  .vitals { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); grid-column: 1 / -1; margin: 0; }
+  @media (min-width: 1024px) { .vitals { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .vital { display: grid; gap: 4px; padding: 16px 18px 12px; overflow: hidden; }
+  .vital header { display: flex; align-items: center; gap: 10px; }
+  .vital h2 { margin: 0; font-size: 0.92rem; font-weight: 600; color: var(--text-mid); }
+  .vital .val { margin: 0; }
+  .vital-icon { position: relative; width: 34px; height: 34px; display: grid; place-content: center; border-radius: 10px; color: var(--data); background: var(--data-soft); border: 1px solid rgba(45, 212, 232, 0.28); }
+  .pulse-ring { position: absolute; inset: 0; border-radius: 10px; border: 2px solid var(--data); opacity: 0; pointer-events: none; }
+  .live-wave { width: 100%; display: block; }
+  .live-num { font-variant-numeric: tabular-nums; }
+  .sim-chip { margin-left: auto; padding: 2px 7px; border-radius: 999px; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; color: var(--text-mid); border: 1px solid var(--line-hi, var(--line)); }
+  .vital-base { font-size: 0.74rem; color: var(--text-mid); }
+
+  /* ---- Mission health grid ---- */
+  .board-top { position: relative; display: grid; gap: 18px; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .board-top { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .twin-card { grid-row: span 2; order: -1; } }
+  @media (min-width: 1280px) {
+    .board-top { grid-template-columns: minmax(280px, 340px) minmax(380px, 1fr) minmax(280px, 340px); }
+    .twin-card { grid-row: auto; order: 0; }
+  }
+
+  .next { display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 24px; }
+  .next .sec-title { margin: 0; }
+  .next-title { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em; }
+  .next-step { margin: 0; font-size: 1.02rem; line-height: 1.45; }
+  .next .step.next-step { min-height: 0; padding: 4px 0; }
+  .next-meta { margin: 0; font-size: 0.8rem; }
+  .next .btn { align-self: flex-start; margin-top: 4px; }
+
+  /* ---- Hazard mini charts ---- */
+  .delta { margin-left: 8px; font-size: 0.78rem; font-weight: 600; color: var(--text-mid); font-family: var(--font-mono); }
+  .mini-box { display: grid; gap: 4px; margin: 10px 0 2px; }
+  .mini { width: 100%; height: 44px; display: block; overflow: visible; }
+  .mini-line { fill: none; stroke: var(--data); stroke-width: 1.8; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+  .mini-area { fill: var(--data-soft); }
+  .mini-bar { fill: rgba(45, 212, 232, 0.55); }
+  .mini-rule { stroke: var(--text-lo); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+  .mini-limit { stroke: var(--watch); stroke-width: 1.2; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
+  .mini-cap { font-size: 0.7rem; color: var(--text-lo); }
+  .backlog { position: relative; height: 10px; margin: 17px 0 17px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); }
+  .backlog-fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--st, var(--data)); }
+  .backlog i { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--text-mid); border-radius: 1px; }
+  .backlog .mark-watch { left: 25%; } .backlog .mark-act { left: 75%; }
+
+  /* Twin <-> hazard cards: hovering or focusing either one lights both; a spark runs from an Act hotspot to Next Action */
+  .tile.is-linked { border-color: var(--st); box-shadow: 0 0 0 1px var(--st), 0 8px 28px -8px color-mix(in srgb, var(--st) 55%, transparent); transform: translateY(-2px); }
+  .pulse-spark { position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%; background: var(--act); box-shadow: 0 0 14px 4px color-mix(in srgb, var(--act) 70%, transparent); pointer-events: none; z-index: 5; opacity: 0; }
+
+  @media (prefers-reduced-motion: reduce) { .dial-needle { animation: none; transition: none; } }
+}

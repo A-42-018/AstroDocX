@@ -1,0 +1,30 @@
+/* Gauge (src/ui/Gauge.tsx): dial and ring. */
+@layer components {
+  .gauge { position: relative; margin: 0; display: grid; place-items: center; width: 100%; }
+  .gauge-dial { aspect-ratio: 280 / 220; max-width: 300px; }
+  .gauge-ring { aspect-ratio: 260 / 210; max-width: 280px; }
+  .gauge svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .gauge-track { fill: none; stroke: rgba(70, 225, 245, 0.1); stroke-width: 14; }
+  .gauge-ring .gauge-track { stroke-width: 10; }
+  .gauge-arc { fill: none; stroke-width: 14; filter: drop-shadow(0 0 8px rgba(54, 226, 245, 0.7)); transition: stroke-dasharray var(--dur-3) var(--ease); }
+  .gauge-ring .gauge-arc { stroke: var(--cy); stroke-width: 10; stroke-linecap: round; filter: drop-shadow(0 0 8px var(--cy)); }
+  .gauge-tick { stroke: rgba(127, 242, 255, 0.25); stroke-width: 1; }
+  .gauge-tick.major { stroke: rgba(127, 242, 255, 0.6); stroke-width: 2; }
+  .gauge-dial .gauge-tick { stroke: rgba(70, 225, 245, 0.25); }
+  .gauge-dial .gauge-tick.lit { stroke: rgba(127, 242, 255, 0.8); }
+  .gauge-ring .gauge-tick.major { stroke-width: 1; }
+  .gauge-dots { fill: none; stroke: rgba(70, 225, 245, 0.25); stroke-dasharray: 1 5; }
+  .gauge-inner { fill: none; stroke: rgba(70, 225, 245, 0.12); }
+  .gauge-ring .gauge-inner { fill: rgba(54, 226, 245, 0.05); stroke: rgba(70, 225, 245, 0.2); stroke-dasharray: 2 4; }
+  .gauge-in { position: relative; display: grid; justify-items: center; gap: 8px; text-align: center; }
+  .gauge-dial .gauge-in { margin-top: 4%; }
+  .gauge-val { font-family: var(--disp); font-size: clamp(44px, 4.6vw, 64px); font-weight: 600; line-height: 0.9; letter-spacing: -0.04em; color: var(--t1); text-shadow: 0 0 24px rgba(54, 226, 245, 0.25); font-variant-numeric: tabular-nums; }
+  .gauge-ring .gauge-val { font-size: clamp(40px, 4vw, 58px); }
+  .gauge-val small { font-size: 0.4em; color: var(--t2); letter-spacing: 0; }
+  .gauge-ring .gauge-val small { display: block; margin-top: 6px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; color: var(--t3); }
+  .gauge-word {
+    padding: 4px 10px; font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--st, var(--cy)); border: 1px solid currentColor; background: color-mix(in srgb, currentColor 12%, transparent); text-shadow: 0 0 8px currentColor;
+  }
+  @media (prefers-reduced-motion: reduce) { .gauge-arc { transition: none; } }
+}

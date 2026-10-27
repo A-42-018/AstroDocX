@@ -1,0 +1,7 @@
+/* Utilities win over every other layer, so keep them single-purpose. */
+@layer utilities {
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .flush { margin: 0; }
+  .flush-top { margin-top: 0; }
+  .flush-bottom { margin-bottom: 0; }
+}

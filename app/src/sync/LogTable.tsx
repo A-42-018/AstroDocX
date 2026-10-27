@@ -31,7 +31,7 @@ export function LogTable({ log, crew }: { log: ActionLogEntry[]; crew: CrewMembe
         </label>
       </div>
       <div className="glass log-table-wrap">
-        {rows.length === 0 ? <p className="muted" style={{ margin: 0 }}>No entries match.</p> : (
+        {rows.length === 0 ? <p className="muted flush">No entries match.</p> : (
           <table className="log-table">
             <thead><tr><th scope="col">Time</th><th scope="col">Person</th><th scope="col">Kind</th><th scope="col">Entry</th><th scope="col">Status</th></tr></thead>
             <tbody>
