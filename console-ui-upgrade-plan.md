@@ -367,3 +367,30 @@ At each width, check:
 | One-screen layout breaks on short laptops (1366×768) | Height-gated fixed layout (h ≥ 820), otherwise normal scroll |
 | Look reads as a game, not a medical tool | Real data only, the "Prototype, not a medical device" bar on every screen, glow kept off body text |
 | Remaining screens drift from the approved look | Mockup → approval → build for Phases 7–9 |
+
+---
+
+## Session log
+
+### 2026-10-27: Phases 0–2
+
+**Done (4 commits on `feat/console-ui-v3`):**
+- **Phase 0** (`652ca6d`): baseline screenshots of all 7 routes at 1440×900 and 390×844 in `docs/design-refs/baseline/`, with page sizes and the lint/test/build numbers in its README.
+- **Phase 1a** (`933af98`): `src/index.css` moved to `src/styles/index.css` unchanged (byte-identical CSS bundle).
+- **Phase 1b** (`3557585`): v3 tokens + v2 aliases in `tokens.css`; the stylesheet split into layers and one file per screen; stage dot grid + vignette; duplicate `.chip` / `.readiness` merged; static inline styles replaced by `.flush*` utilities and classes (only computed values stay inline); `order: 3` removed by moving the tile heading in the DOM; breakpoints reduced to 480/768/1024/1280; `--cyan` replaced by `--cy`.
+- **Phase 2** (`0fdd086`): `src/ui/` primitives (HudPanel + PanelHeader/Brackets/Ruler, StatusTag, Button, KpiCell/KpiGrid, Readout, Gauge dial/ring, Segmented, StateView, Switch), styles in `src/styles/components/`, 18 tests. `StatusPill` is now an alias of `StatusTag`; ErrorBoundary and the route Suspense fallback use StateView.
+- Checks after each phase: lint clean, build OK, tests 190/190 after Phase 1 and 208/208 after Phase 2. Console clean on every route in the preview build.
+
+**Left:** Phases 3–10 as planned, starting with Phase 3 (shell: top tab bar, mission strip, overflow menu, status bar, phone bars). The per-page boot/loading paragraphs (`Initializing demo mission data…`) still use the v2 glass card; the Board's boot is the natural first user of `StateView`'s `progress` (§4.8), in Phase 4.
+
+**Decisions:**
+- **Layer order is `tokens, base, components, layout, pages, utilities`** (§3.4 listed layout before components). Generic components must sit below shell and page rules, otherwise shell refinements such as `.topbar .home-btn` lose to `.btn` regardless of specificity.
+- **Phase 1 was verified with a computed-style diff**, not only screenshots: every element's box and key styles on 7 routes × 4 widths, before and after. With the old token values the only difference was intended (next point).
+- **The phone top bar now hides Install.** Its `display: none` had been dead since v2 (`.btn` came later), which pushed MET onto a third row. With the layers the rule applies and the bar is the documented two rows (128 px).
+- **Rules that never rendered were dropped, not revived:** `.demo-btn`/`.install-btn` sizing, the phone `main` padding, phone `.chip`/`.met` overrides and the `.readiness` ≤600 px padding all lost on source order in v2.
+- **Aliases:** v2 names with a v3 equivalent point at it (`--accent`→`--or`, `--data`→`--cy`, `--text-*`→`--t1..3`, `--violet`→`--data-2`). `--glass-*`, `--line*`, `--shadow`, `--r-*` keep their v2 values until Phase 10, so unconverted screens only shift in accent, data, status and text colours.
+- **Breakpoints:** each old width was mapped to the nearest v3 boundary that leaves 390/768/1024/1440 unchanged (820→1024, 900→1024, 1100/1180→1280, 1100 max→1279, 600/640→767, 520→479, 899→1023).
+- **`KpiGrid` takes no label:** a `<dl>` has no ARIA role, so a name on it is dropped; naming belongs to the panel around it.
+- **StatusTag default words stay `NOMINAL / WATCH / ACT`** (screen text and tests use them); `short` gives the mockup's `NOM`.
+- **Tests on this machine:** the full suite can time out `AlertsPage` / `SimulatorPage` under load (20k-reading seed); they pass alone. Phase 1 and 2 runs were fully green.
+- **Not pushed:** `git push origin feat/console-ui-v3` returned 403 for the GitHub user `morsad01` (no write access to `A-42-018/AstroDocX`). The commits are local until someone with access pushes them.
