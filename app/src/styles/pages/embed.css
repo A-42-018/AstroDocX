@@ -1,0 +1,12 @@
+/* One console screen without the frame (shell/Embed.tsx), shown on the 3D cabin's wall screens. */
+@layer pages {
+  html.adx-embed, html.adx-embed body { overflow: hidden; background: radial-gradient(120% 90% at 50% 0%, #0a1a26, #03080e 70%); }
+  main.embed { height: 100dvh; max-width: none; padding: 16px 20px; overflow: hidden; }
+  main.embed > * { animation: none; }
+  .embed-board .board { height: 100%; grid-template-rows: minmax(0, 1fr) 176px; }
+  .embed-board .bay { min-height: 0; }
+  .em-vitals { height: 100%; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 14px; }
+  .em-vitals .em-title { grid-column: 1 / -1; margin: 0; font-family: var(--disp); font-size: 26px; }
+  .em-title span { color: var(--cy); font-weight: 500; }
+  .em-vitals > :not(.em-title) { min-height: 0; }
+}

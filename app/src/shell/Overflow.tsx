@@ -1,11 +1,12 @@
-import { Download, House, Play, RotateCcw, Square } from 'lucide-react'
+import { Box, Download, House, Play, RotateCcw, Square } from 'lucide-react'
 import { useId, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { DEMO_MAX_STEPS, resetDemo, useDemo } from '../sim/demoRun'
 import { BackdropChoices } from './BackdropPicker'
 import { OVERFLOW_ICON } from './nav'
 import { usePopover } from './usePopover'
 
-/** The `⋯` menu at the end of the top bar: Run demo, the backdrop, Install and the way back to the landing page. */
+/** The `⋯` menu at the end of the top bar: Run demo, 3D mode, the backdrop, Install and the way back to the landing page. */
 export function Overflow({ crewId, crewName, install, onDemo }:
   { crewId: string; crewName: string; install: (() => Promise<void>) | null; onDemo: () => void }) {
   const btn = useRef<HTMLButtonElement>(null)
@@ -35,6 +36,9 @@ export function Overflow({ crewId, crewName, install, onDemo }:
               <span>{demo.phase === 'running' ? `Stop demo (${demo.step}/${DEMO_MAX_STEPS})` : 'Reset demo'}<small>Restore the demo mission data</small></span>
             </button>
           )}
+          <Link to="/cabin" className="ovf-item" onClick={() => setOpen(false)}>
+            <Box size={16} aria-hidden="true" /><span>3D mode<small>Walk through the crew module</small></span>
+          </Link>
           {install && (
             <button type="button" className="ovf-item" onClick={run(() => void install())}>
               <Download size={16} aria-hidden="true" /><span>Install<small>Use the console offline as an app</small></span>

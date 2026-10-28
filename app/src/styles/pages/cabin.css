@@ -1,0 +1,151 @@
+/* 3D Cabin (cabin/CabinPage.tsx): a full-screen walk-through over the console. Holo HUD tokens only. */
+.cabin { position: fixed; inset: 0; z-index: 50; background: var(--bg); color: var(--t1); font-family: var(--ui); overflow: hidden; }
+.cabin-gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+.cabin-gl.dragging { cursor: grabbing; }
+
+.cabin-panel {
+  background: var(--panel); border: 1px solid var(--edge); backdrop-filter: blur(8px);
+  clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+}
+
+.cabin-top { position: absolute; top: var(--sp-4); left: var(--sp-4); right: var(--sp-4); display: flex; align-items: center; gap: var(--sp-4); z-index: 5; pointer-events: none; }
+.cabin-back { pointer-events: auto; font: 600 13px var(--ui); color: var(--cy-hi); background: var(--panel); border: 1px solid var(--edge-hi); padding: var(--sp-2) 14px; cursor: pointer; letter-spacing: .04em; }
+.cabin-back:hover { background: var(--cy-soft); }
+.cabin-back:focus-visible, .cabin-stops button:focus-visible, .cabin-card .close:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
+.cabin-brand { font: 700 15px var(--ui); letter-spacing: .14em; text-transform: uppercase; }
+.cabin-brand span { color: var(--cy); font-weight: 500; }
+
+.cabin-stops { position: absolute; right: 22px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 14px; z-index: 5; }
+.cabin-stops button { all: unset; cursor: pointer; display: flex; align-items: center; justify-content: flex-end; gap: 10px; font: 500 12px var(--ui); color: var(--t3); }
+.cabin-stops i { width: 9px; height: 9px; border: 1.5px solid var(--cy); transform: rotate(45deg); transition: background var(--dur-2), box-shadow var(--dur-2); }
+.cabin-stops span { opacity: 0; transition: opacity var(--dur-2); white-space: nowrap; }
+.cabin-stops button:hover span, .cabin-stops button:focus-visible span, .cabin-stops [aria-current] span { opacity: 1; }
+.cabin-stops [aria-current] { color: var(--cy-hi); }
+.cabin-stops [aria-current] i { background: var(--cy); box-shadow: 0 0 10px var(--cy-glow); }
+
+.cabin-caption { position: absolute; left: var(--sp-5); bottom: var(--sp-5); width: min(420px, calc(100% - 40px)); padding: var(--sp-4) var(--sp-5) 18px; z-index: 5; }
+.cap-step { font: 600 11px var(--mono); color: var(--cy); letter-spacing: .12em; }
+.cabin-caption h1 { margin: 6px 0; font: 700 20px var(--ui); letter-spacing: .02em; }
+.cabin-caption p { margin: 0; font: 400 13.5px/1.5 var(--ui); color: var(--t2); }
+
+.cabin-card { position: absolute; right: 70px; bottom: var(--sp-5); width: 260px; padding: var(--sp-4) 18px; z-index: 6; }
+.cabin-card .close { all: unset; position: absolute; top: 6px; right: 12px; cursor: pointer; color: var(--t3); font-size: 20px; }
+.cc-role { font: 600 11px var(--mono); color: var(--cy); letter-spacing: .1em; text-transform: uppercase; }
+.cabin-card h2 { margin: 4px 0 12px; font: 700 18px var(--ui); }
+.cc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cc-grid span { display: block; font: 500 11px var(--mono); color: var(--t3); letter-spacing: .1em; }
+.cc-grid b { font: 600 20px var(--mono); }
+.cc-status { margin-top: 12px; font: 600 12px var(--ui); padding: 6px 10px; border: 1px solid currentColor; display: inline-block; }
+
+.cabin-credits { position: absolute; right: var(--sp-4); bottom: var(--sp-2); z-index: 5; font: 400 11px var(--ui); color: var(--t3); }
+.cabin-credits a { color: var(--cy); }
+
+/* helmet visor (cabin/VisorHud.tsx): scene.ts fades and grows it as the tour leaves the first stop */
+.cabin-visor { position: absolute; inset: 0; pointer-events: none; z-index: 4; will-change: opacity, transform; }
+.visor-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* the HUD is light projected on the glass: cyan with a dark halo, so it reads over the bright cabin too */
+.vz-hud {
+  --data: #36e2f5; --halo: 0 0 2px rgba(0, 8, 14, .95), 0 0 9px rgba(0, 8, 14, .7), 0 0 16px rgba(54, 226, 245, .45);
+  position: absolute; inset: 0; color: var(--cy-hi); font: 600 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--halo);
+}
+.vz { position: absolute; display: flex; flex-direction: column; gap: 5px; white-space: nowrap; width: max-content; }
+.vz small { font: 700 11.5px var(--mono); letter-spacing: .16em; color: var(--cy-hi); }
+/* a soft dark wash behind each block, as if the projector darkens the glass under its light */
+.vz::before { content: ''; position: absolute; inset: -22px -34px; z-index: -1; background: radial-gradient(closest-side, rgba(1, 8, 14, .5), rgba(1, 8, 14, .28) 60%, transparent); }
+.vz span { color: var(--t1); }
+.vz i { font-style: normal; }
+.vz em { font-style: normal; font-size: .62em; letter-spacing: .1em; color: var(--cy-hi); margin-left: 2px; text-transform: none; }
+.vz .nt { text-transform: none; color: inherit; }
+.vz .big { font: 600 clamp(17px, 1.65vw, 26px) var(--disp); letter-spacing: .04em; color: var(--cy-hi); }
+/* the corner blocks lean with the visor's curve, as on the reference helmet */
+.vz-tl { top: 12vh; left: 15vw; transform-origin: left top; transform: perspective(900px) rotateY(16deg) rotateZ(-6deg); }
+.vz-tr { top: 12vh; right: 15vw; align-items: flex-end; transform-origin: right top; transform: perspective(900px) rotateY(-16deg) rotateZ(6deg); }
+.vz-bl { bottom: max(31vh, 270px); left: 16vw; transform-origin: left bottom; transform: perspective(900px) rotateY(14deg) rotateZ(2deg); }
+.vz-br { bottom: max(31vh, 270px); right: 16vw; align-items: flex-end; transform-origin: right bottom; transform: perspective(900px) rotateY(-14deg) rotateZ(-2deg); }
+
+.vz-tc { top: 4.5vh; left: 50%; transform: translateX(-50%); align-items: center; gap: 0; }
+.vz-tc .huge { font: 600 clamp(28px, 2.6vw, 40px)/1.05 var(--disp); letter-spacing: .02em; color: var(--cy-hi); }
+.vz-tc .state { margin-top: 2px; font-size: 11.5px; letter-spacing: .14em; }
+.vz-gauge { width: clamp(300px, 30vw, 460px); height: auto; overflow: visible; filter: drop-shadow(0 0 1.5px rgba(0, 8, 14, .9)) drop-shadow(0 0 5px rgba(54, 226, 245, .5)); }
+.vz-gauge .tk { stroke: var(--cy-hi); stroke-opacity: .7; stroke-width: 1.4; }
+.vz-gauge .tk.major { stroke-opacity: 1; stroke-width: 2.2; }
+.vz-gauge .z { fill: none; stroke-width: 4; stroke-opacity: .9; }
+.vz-gauge .z.act { stroke: var(--act); } .vz-gauge .z.watch { stroke: var(--watch); } .vz-gauge .z.ok { stroke: var(--ok); }
+.vz-gauge text { fill: var(--cy-hi); font: 600 11px var(--mono); }
+.vz-gauge .needle { transition: transform 1.2s var(--ease); }
+.vz-gauge .needle line { stroke: currentColor; stroke-width: 3; }
+.vz-gauge .needle path { fill: currentColor; }
+
+.vz-heart { display: inline-block; color: var(--act); transition: transform .12s; }
+.vz-heart.beat { animation: vz-beat .35s ease-out; }
+@keyframes vz-beat { 30% { transform: scale(1.3); } }
+.vz-ecg { width: 150px; height: 28px; }
+.vz-ecg .live-wave { width: 100%; display: block; }
+.vz-segs { display: inline-flex; gap: 2px; vertical-align: middle; margin: 0 4px; }
+.vz-segs i { width: 6px; height: 10px; border: 1px solid currentColor; opacity: .35; }
+.vz-segs i.on { background: currentColor; opacity: 1; box-shadow: 0 0 5px currentColor; }
+
+.vz.ladder { top: 50%; transform: translateY(-50%); gap: 7px; }
+.vz.ladder.left { left: 7.2vw; }
+.vz.ladder.left span { display: flex; align-items: center; gap: 4px; }
+.vz.ladder.left b { width: 14px; font: 700 14px var(--disp); }
+.vz.ladder.left em { font-size: 12px; color: var(--t1); }
+.vz.ladder.right { right: 12vw; top: 34%; align-items: flex-end; }
+.vz-signal { display: flex; align-items: flex-end; gap: 3px; }
+.vz-signal i { width: 5px; background: var(--cy); opacity: .25; }
+.vz-signal i.on { opacity: 1; box-shadow: 0 0 6px var(--cy-glow); }
+
+.vz-bar {
+  position: absolute; left: 50%; bottom: max(12.5vh, 200px); transform: translateX(-50%); display: flex; align-items: center; gap: 12px;
+  max-width: min(760px, 56vw); padding: 7px 22px; font-size: 11.5px; white-space: nowrap; color: var(--t1);
+  background: linear-gradient(90deg, transparent, rgba(4, 18, 28, .55) 12%, rgba(4, 18, 28, .55) 88%, transparent);
+  border: 1px solid rgba(54, 226, 245, .55); box-shadow: 0 0 14px rgba(54, 226, 245, .25), inset 0 0 12px rgba(54, 226, 245, .15);
+  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 14px 100%, 0 50%);
+}
+.vz-bar > span + span { padding-left: 12px; border-left: 1px solid rgba(54, 226, 245, .5); }
+.vz-bar .next { overflow: hidden; text-overflow: ellipsis; min-width: 0; text-transform: none; }
+.vz-motto { position: absolute; left: 50%; bottom: max(7.5vh, 150px); transform: translateX(-50%); font: 600 15px var(--disp); letter-spacing: .26em; color: var(--cy-hi); white-space: nowrap; }
+.vz-reticle { position: absolute; left: 50%; top: 50%; width: 220px; height: 220px; margin: -110px 0 0 -110px; overflow: visible; }
+.vz-reticle .ring { fill: none; stroke: rgba(159, 244, 255, .5); stroke-width: 1.2; }
+.vz-reticle .ring.hi { stroke: rgba(159, 244, 255, .75); }
+.vz-reticle .cross { stroke: rgba(159, 244, 255, .5); stroke-width: 1; }
+.vz-reticle .cross.hi { stroke: var(--cy-hi); stroke-width: 1.5; }
+.vz-reticle .spin line { stroke: rgba(159, 244, 255, .45); stroke-width: 1.2; }
+.vz-reticle .spin { animation: vz-spin 60s linear infinite; }
+@keyframes vz-spin { to { transform: rotate(360deg); } }
+.vz-reticle { filter: drop-shadow(0 0 1px rgba(0, 8, 14, .9)); }
+.prompt { position: absolute; left: 50%; bottom: max(4.2vh, 118px); transform: translateX(-50%); font: 600 11px var(--ui); letter-spacing: .2em; text-transform: uppercase; color: var(--cy); white-space: nowrap; }
+.prompt span { display: inline-block; animation: cabin-bob 1.4s ease-in-out infinite; }
+@keyframes cabin-bob { 50% { transform: translateY(4px); } }
+
+.cabin-loading { position: absolute; inset: 0; display: grid; place-items: center; font: 600 14px var(--mono); letter-spacing: .2em; color: var(--cy); background: var(--bg); z-index: 10; }
+.cabin-nogl { max-width: 420px; padding: var(--sp-6); letter-spacing: normal; font: 400 14px/1.5 var(--ui); color: var(--t2); }
+.cabin-nogl h1 { margin: 0 0 var(--sp-2); font: 700 20px var(--ui); color: var(--t1); }
+.cabin-nogl p { margin: 0 0 var(--sp-4); }
+
+/* phones: smaller caption, HUD corners closer in, stop labels hidden */
+@media (max-width: 767px) {
+  .cabin-caption { left: var(--sp-3); bottom: 64px; width: calc(100% - 64px); padding: var(--sp-3) var(--sp-4); } /* clear of the three-line credits */
+  .cabin-caption h1 { font-size: 17px; }
+  .cabin-caption p { font-size: 12.5px; }
+  .cabin-stops { right: 12px; gap: 12px; }
+  .cabin-stops span { display: none; }
+  .cabin-card { right: var(--sp-3); left: var(--sp-3); width: auto; bottom: auto; top: 64px; }
+  .vz-hud { font-size: 10px; }
+  .vz small { font-size: 9.5px; }
+  .vz .big { font-size: 14px; }
+  .vz-tl, .vz-bl { left: 8vw; } .vz-tr, .vz-br { right: 8vw; }
+  .vz-tl, .vz-tr { top: max(25vh, 190px); } /* below the readiness gauge */
+  .vz-tl .big, .vz-tr .vz-segs { display: none; }
+  .vz-bl, .vz-br { bottom: auto; top: 58vh; }
+  .vz-tc { top: 64px; } .vz-gauge { width: 200px; }
+  .vz-ecg { width: 96px; }
+  .vz.ladder, .vz-bar, .vz-motto, .prompt { display: none; } /* the caption already says to scroll */
+  .vz-reticle { width: 150px; height: 150px; margin: -75px 0 0 -75px; }
+  .cabin-credits { left: var(--sp-3); right: var(--sp-3); font-size: 10px; line-height: 1.35; }
+}
+@media (prefers-reduced-motion: reduce) { .prompt span, .vz-reticle .spin, .vz-heart.beat { animation: none; } .vz-gauge .needle { transition: none; } }
+
+/* the real console on the wall screens (cabin/screens.ts): above the canvas, below the HUD, never takes input */
+.cabin-screens { position: absolute !important; inset: 0; z-index: 1; pointer-events: none; }
+.cabin-screens iframe { display: block; border: 0; background: #03080e; pointer-events: none; opacity: 0; }

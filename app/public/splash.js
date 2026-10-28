@@ -7,6 +7,7 @@
   var root = document.documentElement
   var el = document.getElementById('adx-splash')
   if (!el) { root.classList.remove('adx-launching'); return }
+  if (root.classList.contains('adx-embed')) { el.remove(); return } // a cabin wall screen: no launch screen
 
   var REDUCE = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   var MIN_MS = REDUCE ? 400 : 1800   // long enough to read the sequence, short enough not to feel like a toll
