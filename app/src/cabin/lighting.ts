@@ -10,8 +10,10 @@ import { FLOOR, TOP, WIN } from './hall'
 import { C } from './panels'
 
 /*
- * One light story: a warm sun through the forward window (hard shadows, a visible beam, dust in it) in a bright,
- * high-key metal hall with soft warm-white fill, and the cyan of the HUD kept as an accent. Quality tiers drop the costly parts on small or slow devices.
+ * One light story, after the golden helmet-view reference: a golden sun through the forward window (hard shadows, a
+ * visible beam, dust in it) that turns the floor and the ceiling above it gold, while the walls in shade stay a
+ * near-neutral metal falling to deep shadow in the pipework; the cyan of the HUD kept as an accent. Quality tiers
+ * drop the costly parts on small or slow devices.
  */
 
 export type Quality = 'high' | 'mid' | 'low'
@@ -27,15 +29,17 @@ export function windowEnvironment() {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ color, side: THREE.BackSide }))
     m.position.set(...at); env.add(m)
   }
-  box(16, 8, 32, '#2c2c2c', [0, 0, 0]) // the walls round the probe
+  // This is most of the hall's ambient light (the ceiling gets almost all of its light from here), so it is kept dark
+  // but for the window: crevices stay deep and only the surfaces that see the window catch its gold.
+  box(16, 8, 32, '#171615', [0, 0, 0]) // the walls round the probe
   const panel = (w: number, h: number, color: string, intensity: number, at: [number, number, number], rx: number, ry = 0) => {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(intensity) }))
     m.position.set(...at); m.rotation.set(rx, ry, 0); env.add(m)
   }
-  panel(12, 4.5, '#fffaf2', 9, [0, 0.6, -15.9], 0) // the forward window: Earth light and the sun
-  panel(14, 30, '#cfc6b8', 0.55, [0, -3.9, 0], -Math.PI / 2) // the floor bouncing a little light up
-  panel(5, 30, '#c4c2be', 0.8, [0, 3.9, 0], Math.PI / 2) // the ceiling strip
-  for (const x of [-7.9, 7.9]) panel(30, 1.2, '#d4d2ce', 0.9, [x, 1.5, 0], 0, -Math.sign(x) * Math.PI / 2) // light running along the walls
+  panel(12, 4.5, '#ffe6c4', 12, [0, 0.6, -15.9], 0) // the forward window: Earth light and the low golden sun
+  panel(14, 30, '#d8c2a4', 0.26, [0, -3.9, 0], -Math.PI / 2) // the sunlit floor bouncing warm light up
+  panel(5, 30, '#c8c4bc', 0.35, [0, 3.9, 0], Math.PI / 2) // the ceiling strip
+  for (const x of [-7.9, 7.9]) panel(30, 1.2, '#d4d0c8', 0.45, [x, 1.5, 0], 0, -Math.sign(x) * Math.PI / 2) // light running along the walls
   return env
 }
 
@@ -50,20 +54,22 @@ export function pickQuality(): Quality {
 export const BEAM_DIR = new THREE.Vector3(-0.25, -0.45, 1).normalize()
 
 export function addLights(scene: THREE.Scene, quality: Quality) {
-  // The references are lit from the window, not the ceiling: a bright sky term lights the floor, the dark ground term
-  // leaves the ceiling a mid grey, and walls fall in between with deep shadows in the pipework (low: no sun shadows, more fill)
-  scene.add(new THREE.HemisphereLight('#fff4e6', '#1c1a18', quality === 'low' ? 0.75 : 0.95))
-  // ceiling lamps, neutral white and kept low: they glint on the pipes but must not out-light the window
+  // The references are lit from the window, not the ceiling: a near-neutral, low fill keeps the shaded walls metal grey
+  // with deep shadows in the pipework, and the gold comes from the sun and its bounce (low: no sun shadows, more fill)
+  scene.add(new THREE.HemisphereLight('#f4eee6', '#1e1c1a', quality === 'low' ? 0.45 : 0.4))
+  // ceiling lamps, warm white and kept low: they glint on the pipes but must not out-light the window
   for (const z of [11, 4, -3, -9]) {
-    const l = new THREE.PointLight('#f2f5fa', 0.7, 8, 2); l.position.set(0, TOP - 0.6, z); scene.add(l)
+    const l = new THREE.PointLight('#fff4ea', 0.3, 8, 2); l.position.set(0, TOP - 0.6, z); scene.add(l)
   }
-  // warm bounce off the sunlit floor, carried down the hall
-  for (const [z, i] of [[-10, 3], [-2, 2], [6, 1.2]]) {
-    const b = new THREE.PointLight('#ffe6c8', i, 16, 1.4); b.position.set(-1, FLOOR + 0.8, z); scene.add(b)
+  // golden bounce off the sunlit floor, carried down the hall
+  for (const [z, i] of [[-10, 8], [-2, 5], [6, 3.5]]) {
+    const b = new THREE.PointLight('#ffcf9e', i, 16, 1.4); b.position.set(-1, FLOOR + 0.8, z); scene.add(b)
   }
+  // the sun runs to the left, so its bounce reaches the aft left corner: the tank by the door catches a warm edge
+  const aft = new THREE.PointLight('#ffd8b0', 2.5, 9, 1.6); aft.position.set(-3.2, 0.6, 11.5); scene.add(aft)
 
   // without shadows (low) the sun would light the whole hall through its walls: kept dim there
-  const sun = new THREE.DirectionalLight('#fff2e2', quality === 'low' ? 0.7 : 4.3)
+  const sun = new THREE.DirectionalLight('#ffc283', quality === 'low' ? 0.5 : 9)
   const target = new THREE.Vector3(-1.5, FLOOR, -2)
   sun.position.copy(target).addScaledVector(BEAM_DIR, -40); sun.target.position.copy(target)
   scene.add(sun, sun.target)
@@ -127,7 +133,7 @@ export function createSunBeam(scene: THREE.Scene, quality: Quality) {
   const g = new THREE.BufferGeometry()
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('along', new THREE.Float32BufferAttribute(along, 1))
   g.setAttribute('uv', new THREE.Float32BufferAttribute(uv.map((u, i) => (i % 2 ? u : u / 4)), 2)); g.setIndex(idx); g.computeVertexNormals()
-  const beamU = { time: { value: 0 }, color: { value: new THREE.Color('#ffe4c0') }, strength: { value: 0.14 } }
+  const beamU = { time: { value: 0 }, color: { value: new THREE.Color('#ffd4a0') }, strength: { value: 0.14 } }
   const beam = new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: beamU, vertexShader: beamVert, fragmentShader: beamFrag, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false }))
   beam.frustumCulled = false; scene.add(beam)
 
@@ -150,16 +156,16 @@ export function createSunBeam(scene: THREE.Scene, quality: Quality) {
 
 /** A crisp, contrasty grade, vignette and a whisper of film grain: the lens the references were shot through. */
 const LensShader = {
-  uniforms: { tDiffuse: { value: null }, time: { value: 0 }, grain: { value: 0.035 } },
+  uniforms: { tDiffuse: { value: null }, time: { value: 0 }, grain: { value: 0.035 }, contrast: { value: 0.36 }, balance: { value: new THREE.Vector3(1.0, 1.0, 0.985) } },
   vertexShader: /* glsl */ `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: /* glsl */ `
-    uniform sampler2D tDiffuse; uniform float time; uniform float grain; varying vec2 vUv;
+    uniform sampler2D tDiffuse; uniform float time; uniform float grain; uniform float contrast; uniform vec3 balance; varying vec2 vUv;
     float h(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
     void main() {
       vec4 c = texture2D(tDiffuse, vUv);
-      // contrast about mid grey (the input is linear, before tone mapping) and a warm sunlit cast
+      // contrast about mid grey (the input is linear, before tone mapping) and the white balance
       float l = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722));
-      c.rgb *= pow(max(l, 1e-4) / 0.18, 0.28) * vec3(1.03, 1.0, 0.97); // the references' crisp contrast; slightly warm white balance
+      c.rgb *= pow(max(l, 1e-4) / 0.18, contrast) * balance; // the references' deep shadows and crisp highlights; a neutral white balance, the gold is in the light
       vec2 d = vUv - 0.5;
       c.rgb *= mix(1.0, 0.72, smoothstep(0.45, 0.9, length(d * vec2(1.25, 1.0))));
       c.rgb += (h(vUv * 911.0 + fract(time)) - 0.5) * grain;

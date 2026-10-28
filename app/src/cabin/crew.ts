@@ -75,7 +75,7 @@ export function createCrew(scene: THREE.Scene, loader: GLTFLoader, models: strin
         const ring = a.ring.material as THREE.MeshBasicMaterial
         ring.color.set(m.status === 'act' ? C.act : C.watch); ring.opacity = 0.18 + pulse * 0.32 // a quiet halo: the tag carries the alert
         a.ring.position.copy(a.holder.position); a.ring.scale.setScalar(1 + pulse * 0.08)
-        if (id === focusId) { alarm.color.set(ring.color); alarm.position.copy(a.holder.position).add(new THREE.Vector3(0, 0.6, 0.8)); alarm.intensity = 0.25 + pulse * 0.9 }
+        if (id === focusId) { alarm.color.set(ring.color); alarm.position.copy(a.holder.position).add(new THREE.Vector3(0, 0.6, 0.8)); alarm.intensity = 0.1 + pulse * 0.4 } // a hint of red: the hall fill is low, more would dye the suit
       }
       i++
     }

@@ -13,7 +13,7 @@ export const WIN = { x: HALF - 1.8, y0: FLOOR + 0.9, y1: TOP - 1.4, z: -LEN + 0.
 /*
  * Surfaces: the model has no textures, so ambientCG maps (CC0) are projected in world space (triplanar).
  * Walls and ceiling: light grey with PaintedMetal004's scratches and scuffs as wear (its red is not used).
- * Floor: MetalPlates006 tread plate, darker, like the references' grating.
+ * Floor: MetalPlates006 tread plate, tinted the bronze of the golden reference's floor.
  */
 const TRI_VERT = /* glsl */ `
   #include <project_vertex>
@@ -23,7 +23,7 @@ const TRI_VERT = /* glsl */ `
 const TRI_COMMON = /* glsl */ `
   uniform sampler2D wearCol; uniform sampler2D wearNor; uniform sampler2D wearRou;
   uniform sampler2D plateCol; uniform sampler2D plateNor; uniform sampler2D plateRou;
-  uniform float floorY;
+  uniform float floorY; uniform vec3 plateTint;
   varying vec3 vTriPos; varying vec3 vTriN;
   vec3 triW() { vec3 w = pow(abs(normalize(vTriN)), vec3(4.0)); return w / (w.x + w.y + w.z); }
   vec4 tri(sampler2D t, float s) { vec3 w = triW(); vec3 p = vTriPos * s; return texture2D(t, p.zy) * w.x + texture2D(t, p.xz) * w.y + texture2D(t, p.xy) * w.z; }
@@ -49,8 +49,9 @@ function hallMaterial(textures: string) {
     wearCol: { value: tex('paintedmetal_color', true) }, wearNor: { value: tex('paintedmetal_normal') }, wearRou: { value: tex('paintedmetal_roughness') },
     plateCol: { value: tex('metalplates_color', true) }, plateNor: { value: tex('metalplates_normal') }, plateRou: { value: tex('metalplates_roughness') },
     floorY: { value: FLOOR + 0.45 },
+    plateTint: { value: new THREE.Vector3(5.4, 4.4, 2.8) }, // the texture is a cool dark grey: brightened to bronze
   }
-  const m = new THREE.MeshStandardMaterial({ color: '#c4c3bf', metalness: 0.45, roughness: 1, envMapIntensity: 0.8 })
+  const m = new THREE.MeshStandardMaterial({ color: '#c6c3be', metalness: 0.5, roughness: 1 })
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, u)
     sh.vertexShader = 'varying vec3 vTriPos; varying vec3 vTriN;\n' + sh.vertexShader.replace('#include <project_vertex>', TRI_VERT)
@@ -60,9 +61,9 @@ function hallMaterial(textures: string) {
         vec3 wear = tri(wearCol, 0.35).rgb;
         float scuff = dot(wear, vec3(0.2126, 0.7152, 0.0722)); // red paint is dark, the chips are light: a wear mask
         vec3 wall = diffuseColor.rgb * (0.82 + 0.35 * (scuff - 0.12));
-        vec3 plate = tri(plateCol, 0.9).rgb * 2.9; // bright tread plate, as in the references
+        vec3 plate = tri(plateCol, 0.9).rgb * plateTint; // bright bronze tread plate, as in the references
         diffuseColor.rgb = mix(wall, plate, fl);`)
-      .replace('#include <roughnessmap_fragment>', `float roughnessFactor = mix(0.28 + 0.38 * tri(wearRou, 0.35).g, 0.3 + 0.45 * tri(plateRou, 0.9).g, fl);`)
+      .replace('#include <roughnessmap_fragment>', `float roughnessFactor = mix(0.28 + 0.38 * tri(wearRou, 0.35).g, 0.42 + 0.4 * tri(plateRou, 0.9).g, fl); // a broad sheen on the floor, not a hot spot`)
       .replace('#include <metalnessmap_fragment>', `float metalnessFactor = mix(metalness, 0.15, fl);`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
         vec3 wn = fl > 0.5 ? triN(plateNor, 0.9, 1.0) : triN(wearNor, 0.35, 0.6);
@@ -75,10 +76,12 @@ function hallMaterial(textures: string) {
 export function buildHall(scene: THREE.Scene, loader: GLTFLoader, models: string, textures: string): Promise<THREE.Object3D | null> {
   const h = TOP - FLOOR
   const hullMat = new THREE.MeshStandardMaterial({ color: '#4a5058', metalness: 0.3, roughness: 0.8, side: THREE.BackSide })
-  // fills the ceiling seam and anything seen through the wall openings; open at the front (-z) so the window looks into space
-  const hull = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2 + 6, h + 4, LEN * 2 + 3), [hullMat, hullMat, hullMat, hullMat, hullMat, new THREE.MeshBasicMaterial({ visible: false })])
+  // fills the ceiling seam; open at the sides, so the wall openings look out on the stars and Earth's limb as in the
+  // reference, and at the front (-z), so the window looks into space
+  const open = new THREE.MeshBasicMaterial({ visible: false })
+  const hull = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2 + 6, h + 4, LEN * 2 + 3), [open, open, hullMat, hullMat, hullMat, open])
   hull.position.set(0, FLOOR + h / 2, 0); hull.receiveShadow = true; scene.add(hull)
-  const seam = new THREE.Mesh(new THREE.PlaneGeometry(6, LEN * 2), new THREE.MeshStandardMaterial({ color: '#5e6266', metalness: 0.3, roughness: 0.6 }))
+  const seam = new THREE.Mesh(new THREE.PlaneGeometry(6, LEN * 2), new THREE.MeshStandardMaterial({ color: '#908a82', metalness: 0.3, roughness: 0.6 })) // a warm mid tone, as in the reference, not a dark slot
   seam.rotation.x = Math.PI / 2; seam.position.set(0, TOP - 0.02, 0); scene.add(seam)
   const capMat = new THREE.MeshStandardMaterial({ color: '#9aa1a8', metalness: 0.55, roughness: 0.4 })
   const glowMat = new THREE.MeshStandardMaterial({ color: '#0b1218', emissive: C.cy, emissiveIntensity: 1.2 })
