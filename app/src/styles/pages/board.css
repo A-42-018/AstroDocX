@@ -114,7 +114,7 @@
   .hz-mod.st-watch .backlog-fill, .hz-mod.st-act .backlog-fill { background: var(--st); box-shadow: 0 0 6px var(--st); }
   .backlog i { position: absolute; top: -6px; bottom: -6px; width: 1px; }
   .backlog .mark-watch { left: 25%; background: var(--watch); } .backlog .mark-act { left: 75%; background: var(--act); }
-  .backlog-lbl { position: absolute; left: calc(25% + 4px); top: 12px; font-family: var(--mono); font-size: 9px; font-weight: 500; color: rgba(255, 197, 61, 0.8); }
+  .backlog-lbl { position: absolute; left: calc(25% + 4px); top: 12px; font-family: var(--mono); font-size: 11px; font-weight: 500; color: rgba(255, 197, 61, 0.8); }
 
   /* An Act hotspot sends a spark to Next Action */
   .pulse-spark { position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%; background: var(--act); box-shadow: 0 0 14px 4px color-mix(in srgb, var(--act) 70%, transparent); pointer-events: none; z-index: 6; opacity: 0; }

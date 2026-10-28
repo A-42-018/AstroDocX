@@ -1,3 +1,4 @@
+import '../styles/pages/alerts.css'
 import { liveQuery } from 'dexie'
 import { useEffect, useState } from 'react'
 import type { Alert } from '../data/types'

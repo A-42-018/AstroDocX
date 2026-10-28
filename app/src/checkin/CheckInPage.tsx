@@ -1,3 +1,4 @@
+import '../styles/pages/checkin.css'
 import { useEffect, useState } from 'react'
 import { useSnapshot } from '../board/hooks'
 import { db } from '../data/db'

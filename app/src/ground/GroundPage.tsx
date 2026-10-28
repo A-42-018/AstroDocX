@@ -1,3 +1,4 @@
+import '../styles/pages/ground.css'
 import { liveQuery } from 'dexie'
 import { useCallback, useEffect, useState } from 'react'
 import { useSnapshot } from '../board/hooks'

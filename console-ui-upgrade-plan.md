@@ -476,3 +476,21 @@ At each width, check:
 - **Shell:** at exactly 1440 px, a two-digit queue ("10 QUEUED") pushed the top bar 4 px past the edge. Tabs now lose 1 px of padding a side up to 1599 px, which keeps the mockup's wordmark at 1440.
 - **Phone headers:** the panel header's title and meta both don't wrap, so a long title + meta widened the page on phones (mobile emulation then reports a wider `innerWidth`, which hides the problem from a simple `scrollWidth` check). The Sync and Ground heroes hide the meta and let the title wrap below 768 px.
 - **CSS budget:** 103.1 kB (20.9 kB gzip), up from 79.3 kB after Phase 6. The old Check-in, Simulator, Sync and Ground rules were replaced, not kept beside v3, but the v2 shared rules in `components.css` (`.glass`, `.chip`, `.field`, `.sim-steps`, `.badge`, `.sec-title`…) are still there for Phase 10 to remove.
+
+### 2026-10-27: Phase 10
+
+**Done (one commit on `feat/console-ui-v3`):**
+- **Legacy CSS out.** The v2 aliases (`--accent*`, `--data*`, `--text-*`, `--glass-*`, `--line*`, `--r-*`, `--shadow`, `--font-*`, `--holo`, `--violet`, `--void*`, `--nav-h`, `--rail-w`, `--blur`) are gone from `tokens.css`, and nothing reads them. `components.css` lost the glass card, `.btn`, `.chip(s)`, `.field`, `.check`, `.steps`/`.step`, `.badge`, `.sec-title`, `.mini-btn` and `.sim-steps` (none had a user left); it keeps the status colour roles, the hazard chip, and the two helpers other screens share (`.note`, `.form-error`). `.muted` and the `.flush*` utilities went too. Selectors were checked against the TSX with grep first; class names built at run time (`tt-${group}`, `tone-*`, `bd-thumb-*`, `ld-*`, `tc-*`, `readout-*`, `ruler-*`) were kept.
+- **CSS budget met.** The six lazy screens (Alerts, Trends, Check-in, Simulator, Sync, Ground) now import their own stylesheet from their page module, so the entry CSS is **45.8 kB / 10.7 kB gzip** against the Phase 0 baseline of 45.0 / 10.5 (+1.8%; budget +20%). The total shipped CSS is 98.4 kB, and a visit to one screen loads only its own part. Cascade order is unaffected (`@layer` order is declared in `index.css`).
+- **Responsive (§6).** Checked 390, 768, 1024, 1440 and 1920 on all 7 routes: no horizontal scroll, no page scroll on any route at 1440×900 and 1920×1080, one h1 per route. Phone touch targets are now ≥ 44 px: the crew avatars, `⋯` and the link readout in the top bar, and the Board's code chips (their hit area is widened with a pseudo-element). Nothing under 11 px.
+- **Accessibility (§7).** `--t3` raised from 0.58 to 0.74 alpha and `--t2` from 0.78 to 0.88, so both reach ≥ 4.5:1 on `--panel` over the brightest sky frame (computed); the Check-in placeholder moved from `--t4` (decorative only) to `--t3`; links, selection and the global focus ring are cyan instead of orange (colour roles). New test: every route has exactly one h1, and the bell and `⋯` keep their names. The clip-path panels already draw focus inset (`.hp :focus-visible`).
+- **Performance (§8).** No new dependencies; `backdrop-filter` is only on the top bar, the popovers and the phone tabs. Leader lines, traces and pausing were done in earlier phases.
+- **Screenshots.** `docs/screenshots/console-*.jpg` (7) re-shot at 1440×900 with Pilot selected; the README's Run demo line now says it is in the `⋯` menu.
+- **Checks:** lint clean, build OK, tests 215/215 (full run).
+
+**Mistake caught on the way:** deleting `.tt-mission` as "unused" pushed the top bar 93 px past the edge at 1024. The class is built as `tt-${group}`; the rule is back. A string search misses classes composed at run time, so the browser pass is what caught it.
+
+**Not done / for the owner:**
+- Lighthouse mobile on `/board` (a11y ≥ 95, CLS ≈ 0) was not run; no Lighthouse is installed here.
+- Contrast on red `ACT` text is about 3.4:1 only when a panel sits over the very brightest part of the sunrise sky; it is 4.6:1 or better over the rest. A denser panel fill would fix it, at a visible cost to the look.
+- Nothing was exercised with a screen reader; the checks are structural (roles, names, headings) plus tests.

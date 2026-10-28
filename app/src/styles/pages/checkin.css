@@ -1,9 +1,5 @@
 /* Daily check-in (plan §4.5, mockups/checkin.html): procedure stepper, question bay, reaction lamp, saved summary. */
 @layer pages {
-  /* Shared by Ground, Simulator and Sync forms */
-  .note { margin: 8px 0 0; font-size: 0.78rem; }
-  .form-error { color: var(--act); margin: 0; font-weight: 600; }
-
   .ci { display: grid; gap: 14px; grid-template-columns: 320px minmax(0, 1fr); align-items: start; }
   .ci-side { display: grid; gap: 14px; min-width: 0; }
   .ci-eb { margin: 0; font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--t3); }
@@ -70,7 +66,7 @@
   .ci-inp { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 1px solid var(--edge-hi); background: rgba(2, 8, 12, 0.8); }
   .ci-inp:focus-within { box-shadow: inset 0 0 0 1px var(--cy), 0 0 14px -4px var(--cy); }
   .ci-inp input { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; background: none; font-family: var(--disp); font-size: 22px; font-weight: 600; color: var(--t1); outline: 0; }
-  .ci-inp input::placeholder { color: var(--t4); }
+  .ci-inp input::placeholder { color: var(--t3); }
 
   .ci-chips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
   .ci-chip {
