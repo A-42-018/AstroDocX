@@ -37,5 +37,5 @@ model('iss.glb', 'iss.glb', 512)
 for (const [dir, key, ext] of [['metalplates', 'MetalPlates006_1K-PNG', 'png'], ['paintedmetal', 'PaintedMetal004_1K-JPG', 'jpg']]) {
   for (const map of ['Color', 'NormalGL', 'Roughness']) await image(join(src, dir, `${key}_${map}.${ext}`), `${dir}_${map.toLowerCase().replace('gl', '')}.webp`, 1024, map === 'NormalGL' ? 90 : 80)
 }
-// Earth (Solar System Scope, CC BY 4.0): equirectangular 2:1 maps only
-for (const [f, out] of [['2k_earth_daymap.jpg', 'earth_day.webp'], ['2k_earth_nightmap.jpg', 'earth_night.webp'], ['2k_earth_clouds.jpg', 'earth_clouds.webp']]) await image(join(src, f), out, 2048)
+// Earth (NASA Visible Earth, public domain): equirectangular 2:1 maps from eoimages.gsfc.nasa.gov, records 57752, 55167 and 57747
+for (const [f, out] of [['land_shallow_topo_2048.jpg', 'earth_day.webp'], ['earth_lights_lrg.jpg', 'earth_night.webp'], ['cloud_combined_2048.jpg', 'earth_clouds.webp']]) await image(join(src, f), out, 2048)

@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 /*
  * Space outside the forward window: Earth as a real sphere (day, night lights, clouds, atmosphere rim), the sun
- * and a starfield. Earth uses the Solar System Scope maps (CC BY 4.0) in public/textures/ when they are there and
+ * and a starfield. Earth uses NASA Visible Earth maps (public domain) in public/textures/ when they are there and
  * falls back to a procedural globe, so the scene never waits on them. Nothing here takes fog.
  */
 
