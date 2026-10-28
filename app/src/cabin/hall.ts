@@ -60,10 +60,10 @@ function hallMaterial(textures: string) {
         vec3 wear = tri(wearCol, 0.35).rgb;
         float scuff = dot(wear, vec3(0.2126, 0.7152, 0.0722)); // red paint is dark, the chips are light: a wear mask
         vec3 wall = diffuseColor.rgb * (0.82 + 0.35 * (scuff - 0.12));
-        vec3 plate = tri(plateCol, 0.9).rgb * 1.6;
+        vec3 plate = tri(plateCol, 0.9).rgb * 2.9; // bright tread plate, as in the references
         diffuseColor.rgb = mix(wall, plate, fl);`)
       .replace('#include <roughnessmap_fragment>', `float roughnessFactor = mix(0.28 + 0.38 * tri(wearRou, 0.35).g, 0.3 + 0.45 * tri(plateRou, 0.9).g, fl);`)
-      .replace('#include <metalnessmap_fragment>', `float metalnessFactor = mix(metalness, 0.8, fl);`)
+      .replace('#include <metalnessmap_fragment>', `float metalnessFactor = mix(metalness, 0.15, fl);`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
         vec3 wn = fl > 0.5 ? triN(plateNor, 0.9, 1.0) : triN(wearNor, 0.35, 0.6);
         normal = normalize((viewMatrix * vec4(wn, 0.0)).xyz);`)
@@ -78,7 +78,7 @@ export function buildHall(scene: THREE.Scene, loader: GLTFLoader, models: string
   // fills the ceiling seam and anything seen through the wall openings; open at the front (-z) so the window looks into space
   const hull = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2 + 6, h + 4, LEN * 2 + 3), [hullMat, hullMat, hullMat, hullMat, hullMat, new THREE.MeshBasicMaterial({ visible: false })])
   hull.position.set(0, FLOOR + h / 2, 0); hull.receiveShadow = true; scene.add(hull)
-  const seam = new THREE.Mesh(new THREE.PlaneGeometry(6, LEN * 2), new THREE.MeshStandardMaterial({ color: '#a8acb0', metalness: 0.3, roughness: 0.6 }))
+  const seam = new THREE.Mesh(new THREE.PlaneGeometry(6, LEN * 2), new THREE.MeshStandardMaterial({ color: '#5e6266', metalness: 0.3, roughness: 0.6 }))
   seam.rotation.x = Math.PI / 2; seam.position.set(0, TOP - 0.02, 0); scene.add(seam)
   const capMat = new THREE.MeshStandardMaterial({ color: '#9aa1a8', metalness: 0.55, roughness: 0.4 })
   const glowMat = new THREE.MeshStandardMaterial({ color: '#0b1218', emissive: C.cy, emissiveIntensity: 1.2 })
@@ -99,7 +99,8 @@ export function buildHall(scene: THREE.Scene, loader: GLTFLoader, models: string
     new THREE.MeshStandardMaterial({ color: '#c9ccd0', metalness: 0.75, roughness: 0.25 }))
   bezel.position.z = 0.15; bezel.castShadow = bezel.receiveShadow = true; fwd.add(bezel)
   for (const y of [WIN.y0 - 0.25]) { const f = new THREE.Mesh(new THREE.BoxGeometry(WIN.x * 2 - 1, 0.04, 0.04), glowMat); f.position.set(0, y, 0.4); fwd.add(f) }
-  const aft = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2, h, 0.3), capMat); aft.position.set(0, FLOOR + h / 2, LEN); aft.receiveShadow = true; scene.add(aft)
+  // the aft wall faces the window: matte, or it mirrors the window's glare back down the hall
+  const aft = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2, h, 0.3), new THREE.MeshStandardMaterial({ color: '#8c9196', metalness: 0.2, roughness: 0.75 })); aft.position.set(0, FLOOR + h / 2, LEN); aft.receiveShadow = true; scene.add(aft)
   const door = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.2, 0.05), glowMat); door.position.set(0, -0.9, LEN - 0.17); scene.add(door)
   const strip = new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: C.cy, emissiveIntensity: 1.1 }) // present but subtle in the sunlit hall
   for (const [x, y] of [[-5.6, FLOOR + 0.08], [5.6, FLOOR + 0.08], [-3, TOP - 0.08], [3, TOP - 0.08]]) {

@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import type { CabinCrew, CabinData } from './data'
@@ -7,7 +6,7 @@ import { createCrew } from './crew'
 import { createSpace, SUN_AT } from './earth'
 import { createEva, EVA, EVA_VIEW, evaCrewId } from './eva'
 import { buildHall, HALF } from './hall'
-import { addLights, createFlare, createPost, createSunBeam, pickQuality } from './lighting'
+import { addLights, createFlare, createPost, createSunBeam, pickQuality, windowEnvironment } from './lighting'
 import { C, SH, SW, drawAlerts, drawLiveVitals, drawStatusBoard, drawTrends } from './panels'
 import { createScreens, type ScreenSpec } from './screens'
 
@@ -61,10 +60,10 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   renderer.shadowMap.autoUpdate = false // the hall is static and the crew drift slowly: refreshed every few frames in the loop
   const scene = new THREE.Scene()
   scene.background = new THREE.Color('#05080d')
-  scene.fog = new THREE.Fog('#a89f90', 40, 160) // a warm, sunlit haze: the far end of the hall goes lighter, not darker
+  scene.fog = new THREE.Fog('#a3a6aa', 40, 160) // a light haze: the far end of the hall goes lighter, not darker
   const pmrem = new THREE.PMREMGenerator(renderer)
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture // soft reflections for the metal
-  scene.environmentIntensity = 0.45
+  scene.environment = pmrem.fromScene(windowEnvironment(), 0.02).texture // the metal reflects the bright window, not a studio
+  scene.environmentIntensity = 1.0
   const camera = new THREE.PerspectiveCamera(58, size()[0] / size()[1], 0.08, 2000) // far enough for Earth and the stars
   const flare = createFlare(camera, SUN_AT)
   const post = createPost(renderer, scene, camera, ...size(), quality, [flare.pass])

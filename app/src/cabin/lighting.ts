@@ -16,6 +16,29 @@ import { C } from './panels'
 
 export type Quality = 'high' | 'mid' | 'low'
 
+/**
+ * What the metal reflects: a darker room with one blazing window ahead (-z), a sunlit floor and a dim ceiling. Lit
+ * this way the pipes get bright streaks on the window side and fall dark on the other, instead of the even studio
+ * light a generic environment gives. Rendered once into a PMREM by the scene.
+ */
+export function windowEnvironment() {
+  const env = new THREE.Scene()
+  const box = (w: number, h: number, d: number, color: string, at: [number, number, number]) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ color, side: THREE.BackSide }))
+    m.position.set(...at); env.add(m)
+  }
+  box(16, 8, 32, '#2c2c2c', [0, 0, 0]) // the walls round the probe
+  const panel = (w: number, h: number, color: string, intensity: number, at: [number, number, number], rx: number, ry = 0) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(intensity) }))
+    m.position.set(...at); m.rotation.set(rx, ry, 0); env.add(m)
+  }
+  panel(12, 4.5, '#fffaf2', 9, [0, 0.6, -15.9], 0) // the forward window: Earth light and the sun
+  panel(14, 30, '#cfc6b8', 0.55, [0, -3.9, 0], -Math.PI / 2) // the floor bouncing a little light up
+  panel(5, 30, '#c4c2be', 0.8, [0, 3.9, 0], Math.PI / 2) // the ceiling strip
+  for (const x of [-7.9, 7.9]) panel(30, 1.2, '#d4d2ce', 0.9, [x, 1.5, 0], 0, -Math.sign(x) * Math.PI / 2) // light running along the walls
+  return env
+}
+
 /** A first guess from the device; the scene steps down a tier if the first seconds run slow. */
 export function pickQuality(): Quality {
   const cores = navigator.hardwareConcurrency || 4
@@ -27,18 +50,20 @@ export function pickQuality(): Quality {
 export const BEAM_DIR = new THREE.Vector3(-0.25, -0.45, 1).normalize()
 
 export function addLights(scene: THREE.Scene, quality: Quality) {
-  scene.add(new THREE.HemisphereLight('#fff1dc', '#4a3e32', quality === 'low' ? 0.8 : 0.35)) // low has no sun shadows and a dim sun: more fill
-  // ceiling fill, warm white: the hall is high-key, the sun still wins so its shadows read
+  // The references are lit from the window, not the ceiling: a bright sky term lights the floor, the dark ground term
+  // leaves the ceiling a mid grey, and walls fall in between with deep shadows in the pipework (low: no sun shadows, more fill)
+  scene.add(new THREE.HemisphereLight('#fff4e6', '#1c1a18', quality === 'low' ? 0.75 : 0.95))
+  // ceiling lamps, neutral white and kept low: they glint on the pipes but must not out-light the window
   for (const z of [11, 4, -3, -9]) {
-    const l = new THREE.PointLight('#fff2e2', 4.5, 13, 1.7); l.position.set(0, TOP - 0.6, z); scene.add(l)
+    const l = new THREE.PointLight('#f2f5fa', 0.7, 8, 2); l.position.set(0, TOP - 0.6, z); scene.add(l)
   }
   // warm bounce off the sunlit floor, carried down the hall
   for (const [z, i] of [[-10, 3], [-2, 2], [6, 1.2]]) {
-    const b = new THREE.PointLight('#ffc48a', i, 16, 1.4); b.position.set(-1, FLOOR + 0.8, z); scene.add(b)
+    const b = new THREE.PointLight('#ffe6c8', i, 16, 1.4); b.position.set(-1, FLOOR + 0.8, z); scene.add(b)
   }
 
   // without shadows (low) the sun would light the whole hall through its walls: kept dim there
-  const sun = new THREE.DirectionalLight('#ffe2b8', quality === 'low' ? 2.2 : 6.5)
+  const sun = new THREE.DirectionalLight('#fff2e2', quality === 'low' ? 0.7 : 4.3)
   const target = new THREE.Vector3(-1.5, FLOOR, -2)
   sun.position.copy(target).addScaledVector(BEAM_DIR, -40); sun.target.position.copy(target)
   scene.add(sun, sun.target)
@@ -66,7 +91,8 @@ const beamFrag = /* glsl */ `
     float fade = pow(1.0 - vAlong, 1.6) * smoothstep(0.0, 0.06, vAlong);
     float edge = abs(dot(normalize(cameraPosition - vW), normalize(vN))); // edge-on faces vanish, so the beam has no hard outline
     float shafts = 0.55 + 0.45 * sin(vUv.x * 38.0 + time * 0.35) * sin(vUv.x * 17.0 - time * 0.2);
-    gl_FragColor = vec4(color * fade * edge * shafts * strength, 1.0);
+    float near = smoothstep(1.5, 7.0, distance(cameraPosition, vW)); // close up the beam's faces would read as a tinted sheet
+    gl_FragColor = vec4(color * fade * edge * shafts * near * strength, 1.0);
   }
 `
 const dustVert = /* glsl */ `
@@ -101,7 +127,7 @@ export function createSunBeam(scene: THREE.Scene, quality: Quality) {
   const g = new THREE.BufferGeometry()
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('along', new THREE.Float32BufferAttribute(along, 1))
   g.setAttribute('uv', new THREE.Float32BufferAttribute(uv.map((u, i) => (i % 2 ? u : u / 4)), 2)); g.setIndex(idx); g.computeVertexNormals()
-  const beamU = { time: { value: 0 }, color: { value: new THREE.Color('#ffc27a') }, strength: { value: 0.14 } }
+  const beamU = { time: { value: 0 }, color: { value: new THREE.Color('#ffe4c0') }, strength: { value: 0.14 } }
   const beam = new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: beamU, vertexShader: beamVert, fragmentShader: beamFrag, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false }))
   beam.frustumCulled = false; scene.add(beam)
 
@@ -122,7 +148,7 @@ export function createSunBeam(scene: THREE.Scene, quality: Quality) {
   }
 }
 
-/** A warm, contrasty grade, vignette and a whisper of film grain: the lens the references were shot through. */
+/** A crisp, contrasty grade, vignette and a whisper of film grain: the lens the references were shot through. */
 const LensShader = {
   uniforms: { tDiffuse: { value: null }, time: { value: 0 }, grain: { value: 0.035 } },
   vertexShader: /* glsl */ `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
@@ -133,7 +159,7 @@ const LensShader = {
       vec4 c = texture2D(tDiffuse, vUv);
       // contrast about mid grey (the input is linear, before tone mapping) and a warm sunlit cast
       float l = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722));
-      c.rgb *= pow(max(l, 1e-4) / 0.18, 0.14) * vec3(1.05, 1.0, 0.93);
+      c.rgb *= pow(max(l, 1e-4) / 0.18, 0.28) * vec3(1.03, 1.0, 0.97); // the references' crisp contrast; slightly warm white balance
       vec2 d = vUv - 0.5;
       c.rgb *= mix(1.0, 0.72, smoothstep(0.45, 0.9, length(d * vec2(1.25, 1.0))));
       c.rgb += (h(vUv * 911.0 + fract(time)) - 0.5) * grain;
@@ -154,7 +180,7 @@ export function createPost(renderer: THREE.WebGLRenderer, scene: THREE.Scene, ca
     composer.addPass(gtao)
   }
   // a high threshold: the bright hall and screens stay crisp, only the sun and strips glow
-  composer.addPass(new UnrealBloomPass(new THREE.Vector2(w, h), 0.5, 0.5, 0.92))
+  composer.addPass(new UnrealBloomPass(new THREE.Vector2(w, h), 0.5, 0.5, 1.25))
   for (const o of overlays) composer.addPass(o)
   const lens = new ShaderPass(LensShader)
   composer.addPass(lens)

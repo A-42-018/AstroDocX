@@ -58,17 +58,20 @@ const surfaceFrag = /* glsl */ `
       dayC = pow(mix(mix(sea, ground, land), vec3(0.9), ice), vec3(2.2)); // authored in sRGB
       nightC = land * step(0.66, fbm(vObj * 40.0)) * vec3(1.0, 0.72, 0.4) * 0.7;
     }
-    // vivid, like the references: a little more saturation and a deeper blue in the oceans
+    // like the references: deep saturated blue oceans, land a muted green-brown rather than lime
     float dl = dot(dayC, vec3(0.2126, 0.7152, 0.0722));
-    dayC = max(mix(vec3(dl), dayC, 1.15), 0.0) * vec3(0.92, 1.0, 1.12);
+    float ocean = smoothstep(0.0, 0.04, dayC.b - max(dayC.r, dayC.g));
+    dayC = mix(mix(vec3(dl), dayC, 0.7) * vec3(1.06, 0.97, 0.86), max(mix(vec3(dl), dayC, 1.35), 0.0) * vec3(0.8, 1.0, 1.25), ocean);
+    // fine detail the 4K map lacks up close (EVA is a few km up): breaks the blur into texture
+    dayC *= 0.82 + 0.36 * fbm(vObj * 1400.0);
     vec3 c = dayC * (0.03 + 1.3 * max(l, 0.0)) * lit + nightC * (1.0 - lit) * 0.9;
     vec3 v = normalize(cameraPosition - vW);
     // a little sun glint on the oceans
     c += pow(max(dot(reflect(-sun, normalize(vN)), v), 0.0), 40.0) * 0.25 * lit;
     // aerial haze: thicker the more edge-on the ground is seen, so the land fades into a blue-white limb
     float graze = 1.0 - max(dot(v, normalize(vN)), 0.0);
-    vec3 haze = vec3(0.35, 0.58, 1.0) * (0.08 + 0.9 * max(l, 0.0));
-    c = mix(c, haze, clamp(0.02 + 0.75 * pow(graze, 10.0), 0.0, 0.75));
+    vec3 haze = vec3(0.32, 0.56, 1.0) * (0.06 + 0.85 * max(l, 0.0));
+    c = mix(c, haze, clamp(0.01 + 0.7 * pow(graze, 12.0), 0.0, 0.7));
     gl_FragColor = vec4(c, 1.0);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
@@ -80,9 +83,11 @@ const cloudFrag = /* glsl */ `
   ${NOISE}
   void main() {
     float a = maps > 0.5 ? texture2D(clouds, vUv).r : smoothstep(0.6, 0.85, fbm(vObj * 5.0 + vec3(time * 0.01, 0.0, 0.0)));
+    // crisp, bright cloud tops with broken edges, not a soft grey veil
+    a = smoothstep(0.28, 0.7, a * (0.75 + 0.5 * fbm(vObj * 900.0)));
     float l = dot(normalize(vN), sun);
     float face = abs(dot(normalize(cameraPosition - vW), normalize(vN))); // seen edge-on, cloud layers stack up: thin them there
-    gl_FragColor = vec4(vec3(0.92) * (0.04 + max(l, 0.0)), a * smoothstep(-0.2, 0.15, l) * (0.35 + 0.55 * smoothstep(0.0, 0.35, face)));
+    gl_FragColor = vec4(vec3(1.0) * (0.05 + 1.15 * max(l, 0.0)), a * smoothstep(-0.2, 0.15, l) * (0.45 + 0.5 * smoothstep(0.0, 0.35, face)));
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }

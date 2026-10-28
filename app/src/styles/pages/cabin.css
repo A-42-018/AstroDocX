@@ -43,7 +43,8 @@
 /* helmet visor: scene.ts fades it out as the tour leaves the first stop */
 .cabin-visor { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
 /* a light edge falloff and four corner brackets, like a helmet-cam frame: the cabin stays in full view */
-.visor-shade { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 85% at 50% 50%, transparent 62%, rgba(0, 6, 12, .28) 86%, rgba(0, 3, 8, .5) 100%); }
+/* the helmet's round visor: a dark rim closing in at the corners and edges, as in the helmet reference */
+.visor-shade { position: absolute; inset: 0; background: radial-gradient(ellipse 58% 78% at 50% 50%, transparent 78%, rgba(4, 8, 12, .55) 90%, rgba(2, 4, 6, .92) 100%); }
 .visor-rim {
   --c: rgba(54, 226, 245, .5); --l: 34px;
   position: absolute; inset: 10vh 12vw;

@@ -46,9 +46,9 @@ export function createEva(scene: THREE.Scene, loader: GLTFLoader, models: string
   // sunlight on the station and the spacewalker, from the upper left; narrow spots aimed and ranged so none reach the hall
   const issKey = new THREE.SpotLight('#fff0d8', 7, 140, 0.4, 0.5, 0)
   issKey.position.copy(ISS_AT).add(new THREE.Vector3(-30, 35, 45)); issKey.target.position.copy(ISS_AT)
-  const suitKey = new THREE.SpotLight('#ffe8c8', 6, 10, 0.5, 0.6, 1)
+  const suitKey = new THREE.SpotLight('#ffffff', 7, 10, 0.5, 0.6, 1)
   suitKey.position.copy(suit).add(new THREE.Vector3(-2.5, 3, 3.5)); suitKey.target.position.copy(suit)
-  const suitRim = new THREE.SpotLight('#ffc98a', 10, 9, 0.5, 0.6, 1) // the sun behind, edging the suit
+  const suitRim = new THREE.SpotLight('#fff1dc', 10, 9, 0.5, 0.6, 1) // the sun behind, edging the suit
   suitRim.position.copy(suit).add(new THREE.Vector3(-1.5, 1.5, -4.5)); suitRim.target.position.copy(suit)
   for (const l of [issKey, suitKey, suitRim]) group.add(l, l.target)
 
@@ -63,7 +63,7 @@ export function createEva(scene: THREE.Scene, loader: GLTFLoader, models: string
       iss.traverse((o) => {
         const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined
         if (!m?.isMeshStandardMaterial) return
-        m.envMapIntensity = 0.8; m.fog = false // out in space: the hall's haze does not reach it
+        m.envMapIntensity = 0.25; m.fog = false // out in space: the hall's haze does not reach it
         m.metalness = 0.35; m.roughness = 0.42 // bare metal and blankets that catch the sun
         // the model's solar arrays are brown; real ones read deep blue with a gold sheen
         const c = meanColor(m.map)
