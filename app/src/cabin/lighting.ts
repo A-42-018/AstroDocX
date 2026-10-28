@@ -235,7 +235,12 @@ const LensShader = {
 
 /** Render, ambient occlusion (not on low), bloom, `overlays` (the lens flare), lens, output. */
 export function createPost(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera, w: number, h: number, quality: Quality, overlays: RenderPass[] = []) {
-  const composer = new EffectComposer(renderer)
+  // The composer draws into its own targets, so the renderer's antialias does nothing here: without samples of its
+  // own the grating and the ceiling ribs crawl as the camera drifts (low draws without antialiasing, as before)
+  const pr = renderer.getPixelRatio()
+  const target = new THREE.WebGLRenderTarget(w * pr, h * pr, { type: THREE.HalfFloatType, samples: quality === 'low' ? 0 : 4 })
+  const composer = new EffectComposer(renderer, target)
+  composer.setSize(w, h) // a given target leaves the composer at its pixel size; the passes want CSS pixels and the ratio
   composer.addPass(new RenderPass(scene, camera))
   let gtao: GTAOPass | null = null
   if (quality !== 'low') {
