@@ -67,7 +67,7 @@
 
 /* phones: smaller caption, HUD corners closer in, stop labels hidden */
 @media (max-width: 767px) {
-  .cabin-caption { left: var(--sp-3); bottom: var(--sp-6); width: calc(100% - 64px); padding: var(--sp-3) var(--sp-4); }
+  .cabin-caption { left: var(--sp-3); bottom: 64px; width: calc(100% - 64px); padding: var(--sp-3) var(--sp-4); } /* clear of the three-line credits */
   .cabin-caption h1 { font-size: 17px; }
   .cabin-caption p { font-size: 12.5px; }
   .cabin-stops { right: 12px; gap: 12px; }
@@ -75,6 +75,6 @@
   .cabin-card { right: var(--sp-3); left: var(--sp-3); width: auto; bottom: auto; top: 64px; }
   .vhud { font-size: 10px; } .vhud b { font-size: 11px; }
   .vhud.tl, .vhud.bl { left: 9vw; } .vhud.tr, .vhud.br { right: 9vw; }
-  .cabin-credits { left: var(--sp-3); right: auto; font-size: 10px; }
+  .cabin-credits { left: var(--sp-3); right: var(--sp-3); font-size: 10px; line-height: 1.35; }
 }
 @media (prefers-reduced-motion: reduce) { .prompt span { animation: none; } }

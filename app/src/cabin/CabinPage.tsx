@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useReducedMotion } from '../live/usePaused'
 import type { CabinData } from './data'
 import { statusColor, statusLabel } from './panels'
+import { evaCrewId } from './eva'
 import { createCabin, STOP_COUNT, type CabinScene } from './scene'
 import { useCabinData } from './useCabinData'
 
@@ -11,6 +12,7 @@ import { useCabinData } from './useCabinData'
 function stops(d: CabinData | null) {
   const name = (id?: string) => d?.crew.find((c) => c.id === id)?.name ?? 'the crew member'
   const focus = name(d?.focusId), n = d?.crew.length ?? 6
+  const out = d ? evaCrewId(d) : null
   return [
     { title: 'Helmet view', text: `You are in the ${name(d?.selfId)}'s helmet at the back of the module. The visor HUD is wired to AstroDocX: your heart rate and the crew link. Scroll to float forward.` },
     { title: 'Crew overview', text: `${n} astronauts at work in microgravity. Every floating tag is live: name, heart rate and status from the same engine as the console.` },
@@ -20,7 +22,8 @@ function stops(d: CabinData | null) {
     { title: 'Explainable Alerts', text: 'Each alert says WHY in the engine’s own words and the NEXT step from its action card. No black-box warnings.' },
     { title: 'Trends', text: `30 days of the ${focus}'s heart rate against their personal baseline band and the crew median.` },
     { title: 'Forward window', text: 'Earth below, through the forward window: the view the crew works under every day.' },
-    { title: 'Look back', text: 'The whole module from the window: the crew, four health panels, one system. Press Esc or “Console” to return.' },
+    { title: 'Look back', text: 'The whole module from the window: the crew, four health panels, one system.' },
+    { title: 'Outside', text: `${out ? `The ${name(out)} on EVA beside the station, tethered to the ship. AstroDocX tracks every heartbeat out here too.` : 'The station beyond the window, Earth below.'} Press Esc or “Console” to return.` },
   ]
 }
 
@@ -127,7 +130,7 @@ export default function CabinPage() {
       )}
 
       <footer className="cabin-credits">
-        Module: “<a href="https://sketchfab.com/3d-models/space-ship-interior-08f117102f2f4e48ab583b7ae22db1c1" target="_blank" rel="noopener noreferrer">Space Ship Interior</a>” by Ryley Burnett, CC BY 4.0 · Astronaut: NASA 3D Resources
+        Module: “<a href="https://sketchfab.com/3d-models/space-ship-interior-08f117102f2f4e48ab583b7ae22db1c1" target="_blank" rel="noopener noreferrer">Space Ship Interior</a>” by Ryley Burnett · Astronaut: “<a href="https://sketchfab.com/3d-models/e2c4b146e58141e4b87917456a9970b1" target="_blank" rel="noopener noreferrer">Animated Floating Astronaut</a>” by LasquetiSpice · Station: “<a href="https://sketchfab.com/3d-models/813f5b296e584c26bf386ca39de6c3d4" target="_blank" rel="noopener noreferrer">ISS</a>” by uperesito · all CC BY 4.0 · Surfaces: <a href="https://ambientcg.com" target="_blank" rel="noopener noreferrer">ambientCG</a>, CC0
       </footer>
 
       {state !== 'ready' && (

@@ -2,22 +2,21 @@ import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
-import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
-import { clone as skeletonClone } from 'three/examples/jsm/utils/SkeletonUtils.js'
 import type { CabinCrew, CabinData } from './data'
-import { C, SH, SW, TAG_H, TAG_W, drawAlerts, drawLiveVitals, drawStatusBoard, drawTag, drawTrends } from './panels'
+import { createCrew } from './crew'
+import { createSpace } from './earth'
+import { createEva, EVA, EVA_VIEW, evaCrewId } from './eva'
+import { buildHall } from './hall'
+import { addLights, createPost, createSunBeam, pickQuality } from './lighting'
+import { C, SH, SW, drawAlerts, drawLiveVitals, drawStatusBoard, drawTrends } from './panels'
 
 /*
- * The 3D cabin: "Space Ship Interior" by Ryley Burnett (CC BY 4.0) with a mirrored twin, scaled to a
- * 15.5 x 31 m hall (walls at x = +-7.8, floor y = -2.5, door at z = +15.4, Earth window at z = -15.4).
- * Four floating panels show the console's data, the crew float beside them, and a scroll-driven
- * camera tours nine stops from a helmet view at the door to a look back from the window.
+ * The 3D cabin: the hall (hall.ts, lighting.ts), four floating panels with the console's data, the crew
+ * floating beside them (crew.ts), and a scroll-driven camera touring nine stops from a helmet view at the
+ * door, past a look back from the window, out to a crew member on EVA beside the station (eva.ts).
  */
 
-export const STOP_COUNT = 9
+export const STOP_COUNT = 10
 export interface CabinOptions {
   reducedMotion: boolean
   /** Fades and scales with the helmet stop (0 = fully in the helmet). */
@@ -32,8 +31,7 @@ export interface CabinScene {
   dispose: () => void
 }
 
-const MODELS = `${import.meta.env.BASE_URL}models/`
-const HALF = 7.76, LEN = 15.4, TOP = 3.9, FLOOR = -2.5
+const MODELS = `${import.meta.env.BASE_URL}models/`, TEXTURES = `${import.meta.env.BASE_URL}textures/`
 type V3 = [number, number, number]
 
 /** The panels, left (-1) and right (+1) of the hall, in tour order: Status Board, Live Vitals, Alerts, Trends. */
@@ -45,104 +43,34 @@ const PANELS: { at: V3; side: -1 | 1; draw: (g: CanvasRenderingContext2D, d: Cab
 ]
 const PW = 3.2, PH = 1.875
 
-function mulberry(a: number) {
-  return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296 }
-}
-
-/** Earth from low orbit for the forward window: horizon arc, soft land, cloud streaks, a hazy limb and night to one side. */
-function earthTexture() {
-  const W = 2048, H = 1146, c = document.createElement('canvas'); c.width = W; c.height = H
-  const g = c.getContext('2d')!, r = mulberry(11)
-  g.fillStyle = '#000207'; g.fillRect(0, 0, W, H)
-  for (let i = 0; i < 700; i++) { g.fillStyle = `rgba(255,255,255,${0.25 + r() * 0.75})`; const s = r() < 0.92 ? 1.2 : 2.4; g.fillRect(r() * W, r() * H * 0.42, s, s) }
-  const cx = W * 0.5, cy = H * 2.12, R = H * 1.72
-  const halo = g.createRadialGradient(cx, cy, R * 0.98, cx, cy, R * 1.07)
-  halo.addColorStop(0, 'rgba(120,200,255,0.95)'); halo.addColorStop(0.4, 'rgba(60,140,255,0.35)'); halo.addColorStop(1, 'rgba(40,100,255,0)')
-  g.fillStyle = halo; g.beginPath(); g.arc(cx, cy, R * 1.07, 0, 7); g.fill()
-  const sea = g.createRadialGradient(cx - R * 0.2, cy - R * 0.9, R * 0.05, cx, cy, R)
-  sea.addColorStop(0, '#3b86d0'); sea.addColorStop(0.55, '#174a8c'); sea.addColorStop(1, '#0b2a55')
-  g.fillStyle = sea; g.beginPath(); g.arc(cx, cy, R, 0, 7); g.fill()
-  g.save(); g.beginPath(); g.arc(cx, cy, R, 0, 7); g.clip()
-  g.filter = 'blur(18px)'
-  for (let i = 0; i < 9; i++) { g.fillStyle = `rgba(${58 + r() * 30},${84 + r() * 30},${52 + r() * 20},0.55)`; g.beginPath(); g.ellipse(r() * W, H * 0.5 + r() * H * 0.5, 120 + r() * 260, 30 + r() * 60, (r() - 0.5) * 0.4, 0, 7); g.fill() }
-  g.filter = 'blur(4px)'
-  for (let i = 0; i < 420; i++) {
-    const y = H * 0.4 + Math.pow(r(), 0.7) * H * 0.6, k = (y - H * 0.4) / (H * 0.6)
-    g.fillStyle = `rgba(255,255,255,${0.12 + r() * 0.35})`
-    g.beginPath(); g.ellipse(r() * W, y, 14 + r() * 90 * (0.4 + k), 2 + r() * 10 * (0.3 + k), (r() - 0.5) * 0.25, 0, 7); g.fill()
-  }
-  g.filter = 'none'
-  const limb = g.createLinearGradient(0, H * 0.4, 0, H * 0.62)
-  limb.addColorStop(0, 'rgba(150,210,255,0.55)'); limb.addColorStop(1, 'rgba(150,210,255,0)')
-  g.fillStyle = limb; g.fillRect(0, H * 0.38, W, H * 0.3)
-  const night = g.createLinearGradient(0, 0, W, 0)
-  night.addColorStop(0, 'rgba(0,4,16,0)'); night.addColorStop(0.75, 'rgba(0,4,16,0)'); night.addColorStop(1, 'rgba(0,4,16,0.75)')
-  g.fillStyle = night; g.fillRect(0, 0, W, H)
-  g.restore()
-  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace
-  return tex
-}
-
 /** Throws when WebGL is unavailable; the page shows its fallback then. */
 export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): CabinScene {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
+  const quality = pickQuality()
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: quality !== 'low', powerPreference: 'high-performance' })
   const size = () => [canvas.clientWidth || innerWidth, canvas.clientHeight || innerHeight] as const
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
+  renderer.setPixelRatio(Math.min(devicePixelRatio, quality === 'high' ? 2 : 1.5))
   renderer.setSize(...size(), false)
   renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.toneMappingExposure = 0.85
+  renderer.toneMappingExposure = 0.9
+  renderer.shadowMap.enabled = quality !== 'low'
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap
+  renderer.shadowMap.autoUpdate = false // the hall is static and the crew drift slowly: refreshed every few frames in the loop
   const scene = new THREE.Scene()
   scene.background = new THREE.Color('#05080d')
   scene.fog = new THREE.Fog('#05080d', 35, 110)
   const pmrem = new THREE.PMREMGenerator(renderer)
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture // soft reflections for the untextured metal
-  const camera = new THREE.PerspectiveCamera(58, size()[0] / size()[1], 0.05, 140)
-  const composer = new EffectComposer(renderer)
-  composer.addPass(new RenderPass(scene, camera))
-  composer.addPass(new UnrealBloomPass(new THREE.Vector2(...size()), 0.45, 0.45, 0.9))
-  composer.addPass(new OutputPass())
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture // soft reflections for the metal
+  scene.environmentIntensity = 0.6
+  const camera = new THREE.PerspectiveCamera(58, size()[0] / size()[1], 0.08, 2000) // far enough for Earth and the stars
+  const post = createPost(renderer, scene, camera, ...size(), quality)
+  const { composer } = post
 
-  /* ---------- lighting ---------- */
-  scene.add(new THREE.HemisphereLight('#c4dcf5', '#1a2230', 0.38))
-  for (const p of [[0, 5, 1], [0, 5, 8], [0, 5, 15], [-4, 4, 10], [4, 4, 10], [-4, 4, 3], [4, 4, 3]] as V3[]) {
-    const l = new THREE.PointLight('#d6ecff', 8.8, 16, 1.5); l.position.set(...p); scene.add(l)
-  }
-  const alarm = new THREE.PointLight(C.watch, 0, 5, 1.6)
-  scene.add(alarm)
-
-  /* ---------- the hall ---------- */
+  /* ---------- lighting and the hall ---------- */
+  const { alarm } = addLights(scene, quality)
+  const space = createSpace(scene, TEXTURES)
+  const beam = createSunBeam(scene, quality)
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder)
-  const h = TOP - FLOOR
-  const hull = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2 + 6, h + 4, LEN * 2 + 3), new THREE.MeshStandardMaterial({ color: '#141b22', metalness: 0.3, roughness: 0.8, side: THREE.BackSide }))
-  hull.position.set(0, FLOOR + h / 2, 0); scene.add(hull) // fills the ceiling seam and anything seen through the wall openings
-  const seam = new THREE.Mesh(new THREE.PlaneGeometry(6, LEN * 2), new THREE.MeshStandardMaterial({ color: '#59636e', metalness: 0.4, roughness: 0.6 }))
-  seam.rotation.x = Math.PI / 2; seam.position.set(0, TOP - 0.02, 0); scene.add(seam)
-  const capMat = new THREE.MeshStandardMaterial({ color: '#3a4550', metalness: 0.6, roughness: 0.5 })
-  const glowMat = new THREE.MeshStandardMaterial({ color: '#0b1218', emissive: C.cy, emissiveIntensity: 1.2 })
-  const fwd = new THREE.Group(); fwd.position.z = -LEN; scene.add(fwd)
-  for (const [w, x, y, hh] of [[HALF * 2, 0, TOP - 0.9, 1.8], [HALF * 2, 0, FLOOR + 0.6, 1.2], [2.2, -HALF + 1.1, 0.5, h], [2.2, HALF - 1.1, 0.5, h]]) {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, hh, 0.3), capMat); m.position.set(x, y, 0); fwd.add(m)
-  }
-  const win = new THREE.Mesh(new THREE.PlaneGeometry(HALF * 2 - 4.4, h - 3), new THREE.MeshBasicMaterial({ map: earthTexture(), toneMapped: false, fog: false }))
-  win.position.set(0, FLOOR + 1.2 + (h - 3) / 2, -0.4); fwd.add(win)
-  for (const y of [FLOOR + 1.2, TOP - 1.8]) { const f = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2 - 4.4, 0.06, 0.05), glowMat); f.position.set(0, y, 0.17); fwd.add(f) }
-  const aft = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2, h, 0.3), capMat); aft.position.set(0, FLOOR + h / 2, LEN); scene.add(aft)
-  const door = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.2, 0.05), glowMat); door.position.set(0, -0.9, LEN - 0.17); scene.add(door)
-  const strip = new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: C.cy, emissiveIntensity: 1.8 })
-  for (const [x, y] of [[-5.6, FLOOR + 0.08], [5.6, FLOOR + 0.08], [-3, TOP - 0.08], [3, TOP - 0.08]]) {
-    const b = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.04, LEN * 2 - 1), strip); b.position.set(x, y, 0); scene.add(b)
-  }
-  const hallLoaded = loader.loadAsync(`${MODELS}corridor.glb`).then((gltf) => {
-    const metal = new THREE.MeshStandardMaterial({ color: '#8f9ba8', metalness: 0.5, roughness: 0.48, envMapIntensity: 0.3 })
-    gltf.scene.traverse((o) => { if ((o as THREE.Mesh).isMesh) (o as THREE.Mesh).material = metal })
-    // The model is one wall with floor and ceiling, open in front: a mirrored twin closes the hall.
-    const pivot = new THREE.Group()
-    const wall = gltf.scene; wall.position.set(-6.74, 0, -12.16)
-    const twin = wall.clone(); twin.rotation.y = Math.PI; twin.position.set(6.74, 0, 12.16)
-    pivot.add(wall, twin)
-    pivot.rotation.y = Math.PI / 2; pivot.scale.setScalar(0.35); pivot.position.y = -2.325
-    scene.add(pivot)
-  }).catch((err) => console.warn('cabin: corridor.glb failed', err))
+  const hallLoaded = buildHall(scene, loader, MODELS, TEXTURES)
 
   /* ---------- panels ---------- */
   let data: CabinData | null = null
@@ -153,6 +81,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     const back = new THREE.Mesh(new THREE.BoxGeometry(PW + 0.12, PH + 0.12, 0.05), new THREE.MeshStandardMaterial({ color: '#0b1218', roughness: 0.5, metalness: 0.4, emissive: C.cy, emissiveIntensity: 0.08 }))
     const face = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }))
     face.position.z = 0.03; face.userData.panel = i
+    back.castShadow = true
     g.add(back, face); g.position.set(...p.at); g.rotation.y = -p.side * (Math.PI / 2 - 0.3) // turned a little toward the door
     scene.add(g)
     const normal = new THREE.Vector3(0, 0, 1).applyEuler(g.rotation)
@@ -176,45 +105,24 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     { pos: [-1.6, 1.2, 4], rot: [0.4, 0.3, 0.6] },
     { pos: [1.8, 1.4, -4], rot: [-0.3, -0.5, -0.5] },
   ]
-  interface Astro { holder: THREE.Group; base: THREE.Vector3; rot: THREE.Euler; ctx: CanvasRenderingContext2D | null; tagTex: THREE.CanvasTexture; tag: THREE.Sprite; ring: THREE.Mesh }
-  const astros = new Map<string, Astro>()
-  let template: THREE.Object3D | null = null
-  const crewLoaded = loader.loadAsync(`${MODELS}astronaut.glb`).then((gltf) => {
-    const root = gltf.scene, box = new THREE.Box3().setFromObject(root)
-    const s = 1.72 / Math.max(...box.getSize(new THREE.Vector3()).toArray())
-    root.position.sub(box.getCenter(new THREE.Vector3()))
-    template = new THREE.Group().add(root); template.scale.setScalar(s)
-  }).catch((err) => console.warn('cabin: astronaut.glb failed', err))
-
-  function astroFor(id: string): Astro | null {
-    const have = astros.get(id)
-    if (have || !template) return have ?? null
-    const holder = new THREE.Group(); holder.add(skeletonClone(template))
-    holder.traverse((o) => { o.userData.crew = id })
-    scene.add(holder)
-    const c = document.createElement('canvas'); c.width = TAG_W; c.height = TAG_H
-    const tagTex = new THREE.CanvasTexture(c); tagTex.colorSpace = THREE.SRGBColorSpace
-    const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: tagTex, depthTest: false, transparent: true, toneMapped: false }))
-    tag.scale.set(1.25, 0.37, 1); tag.renderOrder = 10; scene.add(tag)
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.012, 8, 64), new THREE.MeshBasicMaterial({ color: C.watch, toneMapped: false, transparent: true }))
-    ring.rotation.x = Math.PI / 2; scene.add(ring)
-    const a: Astro = { holder, base: new THREE.Vector3(), rot: new THREE.Euler(), ctx: c.getContext('2d'), tagTex, tag, ring }
-    astros.set(id, a)
-    return a
-  }
+  const crew = createCrew(scene, loader, MODELS)
+  const eva = createEva(scene, loader, MODELS)
   let placedKey = ''
   function place() {
-    if (!data || !template) return
-    const key = `${data.focusId}|${data.crew.map((c) => c.id).join(',')}`
-    if (key === placedKey) return
+    if (!data) return
+    const out = evaCrewId(data)
+    const order = [data.focusId, ...data.crew.map((c) => c.id).filter((id) => id !== data!.focusId && id !== out)]
+    const key = `${data.focusId}|${out}|${data.crew.map((c) => c.id).join(',')}`
+    if (key === placedKey || !crew.get(order[0])) return // not loaded yet
     placedKey = key
-    const order = [data.focusId, ...data.crew.map((c) => c.id).filter((id) => id !== data!.focusId)]
     order.forEach((id, i) => {
-      const a = astroFor(id), slot = SLOTS[i % SLOTS.length]
+      const a = crew.get(id), slot = SLOTS[i % SLOTS.length]
       if (!a) return
       a.base.set(...slot.pos); a.rot.set(...slot.rot)
     })
-    for (const [id, a] of astros) if (!order.includes(id)) { a.holder.visible = false; a.tag.visible = false; a.ring.visible = false }
+    const spacewalker = out ? crew.get(out) : null
+    if (spacewalker) { spacewalker.base.set(...EVA.pos); spacewalker.rot.set(...EVA.rot) }
+    crew.hideOthers(out ? [...order, out] : order)
     buildPath()
   }
 
@@ -231,6 +139,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
       facing(0), facing(1), close, facing(2), facing(3),
       { pos: v([0, 0.4, -5.5]), look: v([0, 0.3, -16]) },
       { pos: v([0, 2.0, -13.6]), look: v([0, -0.8, 10]) },
+      { pos: EVA_VIEW.pos.clone(), look: EVA_VIEW.look.clone() },
     ]
     posCurve = new THREE.CatmullRomCurve3(stops.map((s) => s.pos), false, 'centripetal')
     lookCurve = new THREE.CatmullRomCurve3(stops.map((s) => s.look), false, 'centripetal')
@@ -265,11 +174,11 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const pick = (e: PointerEvent) => {
     const r = canvas.getBoundingClientRect()
     ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera)
-    const hit = ray.intersectObjects([...panels.map((x) => x.face), ...[...astros.values()].map((a) => a.holder)], true)[0]
+    const hit = ray.intersectObjects([...panels.map((x) => x.face), ...crew.holders()], true)[0]
     if (!hit) return
     const panel = hit.object.userData.panel as number | undefined
     if (panel !== undefined) { goTo([2, 3, 5, 6][panel]); return }
-    const id = hit.object.userData.crew as string | undefined, a = id ? astros.get(id) : undefined
+    const id = hit.object.userData.crew as string | undefined, a = id ? crew.find(id) : undefined
     if (!id || !a) return
     const toCam = camera.position.clone().sub(a.base).setY(0).normalize()
     focus = { pos: a.base.clone().addScaledVector(toCam, 2.6).add(new THREE.Vector3(0, 0.35, 0)), look: a.base.clone() }
@@ -299,7 +208,9 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   /* ---------- loop ---------- */
   const clock = new THREE.Clock()
   const up = new THREE.Vector3(0, 1, 0)
-  let raf = 0, lastDraw = 0, disposed = false
+  let raf = 0, lastDraw = 0, disposed = false, ready = false, downgraded = false
+  const slow = { n: 0, sum: 0 }
+  let frameNo = 0
   const frame = () => {
     raf = requestAnimationFrame(frame)
     const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime, still = reduced ? 0 : 1
@@ -317,36 +228,25 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     const stop = Math.round(p)
     if (stop !== shown) { shown = stop; opts.onStop(stop) }
 
-    const crew = new Map<string, CabinCrew>((data?.crew ?? []).map((c) => [c.id, c]))
-    let i = 0
-    alarm.intensity = 0
-    for (const [id, a] of astros) {
-      const m = crew.get(id)
-      if (!m) continue
-      a.holder.position.set(a.base.x + Math.sin(t * 0.37 + i) * 0.03 * still, a.base.y + Math.sin(t * 0.55 + i * 2) * 0.06 * still, a.base.z)
-      a.holder.rotation.set(a.rot.x + Math.sin(t * 0.3 + i) * 0.05 * still, a.rot.y + Math.sin(t * 0.21 + i) * 0.08 * still, a.rot.z + Math.sin(t * 0.27 + i) * 0.05 * still)
-      a.tag.position.copy(a.holder.position).add(new THREE.Vector3(0, 1.25, 0))
-      ;(a.tag.material as THREE.SpriteMaterial).opacity = THREE.MathUtils.clamp((camera.position.distanceTo(a.tag.position) - 3.0) / 1.0, 0, 1)
-      const off = m.status !== 'nominal'
-      a.ring.visible = off
-      if (off) {
-        const pulse = 0.5 + 0.5 * Math.sin(t * 3 * still + (reduced ? Math.PI / 2 : 0))
-        const ring = a.ring.material as THREE.MeshBasicMaterial
-        ring.color.set(m.status === 'act' ? C.act : C.watch); ring.opacity = 0.35 + pulse * 0.6
-        a.ring.position.copy(a.holder.position); a.ring.scale.setScalar(1 + pulse * 0.08)
-        if (id === data?.focusId) { alarm.color.set(ring.color); alarm.position.copy(a.holder.position).add(new THREE.Vector3(0, 0.6, 0.8)); alarm.intensity = 0.8 + pulse * 2.2 }
-      }
-      i++
-    }
+    const live = new Map<string, CabinCrew>((data?.crew ?? []).map((c) => [c.id, c]))
+    crew.animate(live, data?.focusId, t, dt, still, reduced, camera, alarm)
     if (data && t - lastDraw > 0.05) { // panels and tags at about 20 fps
       lastDraw = t
       for (const x of panels) if (x.ctx) { x.draw(x.ctx, data, t); x.tex.needsUpdate = true }
-      for (const [id, a] of astros) { const m = crew.get(id); if (m && a.ctx) { drawTag(a.ctx, m, t); a.tagTex.needsUpdate = true } }
+      crew.drawTags(live, t)
     }
+    if (p > 5) eva.load()
+    space.update(t, still); beam.update(t, still); post.update(t, still); eva.update(still)
+    if (frameNo++ % 6 === 0) renderer.shadowMap.needsUpdate = true
     composer.render(dt)
+    // step down once if the first seconds run slow (frame times are only trusted after the scene is ready)
+    if (ready && !downgraded) {
+      slow.n++; slow.sum += dt
+      if (slow.n === 90) { downgraded = true; if (slow.sum / slow.n > 1 / 40) post.downgrade() }
+    }
   }
   frame()
-  void Promise.all([hallLoaded, crewLoaded]).then(() => { if (!disposed) { place(); opts.onReady() } })
+  void Promise.all([hallLoaded, crew.loaded]).then(() => { if (!disposed) { place(); ready = true; opts.onReady() } })
 
   return {
     update(d) { data = d; place() },

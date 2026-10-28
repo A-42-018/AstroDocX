@@ -11,3 +11,10 @@ landing/app/
 plan.md
 *plan*.md
 docs/design-refs/
+evidence/
+.vercel/
+# Scratch: old exports, release zips, the standalone cabin prototype (ported to app/src/cabin)
+ex/
+proto/
+*.zip
+assets-src/

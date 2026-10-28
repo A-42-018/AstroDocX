@@ -1,0 +1,19 @@
+# CLI deploys upload the working folder; only app/ and landing/ are needed to build.
+.git/
+.claude/
+.netlify/
+**/node_modules/
+app/dist/
+landing/app/
+docs/
+evidence/
+ex/
+proto/
+assets-src/
+.vercel/
+tools/
+*.zip
+plan.md
+*plan*.md
+.env
+.DS_Store

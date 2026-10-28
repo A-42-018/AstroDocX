@@ -78,5 +78,5 @@ it('without WebGL the page says so and offers the way back', () => {
   render(<MemoryRouter initialEntries={['/cabin']}><CabinPage /></MemoryRouter>)
   expect(screen.getByRole('heading', { name: '3D mode needs WebGL' })).toBeTruthy()
   expect(screen.getByRole('button', { name: /Back to the console/ })).toBeTruthy()
-  expect(screen.getByRole('navigation', { name: 'Tour stops' }).querySelectorAll('button')).toHaveLength(9)
+  expect(screen.getByRole('navigation', { name: 'Tour stops' }).querySelectorAll('button')).toHaveLength(10)
 })
