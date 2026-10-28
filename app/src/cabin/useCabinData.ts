@@ -2,8 +2,9 @@ import { liveQuery } from 'dexie'
 import { useEffect, useMemo, useState } from 'react'
 import { DEFAULT_TARGETS, hashSeed, liveValues, stillValues, watchTargets, type LiveTargets } from '../live/telemetry'
 import { useHidden, useReducedMotion } from '../live/usePaused'
+import { loadSnapshot } from '../board/snapshot'
 import { useShellContext } from '../shell/useShellData'
-import { loadCabinAlerts, loadCabinTrend, pickFocus, type CabinAlert, type CabinData, type CabinTrend } from './data'
+import { loadCabinAlerts, loadCabinTrend, pickFocus, type CabinAlert, type CabinData, type CabinHazard, type CabinTrend } from './data'
 
 /**
  * Everything the cabin shows, for the whole crew at once: the shell's statuses, live signals that follow
@@ -17,6 +18,7 @@ export function useCabinData(): CabinData | null {
   const [targets, setTargets] = useState<Record<string, LiveTargets>>({})
   const [alerts, setAlerts] = useState<CabinAlert[]>([])
   const [trend, setTrend] = useState<CabinTrend | null>(null)
+  const [hazards, setHazards] = useState<CabinHazard[]>([])
   const [tick, setTick] = useState(0)
 
   const crew = shell?.crew
@@ -43,6 +45,17 @@ export function useCabinData(): CabinData | null {
     return () => sub.unsubscribe()
   }, [focusId, now])
 
+  // the helmet wearer's five hazard modules, for the visor HUD
+  const selfId = shell?.crewId
+  useEffect(() => {
+    if (!selfId) return
+    const sub = liveQuery(() => loadSnapshot(selfId)).subscribe({
+      next: (s) => setHazards(s?.tiles.map((t) => ({ id: t.hazard, name: t.name, status: t.status, score: t.score })) ?? []),
+      error: () => setHazards([]),
+    })
+    return () => sub.unsubscribe()
+  }, [selfId])
+
   const paused = reduced || hidden
   useEffect(() => {
     if (paused) return
@@ -56,14 +69,17 @@ export function useCabinData(): CabinData | null {
     return {
       crew: crew.map((c) => {
         const tg = targets[c.id] ?? DEFAULT_TARGETS
-        return { id: c.id, name: c.name, role: c.role, status: c.status, alerts: c.alerts, live: reduced ? stillValues(tg) : liveValues(tg, t, hashSeed(c.id)) }
+        return { id: c.id, name: c.name, role: c.role, status: c.status, alerts: c.alerts, readiness: c.readiness, live: reduced ? stillValues(tg) : liveValues(tg, t, hashSeed(c.id)) }
       }),
       focusId,
       selfId: shell.crewId,
       alerts,
       trend,
+      hazards,
+      now: shell.now,
+      link: { pending: shell.pendingSync, sinceSyncH: shell.sinceSyncH },
     }
     // `tick` re-evaluates the wobble once a second.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shell, crew, focusId, targets, alerts, trend, reduced, tick])
+  }, [shell, crew, focusId, targets, alerts, trend, hazards, reduced, tick])
 }

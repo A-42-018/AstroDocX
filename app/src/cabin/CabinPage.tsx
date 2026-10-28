@@ -7,6 +7,7 @@ import { statusColor, statusLabel } from './panels'
 import { evaCrewId } from './eva'
 import { createCabin, STOP_COUNT, type CabinScene } from './scene'
 import { useCabinData } from './useCabinData'
+import { VisorHud } from './VisorHud'
 
 /** Caption for each tour stop, in scene order; names come from the live data. */
 function stops(d: CabinData | null) {
@@ -14,7 +15,7 @@ function stops(d: CabinData | null) {
   const focus = name(d?.focusId), n = d?.crew.length ?? 6
   const out = d ? evaCrewId(d) : null
   return [
-    { title: 'Helmet view', text: `You are in the ${name(d?.selfId)}'s helmet at the back of the module. The visor HUD is wired to AstroDocX: your heart rate and the crew link. Scroll to float forward.` },
+    { title: 'Helmet view', text: `You are in the ${name(d?.selfId)}'s helmet at the back of the module. The visor HUD is wired to AstroDocX: your readiness, live vitals, the five hazard modules, the crew and the ground link. Scroll to float forward.` },
     { title: 'Crew overview', text: `${n} astronauts at work in microgravity. Every floating tag is live: name, heart rate and status from the same engine as the console.` },
     { title: 'Crew Status Board', text: `The real console on the wall, live: the ${name(d?.selfId)}'s Status Board with readiness, the body twin, vitals and the five hazard modules.` },
     { title: 'Live Vitals', text: `The console's live vitals for the ${focus}: ECG, SpO₂ and breathing, with their Next Action. This screen follows whoever needs attention most.` },
@@ -77,8 +78,6 @@ export default function CabinPage() {
   })
 
   const caps = stops(data)
-  const self = data?.crew.find((c) => c.id === data.selfId)
-  const off = data?.crew.filter((c) => c.status !== 'nominal').length ?? 0
   const who = picked ? data?.crew.find((c) => c.id === picked) : undefined
 
   return (
@@ -86,13 +85,7 @@ export default function CabinPage() {
       <canvas ref={canvas} className="cabin-gl" role="img" aria-label="3D crew module. Scroll, use the arrow keys or the stop list to move through the tour." />
 
       <div ref={visor} className="cabin-visor" aria-hidden="true">
-        <div className="visor-shade" /><div className="visor-rim" /><div className="visor-glare" />
-        <div className="vhud tl"><b>EMU HELMET CAM</b><span>{self?.name.toUpperCase() ?? 'CREW'} · LINKED TO ASTRODOCX</span></div>
-        <div className="vhud tr"><b>CABIN</b><span>CO₂ {self ? self.live.co2.toFixed(1) : '–'} mmHg</span></div>
-        <div className="vhud bl"><b>SUIT</b><span>♥ {self ? self.live.hr.toFixed(0) : '–'} bpm · SpO₂ {self ? self.live.spo2.toFixed(0) : '–'}%</span></div>
-        <div className="vhud br"><b>CREW LINK</b><span><i className="ok">●</i> {data?.crew.length ?? 0} ONLINE · <i className={off ? 'watch' : 'ok'}>●</i> {off} OFF-NOMINAL</span></div>
-        <div className="reticle" />
-        <div className="prompt">Scroll to explore <span>↓</span></div>
+        <VisorHud data={data} reduced={reduced} />
       </div>
 
       <header className="cabin-top">

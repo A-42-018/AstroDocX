@@ -1,10 +1,12 @@
 import { db, readingsFor, type ConsoleDB } from '../data/db'
 import { DAY } from '../data/synthetic'
-import { METRICS, type Alert, type Status } from '../data/types'
+import { METRICS, type Alert, type Hazard, type Status } from '../data/types'
 import type { LiveValues } from '../live/telemetry'
 
 /** One astronaut in the cabin: who they are, the engine's verdict and the live (1 Hz) signals. */
-export interface CabinCrew { id: string; name: string; role: string; status: Status; alerts: number; live: LiveValues }
+export interface CabinCrew { id: string; name: string; role: string; status: Status; alerts: number; readiness: number; live: LiveValues }
+/** One of the five hazard modules for the helmet wearer, as the visor's side ladder shows it. */
+export interface CabinHazard { id: Hazard; name: string; status: Status; score: number }
 /** An alert as the in-cabin panel shows it: what, why and the next step, in the engine's own words. */
 export interface CabinAlert { id: number; crewId: string; title: string; detail: string; why: string; next: string; status: Status | 'resolved' }
 /** 30 days of daily mean heart rate for the focus crew member, the crew median and their personal band. */
@@ -17,6 +19,11 @@ export interface CabinData {
   selfId: string
   alerts: CabinAlert[]
   trend: CabinTrend | null
+  /** The helmet wearer's five hazard modules (empty until loaded). */
+  hazards: CabinHazard[]
+  /** Mission "now" (latest reading) and the ground link: entries waiting to sync, hours since the last sync. */
+  now: number
+  link: { pending: number; sinceSyncH: number | null }
 }
 
 const RANK: Record<Status, number> = { nominal: 0, watch: 1, act: 2 }

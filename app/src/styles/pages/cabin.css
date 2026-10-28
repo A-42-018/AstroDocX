@@ -40,34 +40,81 @@
 .cabin-credits { position: absolute; right: var(--sp-4); bottom: var(--sp-2); z-index: 5; font: 400 11px var(--ui); color: var(--t3); }
 .cabin-credits a { color: var(--cy); }
 
-/* helmet visor: scene.ts fades it out as the tour leaves the first stop */
-.cabin-visor { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
-/* a light edge falloff and four corner brackets, like a helmet-cam frame: the cabin stays in full view */
-/* the helmet's round visor: a dark rim closing in at the corners and edges, as in the helmet reference */
-.visor-shade { position: absolute; inset: 0; background: radial-gradient(ellipse 58% 78% at 50% 50%, transparent 78%, rgba(4, 8, 12, .55) 90%, rgba(2, 4, 6, .92) 100%); }
-.visor-rim {
-  --c: rgba(54, 226, 245, .5); --l: 34px;
-  position: absolute; inset: 10vh 12vw;
-  background:
-    linear-gradient(var(--c), var(--c)) top left / var(--l) 1px, linear-gradient(var(--c), var(--c)) top left / 1px var(--l),
-    linear-gradient(var(--c), var(--c)) top right / var(--l) 1px, linear-gradient(var(--c), var(--c)) top right / 1px var(--l),
-    linear-gradient(var(--c), var(--c)) bottom left / var(--l) 1px, linear-gradient(var(--c), var(--c)) bottom left / 1px var(--l),
-    linear-gradient(var(--c), var(--c)) bottom right / var(--l) 1px, linear-gradient(var(--c), var(--c)) bottom right / 1px var(--l);
-  background-repeat: no-repeat;
+/* helmet visor (cabin/VisorHud.tsx): scene.ts fades and grows it as the tour leaves the first stop */
+.cabin-visor { position: absolute; inset: 0; pointer-events: none; z-index: 4; will-change: opacity, transform; }
+.visor-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* the HUD is light projected on the glass: cyan with a dark halo, so it reads over the bright cabin too */
+.vz-hud {
+  --data: #36e2f5; --halo: 0 0 2px rgba(0, 8, 14, .95), 0 0 9px rgba(0, 8, 14, .7), 0 0 16px rgba(54, 226, 245, .45);
+  position: absolute; inset: 0; color: var(--cy-hi); font: 600 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; text-shadow: var(--halo);
 }
-.visor-glare { position: absolute; inset: 0; background: linear-gradient(115deg, transparent 18%, rgba(190, 235, 255, .05) 24%, transparent 31%, transparent 64%, rgba(190, 235, 255, .03) 70%, transparent 76%); }
-.vhud { position: absolute; font: 500 12px var(--mono); color: var(--cy-hi); text-shadow: 0 0 8px var(--cy-glow); letter-spacing: .08em; display: flex; flex-direction: column; gap: 4px; }
-.vhud b { font-weight: 700; font-size: 13px; }
-.vhud span { color: var(--t2); white-space: nowrap; }
-.vhud i { font-style: normal; }
-.vhud .ok { color: var(--ok); } .vhud .watch { color: var(--watch); }
-.vhud.tl { top: 14vh; left: 15vw; } .vhud.tr { top: 14vh; right: 15vw; text-align: right; }
-.vhud.bl { bottom: 26vh; left: 15vw; } .vhud.br { bottom: 26vh; right: 15vw; text-align: right; }
-.reticle { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border: 1px solid rgba(54, 226, 245, .3); border-radius: 50%; }
-.reticle::before, .reticle::after { content: ''; position: absolute; background: rgba(54, 226, 245, .4); }
-.reticle::before { left: 50%; top: -10px; bottom: -10px; width: 1px; }
-.reticle::after { top: 50%; left: -10px; right: -10px; height: 1px; }
-.prompt { position: absolute; left: 50%; bottom: 9vh; transform: translateX(-50%); font: 600 13px var(--ui); letter-spacing: .2em; text-transform: uppercase; color: var(--cy-hi); text-shadow: 0 0 10px var(--cy); }
+.vz { position: absolute; display: flex; flex-direction: column; gap: 5px; white-space: nowrap; width: max-content; }
+.vz small { font: 700 11.5px var(--mono); letter-spacing: .16em; color: var(--cy-hi); }
+/* a soft dark wash behind each block, as if the projector darkens the glass under its light */
+.vz::before { content: ''; position: absolute; inset: -22px -34px; z-index: -1; background: radial-gradient(closest-side, rgba(1, 8, 14, .5), rgba(1, 8, 14, .28) 60%, transparent); }
+.vz span { color: var(--t1); }
+.vz i { font-style: normal; }
+.vz em { font-style: normal; font-size: .62em; letter-spacing: .1em; color: var(--cy-hi); margin-left: 2px; text-transform: none; }
+.vz .nt { text-transform: none; color: inherit; }
+.vz .big { font: 600 clamp(17px, 1.65vw, 26px) var(--disp); letter-spacing: .04em; color: var(--cy-hi); }
+/* the corner blocks lean with the visor's curve, as on the reference helmet */
+.vz-tl { top: 12vh; left: 15vw; transform-origin: left top; transform: perspective(900px) rotateY(16deg) rotateZ(-6deg); }
+.vz-tr { top: 12vh; right: 15vw; align-items: flex-end; transform-origin: right top; transform: perspective(900px) rotateY(-16deg) rotateZ(6deg); }
+.vz-bl { bottom: max(31vh, 270px); left: 16vw; transform-origin: left bottom; transform: perspective(900px) rotateY(14deg) rotateZ(2deg); }
+.vz-br { bottom: max(31vh, 270px); right: 16vw; align-items: flex-end; transform-origin: right bottom; transform: perspective(900px) rotateY(-14deg) rotateZ(-2deg); }
+
+.vz-tc { top: 4.5vh; left: 50%; transform: translateX(-50%); align-items: center; gap: 0; }
+.vz-tc .huge { font: 600 clamp(28px, 2.6vw, 40px)/1.05 var(--disp); letter-spacing: .02em; color: var(--cy-hi); }
+.vz-tc .state { margin-top: 2px; font-size: 11.5px; letter-spacing: .14em; }
+.vz-gauge { width: clamp(300px, 30vw, 460px); height: auto; overflow: visible; filter: drop-shadow(0 0 1.5px rgba(0, 8, 14, .9)) drop-shadow(0 0 5px rgba(54, 226, 245, .5)); }
+.vz-gauge .tk { stroke: var(--cy-hi); stroke-opacity: .7; stroke-width: 1.4; }
+.vz-gauge .tk.major { stroke-opacity: 1; stroke-width: 2.2; }
+.vz-gauge .z { fill: none; stroke-width: 4; stroke-opacity: .9; }
+.vz-gauge .z.act { stroke: var(--act); } .vz-gauge .z.watch { stroke: var(--watch); } .vz-gauge .z.ok { stroke: var(--ok); }
+.vz-gauge text { fill: var(--cy-hi); font: 600 11px var(--mono); }
+.vz-gauge .needle { transition: transform 1.2s var(--ease); }
+.vz-gauge .needle line { stroke: currentColor; stroke-width: 3; }
+.vz-gauge .needle path { fill: currentColor; }
+
+.vz-heart { display: inline-block; color: var(--act); transition: transform .12s; }
+.vz-heart.beat { animation: vz-beat .35s ease-out; }
+@keyframes vz-beat { 30% { transform: scale(1.3); } }
+.vz-ecg { width: 150px; height: 28px; }
+.vz-ecg .live-wave { width: 100%; display: block; }
+.vz-segs { display: inline-flex; gap: 2px; vertical-align: middle; margin: 0 4px; }
+.vz-segs i { width: 6px; height: 10px; border: 1px solid currentColor; opacity: .35; }
+.vz-segs i.on { background: currentColor; opacity: 1; box-shadow: 0 0 5px currentColor; }
+
+.vz.ladder { top: 50%; transform: translateY(-50%); gap: 7px; }
+.vz.ladder.left { left: 7.2vw; }
+.vz.ladder.left span { display: flex; align-items: center; gap: 4px; }
+.vz.ladder.left b { width: 14px; font: 700 14px var(--disp); }
+.vz.ladder.left em { font-size: 12px; color: var(--t1); }
+.vz.ladder.right { right: 12vw; top: 34%; align-items: flex-end; }
+.vz-signal { display: flex; align-items: flex-end; gap: 3px; }
+.vz-signal i { width: 5px; background: var(--cy); opacity: .25; }
+.vz-signal i.on { opacity: 1; box-shadow: 0 0 6px var(--cy-glow); }
+
+.vz-bar {
+  position: absolute; left: 50%; bottom: max(12.5vh, 200px); transform: translateX(-50%); display: flex; align-items: center; gap: 12px;
+  max-width: min(760px, 56vw); padding: 7px 22px; font-size: 11.5px; white-space: nowrap; color: var(--t1);
+  background: linear-gradient(90deg, transparent, rgba(4, 18, 28, .55) 12%, rgba(4, 18, 28, .55) 88%, transparent);
+  border: 1px solid rgba(54, 226, 245, .55); box-shadow: 0 0 14px rgba(54, 226, 245, .25), inset 0 0 12px rgba(54, 226, 245, .15);
+  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 14px 100%, 0 50%);
+}
+.vz-bar > span + span { padding-left: 12px; border-left: 1px solid rgba(54, 226, 245, .5); }
+.vz-bar .next { overflow: hidden; text-overflow: ellipsis; min-width: 0; text-transform: none; }
+.vz-motto { position: absolute; left: 50%; bottom: max(7.5vh, 150px); transform: translateX(-50%); font: 600 15px var(--disp); letter-spacing: .26em; color: var(--cy-hi); white-space: nowrap; }
+.vz-reticle { position: absolute; left: 50%; top: 50%; width: 220px; height: 220px; margin: -110px 0 0 -110px; overflow: visible; }
+.vz-reticle .ring { fill: none; stroke: rgba(159, 244, 255, .5); stroke-width: 1.2; }
+.vz-reticle .ring.hi { stroke: rgba(159, 244, 255, .75); }
+.vz-reticle .cross { stroke: rgba(159, 244, 255, .5); stroke-width: 1; }
+.vz-reticle .cross.hi { stroke: var(--cy-hi); stroke-width: 1.5; }
+.vz-reticle .spin line { stroke: rgba(159, 244, 255, .45); stroke-width: 1.2; }
+.vz-reticle .spin { animation: vz-spin 60s linear infinite; }
+@keyframes vz-spin { to { transform: rotate(360deg); } }
+.vz-reticle { filter: drop-shadow(0 0 1px rgba(0, 8, 14, .9)); }
+.prompt { position: absolute; left: 50%; bottom: max(4.2vh, 118px); transform: translateX(-50%); font: 600 11px var(--ui); letter-spacing: .2em; text-transform: uppercase; color: var(--cy); white-space: nowrap; }
 .prompt span { display: inline-block; animation: cabin-bob 1.4s ease-in-out infinite; }
 @keyframes cabin-bob { 50% { transform: translateY(4px); } }
 
@@ -84,12 +131,20 @@
   .cabin-stops { right: 12px; gap: 12px; }
   .cabin-stops span { display: none; }
   .cabin-card { right: var(--sp-3); left: var(--sp-3); width: auto; bottom: auto; top: 64px; }
-  .vhud { font-size: 10px; } .vhud b { font-size: 11px; }
-  .vhud.tl, .vhud.bl { left: 9vw; } .vhud.tr, .vhud.br { right: 9vw; }
-  .visor-rim { inset: 10vh 6vw; --l: 22px; }
+  .vz-hud { font-size: 10px; }
+  .vz small { font-size: 9.5px; }
+  .vz .big { font-size: 14px; }
+  .vz-tl, .vz-bl { left: 8vw; } .vz-tr, .vz-br { right: 8vw; }
+  .vz-tl, .vz-tr { top: max(25vh, 190px); } /* below the readiness gauge */
+  .vz-tl .big, .vz-tr .vz-segs { display: none; }
+  .vz-bl, .vz-br { bottom: auto; top: 58vh; }
+  .vz-tc { top: 64px; } .vz-gauge { width: 200px; }
+  .vz-ecg { width: 96px; }
+  .vz.ladder, .vz-bar, .vz-motto, .prompt { display: none; } /* the caption already says to scroll */
+  .vz-reticle { width: 150px; height: 150px; margin: -75px 0 0 -75px; }
   .cabin-credits { left: var(--sp-3); right: var(--sp-3); font-size: 10px; line-height: 1.35; }
 }
-@media (prefers-reduced-motion: reduce) { .prompt span { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .prompt span, .vz-reticle .spin, .vz-heart.beat { animation: none; } .vz-gauge .needle { transition: none; } }
 
 /* the real console on the wall screens (cabin/screens.ts): above the canvas, below the HUD, never takes input */
 .cabin-screens { position: absolute !important; inset: 0; z-index: 1; pointer-events: none; }
