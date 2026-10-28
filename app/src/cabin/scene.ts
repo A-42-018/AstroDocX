@@ -56,6 +56,32 @@ const exposureAt = (p: number) => {
   return THREE.MathUtils.lerp(EXPOSURE[i], EXPOSURE[i + 1], f)
 }
 
+/**
+ * The triangles of `root` (in world space) whose bounds touch `box`, as one mesh to raycast against. Faces keep their
+ * winding, so rays still pass through back faces as they do on the hall itself.
+ */
+function wallPatch(root: THREE.Object3D, box: THREE.Box3) {
+  const out: number[] = [], a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), tri = new THREE.Box3()
+  root.traverse((o) => {
+    const m = o as THREE.Mesh
+    if (!m.isMesh || !m.visible) return
+    const pos = m.geometry.getAttribute('position'), index = m.geometry.getIndex()
+    const flip = m.matrixWorld.determinant() < 0
+    const count = index ? index.count : pos.count
+    for (let t = 0; t + 2 < count; t += 3) {
+      const [i, j, k] = index ? [index.getX(t), index.getX(t + 1), index.getX(t + 2)] : [t, t + 1, t + 2]
+      a.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld)
+      b.fromBufferAttribute(pos, j).applyMatrix4(m.matrixWorld)
+      c.fromBufferAttribute(pos, k).applyMatrix4(m.matrixWorld)
+      if (!box.intersectsBox(tri.setFromPoints([a, b, c]))) continue
+      out.push(...a.toArray(), ...(flip ? c : b).toArray(), ...(flip ? b : c).toArray())
+    }
+  })
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(out, 3))
+  return new THREE.Mesh(geo, new THREE.MeshBasicMaterial())
+}
+
 /** Throws when WebGL is unavailable; the page shows its fallback then. */
 export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): CabinScene {
   const quality = pickQuality()
@@ -122,11 +148,16 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     panels.forEach((p, i) => {
       const side = PANELS[i].side
       dir.set(side, 0, 0)
+      // only the stretch of wall the rays can reach: the whole hall is too many triangles to test 700 rays against
+      const reachZ = 2.5 + PW / 2 + 0.1
+      const near = wallPatch(hall, new THREE.Box3(
+        new THREE.Vector3(side < 0 ? -HALF - 1 : 2, PY - PH / 2 - 0.1, PANELS[i].z - reachZ),
+        new THREE.Vector3(side < 0 ? -2 : HALF + 1, PY + PH / 2 + 0.1, PANELS[i].z + reachZ)))
       const reach = (z: number) => { // the smallest |x| the wall reaches over a screen centred at z
         let min = HALF
         for (let a = 0; a <= 6; a++) for (let b = 0; b <= 4; b++) {
           ray.set(new THREE.Vector3(side * 2, PY - PH / 2 - 0.05 + (b / 4) * (PH + 0.1), z - PW / 2 - 0.05 + (a / 6) * (PW + 0.1)), dir)
-          const hit = ray.intersectObject(hall, true)[0]
+          const hit = ray.intersectObject(near, false)[0]
           if (hit) min = Math.min(min, 2 + hit.distance)
         }
         return min
@@ -136,6 +167,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
         const z = PANELS[i].z + dz, x = reach(z), score = x - Math.abs(dz) * 0.08
         if (score > best.score) best = { z, x, score }
       }
+      near.geometry.dispose()
       p.g.position.set(side * Math.max(best.x - 0.11, 4.6), PY, best.z)
       p.g.updateMatrixWorld(); p.at()
     })
