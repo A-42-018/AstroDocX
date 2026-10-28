@@ -53,9 +53,11 @@ const TRI_COMMON = /* glsl */ `
     else if (n.y > n.z) { uv = vTriPos.xz; ev = vec3(0.0, 0.0, 1.0); }
     vec2 q = uv / panel, f = fract(q + 0.5) - 0.5, d = abs(f) * panel; // metres to the nearest seam on each axis
     float m = min(d.x, d.y), aa = fwidth(m) + 1e-4;
-    tilt = (d.x < d.y ? eu * sign(f.x) : ev * sign(f.y)) * (1.0 - smoothstep(0.0, 0.03, m)) * 0.6;
+    // a seam thinner than a pixel fades instead of flickering on and off as the camera drifts (the far ceiling)
+    float cover = min(1.0, 0.016 / aa), bevel = min(1.0, 0.06 / aa);
+    tilt = (d.x < d.y ? eu * sign(f.x) : ev * sign(f.y)) * (1.0 - smoothstep(0.0, 0.03, m)) * 0.6 * bevel;
     float tone = 0.9 + 0.2 * fract(sin(dot(floor(q + 0.5), vec2(12.9898, 78.233))) * 43758.5453); // no two plates quite alike
-    return vec3(1.0 - smoothstep(0.008, 0.008 + aa, m), 1.0 - smoothstep(0.0, 0.08, m), tone);
+    return vec3((1.0 - smoothstep(0.008, 0.008 + aa, m)) * cover, (1.0 - smoothstep(0.0, 0.08, m)) * bevel, tone);
   }
 `
 
