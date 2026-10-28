@@ -15,8 +15,9 @@ export interface DemoSnapshot {
   actionLog: ActionLogEntry[]
 }
 
+/** Loaded means the current roster is in the DB; a browser still holding the old 4-person crew is re-seeded once. */
 export async function demoLoaded(d: ConsoleDB = db) {
-  return (await d.crew.count()) > 0
+  return (await d.crew.count()) === CREW.length
 }
 
 /**

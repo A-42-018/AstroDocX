@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useRef } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import BoardPage from './board/BoardPage'
+import { CabinPage } from './cabin/lazy'
 import { seedDemo } from './data/demo'
 import { Backdrop } from './shell/Backdrop'
 import { ErrorBoundary } from './shell/ErrorBoundary'
@@ -45,7 +46,7 @@ function useRouteAnnounce(main: React.RefObject<HTMLElement | null>) {
   const { pathname } = useLocation()
   const first = useRef(true)
   useEffect(() => {
-    const label = routeFor(pathname)?.label
+    const label = pathname.startsWith('/cabin') ? '3D Cabin' : routeFor(pathname)?.label
     document.title = label ? `${label} · AstroDocX Crew Console` : 'AstroDocX Crew Console'
     if (first.current) { first.current = false; return }
     main.current?.focus()
@@ -61,6 +62,14 @@ export default function App() {
   const install = useInstallPrompt()
   const shell = useShellData()
   const { pathname } = useLocation()
+  // 3D mode is full screen: no console frame or animated backdrop drawing behind it.
+  if (pathname.startsWith('/cabin')) return (
+    <ShellDataContext.Provider value={shell}>
+      <ErrorBoundary key={pathname} onReset={() => seedDemo().then(() => undefined)}>
+        <Suspense fallback={<StateView kind="loading" label="Loading 3D cabin" />}><CabinPage /></Suspense>
+      </ErrorBoundary>
+    </ShellDataContext.Provider>
+  )
   return (
     <ShellDataContext.Provider value={shell}>
     <div className="shell">

@@ -14,11 +14,11 @@ describe('generateReadings', () => {
     expect(generateReadings({ seed: 8 })).not.toEqual(a)
   })
 
-  it('produces 4 crew x 30 days with the expected counts', () => {
+  it('produces the whole crew x 30 days with the expected counts', () => {
     const rs = generateReadings()
-    expect(new Set(rs.map((r) => r.crewId)).size).toBe(4)
+    expect(new Set(rs.map((r) => r.crewId)).size).toBe(CREW.length)
     // per crew per day: 7 hourly metrics x 24 + 4 daily
-    expect(rs.length).toBe(4 * 30 * (7 * 24 + 4))
+    expect(rs.length).toBe(CREW.length * 30 * (7 * 24 + 4))
     expect(Math.max(...rs.map((r) => r.ts))).toBeLessThan(MISSION_START + 30 * DAY)
   })
 
@@ -34,7 +34,7 @@ describe('generateReadings', () => {
   it('personalizes baselines per crew member', () => {
     const rs = generateReadings()
     const m = CREW.map((c) => mean(rs.filter((r) => r.crewId === c.id && r.metric === 'hr').map((r) => r.value)))
-    expect(new Set(m.map((x) => x.toFixed(1))).size).toBe(4)
+    expect(new Set(m.map((x) => x.toFixed(1))).size).toBe(CREW.length)
   })
 
   it.each(SCENARIOS)('scenario $id shifts the targeted metrics only inside its window', (s) => {
@@ -57,7 +57,7 @@ describe('seedDb', () => {
   it('loads crew and readings into Dexie and re-seeding is idempotent', async () => {
     const d = new ConsoleDB('seed-test')
     const n = await seedDb({ seed: 1, days: 3 }, d)
-    expect(await d.crew.count()).toBe(4)
+    expect(await d.crew.count()).toBe(CREW.length)
     expect(await d.readings.count()).toBe(n)
     await seedDb({ seed: 1, days: 3 }, d)
     expect(await d.readings.count()).toBe(n)

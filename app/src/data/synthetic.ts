@@ -11,6 +11,8 @@ export const CREW: CrewMember[] = [
   { id: 'pilot', name: 'Pilot', role: 'Pilot' },
   { id: 'eng', name: 'Flight Engineer', role: 'Flight Engineer' },
   { id: 'med', name: 'Medical Officer', role: 'Medical Officer' },
+  { id: 'spec', name: 'Mission Specialist', role: 'Mission Specialist' },
+  { id: 'payload', name: 'Payload Specialist', role: 'Payload Specialist' },
 ]
 
 /** Seeded PRNG (mulberry32). */

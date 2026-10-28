@@ -31,7 +31,12 @@ export default defineConfig({
         ],
       },
       // Fonts and the 3D twin's body are bundled and precached so the console looks the same offline.
-      workbox: { navigateFallback: '/app/index.html', globPatterns: ['**/*.{js,css,html,svg,png,woff2,bin}'] },
+      // The 3D cabin's models (about 0.7 MB) are cached on first visit instead of precached, so the console's install stays small.
+      workbox: {
+        navigateFallback: '/app/index.html',
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2,bin}'],
+        runtimeCaching: [{ urlPattern: /\/models\/[^/]+\.glb$/, handler: 'CacheFirst', options: { cacheName: 'cabin-models' } }],
+      },
     }),
   ],
 })

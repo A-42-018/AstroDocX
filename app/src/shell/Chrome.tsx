@@ -1,7 +1,8 @@
-import { Bell, Plus, RotateCcw, Square } from 'lucide-react'
+import { Bell, Box, Plus, RotateCcw, Square } from 'lucide-react'
 import { Fragment, useId, useRef } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useBoard } from '../board/store'
+import { CabinPage } from '../cabin/lazy'
 import { met } from '../engine/actions'
 import { DEMO_MAX_STEPS, resetDemo, runDemo, useDemo } from '../sim/demoRun'
 import { linkAt, type LinkInfo } from '../sync/link'
@@ -130,6 +131,9 @@ export function TopBar({ data, install }: { data: ShellData | null; install: (()
               {demo.phase === 'running' ? `Demo ${demo.step}/${DEMO_MAX_STEPS}` : 'Reset demo'}
             </button>
           )}
+          <Link to="/cabin" className="tb-icon tb-3d" aria-label="3D mode: walk through the crew module" title="3D mode" onPointerEnter={() => CabinPage.preload()} onFocus={() => CabinPage.preload()}>
+            <Box size={20} strokeWidth={1.9} aria-hidden="true" />
+          </Link>
           <Link to="/alerts" className={`tb-icon bell st-${who.status}`} aria-label={open ? `${open} open alert${open > 1 ? 's' : ''} for ${who.name}` : `No open alerts for ${who.name}`}>
             <Bell size={20} strokeWidth={1.9} aria-hidden="true" />
             {open > 0 && <b aria-hidden="true">{open}</b>}

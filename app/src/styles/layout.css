@@ -195,7 +195,7 @@
     .greet b { color: var(--t1); font-weight: 700; }
     .tb-met { order: 2; display: block; font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--cy); text-shadow: 0 0 10px var(--cy-glow); }
     .tb-break { order: 3; display: block; flex: 0 0 100%; height: 10px; }
-    .toptabs, .strip-met, .bell, .demo-btn { display: none; }
+    .toptabs, .strip-met, .bell, .tb-3d, .demo-btn { display: none; } /* 3D mode is in the ⋯ menu here */
     .crew-switch { order: 4; }
     .av { width: 44px; } .av-disc { width: 34px; height: 34px; }
     .strip { order: 5; flex: 1 1 0; min-width: 0; height: 44px; margin: 0; border: 0; background: transparent; overflow: hidden; }

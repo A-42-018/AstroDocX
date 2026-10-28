@@ -1,0 +1,80 @@
+/* 3D Cabin (cabin/CabinPage.tsx): a full-screen walk-through over the console. Holo HUD tokens only. */
+.cabin { position: fixed; inset: 0; z-index: 50; background: var(--bg); color: var(--t1); font-family: var(--ui); overflow: hidden; }
+.cabin-gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+.cabin-gl.dragging { cursor: grabbing; }
+
+.cabin-panel {
+  background: var(--panel); border: 1px solid var(--edge); backdrop-filter: blur(8px);
+  clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+}
+
+.cabin-top { position: absolute; top: var(--sp-4); left: var(--sp-4); right: var(--sp-4); display: flex; align-items: center; gap: var(--sp-4); z-index: 5; pointer-events: none; }
+.cabin-back { pointer-events: auto; font: 600 13px var(--ui); color: var(--cy-hi); background: var(--panel); border: 1px solid var(--edge-hi); padding: var(--sp-2) 14px; cursor: pointer; letter-spacing: .04em; }
+.cabin-back:hover { background: var(--cy-soft); }
+.cabin-back:focus-visible, .cabin-stops button:focus-visible, .cabin-card .close:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
+.cabin-brand { font: 700 15px var(--ui); letter-spacing: .14em; text-transform: uppercase; }
+.cabin-brand span { color: var(--cy); font-weight: 500; }
+
+.cabin-stops { position: absolute; right: 22px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 14px; z-index: 5; }
+.cabin-stops button { all: unset; cursor: pointer; display: flex; align-items: center; justify-content: flex-end; gap: 10px; font: 500 12px var(--ui); color: var(--t3); }
+.cabin-stops i { width: 9px; height: 9px; border: 1.5px solid var(--cy); transform: rotate(45deg); transition: background var(--dur-2), box-shadow var(--dur-2); }
+.cabin-stops span { opacity: 0; transition: opacity var(--dur-2); white-space: nowrap; }
+.cabin-stops button:hover span, .cabin-stops button:focus-visible span, .cabin-stops [aria-current] span { opacity: 1; }
+.cabin-stops [aria-current] { color: var(--cy-hi); }
+.cabin-stops [aria-current] i { background: var(--cy); box-shadow: 0 0 10px var(--cy-glow); }
+
+.cabin-caption { position: absolute; left: var(--sp-5); bottom: var(--sp-5); width: min(420px, calc(100% - 40px)); padding: var(--sp-4) var(--sp-5) 18px; z-index: 5; }
+.cap-step { font: 600 11px var(--mono); color: var(--cy); letter-spacing: .12em; }
+.cabin-caption h1 { margin: 6px 0; font: 700 20px var(--ui); letter-spacing: .02em; }
+.cabin-caption p { margin: 0; font: 400 13.5px/1.5 var(--ui); color: var(--t2); }
+
+.cabin-card { position: absolute; right: 70px; bottom: var(--sp-5); width: 260px; padding: var(--sp-4) 18px; z-index: 6; }
+.cabin-card .close { all: unset; position: absolute; top: 6px; right: 12px; cursor: pointer; color: var(--t3); font-size: 20px; }
+.cc-role { font: 600 11px var(--mono); color: var(--cy); letter-spacing: .1em; text-transform: uppercase; }
+.cabin-card h2 { margin: 4px 0 12px; font: 700 18px var(--ui); }
+.cc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cc-grid span { display: block; font: 500 11px var(--mono); color: var(--t3); letter-spacing: .1em; }
+.cc-grid b { font: 600 20px var(--mono); }
+.cc-status { margin-top: 12px; font: 600 12px var(--ui); padding: 6px 10px; border: 1px solid currentColor; display: inline-block; }
+
+.cabin-credits { position: absolute; right: var(--sp-4); bottom: var(--sp-2); z-index: 5; font: 400 11px var(--ui); color: var(--t3); }
+.cabin-credits a { color: var(--cy); }
+
+/* helmet visor: scene.ts fades it out as the tour leaves the first stop */
+.cabin-visor { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
+.visor-shade { position: absolute; inset: 0; background: radial-gradient(ellipse 72% 78% at 50% 48%, transparent 58%, rgba(0, 6, 12, .55) 78%, rgba(0, 3, 8, .96) 100%); }
+.visor-rim { position: absolute; inset: 3vh 4vw; border-radius: 48% / 46%; box-shadow: inset 0 0 0 2px rgba(54, 226, 245, .35), inset 0 0 60px rgba(54, 226, 245, .18), 0 0 0 100vmax rgba(0, 3, 8, .9); }
+.visor-glare { position: absolute; inset: 0; background: linear-gradient(115deg, transparent 18%, rgba(190, 235, 255, .09) 24%, transparent 31%, transparent 64%, rgba(190, 235, 255, .05) 70%, transparent 76%); }
+.vhud { position: absolute; font: 500 12px var(--mono); color: var(--cy-hi); text-shadow: 0 0 8px var(--cy-glow); letter-spacing: .08em; display: flex; flex-direction: column; gap: 4px; }
+.vhud b { font-weight: 700; font-size: 13px; }
+.vhud span { color: var(--t2); white-space: nowrap; }
+.vhud i { font-style: normal; }
+.vhud .ok { color: var(--ok); } .vhud .watch { color: var(--watch); }
+.vhud.tl { top: 14vh; left: 15vw; } .vhud.tr { top: 14vh; right: 15vw; text-align: right; }
+.vhud.bl { bottom: 26vh; left: 15vw; } .vhud.br { bottom: 26vh; right: 15vw; text-align: right; }
+.reticle { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border: 1px solid rgba(54, 226, 245, .45); border-radius: 50%; }
+.reticle::before, .reticle::after { content: ''; position: absolute; background: rgba(54, 226, 245, .6); }
+.reticle::before { left: 50%; top: -10px; bottom: -10px; width: 1px; }
+.reticle::after { top: 50%; left: -10px; right: -10px; height: 1px; }
+.prompt { position: absolute; left: 50%; bottom: 9vh; transform: translateX(-50%); font: 600 13px var(--ui); letter-spacing: .2em; text-transform: uppercase; color: var(--cy-hi); text-shadow: 0 0 10px var(--cy); }
+.prompt span { display: inline-block; animation: cabin-bob 1.4s ease-in-out infinite; }
+@keyframes cabin-bob { 50% { transform: translateY(4px); } }
+
+.cabin-loading { position: absolute; inset: 0; display: grid; place-items: center; font: 600 14px var(--mono); letter-spacing: .2em; color: var(--cy); background: var(--bg); z-index: 10; }
+.cabin-nogl { max-width: 420px; padding: var(--sp-6); letter-spacing: normal; font: 400 14px/1.5 var(--ui); color: var(--t2); }
+.cabin-nogl h1 { margin: 0 0 var(--sp-2); font: 700 20px var(--ui); color: var(--t1); }
+.cabin-nogl p { margin: 0 0 var(--sp-4); }
+
+/* phones: smaller caption, HUD corners closer in, stop labels hidden */
+@media (max-width: 767px) {
+  .cabin-caption { left: var(--sp-3); bottom: var(--sp-6); width: calc(100% - 64px); padding: var(--sp-3) var(--sp-4); }
+  .cabin-caption h1 { font-size: 17px; }
+  .cabin-caption p { font-size: 12.5px; }
+  .cabin-stops { right: 12px; gap: 12px; }
+  .cabin-stops span { display: none; }
+  .cabin-card { right: var(--sp-3); left: var(--sp-3); width: auto; bottom: auto; top: 64px; }
+  .vhud { font-size: 10px; } .vhud b { font-size: 11px; }
+  .vhud.tl, .vhud.bl { left: 9vw; } .vhud.tr, .vhud.br { right: 9vw; }
+  .cabin-credits { left: var(--sp-3); right: auto; font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .prompt span { animation: none; } }
