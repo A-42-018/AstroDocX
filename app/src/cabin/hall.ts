@@ -71,8 +71,8 @@ function hallMaterial(textures: string) {
   return m
 }
 
-/** Adds the hall's shell, bulkheads, window and light strips at once; the detailed walls arrive with the returned promise. */
-export function buildHall(scene: THREE.Scene, loader: GLTFLoader, models: string, textures: string): Promise<void> {
+/** Adds the hall's shell, bulkheads, window and light strips at once; the detailed walls arrive with the returned promise (null if they failed). */
+export function buildHall(scene: THREE.Scene, loader: GLTFLoader, models: string, textures: string): Promise<THREE.Object3D | null> {
   const h = TOP - FLOOR
   const hullMat = new THREE.MeshStandardMaterial({ color: '#141b22', metalness: 0.3, roughness: 0.8, side: THREE.BackSide })
   // fills the ceiling seam and anything seen through the wall openings; open at the front (-z) so the window looks into space
@@ -104,5 +104,6 @@ export function buildHall(scene: THREE.Scene, loader: GLTFLoader, models: string
     pivot.add(wall, twin)
     pivot.rotation.y = Math.PI / 2; pivot.scale.setScalar(0.35); pivot.position.y = -2.325
     scene.add(pivot)
-  }).catch((err) => console.warn('cabin: corridor.glb failed', err))
+    return pivot
+  }).catch((err) => { console.warn('cabin: corridor.glb failed', err); return null })
 }

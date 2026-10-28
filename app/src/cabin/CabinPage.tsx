@@ -16,13 +16,13 @@ function stops(d: CabinData | null) {
   return [
     { title: 'Helmet view', text: `You are in the ${name(d?.selfId)}'s helmet at the back of the module. The visor HUD is wired to AstroDocX: your heart rate and the crew link. Scroll to float forward.` },
     { title: 'Crew overview', text: `${n} astronauts at work in microgravity. Every floating tag is live: name, heart rate and status from the same engine as the console.` },
-    { title: 'Crew Status Board', text: 'Every crew member at a glance with live heart rate, SpO₂ and breathing. Amber and red cards are off-nominal.' },
-    { title: 'Live Vitals', text: `The ${focus}'s live ECG, SpO₂, breathing and cabin CO₂. This panel follows whoever needs attention most.` },
+    { title: 'Crew Status Board', text: `The real console on the wall, live: the ${name(d?.selfId)}'s Status Board with readiness, the body twin, vitals and the five hazard modules.` },
+    { title: 'Live Vitals', text: `The console's live vitals for the ${focus}: ECG, SpO₂ and breathing, with their Next Action. This screen follows whoever needs attention most.` },
     { title: focus, text: 'The crew member behind the numbers. When they are off-nominal their tag pulses and a ring of light surrounds them, so the alert is visible in the room, not only on a screen.' },
     { title: 'Explainable Alerts', text: 'Each alert says WHY in the engine’s own words and the NEXT step from its action card. No black-box warnings.' },
     { title: 'Trends', text: `30 days of the ${focus}'s heart rate against their personal baseline band and the crew median.` },
     { title: 'Forward window', text: 'Earth below, through the forward window: the view the crew works under every day.' },
-    { title: 'Look back', text: 'The whole module from the window: the crew, four health panels, one system.' },
+    { title: 'Look back', text: 'The whole module from the window: the crew, four console screens, one system.' },
     { title: 'Outside', text: `${out ? `The ${name(out)} on EVA beside the station, tethered to the ship. AstroDocX tracks every heartbeat out here too.` : 'The station beyond the window, Earth below.'} Press Esc or “Console” to return.` },
   ]
 }

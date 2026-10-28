@@ -12,9 +12,10 @@
     <title>AstroDocX Crew Console</title>
     <!-- Launch screen: critical CSS inline so it paints before the console bundle arrives. public/splash.js drives it;
          the app reports real boot progress (bundle → demo seeding → first board paint) through window.adxSplash. -->
-    <script>document.documentElement.classList.add('adx-launching');</script>
+    <script>document.documentElement.classList.add(/[?&]embed=/.test(location.search) ? 'adx-embed' : 'adx-launching');</script>
     <noscript><style>#adx-splash{display:none !important}</style></noscript>
     <style>
+      html.adx-embed #adx-splash{display:none !important}
       html.adx-launching{background:#02030a}
       html.adx-launching,html.adx-launching body{overflow:hidden !important}
       #adx-splash{position:fixed;inset:0;z-index:10000;background:#02030a;color:#f4f5f7;overflow:hidden;

@@ -4,6 +4,7 @@ import BoardPage from './board/BoardPage'
 import { CabinPage } from './cabin/lazy'
 import { seedDemo } from './data/demo'
 import { Backdrop } from './shell/Backdrop'
+import { Embed, embedFromUrl } from './shell/Embed'
 import { ErrorBoundary } from './shell/ErrorBoundary'
 import { useInstallPrompt } from './shell/install'
 import { lazyPage } from './shell/lazyPage'
@@ -61,7 +62,14 @@ export default function App() {
   useRouteAnnounce(main)
   const install = useInstallPrompt()
   const shell = useShellData()
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
+  // A single screen without the frame, for the 3D cabin's wall screens.
+  const embed = embedFromUrl(search)
+  if (embed) return (
+    <ShellDataContext.Provider value={shell}>
+      <ErrorBoundary key={pathname} onReset={() => seedDemo().then(() => undefined)}><Embed {...embed} /></ErrorBoundary>
+    </ShellDataContext.Provider>
+  )
   // 3D mode is full screen: no console frame or animated backdrop drawing behind it.
   if (pathname.startsWith('/cabin')) return (
     <ShellDataContext.Provider value={shell}>

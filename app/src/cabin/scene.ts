@@ -6,12 +6,13 @@ import type { CabinCrew, CabinData } from './data'
 import { createCrew } from './crew'
 import { createSpace, SUN_AT } from './earth'
 import { createEva, EVA, EVA_VIEW, evaCrewId } from './eva'
-import { buildHall } from './hall'
+import { buildHall, HALF } from './hall'
 import { addLights, createFlare, createPost, createSunBeam, pickQuality } from './lighting'
 import { C, SH, SW, drawAlerts, drawLiveVitals, drawStatusBoard, drawTrends } from './panels'
+import { createScreens, type ScreenSpec } from './screens'
 
 /*
- * The 3D cabin: the hall (hall.ts, lighting.ts), four floating panels with the console's data, the crew
+ * The 3D cabin: the hall (hall.ts, lighting.ts), four wall screens running the real console (screens.ts), the crew
  * floating beside them (crew.ts), and a scroll-driven camera touring nine stops from a helmet view at the
  * door, past a look back from the window, out to a crew member on EVA beside the station (eva.ts).
  */
@@ -34,14 +35,17 @@ export interface CabinScene {
 const MODELS = `${import.meta.env.BASE_URL}models/`, TEXTURES = `${import.meta.env.BASE_URL}textures/`
 type V3 = [number, number, number]
 
-/** The panels, left (-1) and right (+1) of the hall, in tour order: Status Board, Live Vitals, Alerts, Trends. */
-const PANELS: { at: V3; side: -1 | 1; draw: (g: CanvasRenderingContext2D, d: CabinData, t: number) => void }[] = [
-  { at: [-5.4, 0.2, 9], side: -1, draw: drawStatusBoard },
-  { at: [5.4, 0.2, 5], side: 1, draw: drawLiveVitals },
-  { at: [-5.4, 0.2, -1], side: -1, draw: drawAlerts },
-  { at: [5.4, 0.2, -5.5], side: 1, draw: drawTrends },
+/**
+ * The wall screens, left (-1) and right (+1) of the hall, in tour order: Status Board, Live Vitals, Alerts, Trends.
+ * `z` is where to look for a flat stretch of wall; `draw` is the stand-in seen from afar, `screen` the live console view.
+ */
+const PANELS: { z: number; side: -1 | 1; draw: (g: CanvasRenderingContext2D, d: CabinData, t: number) => void; screen: ScreenSpec }[] = [
+  { z: 9, side: -1, draw: drawStatusBoard, screen: { view: 'board', px: [1600, 938] } },
+  { z: 5, side: 1, draw: drawLiveVitals, screen: { view: 'vitals', px: [1024, 600] } },
+  { z: -1, side: -1, draw: drawAlerts, screen: { view: 'alerts', px: [1280, 750] } },
+  { z: -5.5, side: 1, draw: drawTrends, screen: { view: 'trends', px: [1280, 750] } },
 ]
-const PW = 3.2, PH = 1.875
+const PW = 3.2, PH = 1.875, PY = 0.2
 
 /** Throws when WebGL is unavailable; the page shows its fallback then. */
 export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): CabinScene {
@@ -73,30 +77,69 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder)
   const hallLoaded = buildHall(scene, loader, MODELS, TEXTURES)
 
-  /* ---------- panels ---------- */
+  /* ---------- wall screens ---------- */
   let data: CabinData | null = null
+  const screens = createScreens(canvas.parentElement ?? document.body, import.meta.env.BASE_URL)
+  screens.setSize(...size())
+  const frameMat = new THREE.MeshStandardMaterial({ color: '#1a232c', roughness: 0.45, metalness: 0.7 })
   const panels = PANELS.map((p, i) => {
     const c = document.createElement('canvas'); c.width = SW; c.height = SH
     const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8
     const g = new THREE.Group()
-    const back = new THREE.Mesh(new THREE.BoxGeometry(PW + 0.12, PH + 0.12, 0.05), new THREE.MeshStandardMaterial({ color: '#0b1218', roughness: 0.5, metalness: 0.4, emissive: C.cy, emissiveIntensity: 0.08 }))
+    // a bezel with a little depth and two brackets into the wall, so the screen reads as mounted
+    const back = new THREE.Mesh(new THREE.BoxGeometry(PW + 0.16, PH + 0.16, 0.1), frameMat)
+    back.position.z = -0.05
+    const lip = new THREE.Mesh(new THREE.BoxGeometry(PW + 0.04, 0.025, 0.02), new THREE.MeshStandardMaterial({ color: '#0b1218', emissive: C.cy, emissiveIntensity: 1.4 }))
+    lip.position.set(0, -PH / 2 - 0.055, 0.005)
+    for (const x of [-PW / 3, PW / 3]) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.5, 0.6), frameMat); b.position.set(x, 0, -0.38); g.add(b) }
     const face = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }))
-    face.position.z = 0.03; face.userData.panel = i
+    face.position.z = 0.002; face.userData.panel = i
     back.castShadow = true
-    g.add(back, face); g.position.set(...p.at); g.rotation.y = -p.side * (Math.PI / 2 - 0.3) // turned a little toward the door
+    g.add(back, lip, face); g.rotation.y = -p.side * (Math.PI / 2) // flat against its wall, facing the middle of the hall
+    g.position.set(p.side * (HALF - 1), PY, p.z)
     scene.add(g)
     const normal = new THREE.Vector3(0, 0, 1).applyEuler(g.rotation)
-    const light = new THREE.PointLight(C.cy, 1.0, 5, 2); light.position.copy(g.position).addScaledVector(normal, 1.2); scene.add(light)
-    return { ctx: c.getContext('2d'), tex, face, pos: g.position.clone(), normal, draw: p.draw }
+    const light = new THREE.PointLight(C.cy, 1.0, 5, 2); scene.add(light)
+    const at = () => { light.position.copy(g.position).addScaledVector(normal, 1.2); screens.place(i, face.getWorldPosition(new THREE.Vector3()), g.rotation.y) }
+    screens.add(p.screen, PW, PH); g.updateMatrixWorld(); at()
+    return { ctx: c.getContext('2d'), tex, face, g, pos: g.position, normal, draw: p.draw, at }
   })
-  /** Beside panel `i`: a metre in front of it and 2.1 m toward its outer edge. */
+  /**
+   * Hangs each screen on the wall: rays across its footprint find how far the wall's pipes and ribs reach into the
+   * hall; the screen goes on the flattest stretch near its spot, its back just clear of the nearest part.
+   */
+  function mount(hall: THREE.Object3D) {
+    const ray = new THREE.Raycaster(), dir = new THREE.Vector3()
+    hall.updateMatrixWorld(true)
+    panels.forEach((p, i) => {
+      const side = PANELS[i].side
+      dir.set(side, 0, 0)
+      const reach = (z: number) => { // the smallest |x| the wall reaches over a screen centred at z
+        let min = HALF
+        for (let a = 0; a <= 6; a++) for (let b = 0; b <= 4; b++) {
+          ray.set(new THREE.Vector3(side * 2, PY - PH / 2 - 0.05 + (b / 4) * (PH + 0.1), z - PW / 2 - 0.05 + (a / 6) * (PW + 0.1)), dir)
+          const hit = ray.intersectObject(hall, true)[0]
+          if (hit) min = Math.min(min, 2 + hit.distance)
+        }
+        return min
+      }
+      let best = { z: PANELS[i].z, x: reach(PANELS[i].z), score: -Infinity }
+      for (let dz = -2.5; dz <= 2.5; dz += 0.25) {
+        const z = PANELS[i].z + dz, x = reach(z), score = x - Math.abs(dz) * 0.08
+        if (score > best.score) best = { z, x, score }
+      }
+      p.g.position.set(side * Math.max(best.x - 0.11, 4.6), PY, best.z)
+      p.g.updateMatrixWorld(); p.at()
+    })
+  }
+  /** Beside panel `i`: a metre in front of it and 2.4 m toward its outer edge. */
   const beside = (i: number, dy: number): V3 => {
     const p = panels[i], t = new THREE.Vector3(-p.normal.z, 0, p.normal.x).multiplyScalar(PANELS[i].side < 0 ? 1 : -1)
-    return p.pos.clone().addScaledVector(p.normal, 1.0).addScaledVector(t, 2.1).add(new THREE.Vector3(0, dy, 0)).toArray() as V3
+    return p.pos.clone().addScaledVector(p.normal, 1.0).addScaledVector(t, 2.4).add(new THREE.Vector3(0, dy, 0)).toArray() as V3
   }
 
   /* ---------- crew: the focus member beside Live Vitals, the rest by roster order ---------- */
-  const SLOTS: { pos: V3; rot: V3 }[] = [
+  const slots = (): { pos: V3; rot: V3 }[] => [
     { pos: beside(1, -0.9), rot: [0, -0.8, 0.08] },
     { pos: [-2.2, -0.9, -11.5], rot: [0, 0.9, 0.05] },
     { pos: [2.2, -0.4, -11.8], rot: [0.2, -0.9, -0.15] },
@@ -106,6 +149,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     { pos: [-1.6, 1.2, 4], rot: [0.4, 0.3, 0.6] },
     { pos: [1.8, 1.4, -4], rot: [-0.3, -0.5, -0.5] },
   ]
+  let SLOTS = slots()
   const crew = createCrew(scene, loader, MODELS)
   const eva = createEva(scene, loader, MODELS)
   let placedKey = ''
@@ -116,6 +160,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     const key = `${data.focusId}|${out}|${data.crew.map((c) => c.id).join(',')}`
     if (key === placedKey || !crew.get(order[0])) return // not loaded yet
     placedKey = key
+    SLOTS = slots()
     order.forEach((id, i) => {
       const a = crew.get(id), slot = SLOTS[i % SLOTS.length]
       if (!a) return
@@ -197,7 +242,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const onResize = () => {
     const [w, hh] = size()
     camera.aspect = w / hh; camera.updateProjectionMatrix()
-    renderer.setSize(w, hh, false); composer.setSize(w, hh)
+    renderer.setSize(w, hh, false); composer.setSize(w, hh); screens.setSize(w, hh)
   }
   canvas.addEventListener('wheel', onWheel, { passive: false })
   canvas.addEventListener('pointerdown', onDown)
@@ -240,6 +285,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     space.update(t, still); beam.update(t, still); post.update(t, still); eva.update(still, p); flare.update(reduced)
     if (frameNo++ % 6 === 0) renderer.shadowMap.needsUpdate = true
     composer.render(dt)
+    screens.render(camera, crew.holders().filter((h) => h.visible).map((h) => h.getWorldPosition(new THREE.Vector3())), dt)
     // step down once if the first seconds run slow (frame times are only trusted after the scene is ready)
     if (ready && !downgraded) {
       slow.n++; slow.sum += dt
@@ -247,10 +293,21 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     }
   }
   frame()
-  void Promise.all([hallLoaded, crew.loaded]).then(() => { if (!disposed) { place(); renderer.shadowMap.needsUpdate = true; ready = true; opts.onReady() } })
+  void Promise.all([hallLoaded, crew.loaded]).then(([hall]) => {
+    if (disposed) return
+    if (hall) mount(hall)
+    placedKey = ''; place(); renderer.shadowMap.needsUpdate = true; ready = true; opts.onReady()
+    loadScreens()
+  })
+  /** The console views follow the cabin: your own board, and vitals, alerts and trends for the focus crew member. */
+  function loadScreens() {
+    if (!ready || !data) return
+    const crewFor = [data.selfId, data.focusId, data.focusId, data.focusId]
+    PANELS.forEach((_, i) => screens.load(i, crewFor[i] ?? null, i * 1200))
+  }
 
   return {
-    update(d) { data = d; place() },
+    update(d) { data = d; place(); loadScreens() },
     goTo,
     dispose() {
       disposed = true
@@ -266,7 +323,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
         m.geometry?.dispose()
         for (const mat of ([] as THREE.Material[]).concat(m.material ?? [])) { (mat as THREE.MeshBasicMaterial).map?.dispose(); mat.dispose() }
       })
-      scene.environment?.dispose(); pmrem.dispose(); composer.dispose(); renderer.dispose()
+      scene.environment?.dispose(); pmrem.dispose(); composer.dispose(); renderer.dispose(); screens.dispose()
     },
   }
 }
