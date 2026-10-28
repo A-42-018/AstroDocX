@@ -173,7 +173,7 @@
     .tt-label, .strip-q, .strip-link > span[aria-hidden]:not(.lamp):not(.strip-q) { display: none; }
     .toptabs { margin-left: 0; }
     .toptabs a { padding: 0 9px; }
-    .tt-n { position: absolute; top: 9px; right: 0; min-width: 14px; height: 14px; padding: 0 3px; font-size: 10px; }
+    .tt-n { position: absolute; top: 9px; right: 0; min-width: 15px; height: 15px; padding: 0 3px; font-size: 11px; }
     .tt-sep { margin: 16px 4px; }
     .strip-link { padding: 0 12px; }
     .topbar { gap: 8px; padding: 0 12px; }
@@ -216,9 +216,10 @@
       border-top: 1px solid var(--edge); background: rgba(3, 10, 16, 0.96); padding-bottom: env(safe-area-inset-bottom, 0);
       -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
     }
-    .tabs ul { display: grid; grid-template-columns: repeat(5, 1fr); }
+    .tabs ul { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .tabs li { min-width: 0; }
     .tabs li > a, .tabs li > button {
-      position: relative; width: 100%; height: 64px; display: grid; justify-items: center; align-content: center; gap: 4px; padding: 0;
+      position: relative; width: 100%; height: 64px; overflow: hidden; display: grid; justify-items: center; align-content: center; gap: 4px; padding: 0;
       border: 0; background: transparent; color: var(--t3); cursor: pointer;
       font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
     }
