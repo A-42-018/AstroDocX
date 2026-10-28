@@ -11,6 +11,8 @@ export const SUN_DIR = new THREE.Vector3(14, 4.5, -80).normalize()
 /** The light on Earth itself: from above and behind the ship, so the side we see is in daylight (artistic, like the references). */
 const EARTH_SUN = new THREE.Vector3(0.55, 0.5, 0.65).normalize()
 const R = 300
+/** Starting longitude turned toward the ship: Africa and the Atlantic, green and blue rather than polar snow. */
+const SPIN0 = 2.2
 /** Below and ahead of the ship, so the limb arcs across the upper window. */
 export const EARTH_CENTER = new THREE.Vector3(0, -R + 9.5, -340)
 
@@ -96,15 +98,18 @@ function glowTexture(stops: [number, string][]) {
 
 export interface Space { group: THREE.Group; sun: THREE.Vector3; update: (t: number, still: number) => void }
 
-/** Builds Earth, sun and stars; `textures` is the folder the Earth maps would be in. */
-export function createSpace(scene: THREE.Scene, textures: string): Space {
+/**
+ * Builds Earth, sun and stars; `textures` is the folder the Earth maps would be in. `sharp` picks the 4K day map
+ * ("Earth" by kongle, CC BY-SA 4.0) over NASA's 2K one; phones and small GPUs keep the 2K.
+ */
+export function createSpace(scene: THREE.Scene, textures: string, sharp: boolean): Space {
   const group = new THREE.Group(); scene.add(group)
   const uniforms = {
     day: { value: null as THREE.Texture | null }, night: { value: null as THREE.Texture | null }, clouds: { value: null as THREE.Texture | null },
     maps: { value: 0 }, sun: { value: EARTH_SUN }, time: { value: 0 },
   }
   // tilted so the ship looks down on the tropics, not a pole; `spin` turns about Earth's own axis
-  const earth = new THREE.Group(); earth.position.copy(EARTH_CENTER); earth.rotation.set(1.15, 0, 0.25); group.add(earth)
+  const earth = new THREE.Group(); earth.position.copy(EARTH_CENTER); earth.rotation.set(1.42, 0, 0.25); group.add(earth)
   const spin = new THREE.Group(); earth.add(spin)
   const geo = new THREE.SphereGeometry(R, 128, 64)
   spin.add(new THREE.Mesh(geo, new THREE.ShaderMaterial({ uniforms, vertexShader: surfaceVert, fragmentShader: surfaceFrag })))
@@ -116,7 +121,8 @@ export function createSpace(scene: THREE.Scene, textures: string): Space {
   // the real maps, if they are installed; all three or none
   const loader = new THREE.TextureLoader()
   const load = (name: string) => loader.loadAsync(`${textures}${name}`).then((t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t })
-  Promise.all([load('earth_day.webp'), load('earth_night.webp'), load('earth_clouds.webp')])
+  const day = sharp ? load('earth_day_4k.webp').catch(() => load('earth_day.webp')) : load('earth_day.webp')
+  Promise.all([day, load('earth_night.webp'), load('earth_clouds.webp')])
     .then(([d, n, c]) => { uniforms.day.value = d; uniforms.night.value = n; uniforms.clouds.value = c; uniforms.maps.value = 1 })
     .catch(() => { /* procedural Earth stays */ })
 
@@ -145,7 +151,7 @@ export function createSpace(scene: THREE.Scene, textures: string): Space {
     group, sun: SUN_AT,
     update(t, still) {
       uniforms.time.value = t * still
-      spin.rotation.y = t * 0.004 * still
+      spin.rotation.y = SPIN0 + t * 0.004 * still
       clouds.rotation.y = t * 0.0015 * still
     },
   }

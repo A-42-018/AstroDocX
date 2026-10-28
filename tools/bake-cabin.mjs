@@ -1,7 +1,7 @@
 // Compresses the 3D cabin's raw downloads (assets-src/cabin/, not in git) into app/public/models and app/public/textures.
 // Run from app/: node ../tools/bake-cabin.mjs   (needs the @gltf-transform/cli devDependency)
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, statSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -24,10 +24,12 @@ function model(name, out, size, specGloss = false) {
 }
 
 /** An image to webp, longest side `size`. */
-async function image(input, out, size, quality = 82) {
+async function image(input, out, size, quality = 82, flip = false) {
   if (!existsSync(input)) return console.log(`skip ${input} (not downloaded)`)
   const { default: sharp } = await import(createRequire(join(root, 'app/package.json')).resolve('sharp'))
-  await sharp(input).resize(size, size, { fit: 'inside' }).webp({ quality }).toFile(join(textures, out))
+  let img = sharp(input, { limitInputPixels: false }).resize(size, size, { fit: 'inside' })
+  if (flip) img = img.flip()
+  await img.webp({ quality }).toFile(join(textures, out))
   console.log(`${out}: ${mb(input)} -> ${mb(join(textures, out))}`)
 }
 
@@ -39,3 +41,12 @@ for (const [dir, key, ext] of [['metalplates', 'MetalPlates006_1K-PNG', 'png'], 
 }
 // Earth (NASA Visible Earth, public domain): equirectangular 2:1 maps from eoimages.gsfc.nasa.gov, records 57752, 55167 and 57747
 for (const [f, out] of [['land_shallow_topo_2048.jpg', 'earth_day.webp'], ['earth_lights_lrg.jpg', 'earth_night.webp'], ['cloud_combined_2048.jpg', 'earth_clouds.webp']]) await image(join(src, f), out, 2048)
+// Sharper Earth for desktop: "Earth" by kongle (CC BY-SA 4.0, sketchfab.com/3d-models/earth-63d902b12fd14868b4dc2f19dc21d7c2),
+// its 8K texture pulled out of earth.glb (stored upside down, glTF style) and baked at 4K
+const earthGlb = join(src, 'earth.glb')
+if (existsSync(earthGlb)) {
+  const b = readFileSync(earthGlb), n = b.readUInt32LE(12), j = JSON.parse(b.subarray(20, 20 + n).toString())
+  const bv = j.bufferViews[j.images[0].bufferView], at = 20 + n + 8 + (bv.byteOffset ?? 0)
+  writeFileSync(join(tmp, 'earth_8k.jpg'), b.subarray(at, at + bv.byteLength))
+  await image(join(tmp, 'earth_8k.jpg'), 'earth_day_4k.webp', 4096, 85, true)
+} else console.log('skip earth.glb (not downloaded)')

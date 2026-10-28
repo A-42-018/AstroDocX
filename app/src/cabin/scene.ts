@@ -67,7 +67,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
 
   /* ---------- lighting and the hall ---------- */
   const { alarm } = addLights(scene, quality)
-  const space = createSpace(scene, TEXTURES)
+  const space = createSpace(scene, TEXTURES, quality !== 'low' && renderer.capabilities.maxTextureSize >= 4096)
   const beam = createSunBeam(scene, quality)
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder)
   const hallLoaded = buildHall(scene, loader, MODELS, TEXTURES)
