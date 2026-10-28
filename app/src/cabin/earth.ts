@@ -3,7 +3,7 @@ import * as THREE from 'three'
 /*
  * Space outside the forward window: Earth as a real sphere (day, night lights, clouds, atmosphere rim), the sun
  * and a starfield. Earth uses NASA Visible Earth maps (public domain) in public/textures/ when they are there and
- * falls back to a procedural globe, so the scene never waits on them. Nothing here takes fog.
+ * falls back to a procedural globe, so the scene never waits on them.
  */
 
 /** Where the sun is seen from the hall: just above the limb at the window's upper right, behind the station on EVA. */
@@ -58,20 +58,22 @@ const surfaceFrag = /* glsl */ `
       dayC = pow(mix(mix(sea, ground, land), vec3(0.9), ice), vec3(2.2)); // authored in sRGB
       nightC = land * step(0.66, fbm(vObj * 40.0)) * vec3(1.0, 0.72, 0.4) * 0.7;
     }
-    // like the references: deep saturated blue oceans, land a muted green-brown rather than lime
+    // like the references: deep saturated blue oceans, land a natural green-brown (not lime, and not muddied toward
+    // olive: it is the cool counterweight to the golden cabin)
     float dl = dot(dayC, vec3(0.2126, 0.7152, 0.0722));
     float ocean = smoothstep(0.0, 0.04, dayC.b - max(dayC.r, dayC.g));
-    dayC = mix(mix(vec3(dl), dayC, 0.7) * vec3(1.06, 0.97, 0.86), max(mix(vec3(dl), dayC, 1.35), 0.0) * vec3(0.8, 1.0, 1.25), ocean);
+    dayC = mix(mix(vec3(dl), dayC, 0.9) * vec3(0.98, 1.0, 1.0) * 1.08, max(mix(vec3(dl), dayC, 1.35), 0.0) * vec3(0.8, 1.0, 1.25), ocean);
     // fine detail the 4K map lacks up close (EVA is a few km up): breaks the blur into texture
     dayC *= 0.82 + 0.36 * fbm(vObj * 1400.0);
     vec3 c = dayC * (0.03 + 1.3 * max(l, 0.0)) * lit + nightC * (1.0 - lit) * 0.9;
     vec3 v = normalize(cameraPosition - vW);
     // a little sun glint on the oceans
     c += pow(max(dot(reflect(-sun, normalize(vN)), v), 0.0), 40.0) * 0.25 * lit;
-    // aerial haze: thicker the more edge-on the ground is seen, so the land fades into a blue-white limb
+    // aerial haze: thicker the more edge-on the ground is seen, so the land fades into a blue-white limb (and the
+    // oblique view from the hall, through more air, reads blue, the cool counterweight to the cabin's gold)
     float graze = 1.0 - max(dot(v, normalize(vN)), 0.0);
     vec3 haze = vec3(0.32, 0.56, 1.0) * (0.06 + 0.85 * max(l, 0.0));
-    c = mix(c, haze, clamp(0.01 + 0.7 * pow(graze, 12.0), 0.0, 0.7));
+    c = mix(c, haze, clamp(0.01 + 0.7 * pow(graze, 7.0), 0.0, 0.7));
     gl_FragColor = vec4(c, 1.0);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>

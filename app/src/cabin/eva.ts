@@ -63,7 +63,7 @@ export function createEva(scene: THREE.Scene, loader: GLTFLoader, models: string
       iss.traverse((o) => {
         const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined
         if (!m?.isMeshStandardMaterial) return
-        m.envMapIntensity = 0.25; m.fog = false // out in space: the hall's haze does not reach it
+        m.envMapIntensity = 0.25
         m.metalness = 0.35; m.roughness = 0.42 // bare metal and blankets that catch the sun
         // the model's solar arrays are brown; real ones read deep blue with a gold sheen
         const c = meanColor(m.map)

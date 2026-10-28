@@ -6,7 +6,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { glowTexture, mulberry } from './earth'
-import { FLOOR, TOP, WIN } from './hall'
+import { FLOOR, SUN_LAYER, TOP, WIN } from './hall'
 import { C } from './panels'
 
 /*
@@ -36,7 +36,7 @@ export function windowEnvironment() {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(intensity) }))
     m.position.set(...at); m.rotation.set(rx, ry, 0); env.add(m)
   }
-  panel(12, 4.5, '#ffe6c4', 12, [0, 0.6, -15.9], 0) // the forward window: Earth light and the low golden sun
+  panel(12, 4.5, '#fbf6f0', 12, [0, 0.6, -15.9], 0) // the forward window: mostly Earth light, so what it lights stays near neutral; the sun carries the gold
   panel(14, 30, '#d8c2a4', 0.26, [0, -3.9, 0], -Math.PI / 2) // the sunlit floor bouncing warm light up
   panel(5, 30, '#c8c4bc', 0.35, [0, 3.9, 0], Math.PI / 2) // the ceiling strip
   for (const x of [-7.9, 7.9]) panel(30, 1.2, '#d4d0c8', 0.45, [x, 1.5, 0], 0, -Math.sign(x) * Math.PI / 2) // light running along the walls
@@ -52,28 +52,80 @@ export function pickQuality(): Quality {
 
 /** The sunlight's direction into the hall: down and a little to the left, so it lands on the forward floor. */
 export const BEAM_DIR = new THREE.Vector3(-0.25, -0.45, 1).normalize()
+const SUN = '#ffc283', SUN_POWER = 9
+
+const poolVert = /* glsl */ `
+  varying vec3 vW; varying vec3 vN;
+  void main() { vN = normalize(mat3(modelMatrix) * normal); vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }
+`
+const poolFrag = /* glsl */ `
+  uniform float floorY; uniform vec2 across; varying vec3 vW; varying vec3 vN;
+  void main() {
+    float t = fract(dot(vW.xz, across) / 0.3); // the floor grating's slats throw long shadows down the sun's path
+    float slat = smoothstep(0.0, 0.08, t) * (1.0 - smoothstep(0.38, 0.46, t));
+    float floorLit = step(0.65, normalize(vN).y) * step(vW.y, floorY) * (gl_FrontFacing ? 1.0 : 0.0);
+    gl_FragColor = vec4(vec3(floorLit * (1.0 - 0.55 * slat)), 1.0);
+  }
+`
+
+/**
+ * The low tier's stand-in for the shadowed sun: a spot from the sun's direction, its map (cookie) a view of the hall
+ * from the sun rendered once when the hall has loaded: white where the sun reaches the floor (through the window, the
+ * side ports, the ceiling seam), crossed by the slats' long shadows, black where walls and bulkheads stop it. It lays
+ * the gold pool where the shadowed sun would, without a shadow map. `bake` renders the cookie.
+ */
+function sunPool(scene: THREE.Scene, target: THREE.Vector3) {
+  const spot = new THREE.SpotLight(SUN, 0, 0, 0.36, 0, 0) // dark until baked: unmapped, it would light the whole hall
+  spot.position.copy(target).addScaledVector(BEAM_DIR, -40); spot.target.position.copy(target)
+  scene.add(spot, spot.target)
+  const rt = new THREE.WebGLRenderTarget(512, 512, { samples: 4 })
+  const bake = (renderer: THREE.WebGLRenderer) => {
+    // the spot's map is projected like its shadow camera: square, aimed at the target, its field the cone
+    const cam = new THREE.PerspectiveCamera(THREE.MathUtils.radToDeg(spot.angle * 2), 1, 5, 80)
+    cam.position.copy(spot.position); cam.lookAt(target); cam.layers.set(SUN_LAYER); cam.updateMatrixWorld()
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: poolVert, fragmentShader: poolFrag, side: THREE.DoubleSide,
+      uniforms: { floorY: { value: FLOOR + 0.45 }, across: { value: new THREE.Vector2(BEAM_DIR.z, -BEAM_DIR.x).normalize() } },
+    })
+    const bg = scene.background, clear = renderer.getClearColor(new THREE.Color()), alpha = renderer.getClearAlpha()
+    scene.background = null; scene.overrideMaterial = mat; renderer.setClearColor(0x000000, 1)
+    renderer.setRenderTarget(rt); renderer.clear(); renderer.render(scene, cam); renderer.setRenderTarget(null)
+    scene.background = bg; scene.overrideMaterial = null; renderer.setClearColor(clear, alpha); mat.dispose()
+    spot.map = rt.texture; spot.intensity = SUN_POWER
+  }
+  return { bake, dispose: () => rt.dispose() }
+}
+
+/**
+ * A neutral key on the crew member in focus, aimed each frame by crew.ts: nothing else lights the suits directly, and
+ * the warm window ambient alone turns their white tan. Narrow and short, so the wall behind them hardly catches it.
+ */
+export const CREW_KEY = 6
 
 export function addLights(scene: THREE.Scene, quality: Quality) {
   // The references are lit from the window, not the ceiling: a near-neutral, low fill keeps the shaded walls metal grey
-  // with deep shadows in the pipework, and the gold comes from the sun and its bounce (low: no sun shadows, more fill)
-  scene.add(new THREE.HemisphereLight('#f4eee6', '#1e1c1a', quality === 'low' ? 0.45 : 0.4))
+  // with deep shadows in the pipework, and the gold comes from the sun and its bounce (low: less, since nothing
+  // darkens the crevices there and the sun pool must stand out)
+  scene.add(new THREE.HemisphereLight('#f4eee6', '#1e1c1a', quality === 'low' ? 0.3 : 0.4))
   // ceiling lamps, warm white and kept low: they glint on the pipes but must not out-light the window
   for (const z of [11, 4, -3, -9]) {
     const l = new THREE.PointLight('#fff4ea', 0.3, 8, 2); l.position.set(0, TOP - 0.6, z); scene.add(l)
   }
-  // golden bounce off the sunlit floor, carried down the hall
+  // warm bounce off the sunlit floor, carried down the hall (the seam and the floor plate carry the deeper gold)
   for (const [z, i] of [[-10, 8], [-2, 5], [6, 3.5]]) {
-    const b = new THREE.PointLight('#ffcf9e', i, 16, 1.4); b.position.set(-1, FLOOR + 0.8, z); scene.add(b)
+    const b = new THREE.PointLight('#ffdcb8', i, 16, 1.4); b.position.set(-1, FLOOR + 0.8, z); scene.add(b)
   }
   // the sun runs to the left, so its bounce reaches the aft left corner: the tank by the door catches a warm edge
-  const aft = new THREE.PointLight('#ffd8b0', 2.5, 9, 1.6); aft.position.set(-3.2, 0.6, 11.5); scene.add(aft)
+  const aft = new THREE.PointLight('#ffe4c8', 2.5, 9, 1.6); aft.position.set(-3.2, 0.6, 11.5); scene.add(aft)
 
-  // without shadows (low) the sun would light the whole hall through its walls: kept dim there
-  const sun = new THREE.DirectionalLight('#ffc283', quality === 'low' ? 0.5 : 9)
+  // without shadows (low) the sun would light the whole hall through its walls: kept dim there, and the sun pool spot
+  // lays its gold instead
+  const sun = new THREE.DirectionalLight(SUN, quality === 'low' ? 0.5 : SUN_POWER)
   const target = new THREE.Vector3(-1.5, FLOOR, -2)
   sun.position.copy(target).addScaledVector(BEAM_DIR, -40); sun.target.position.copy(target)
   scene.add(sun, sun.target)
-  if (quality !== 'low') {
+  const sunPoolLow = quality === 'low' ? sunPool(scene, target) : null
+  if (!sunPoolLow) {
     sun.castShadow = true
     sun.shadow.mapSize.setScalar(quality === 'high' ? 4096 : 2048) // crisp grating shadows
     // the whole hall, so the sun gets in only through the window
@@ -83,7 +135,9 @@ export function addLights(scene: THREE.Scene, quality: Quality) {
 
   const alarm = new THREE.PointLight(C.watch, 0, 5, 1.6)
   scene.add(alarm)
-  return { alarm, sun }
+  const crewKey = new THREE.SpotLight('#ffffff', CREW_KEY, 6.5, 0.36, 0.7, 1.2)
+  scene.add(crewKey, crewKey.target)
+  return { alarm, sun, crewKey, sunPool: sunPoolLow }
 }
 
 const beamVert = /* glsl */ `
@@ -91,10 +145,15 @@ const beamVert = /* glsl */ `
   void main() { vAlong = along; vUv = uv; vN = normalize(mat3(modelMatrix) * normal); vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }
 `
 const beamFrag = /* glsl */ `
-  uniform float time; uniform vec3 color; uniform float strength;
+  uniform float time; uniform vec3 color; uniform float strength; uniform vec4 win;
   varying float vAlong; varying vec2 vUv; varying vec3 vN; varying vec3 vW;
   void main() {
     float fade = pow(1.0 - vAlong, 1.6) * smoothstep(0.0, 0.06, vAlong);
+    // seen against the window the haze would only veil Earth (and warm its blues): it thins out there
+    vec3 ray = vW - cameraPosition; float k = (win.w - cameraPosition.z) / ray.z;
+    vec2 hit = cameraPosition.xy + ray.xy * k;
+    float over = step(1.0, k) * (1.0 - smoothstep(win.x - 0.6, win.x + 0.2, abs(hit.x))) * smoothstep(win.y - 0.2, win.y + 0.6, hit.y) * (1.0 - smoothstep(win.z - 0.6, win.z + 0.2, hit.y));
+    fade *= 1.0 - 0.75 * over;
     float edge = abs(dot(normalize(cameraPosition - vW), normalize(vN))); // edge-on faces vanish, so the beam has no hard outline
     float shafts = 0.55 + 0.45 * sin(vUv.x * 38.0 + time * 0.35) * sin(vUv.x * 17.0 - time * 0.2);
     float near = smoothstep(1.5, 7.0, distance(cameraPosition, vW)); // close up the beam's faces would read as a tinted sheet
@@ -133,7 +192,7 @@ export function createSunBeam(scene: THREE.Scene, quality: Quality) {
   const g = new THREE.BufferGeometry()
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('along', new THREE.Float32BufferAttribute(along, 1))
   g.setAttribute('uv', new THREE.Float32BufferAttribute(uv.map((u, i) => (i % 2 ? u : u / 4)), 2)); g.setIndex(idx); g.computeVertexNormals()
-  const beamU = { time: { value: 0 }, color: { value: new THREE.Color('#ffd4a0') }, strength: { value: 0.14 } }
+  const beamU = { time: { value: 0 }, color: { value: new THREE.Color('#ffd4a0') }, strength: { value: 0.14 }, win: { value: new THREE.Vector4(WIN.x, WIN.y0, WIN.y1, WIN.z) } }
   const beam = new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: beamU, vertexShader: beamVert, fragmentShader: beamFrag, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false }))
   beam.frustumCulled = false; scene.add(beam)
 
@@ -154,9 +213,9 @@ export function createSunBeam(scene: THREE.Scene, quality: Quality) {
   }
 }
 
-/** A crisp, contrasty grade, vignette and a whisper of film grain: the lens the references were shot through. */
+/** A gentle contrast curve, vignette and a whisper of film grain: the lens the references were shot through. */
 const LensShader = {
-  uniforms: { tDiffuse: { value: null }, time: { value: 0 }, grain: { value: 0.035 }, contrast: { value: 0.36 }, balance: { value: new THREE.Vector3(1.0, 1.0, 0.985) } },
+  uniforms: { tDiffuse: { value: null }, time: { value: 0 }, grain: { value: 0.035 }, contrast: { value: 0.14 }, balance: { value: new THREE.Vector3(1.0, 1.0, 0.985) } },
   vertexShader: /* glsl */ `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: /* glsl */ `
     uniform sampler2D tDiffuse; uniform float time; uniform float grain; uniform float contrast; uniform vec3 balance; varying vec2 vUv;
@@ -165,7 +224,7 @@ const LensShader = {
       vec4 c = texture2D(tDiffuse, vUv);
       // contrast about mid grey (the input is linear, before tone mapping) and the white balance
       float l = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722));
-      c.rgb *= pow(max(l, 1e-4) / 0.18, contrast) * balance; // the references' deep shadows and crisp highlights; a neutral white balance, the gold is in the light
+      c.rgb *= pow(max(l, 1e-4) / 0.18, contrast) * balance; // kept low: the references' shadows are deep but open, their sunlit highlights hold detail; a neutral white balance, the gold is in the light
       vec2 d = vUv - 0.5;
       c.rgb *= mix(1.0, 0.72, smoothstep(0.45, 0.9, length(d * vec2(1.25, 1.0))));
       c.rgb += (h(vUv * 911.0 + fract(time)) - 0.5) * grain;
@@ -210,7 +269,7 @@ export function createFlare(camera: THREE.PerspectiveCamera, sun: THREE.Vector3)
   const halo = glowTexture([[0, 'rgba(255,240,210,0.6)'], [0.25, 'rgba(255,200,130,0.18)'], [1, 'rgba(255,170,90,0)']])
   // [where along the line (1 = at the sun, 0 = centre, below 0 = past it), size, texture, colour, opacity]
   const ghosts = ([
-    [1, 1.1, halo, '#ffd9a0', 0.55], [0.55, 0.09, disc, '#ffb070', 0.35], [0.25, 0.05, disc, '#c8ff9a', 0.3],
+    [1, 0.75, halo, '#ffe7c8', 0.45], [0.55, 0.09, disc, '#ffb070', 0.35], [0.25, 0.05, disc, '#c8ff9a', 0.3],
     [-0.2, 0.16, ring, '#8fd0ff', 0.35], [-0.45, 0.07, disc, '#ff9ad0', 0.25], [-0.8, 0.3, ring, '#ffc070', 0.22],
   ] as const).map(([at, size, map, color, op]) => {
     const m = new THREE.SpriteMaterial({ map, color, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false, fog: false, toneMapped: false })

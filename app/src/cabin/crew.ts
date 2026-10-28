@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import type { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { clone as skeletonClone } from 'three/examples/jsm/utils/SkeletonUtils.js'
 import type { CabinCrew } from './data'
+import { CREW_KEY } from './lighting'
 import { C, TAG_H, TAG_W, drawTag } from './panels'
 
 /** One astronaut in the room: the model, its live name tag and the ring shown when off-nominal. */
@@ -56,10 +57,15 @@ export function createCrew(scene: THREE.Scene, loader: GLTFLoader, models: strin
     for (const [id, a] of astros) if (!keep.includes(id)) { a.holder.visible = false; a.tag.visible = false; a.ring.visible = false }
   }
 
-  /** Float, tag fade and status ring for each crew member; lights `alarm` on the focus member when off-nominal. */
-  function animate(crew: Map<string, CabinCrew>, focusId: string | undefined, t: number, dt: number, still: number, reduced: boolean, camera: THREE.Camera, alarm: THREE.PointLight) {
+  const toCam = new THREE.Vector3(), side = new THREE.Vector3()
+  /**
+   * Float, tag fade and status ring for each crew member; lights `alarm` on the focus member when off-nominal, and aims
+   * `key` at `keyId` (the member picked, else the focus): from the camera's side, a little off to the hall's middle and above.
+   */
+  function animate(crew: Map<string, CabinCrew>, focusId: string | undefined, keyId: string | undefined, t: number, dt: number, still: number, reduced: boolean, camera: THREE.Camera, alarm: THREE.PointLight, key: THREE.SpotLight) {
     let i = 0
     alarm.intensity = 0
+    key.intensity = 0 // off, not hidden (that would recompile every shader), unless its member is here
     for (const [id, a] of astros) {
       const m = crew.get(id)
       if (!m) continue
@@ -76,6 +82,15 @@ export function createCrew(scene: THREE.Scene, loader: GLTFLoader, models: strin
         ring.color.set(m.status === 'act' ? C.act : C.watch); ring.opacity = 0.18 + pulse * 0.32 // a quiet halo: the tag carries the alert
         a.ring.position.copy(a.holder.position); a.ring.scale.setScalar(1 + pulse * 0.08)
         if (id === focusId) { alarm.color.set(ring.color); alarm.position.copy(a.holder.position).add(new THREE.Vector3(0, 0.6, 0.8)); alarm.intensity = 0.1 + pulse * 0.4 } // a hint of red: the hall fill is low, more would dye the suit
+      }
+      if (id === keyId && a.holder.visible) {
+        const at = a.holder.position
+        toCam.copy(camera.position).sub(at).setY(0).normalize()
+        side.set(-toCam.z, 0, toCam.x)
+        if (side.x * at.x > 0) side.negate() // toward the middle of the hall, never into a wall
+        key.position.copy(at).addScaledVector(toCam, 2.2).addScaledVector(side, 1.4).add(new THREE.Vector3(0, 2.2, 0))
+        key.target.position.copy(at)
+        key.intensity = CREW_KEY
       }
       i++
     }

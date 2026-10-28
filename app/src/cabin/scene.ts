@@ -45,6 +45,16 @@ const PANELS: { z: number; side: -1 | 1; draw: (g: CanvasRenderingContext2D, d: 
   { z: -5.5, side: 1, draw: drawTrends, screen: { view: 'trends', px: [1280, 750] } },
 ]
 const PW = 3.2, PH = 1.875, PY = 0.2
+/**
+ * Eye adaptation: the exposure at each tour stop, eased between stops as the camera moves. The helmet's visor takes a
+ * little light off at the first stop; facing the sun at the forward window the eye stops down, so the sunlit floor
+ * there keeps its tread plate instead of burning out.
+ */
+const EXPOSURE = [0.86, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 0.55, 1.1, 1.1]
+const exposureAt = (p: number) => {
+  const i = Math.min(Math.floor(p), EXPOSURE.length - 2), f = THREE.MathUtils.smoothstep(p - i, 0, 1)
+  return THREE.MathUtils.lerp(EXPOSURE[i], EXPOSURE[i + 1], f)
+}
 
 /** Throws when WebGL is unavailable; the page shows its fallback then. */
 export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): CabinScene {
@@ -54,23 +64,22 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   renderer.setPixelRatio(Math.min(devicePixelRatio, quality === 'high' ? 2 : 1.5))
   renderer.setSize(...size(), false)
   renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.toneMappingExposure = 1.1
+  renderer.toneMappingExposure = exposureAt(0)
   renderer.shadowMap.enabled = quality !== 'low'
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.shadowMap.autoUpdate = false // the hall is static and the crew drift slowly: refreshed every few frames in the loop
   const scene = new THREE.Scene()
   scene.background = new THREE.Color('#05080d')
-  scene.fog = new THREE.Fog('#a3a6aa', 40, 160) // a light haze: the far end of the hall goes lighter, not darker
   const pmrem = new THREE.PMREMGenerator(renderer)
   scene.environment = pmrem.fromScene(windowEnvironment(), 0.02).texture // the metal reflects the bright window, not a studio
-  scene.environmentIntensity = 0.8
+  scene.environmentIntensity = quality === 'low' ? 0.6 : 0.8 // low has no ambient occlusion to darken the crevices
   const camera = new THREE.PerspectiveCamera(58, size()[0] / size()[1], 0.08, 2000) // far enough for Earth and the stars
   const flare = createFlare(camera, SUN_AT)
   const post = createPost(renderer, scene, camera, ...size(), quality, [flare.pass])
   const { composer } = post
 
   /* ---------- lighting and the hall ---------- */
-  const { alarm } = addLights(scene, quality)
+  const { alarm, crewKey, sunPool } = addLights(scene, quality)
   const space = createSpace(scene, TEXTURES, quality !== 'low' && renderer.capabilities.maxTextureSize >= 4096, quality !== 'low')
   const beam = createSunBeam(scene, quality)
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder)
@@ -193,7 +202,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
 
   const N = STOP_COUNT, reduced = opts.reducedMotion
   let p = 0, pTarget = 0, snapTimer = 0, shown = -1
-  let focus: { pos: THREE.Vector3; look: THREE.Vector3 } | null = null
+  let focus: { pos: THREE.Vector3; look: THREE.Vector3; id: string } | null = null
   const camPos = posCurve.getPoint(0), camLook = lookCurve.getPoint(0)
   const drag = { on: false, moved: 0, x: 0, y: 0, yaw: 0, pitch: 0 }
 
@@ -226,7 +235,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     const id = hit.object.userData.crew as string | undefined, a = id ? crew.find(id) : undefined
     if (!id || !a) return
     const toCam = camera.position.clone().sub(a.base).setY(0).normalize()
-    focus = { pos: a.base.clone().addScaledVector(toCam, 2.6).add(new THREE.Vector3(0, 0.35, 0)), look: a.base.clone() }
+    focus = { pos: a.base.clone().addScaledVector(toCam, 2.6).add(new THREE.Vector3(0, 0.35, 0)), look: a.base.clone(), id }
     opts.onPick(id)
   }
   const onDown = (e: PointerEvent) => { drag.on = true; drag.moved = 0; drag.x = e.clientX; drag.y = e.clientY; canvas.classList.add('dragging') }
@@ -270,11 +279,12 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     dir.applyAxisAngle(new THREE.Vector3().crossVectors(dir, up).normalize(), drag.pitch)
     camera.lookAt(camera.position.clone().add(dir))
     if (opts.visor) { opts.visor.style.opacity = String(helmet); opts.visor.style.transform = `scale(${1 + (1 - helmet) * 0.25})` }
+    renderer.toneMappingExposure = exposureAt(p)
     const stop = Math.round(p)
     if (stop !== shown) { shown = stop; opts.onStop(stop) }
 
     const live = new Map<string, CabinCrew>((data?.crew ?? []).map((c) => [c.id, c]))
-    crew.animate(live, data?.focusId, t, dt, still, reduced, camera, alarm)
+    crew.animate(live, data?.focusId, focus?.id ?? data?.focusId, t, dt, still, reduced, camera, alarm, crewKey)
     if (data && t - lastDraw > 0.05) { // panels and tags at about 20 fps
       lastDraw = t
       for (const x of panels) if (x.ctx) { x.draw(x.ctx, data, t); x.tex.needsUpdate = true }
@@ -294,7 +304,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   frame()
   void Promise.all([hallLoaded, crew.loaded]).then(([hall]) => {
     if (disposed) return
-    if (hall) mount(hall)
+    if (hall) { mount(hall); sunPool?.bake(renderer) }
     placedKey = ''; place(); renderer.shadowMap.needsUpdate = true; ready = true; opts.onReady()
     loadScreens()
   })
@@ -322,7 +332,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
         m.geometry?.dispose()
         for (const mat of ([] as THREE.Material[]).concat(m.material ?? [])) { (mat as THREE.MeshBasicMaterial).map?.dispose(); mat.dispose() }
       })
-      scene.environment?.dispose(); pmrem.dispose(); composer.dispose(); renderer.dispose(); screens.dispose()
+      scene.environment?.dispose(); sunPool?.dispose(); pmrem.dispose(); composer.dispose(); renderer.dispose(); screens.dispose()
     },
   }
 }
