@@ -12,8 +12,11 @@ export const SUN_AT = SUN_DIR.clone().multiplyScalar(900)
 /** The light on Earth itself: from above and behind the ship, so the side we see is in daylight (artistic, like the references). */
 const EARTH_SUN = new THREE.Vector3(0.55, 0.5, 0.65).normalize()
 const R = 600
-/** Starting longitude turned toward the ship: Africa and the Atlantic, green and blue rather than polar snow. */
-const SPIN0 = 2.2
+/**
+ * Starting longitude turned toward the ship: with the tilt below, the views look down on the US east coast at about
+ * 33-40 N, green land, blue Atlantic and the cloud bands over it (the day map is a winter one: further north is snow).
+ */
+const SPIN0 = 2.62
 /**
  * Below and ahead of the ship, in a low orbit (about 0.08 R up): the horizon sits just above eye level ahead, so
  * the limb crosses the upper window and curves away down the sides, and on EVA Earth fills the lower frame.
@@ -55,17 +58,17 @@ const surfaceFrag = /* glsl */ `
       dayC = pow(mix(mix(sea, ground, land), vec3(0.9), ice), vec3(2.2)); // authored in sRGB
       nightC = land * step(0.66, fbm(vObj * 40.0)) * vec3(1.0, 0.72, 0.4) * 0.7;
     }
-    // the oceans a touch lighter and less saturated, as seen through the air
+    // vivid, like the references: a little more saturation and a deeper blue in the oceans
     float dl = dot(dayC, vec3(0.2126, 0.7152, 0.0722));
-    dayC = mix(dayC, vec3(dl), 0.18) + vec3(0.006, 0.014, 0.03);
-    vec3 c = dayC * (0.03 + 1.05 * max(l, 0.0)) * lit + nightC * (1.0 - lit) * 0.9;
+    dayC = max(mix(vec3(dl), dayC, 1.15), 0.0) * vec3(0.92, 1.0, 1.12);
+    vec3 c = dayC * (0.03 + 1.3 * max(l, 0.0)) * lit + nightC * (1.0 - lit) * 0.9;
     vec3 v = normalize(cameraPosition - vW);
     // a little sun glint on the oceans
     c += pow(max(dot(reflect(-sun, normalize(vN)), v), 0.0), 40.0) * 0.25 * lit;
     // aerial haze: thicker the more edge-on the ground is seen, so the land fades into a blue-white limb
     float graze = 1.0 - max(dot(v, normalize(vN)), 0.0);
-    vec3 haze = vec3(0.42, 0.62, 0.95) * (0.08 + 0.9 * max(l, 0.0));
-    c = mix(c, haze, clamp(0.08 + 0.8 * pow(graze, 8.0), 0.0, 0.8));
+    vec3 haze = vec3(0.35, 0.58, 1.0) * (0.08 + 0.9 * max(l, 0.0));
+    c = mix(c, haze, clamp(0.02 + 0.75 * pow(graze, 10.0), 0.0, 0.75));
     gl_FragColor = vec4(c, 1.0);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
@@ -79,7 +82,7 @@ const cloudFrag = /* glsl */ `
     float a = maps > 0.5 ? texture2D(clouds, vUv).r : smoothstep(0.6, 0.85, fbm(vObj * 5.0 + vec3(time * 0.01, 0.0, 0.0)));
     float l = dot(normalize(vN), sun);
     float face = abs(dot(normalize(cameraPosition - vW), normalize(vN))); // seen edge-on, cloud layers stack up: thin them there
-    gl_FragColor = vec4(vec3(0.95) * (0.04 + max(l, 0.0)), a * smoothstep(-0.2, 0.15, l) * (0.4 + 0.5 * smoothstep(0.0, 0.35, face)));
+    gl_FragColor = vec4(vec3(0.92) * (0.04 + max(l, 0.0)), a * smoothstep(-0.2, 0.15, l) * (0.35 + 0.55 * smoothstep(0.0, 0.35, face)));
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
@@ -157,7 +160,7 @@ export function createSpace(scene: THREE.Scene, textures: string, sharp: boolean
     maps: { value: 0 }, sun: { value: EARTH_SUN }, time: { value: 0 }, center: { value: EARTH_CENTER }, radius: { value: R },
   }
   // tilted so the ship looks down on the tropics, not a pole; `spin` turns about Earth's own axis
-  const earth = new THREE.Group(); earth.position.copy(EARTH_CENTER); earth.rotation.set(0.886, 0, 0.25); group.add(earth)
+  const earth = new THREE.Group(); earth.position.copy(EARTH_CENTER); earth.rotation.set(1.15, 0, 0.25); group.add(earth)
   const spin = new THREE.Group(); earth.add(spin)
   const geo = new THREE.SphereGeometry(R, 256, 128)
   spin.add(new THREE.Mesh(geo, new THREE.ShaderMaterial({ uniforms, vertexShader: surfaceVert, fragmentShader: surfaceFrag })))
@@ -176,7 +179,7 @@ export function createSpace(scene: THREE.Scene, textures: string, sharp: boolean
 
   // the sun: a white-hot core (bright enough to bloom), a wide soft halo and a slowly turning starburst
   const sunSprites = ([
-    [520, glowTexture([[0, 'rgba(255,214,150,0.6)'], [0.3, 'rgba(255,180,100,0.14)'], [1, 'rgba(255,160,80,0)']]), 0.95, 1],
+    [520, glowTexture([[0, 'rgba(255,240,215,0.55)'], [0.3, 'rgba(255,220,170,0.1)'], [1, 'rgba(255,200,140,0)']]), 0.9, 1],
     [380, raysTexture(), 0.9, 1.6],
     [70, glowTexture([[0, 'rgba(255,255,250,1)'], [0.2, 'rgba(255,244,210,0.95)'], [0.5, 'rgba(255,200,120,0.3)'], [1, 'rgba(255,180,90,0)']]), 1, 4],
   ] as const).map(([size, tex, op, hot]) => {
@@ -213,7 +216,7 @@ export function createSpace(scene: THREE.Scene, textures: string, sharp: boolean
     group, sun: SUN_AT,
     update(t, still) {
       uniforms.time.value = t * still
-      spin.rotation.y = SPIN0 + t * 0.004 * still
+      spin.rotation.y = SPIN0 + t * 0.0012 * still // slow enough that a long visit stays over the same coast
       clouds.rotation.y = t * 0.0015 * still
       rays.rotation = t * 0.01 * still
     },

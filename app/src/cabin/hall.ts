@@ -50,7 +50,7 @@ function hallMaterial(textures: string) {
     plateCol: { value: tex('metalplates_color', true) }, plateNor: { value: tex('metalplates_normal') }, plateRou: { value: tex('metalplates_roughness') },
     floorY: { value: FLOOR + 0.45 },
   }
-  const m = new THREE.MeshStandardMaterial({ color: '#b4bdc6', metalness: 0.45, roughness: 1, envMapIntensity: 0.4 })
+  const m = new THREE.MeshStandardMaterial({ color: '#c4c3bf', metalness: 0.45, roughness: 1, envMapIntensity: 0.8 })
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, u)
     sh.vertexShader = 'varying vec3 vTriPos; varying vec3 vTriN;\n' + sh.vertexShader.replace('#include <project_vertex>', TRI_VERT)
@@ -60,9 +60,9 @@ function hallMaterial(textures: string) {
         vec3 wear = tri(wearCol, 0.35).rgb;
         float scuff = dot(wear, vec3(0.2126, 0.7152, 0.0722)); // red paint is dark, the chips are light: a wear mask
         vec3 wall = diffuseColor.rgb * (0.82 + 0.35 * (scuff - 0.12));
-        vec3 plate = tri(plateCol, 0.9).rgb * 1.9;
+        vec3 plate = tri(plateCol, 0.9).rgb * 1.6;
         diffuseColor.rgb = mix(wall, plate, fl);`)
-      .replace('#include <roughnessmap_fragment>', `float roughnessFactor = mix(0.38 + 0.45 * tri(wearRou, 0.35).g, 0.3 + 0.5 * tri(plateRou, 0.9).g, fl);`)
+      .replace('#include <roughnessmap_fragment>', `float roughnessFactor = mix(0.28 + 0.38 * tri(wearRou, 0.35).g, 0.3 + 0.45 * tri(plateRou, 0.9).g, fl);`)
       .replace('#include <metalnessmap_fragment>', `float metalnessFactor = mix(metalness, 0.8, fl);`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
         vec3 wn = fl > 0.5 ? triN(plateNor, 0.9, 1.0) : triN(wearNor, 0.35, 0.6);
@@ -74,23 +74,34 @@ function hallMaterial(textures: string) {
 /** Adds the hall's shell, bulkheads, window and light strips at once; the detailed walls arrive with the returned promise (null if they failed). */
 export function buildHall(scene: THREE.Scene, loader: GLTFLoader, models: string, textures: string): Promise<THREE.Object3D | null> {
   const h = TOP - FLOOR
-  const hullMat = new THREE.MeshStandardMaterial({ color: '#141b22', metalness: 0.3, roughness: 0.8, side: THREE.BackSide })
+  const hullMat = new THREE.MeshStandardMaterial({ color: '#4a5058', metalness: 0.3, roughness: 0.8, side: THREE.BackSide })
   // fills the ceiling seam and anything seen through the wall openings; open at the front (-z) so the window looks into space
   const hull = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2 + 6, h + 4, LEN * 2 + 3), [hullMat, hullMat, hullMat, hullMat, hullMat, new THREE.MeshBasicMaterial({ visible: false })])
   hull.position.set(0, FLOOR + h / 2, 0); hull.receiveShadow = true; scene.add(hull)
-  const seam = new THREE.Mesh(new THREE.PlaneGeometry(6, LEN * 2), new THREE.MeshStandardMaterial({ color: '#59636e', metalness: 0.4, roughness: 0.6 }))
+  const seam = new THREE.Mesh(new THREE.PlaneGeometry(6, LEN * 2), new THREE.MeshStandardMaterial({ color: '#a8acb0', metalness: 0.3, roughness: 0.6 }))
   seam.rotation.x = Math.PI / 2; seam.position.set(0, TOP - 0.02, 0); scene.add(seam)
-  const capMat = new THREE.MeshStandardMaterial({ color: '#3a4550', metalness: 0.6, roughness: 0.5 })
+  const capMat = new THREE.MeshStandardMaterial({ color: '#9aa1a8', metalness: 0.55, roughness: 0.4 })
   const glowMat = new THREE.MeshStandardMaterial({ color: '#0b1218', emissive: C.cy, emissiveIntensity: 1.2 })
   const fwd = new THREE.Group(); fwd.position.z = -LEN; scene.add(fwd)
   const side = HALF - WIN.x, top = TOP - WIN.y1, sill = WIN.y0 - FLOOR
   for (const [w, x, y, hh] of [[HALF * 2, 0, TOP - top / 2, top], [HALF * 2, 0, FLOOR + sill / 2, sill], [side, -HALF + side / 2, 0.5, h], [side, HALF - side / 2, 0.5, h]]) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, hh, 0.3), capMat); m.position.set(x, y, 0); m.castShadow = m.receiveShadow = true; fwd.add(m)
   }
-  for (const y of [WIN.y0, WIN.y1]) { const f = new THREE.Mesh(new THREE.BoxGeometry(WIN.x * 2, 0.06, 0.05), glowMat); f.position.set(0, y, 0.17); fwd.add(f) }
+  // a soft-cornered metal bezel round the window; its rounded inner edge covers the opening's square corners
+  const round = (path: THREE.Path, x0: number, y0: number, x1: number, y1: number, r: number) => {
+    path.moveTo(x0 + r, y0); path.lineTo(x1 - r, y0); path.quadraticCurveTo(x1, y0, x1, y0 + r); path.lineTo(x1, y1 - r); path.quadraticCurveTo(x1, y1, x1 - r, y1)
+    path.lineTo(x0 + r, y1); path.quadraticCurveTo(x0, y1, x0, y1 - r); path.lineTo(x0, y0 + r); path.quadraticCurveTo(x0, y0, x0 + r, y0)
+    return path
+  }
+  const bezelShape = round(new THREE.Shape(), -WIN.x - 0.45, WIN.y0 - 0.4, WIN.x + 0.45, WIN.y1 + 0.4, 0.9) as THREE.Shape
+  bezelShape.holes.push(round(new THREE.Path(), -WIN.x + 0.05, WIN.y0 + 0.05, WIN.x - 0.05, WIN.y1 - 0.05, 0.7))
+  const bezel = new THREE.Mesh(new THREE.ExtrudeGeometry(bezelShape, { depth: 0.12, bevelEnabled: true, bevelThickness: 0.08, bevelSize: 0.08, bevelSegments: 4, curveSegments: 16 }),
+    new THREE.MeshStandardMaterial({ color: '#c9ccd0', metalness: 0.75, roughness: 0.25 }))
+  bezel.position.z = 0.15; bezel.castShadow = bezel.receiveShadow = true; fwd.add(bezel)
+  for (const y of [WIN.y0 - 0.25]) { const f = new THREE.Mesh(new THREE.BoxGeometry(WIN.x * 2 - 1, 0.04, 0.04), glowMat); f.position.set(0, y, 0.4); fwd.add(f) }
   const aft = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2, h, 0.3), capMat); aft.position.set(0, FLOOR + h / 2, LEN); aft.receiveShadow = true; scene.add(aft)
   const door = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.2, 0.05), glowMat); door.position.set(0, -0.9, LEN - 0.17); scene.add(door)
-  const strip = new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: C.cy, emissiveIntensity: 1.8 })
+  const strip = new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: C.cy, emissiveIntensity: 1.1 }) // present but subtle in the sunlit hall
   for (const [x, y] of [[-5.6, FLOOR + 0.08], [5.6, FLOOR + 0.08], [-3, TOP - 0.08], [3, TOP - 0.08]]) {
     const b = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.04, LEN * 2 - 1), strip); b.position.set(x, y, 0); scene.add(b)
   }

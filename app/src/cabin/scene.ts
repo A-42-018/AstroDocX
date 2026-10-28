@@ -55,13 +55,13 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   renderer.setPixelRatio(Math.min(devicePixelRatio, quality === 'high' ? 2 : 1.5))
   renderer.setSize(...size(), false)
   renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.toneMappingExposure = 0.9
+  renderer.toneMappingExposure = 0.92
   renderer.shadowMap.enabled = quality !== 'low'
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
   renderer.shadowMap.autoUpdate = false // the hall is static and the crew drift slowly: refreshed every few frames in the loop
   const scene = new THREE.Scene()
   scene.background = new THREE.Color('#05080d')
-  scene.fog = new THREE.Fog('#05080d', 35, 110)
+  scene.fog = new THREE.Fog('#a89f90', 40, 160) // a warm, sunlit haze: the far end of the hall goes lighter, not darker
   const pmrem = new THREE.PMREMGenerator(renderer)
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture // soft reflections for the metal
   scene.environmentIntensity = 0.45
