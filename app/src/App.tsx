@@ -9,6 +9,7 @@ import { lazyPage } from './shell/lazyPage'
 import { BottomTabs, StatusBar, TopBar } from './shell/Chrome'
 import { routeFor } from './shell/nav'
 import { ShellDataContext, useShellData } from './shell/useShellData'
+import { useSplashHandoff } from './shell/splash'
 import { StateView } from './ui/StateView'
 
 // The board is the landing screen and loads eagerly; every other screen (Trends carries the chart
@@ -53,6 +54,7 @@ function useRouteAnnounce(main: React.RefObject<HTMLElement | null>) {
 
 export default function App() {
   useBootDemo()
+  useSplashHandoff()
   usePreloadPages()
   const main = useRef<HTMLElement>(null)
   useRouteAnnounce(main)

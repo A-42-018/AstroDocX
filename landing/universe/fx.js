@@ -6,6 +6,8 @@
      03  ECG line made of particles across the lunar foreground
      04  engine trail streaming back from the Orion engine
      05  small far Earth + data packets (satellite -> Earth along an arc)
+     01  singularity: hairline streaks / beams / curly trails, the black
+         event horizon behind the headline, rim glow, collapse flash
    (heartbeat ripple, mouse repel and planet shading live in engine.js)
 ============================================================ */
 (function () {
@@ -49,8 +51,98 @@
     return b(0.18, 0.035, 0.12) - b(0.37, 0.012, 0.14) + b(0.40, 0.012, 1.0) - b(0.43, 0.012, 0.28) + b(0.66, 0.05, 0.22);
   }
 
+  /* ── 01 singularity: the parts points can't draw. Hairline streaks and curly trails as 1-px lines, a black
+        event-horizon disc that hides the stars behind the headline, and a soft rim glow. Everything is in the
+        iris plane (z = 0), sized by the dust shape's scale (= horizon radius), and driven by
+        (time, ignite, morph t), so it reverses with the scroll like the particles do. ── */
+  const LVS =
+    'attribute vec4 aSeed; attribute vec2 aL; uniform float uTime,uR,uW,uIgn,uBurst; varying float vA; varying vec3 vC;' +
+    'void main(){ float ign=1.-pow(1.-uIgn,3.), k=aSeed.w, th, r, a;' +
+    ' if(k<.5){ float life=fract(uTime*(.03+.05*aSeed.y)+aSeed.x); th=aL.x+uTime*.012;' +                 // streak: a hairline running outward
+    '  float head=1.02+pow(life,1.3)*3.6*(.4+.6*aSeed.z), len=.05+.5*life*aSeed.z; r=aL.y>.5?head:max(1.01,head-len);' +
+    '  a=(aL.y>.5?1.:0.)*smoothstep(0.,.05,life)*pow(1.-life,1.4)*.55; }' +
+    ' else if(k<1.5){ th=aL.x+uTime*.012; r=aL.y>.5?5.5:1.0; a=(aL.y>.5?0.:.75)*(.75+.25*sin(uTime*.7+aSeed.x*9.)); }' +   // beam: a long spoke fading out
+    ' else if(k<2.5){ th=position.y+uTime*(.012-.02/position.x); r=position.x; float h=fract(uTime*.11+aSeed.x), d=fract(h-aL.y);' +   // curl: a trail with a running bright head
+    '  a=.07+.5*exp(-d*6.); }' +
+    ' else { th=position.y+uTime*(.012+.035/position.x); r=1.+(position.x-1.)*(1.+.1*sin(uTime*.9+aSeed.x*6.28));' +   // corona fibre: rooted on the rim, swirls and breathes with the particles
+    '  a=pow(1.-aL.y,1.3)*(.4+.3*sin(uTime*(1.2+aSeed.y*2.5)+aSeed.z*30.)); }' +
+    ' r*=mix(.08,1.,ign)*(1.+uBurst*uBurst*3.2); a*=ign*uW*(1.-uBurst);' +
+    ' vec3 p=vec3(cos(th)*r,sin(th)*r,0.)*uR; vA=a; vC=mix(vec3(.9,.95,1.),vec3(.55,.85,1.),aSeed.z*.4);' +
+    ' gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.); }';
+  const LFS = 'precision mediump float; varying float vA; varying vec3 vC; void main(){ gl_FragColor=vec4(vC*vA,vA); }';
+  /* disc + glow share one quad: uMode 0 = black horizon (normal blend), 1 = rim glow (additive) */
+  const QVS = 'varying vec2 vP; void main(){ vP=position.xy; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }';
+  const QFS =
+    'precision mediump float; varying vec2 vP; uniform float uMode,uW,uIgn,uBurst,uTime,uHole;' +
+    'void main(){ float ign=1.-pow(1.-uIgn,3.), R=mix(.08,1.,ign)*uHole, r=length(vP);' +
+    ' if(uMode<.5){ float m=smoothstep(R,R*.93,r)*uW; gl_FragColor=vec4(0.,0.,0.,m*.96); return; }' +
+    ' float rim=exp(-pow((r-R)/(.035+.02*sin(uTime*.9)),2.))*step(R*.9,r), haze=exp(-max(r-R,0.)*1.6)*step(R,r)*.22;' +
+    ' float fb=clamp(uBurst*2.2,0.,1.), flash=fb*(1.-fb)*4.*exp(-r*r*1.8)*.32;' +                      // a short, soft collapse flash at the core
+    ' float a=(rim*.28+haze)*uW*ign*(1.-uBurst)+flash*uW; gl_FragColor=vec4(vec3(.82,.9,1.)*a,a); }';
+
+  function singularity(scene) {
+    const TAU = Math.PI * 2, rnd = Math.random;
+    const STREAKS = 1100, BEAMS = [0.42, 1.31, 2.05, 3.6, 4.9], TRAILS = 90, SEG = 48, FIBRES = 2200, FSEG = 3;
+    const nV = (STREAKS + BEAMS.length) * 2 + TRAILS * SEG * 2 + FIBRES * FSEG * 2;
+    const pos = new Float32Array(nV * 3), seed = new Float32Array(nV * 4), L = new Float32Array(nV * 2);
+    let v = 0;
+    const vert = (s, lx, ly, px, py) => { seed.set(s, v * 4); L[v * 2] = lx; L[v * 2 + 1] = ly; pos[v * 3] = px || 0; pos[v * 3 + 1] = py || 0; v++; };
+    for (let i = 0; i < STREAKS; i++) { const s = [rnd(), rnd(), rnd(), 0], th = rnd() * TAU; vert(s, th, 0); vert(s, th, 1); }
+    BEAMS.forEach(th => { const s = [rnd(), 0, 0, 1]; vert(s, th, 0); vert(s, th, 1); });
+    for (let t = 0; t < TRAILS; t++) {                                       // curls in polar form: position.x = radius, .y = angle
+      const s = [rnd(), rnd(), rnd(), 2], pts = [];
+      let rr = 1.1 + Math.pow(rnd(), 1.4) * 2.2, th = rnd() * TAU, hd = rnd() * TAU;
+      const turn = (rnd() - 0.5) * 0.45, step = 0.012 + rnd() * 0.012;
+      for (let j = 0; j <= SEG; j++) {
+        pts.push([rr, th]);
+        hd += turn + Math.sin(j * 0.25 + t) * 0.22;
+        const x = Math.cos(th) * rr + Math.cos(hd) * step, y = Math.sin(th) * rr + Math.sin(hd) * step;
+        rr = Math.max(1.06, Math.hypot(x, y)); th = Math.atan2(y, x);
+      }
+      for (let j = 0; j < SEG; j++) { vert(s, 0, j / SEG, pts[j][0], pts[j][1]); vert(s, 0, (j + 1) / SEG, pts[j + 1][0], pts[j + 1][1]); }
+    }
+    for (let f = 0; f < FIBRES; f++) {                                       // corona fibres: short, a few long, bending slightly
+      const s = [rnd(), rnd(), rnd(), 3], th0 = rnd() * TAU, len = 0.06 + Math.pow(rnd(), 2.2) * 1.1, bend = (rnd() - 0.5) * 0.35;
+      for (let j = 0; j < FSEG; j++) {
+        const u0 = j / FSEG, u1 = (j + 1) / FSEG;
+        vert(s, 0, u0, 1.0 + u0 * len, th0 + bend * u0 * u0 * len); vert(s, 0, u1, 1.0 + u1 * len, th0 + bend * u1 * u1 * len);
+      }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 4));
+    g.setAttribute('aL', new THREE.BufferAttribute(L, 2));
+    const LU = { uTime: { value: 0 }, uR: { value: 1 }, uW: { value: 0 }, uIgn: { value: 1 }, uBurst: { value: 0 } };
+    const lines = new THREE.LineSegments(g, new THREE.ShaderMaterial({ uniforms: LU, vertexShader: LVS, fragmentShader: LFS, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending }));
+    lines.frustumCulled = false; lines.visible = false; scene.add(lines);
+
+    const qg = new THREE.PlaneGeometry(14, 14);
+    const quad = (mode, blend, order) => {
+      const U = { uMode: { value: mode }, uW: { value: 0 }, uIgn: { value: 1 }, uBurst: { value: 0 }, uTime: { value: 0 }, uHole: { value: 1 } };
+      const m = new THREE.Mesh(qg, new THREE.ShaderMaterial({ uniforms: U, vertexShader: QVS, fragmentShader: QFS, transparent: true, depthWrite: false, depthTest: false, blending: blend }));
+      m.renderOrder = order; m.frustumCulled = false; m.visible = false; scene.add(m);
+      return { m: m, U: U };
+    };
+    const disc = quad(0, THREE.NormalBlending, -1);                          // after the stars (-2), before the particles (0)
+    const glow = quad(1, THREE.AdditiveBlending, -1);
+    return {
+      update: function (time, w, ign, burst, R) {
+        const on = w > 0.002;
+        lines.visible = disc.m.visible = glow.m.visible = on;
+        if (!on) return;
+        LU.uTime.value = time; LU.uR.value = R; LU.uW.value = w; LU.uIgn.value = ign; LU.uBurst.value = burst;
+        [disc, glow].forEach(q => {
+          q.m.scale.setScalar(R); q.U.uTime.value = time; q.U.uW.value = w; q.U.uIgn.value = ign; q.U.uBurst.value = burst;
+          q.U.uHole.value = 1 - burst * burst * (3 - 2 * burst);               // the horizon collapses as the planet forms
+        });
+      },
+      dispose: function () { [lines, disc.m, glow.m].forEach(o => { scene.remove(o); o.geometry.dispose(); o.material.dispose(); }); }
+    };
+  }
+
   function create(scene, engine) {
     const S = engine.uniforms, W = engine.weights;
+    const SG = singularity(scene);
     const ecgN = 360, ECG_X = -3.6, ECG_Y = -3.28, ECG_Z = 2.6, ECG_LEN = 3.2;
     const E = system(scene, ecgN, 0, function (pos, t, n) {
       for (let i = 0; i < n; i++) {
@@ -72,13 +164,15 @@
     return {
       setPR: function (pr) { all.forEach(s => { s.U.uPR.value = pr; }); },
       update: function (time) {
+        const t0 = S.uSeg.value < 0.5 ? S.uT.value : 1;                    // morph out of the singularity
+        SG.update(time, W[0], S.uIgn.value, Math.min(1, t0 / 0.7), ADX_ENGINE.SHAPES[0].sc);
         const wAstro = W[2], wOrion = W[3], wRelay = W[4];
         E.U.uW.value = sm(wAstro); E.pts.visible = wAstro > 0.01; E.U.uHead.value = (time * 0.42) % 1.5;     // head sweeps, tail fades; pause beyond 1 for a beat
         T.U.uW.value = sm(wOrion); T.pts.visible = wOrion > 0.01; T.U.uTime.value = time;
         FE.U.uW.value = sm(wRelay); FE.pts.visible = wRelay > 0.01;
         PK.U.uW.value = sm(wRelay); PK.pts.visible = wRelay > 0.01; PK.U.uTime.value = time;
       },
-      dispose: function () { all.forEach(s => { scene.remove(s.pts); s.geo.dispose(); s.pts.material.dispose(); }); }
+      dispose: function () { SG.dispose(); all.forEach(s => { scene.remove(s.pts); s.geo.dispose(); s.pts.material.dispose(); }); }
     };
   }
   window.ADX_FX = { create: create };

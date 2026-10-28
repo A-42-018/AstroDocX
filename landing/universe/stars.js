@@ -43,7 +43,7 @@
         uniforms: Object.assign({ uLayer: { value: li } }, U), vertexShader: VS, fragmentShader: FS,
         transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
       });
-      const pts = new THREE.Points(g, m); pts.frustumCulled = false;
+      const pts = new THREE.Points(g, m); pts.frustumCulled = false; pts.renderOrder = -2;   // under the singularity's horizon disc (fx.js)
       scene.add(pts); layers.push(pts);
     });
     function range() { layers.forEach((l, li) => l.geometry.setDrawRange(0, COUNTS[tier][li])); }

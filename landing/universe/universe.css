@@ -45,6 +45,8 @@
 .uni-scene[data-pos="left"]   { left:calc(var(--pad-x,24px) + 56px);bottom:11vh; }
 .uni-scene[data-pos="right"]  { right:var(--pad-x,24px);top:20vh;text-align:right; }
 .uni-scene[data-pos="right"] .ch-sub { margin-left:auto; }
+.uni-scene[data-scene="dust"] .ch-title { font-size:clamp(2rem,5.6vw,5.4rem);text-shadow:0 0 30px rgba(0,0,0,.95); }   /* 01 sits inside the singularity's core */
+.uni-scene[data-scene="dust"] .ch-sub { max-width:28ch; }
 .uni-scene[data-pos="top"]    { left:50%;top:14vh;transform:translateX(-50%);text-align:center; }
 .uni-scene[data-pos="right"] .ch-title { font-size:clamp(2rem,6.4vw,6rem); }
 /* Home: both lines fit on one row each, so the heading stays above the Earth instead of wrapping onto it */
