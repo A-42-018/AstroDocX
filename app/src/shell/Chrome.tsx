@@ -1,36 +1,42 @@
-import { Bell, Download, House, Play, Radio, RadioTower, RotateCcw, WifiOff } from 'lucide-react'
-import { useEffect, useId, useRef, useState } from 'react'
+import { Bell, Plus, RotateCcw, Square } from 'lucide-react'
+import { Fragment, useId, useRef } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useBoard } from '../board/store'
 import { met } from '../engine/actions'
 import { DEMO_MAX_STEPS, resetDemo, runDemo, useDemo } from '../sim/demoRun'
-import { linkAt } from '../sync/link'
+import { linkAt, type LinkInfo } from '../sync/link'
 import { useSync } from '../sync/store'
-import { BackdropPicker } from './BackdropPicker'
 import { CrewSwitcher } from './CrewSwitcher'
-import { greetingFor, linkSummary } from './format'
-import { MORE_ICON, ROUTES } from './nav'
+import { duration, greetingFor, linkSummary } from './format'
+import { MORE_ICON, ROUTES, routeFor } from './nav'
+import { Overflow } from './Overflow'
+import { usePopover } from './usePopover'
 import type { ShellData } from './useShellData'
 
-/** Desktop and tablet: a slim icon rail on the left (labels under the icons, names as link names). */
-export function Rail() {
+const clock = (now: number) => met(now).replace(/ MET$/, '')
+
+/** "LINK · 1H 00M" in the strip: the lamp says open or closed, the time is when that changes. */
+function linkShort(link: LinkInfo, now: number): string {
+  if (link.state === 'blackout') return 'Blackout'
+  return `Link · ${duration((link.state === 'open' ? link.closesAt ?? now : link.nextOpen) - now)}`
+}
+
+/** Desktop and tablet: one tab per screen, crew screens then mission screens. At md the labels collapse to icons. */
+export function TopTabs({ alerts = 0 }: { alerts?: number }) {
   return (
-    <nav className="rail" aria-label="Crew Console">
-      <img className="brand-mark" src={`${import.meta.env.BASE_URL}favicon.svg`} alt="AstroDocX" width={40} height={40} />
+    <nav className="toptabs" aria-label="Crew Console">
       <ul>
-        <li className="rail-home">
-          <a href="/" aria-label="Back to the AstroDocX landing page" title="Back to the landing page">
-            <House size={20} strokeWidth={1.9} aria-hidden="true" />
-            <span aria-hidden="true">Landing</span>
-          </a>
-        </li>
-        {ROUTES.map(({ path, label, tab, icon: Icon }) => (
-          <li key={path}>
-            <NavLink to={path} aria-label={label} title={label}>
-              <Icon size={20} strokeWidth={1.9} aria-hidden="true" />
-              <span aria-hidden="true">{tab}</span>
-            </NavLink>
-          </li>
+        {ROUTES.map(({ path, label, tab, icon: Icon, group }, i) => (
+          <Fragment key={path}>
+            {i > 0 && group !== ROUTES[i - 1].group && <li className="tt-sep" aria-hidden="true" />}
+            <li className={`tt-${group}`}>
+              <NavLink to={path} aria-label={label} title={label}>
+                <Icon size={15} strokeWidth={1.9} aria-hidden="true" />
+                <span className="tt-label" aria-hidden="true">{tab}</span>
+                {path === '/alerts' && alerts > 0 && <b className="tt-n" aria-hidden="true">{alerts}</b>}
+              </NavLink>
+            </li>
+          </Fragment>
         ))}
       </ul>
     </nav>
@@ -38,52 +44,38 @@ export function Rail() {
 }
 
 /** Phones: four tabs plus a More sheet for the rest, pinned to the bottom edge where the thumb is. */
-export function BottomTabs() {
+export function BottomTabs({ alerts = 0 }: { alerts?: number }) {
   const { pathname } = useLocation()
-  // The sheet is tied to the page it was opened on, so navigating closes it without an effect.
-  const [openPath, setOpenPath] = useState<string | null>(null)
-  const open = openPath === pathname
-  const setOpen = (v: boolean) => setOpenPath(v ? pathname : null)
-  const id = useId()
   const btn = useRef<HTMLButtonElement>(null)
   const sheet = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = usePopover(btn, sheet)
+  const id = useId()
   const secondary = ROUTES.filter((r) => !r.primary)
   const inMore = secondary.some((r) => pathname.startsWith(r.path))
-
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpenPath(null); btn.current?.focus() } }
-    const onDown = (e: PointerEvent) => {
-      const t = e.target as Node
-      if (!sheet.current?.contains(t) && !btn.current?.contains(t)) setOpenPath(null)
-    }
-    document.addEventListener('keydown', onKey)
-    document.addEventListener('pointerdown', onDown)
-    return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('pointerdown', onDown) }
-  }, [open])
 
   const More = MORE_ICON
   return (
     <nav className="tabs" aria-label="Crew Console">
       {open && (
-        <div ref={sheet} id={id} className="more-sheet">
+        <div ref={sheet} id={id} className="more-sheet" role="dialog" aria-label="More screens">
           {secondary.map(({ path, label, icon: Icon }) => (
             <NavLink key={path} to={path}><Icon size={20} strokeWidth={1.9} aria-hidden="true" />{label}</NavLink>
           ))}
         </div>
       )}
       <ul>
-        {ROUTES.filter((r) => r.primary).map(({ path, label, tab, icon: Icon }) => (
+        {ROUTES.filter((r) => r.primary).map(({ path, label, tab, mini, icon: Icon }) => (
           <li key={path}>
             <NavLink to={path} aria-label={label}>
-              <Icon size={22} strokeWidth={1.9} aria-hidden="true" />
-              <span aria-hidden="true">{tab}</span>
+              <Icon size={20} strokeWidth={1.9} aria-hidden="true" />
+              <span aria-hidden="true">{mini ?? tab}</span>
+              {path === '/alerts' && alerts > 0 && <b className="tab-n" aria-hidden="true">{alerts}</b>}
             </NavLink>
           </li>
         ))}
         <li>
           <button ref={btn} type="button" className={inMore ? 'active' : ''} aria-expanded={open} aria-controls={open ? id : undefined} aria-label="More screens" onClick={() => setOpen(!open)}>
-            <More size={22} strokeWidth={1.9} aria-hidden="true" />
+            <More size={20} strokeWidth={1.9} aria-hidden="true" />
             <span aria-hidden="true">More</span>
           </button>
         </li>
@@ -92,14 +84,17 @@ export function BottomTabs() {
   )
 }
 
-/** Greeting, crew switcher, mission clock, ground-link widget and alert bell: what the crew needs to see on every screen. */
+/**
+ * Top bar (plan §4.1). Desktop: brand, tabs, mission strip (MET │ link │ queue), crew switcher, bell and the `⋯` menu.
+ * Phones: two rows, the page name with a greeting and MET, then the crew switcher, the link chip and `⋯`.
+ */
 export function TopBar({ data, install }: { data: ShellData | null; install: (() => Promise<void>) | null }) {
   const select = useBoard((s) => s.selectCrew)
   const blackout = useSync((s) => s.blackout)
+  const { pathname } = useLocation()
   const who = data?.crew.find((c) => c.id === data.crewId)
   const link = data ? linkAt(data.now, blackout) : null
   const summary = data && link ? linkSummary(link, data.now, data.pendingSync, data.sinceSyncH) : null
-  const LinkIcon = link?.state === 'open' ? RadioTower : link?.state === 'blackout' ? WifiOff : Radio
   const open = who?.alerts ?? 0
   const navigate = useNavigate()
   const demo = useDemo()
@@ -107,46 +102,55 @@ export function TopBar({ data, install }: { data: ShellData | null; install: (()
 
   return (
     <header className="topbar">
+      <div className="brand">
+        <span className="logo" aria-hidden="true"><Plus size={20} strokeWidth={3.2} /></span>
+        <span className="brand-text"><b>AstroDocX</b><small>Crew Console</small></span>
+      </div>
       <div className="greet">
-        <small>AstroDocX · Crew Console</small>
+        <small>{routeFor(pathname)?.label ?? 'Crew Console'}</small>
         <p>{data && who ? <>{greetingFor(data.now)}, <b>{who.name}</b></> : 'Starting up…'}</p>
       </div>
-      {data && who && (
-        <div className="tb-right">
-          <a href="/" className="btn ghost home-btn" aria-label="Back to the AstroDocX landing page" title="Back to the landing page">
-            <House size={16} aria-hidden="true" /><span>Landing</span>
-          </a>
+      <TopTabs alerts={open} />
+      {data && who && summary && link && (
+        <>
+          <span className="tb-met" title="Mission elapsed time"><span className="sr-only">Mission elapsed time </span>{clock(data.now)}</span>
           <span className="tb-break" aria-hidden="true" />
-          <CrewSwitcher crew={data.crew} crewId={data.crewId} onSelect={select} />
-          <span className="chip met mono" title="Mission elapsed time"><span className="sr-only">Mission elapsed time </span>{met(data.now)}</span>
-          {summary && link && (
-            <Link to="/sync" className={`chip link-chip ${link.state}`} aria-label={`Ground link: ${summary.long}`} title="Open Ground Sync">
-              <LinkIcon size={15} strokeWidth={2} aria-hidden="true" />
-              <span className="lc-long" aria-hidden="true">{summary.long}</span>
-              <span className="lc-short" aria-hidden="true">{summary.short}</span>
+          <div className="strip">
+            <span className="strip-met" title="Mission elapsed time"><span className="strip-eb" aria-hidden="true">MET</span><span className="sr-only">Mission elapsed time </span><b>{clock(data.now)}</b></span>
+            <Link to="/sync" className={`strip-link ${link.state}`} aria-label={`Ground link: ${summary.long}`} title="Open Ground Sync">
+              <span className="lamp" aria-hidden="true" />
+              <span aria-hidden="true">{linkShort(link, data.now)}</span>
+              {data.pendingSync > 0 && <span className="strip-q" aria-hidden="true">{data.pendingSync}<span className="strip-ql">queued</span></span>}
             </Link>
-          )}
-          {demo.phase === 'idle' ? (
-            <button type="button" className="btn ghost demo-btn" onClick={startDemo} title="Inject a CO₂ scrubber fault and watch the board react (about 20 s)">
-              <Play size={15} aria-hidden="true" />Run demo
-            </button>
-          ) : (
-            <button type="button" className="btn ghost demo-btn" onClick={() => void resetDemo()} title="Restore the demo mission data">
-              <RotateCcw size={15} aria-hidden="true" />{demo.phase === 'running' ? `Demo ${demo.step}/${DEMO_MAX_STEPS} · stop` : 'Reset demo'}
+          </div>
+          <CrewSwitcher crew={data.crew} crewId={data.crewId} onSelect={select} />
+          {demo.phase !== 'idle' && (
+            <button type="button" className="hbtn ghost sm demo-btn" onClick={() => void resetDemo()} title="Restore the demo mission data">
+              {demo.phase === 'running' ? <Square size={13} aria-hidden="true" /> : <RotateCcw size={13} aria-hidden="true" />}
+              {demo.phase === 'running' ? `Demo ${demo.step}/${DEMO_MAX_STEPS}` : 'Reset demo'}
             </button>
           )}
-          <BackdropPicker crewId={who.id} crewName={who.name} />
-          <Link to="/alerts" className={`bell st-${who.status}`} aria-label={open ? `${open} open alert${open > 1 ? 's' : ''} for ${who.name}` : `No open alerts for ${who.name}`}>
+          <Link to="/alerts" className={`tb-icon bell st-${who.status}`} aria-label={open ? `${open} open alert${open > 1 ? 's' : ''} for ${who.name}` : `No open alerts for ${who.name}`}>
             <Bell size={20} strokeWidth={1.9} aria-hidden="true" />
             {open > 0 && <b aria-hidden="true">{open}</b>}
           </Link>
-          {install && (
-            <button type="button" className="btn ghost install-btn" onClick={() => void install()}>
-              <Download size={16} aria-hidden="true" />Install
-            </button>
-          )}
-        </div>
+          <Overflow crewId={who.id} crewName={who.name} install={install} onDemo={startDemo} />
+        </>
       )}
     </header>
+  )
+}
+
+/** 28 px footer on every screen: the ground link on the left, mission time and the disclaimer on the right. */
+export function StatusBar({ data }: { data: ShellData | null }) {
+  const blackout = useSync((s) => s.blackout)
+  const link = data ? linkAt(data.now, blackout) : null
+  const state = !link ? null : link.state === 'blackout' ? 'Ground link blackout' : link.state === 'open' ? `Ground link open · closes in ${duration((link.closesAt ?? data!.now) - data!.now)}` : 'Ground link closed'
+  const synced = !data ? '' : data.sinceSyncH === null ? ' · no sync yet' : ` · synced ${data.sinceSyncH.toFixed(1)} h ago`
+  return (
+    <footer className="statusbar">
+      {link && <span className={`sb-link ${link.state}`}><span className="lamp" aria-hidden="true" />{state}{synced}</span>}
+      <span className="sb-right">{data && <span className="sb-met">{met(data.now)} · </span>}Prototype, not a medical device.</span>
+    </footer>
   )
 }

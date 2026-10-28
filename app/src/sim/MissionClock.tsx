@@ -22,5 +22,6 @@ export function MissionClock({ now }: { now: number }) {
     raf = requestAnimationFrame(step)
     return () => cancelAnimationFrame(raf)
   }, [now, reduced])
-  return <p className="mono mclock" aria-label="Mission elapsed time">{met(reduced ? now : shown)}</p>
+  const [day, unit] = met(reduced ? now : shown).split(/ (?=MET$)/)
+  return <p className="sm-mclock" aria-label="Mission elapsed time"><span className="sm-mclock-v">{day}</span> <span className="sm-mclock-u">{unit}</span></p>
 }

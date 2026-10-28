@@ -309,7 +309,7 @@ Each phase ends with:
 | 7 | Check-in: mockup first (`mockups/checkin.html` + PNG, quick approval), then build §4.5 | Approved mockup matched; Check-in + PVT tests green | 1½ d |
 | 8 | Simulator: mockup, then §4.6 | Same | 1½ d |
 | 9 | Sync + Ground: mockups, then §4.7 | Same; `.ld-burst` intact | 2 d |
-| 10 | Remove the aliases and legacy CSS; responsive and a11y pass (§6–7); performance pass (§8); refresh `docs/screenshots/console-*.jpg` for the README | All acceptance criteria (§9) met | 1½ d |
+| 10 | Remove the aliases and legacy CSS; responsive and a11y pass (§6–7); performance pass (§8), including bringing the CSS bundle back within +20% of the Phase 0 baseline (66.4 kB now vs 45.0 kB; see the 2026-10-27 log); refresh `docs/screenshots/console-*.jpg` for the README | All acceptance criteria (§9) met | 1½ d |
 
 **Total ≈ 18 working days.** Phases 4–6 are the highest value; if time is short, ship 0–6 and keep Check-in/Sim/Sync/Ground on the v3 tokens + HudPanel only (they'll look consistent, just less bespoke).
 
@@ -367,3 +367,130 @@ At each width, check:
 | One-screen layout breaks on short laptops (1366×768) | Height-gated fixed layout (h ≥ 820), otherwise normal scroll |
 | Look reads as a game, not a medical tool | Real data only, the "Prototype, not a medical device" bar on every screen, glow kept off body text |
 | Remaining screens drift from the approved look | Mockup → approval → build for Phases 7–9 |
+
+---
+
+## Session log
+
+### 2026-10-27: Phases 0–2
+
+**Done (4 commits on `feat/console-ui-v3`):**
+- **Phase 0** (`652ca6d`): baseline screenshots of all 7 routes at 1440×900 and 390×844 in `docs/design-refs/baseline/`, with page sizes and the lint/test/build numbers in its README.
+- **Phase 1a** (`933af98`): `src/index.css` moved to `src/styles/index.css` unchanged (byte-identical CSS bundle).
+- **Phase 1b** (`3557585`): v3 tokens + v2 aliases in `tokens.css`; the stylesheet split into layers and one file per screen; stage dot grid + vignette; duplicate `.chip` / `.readiness` merged; static inline styles replaced by `.flush*` utilities and classes (only computed values stay inline); `order: 3` removed by moving the tile heading in the DOM; breakpoints reduced to 480/768/1024/1280; `--cyan` replaced by `--cy`.
+- **Phase 2** (`0fdd086`): `src/ui/` primitives (HudPanel + PanelHeader/Brackets/Ruler, StatusTag, Button, KpiCell/KpiGrid, Readout, Gauge dial/ring, Segmented, StateView, Switch), styles in `src/styles/components/`, 18 tests. `StatusPill` is now an alias of `StatusTag`; ErrorBoundary and the route Suspense fallback use StateView.
+- Checks after each phase: lint clean, build OK, tests 190/190 after Phase 1 and 208/208 after Phase 2. Console clean on every route in the preview build.
+
+**Left:** Phases 3–10 as planned, starting with Phase 3 (shell: top tab bar, mission strip, overflow menu, status bar, phone bars). The per-page boot/loading paragraphs (`Initializing demo mission data…`) still use the v2 glass card; the Board's boot is the natural first user of `StateView`'s `progress` (§4.8), in Phase 4.
+
+**Decisions:**
+- **Layer order is `tokens, base, components, layout, pages, utilities`** (§3.4 listed layout before components). Generic components must sit below shell and page rules, otherwise shell refinements such as `.topbar .home-btn` lose to `.btn` regardless of specificity.
+- **Phase 1 was verified with a computed-style diff**, not only screenshots: every element's box and key styles on 7 routes × 4 widths, before and after. With the old token values the only difference was intended (next point).
+- **The phone top bar now hides Install.** Its `display: none` had been dead since v2 (`.btn` came later), which pushed MET onto a third row. With the layers the rule applies and the bar is the documented two rows (128 px).
+- **Rules that never rendered were dropped, not revived:** `.demo-btn`/`.install-btn` sizing, the phone `main` padding, phone `.chip`/`.met` overrides and the `.readiness` ≤600 px padding all lost on source order in v2.
+- **Aliases:** v2 names with a v3 equivalent point at it (`--accent`→`--or`, `--data`→`--cy`, `--text-*`→`--t1..3`, `--violet`→`--data-2`). `--glass-*`, `--line*`, `--shadow`, `--r-*` keep their v2 values until Phase 10, so unconverted screens only shift in accent, data, status and text colours.
+- **Breakpoints:** each old width was mapped to the nearest v3 boundary that leaves 390/768/1024/1440 unchanged (820→1024, 900→1024, 1100/1180→1280, 1100 max→1279, 600/640→767, 520→479, 899→1023).
+- **`KpiGrid` takes no label:** a `<dl>` has no ARIA role, so a name on it is dropped; naming belongs to the panel around it.
+- **StatusTag default words stay `NOMINAL / WATCH / ACT`** (screen text and tests use them); `short` gives the mockup's `NOM`.
+- **Tests on this machine:** the full suite can time out `AlertsPage` / `SimulatorPage` under load (20k-reading seed); they pass alone. Phase 1 and 2 runs were fully green.
+- **Not pushed:** `git push origin feat/console-ui-v3` returned 403 for the GitHub user `morsad01` (no write access to `A-42-018/AstroDocX`). The commits are local until someone with access pushes them.
+
+### 2026-10-27: Phases 3–4
+
+**Done (2 commits on `feat/console-ui-v3`, pushed):**
+- **Phase 3** (`b57e4fa`): the shell. A top bar with the octagon logo and wordmark, tabs grouped crew │ mission (`ROUTES` gained `group` and a phone `mini` label) with the glowing underline and the Alerts count, a mission strip (MET │ link lamp + time │ queue) that links to Ground Sync, round crew avatars with status rings, the bell and a `⋯` menu. Phones get the two-row bar from mockup 4 and 64 px bottom tabs; the More sheet is a dialog. The 28 px status bar is on every screen. The icon rail is gone. New: `shell/Overflow.tsx`, `shell/usePopover.ts` (shared by both popovers: focus in, Escape back to the trigger, outside click, arrow keys, closes on navigation).
+- **Phase 4** (`22122b3`): the Status Board per §4.2. Crew ID panel with the visible h1; the readiness dial with the KPI 2×2 and 7 bars; the twin bay with floor rings, five callouts, ringed markers and leader lines that follow the turning body, and a scan line; heart rate, SpO₂ and Resp tiles; Next Action as a tone panel; five hazard modules. Board loading, empty and error states use `StateView` with the real boot %.
+- Checks after each phase: lint clean, tests 210/210, build OK. In the preview build at 390, 768, 1024, 1440 and 1920 wide: no horizontal scroll, and no page scroll at 1440×900 or 1920×1080. 1280×800 scrolls, as planned (the one-screen layout needs a height ≥ 820).
+
+**Left:** Phases 5–10 as planned, starting with Phase 5 (Alerts per §4.4).
+
+**Decisions:**
+- **Run demo lives in the `⋯` menu.** While a demo runs (or has finished), a ghost `Demo n/8` / `Reset demo` button also shows next to the bell, so it can be stopped in one click. Install, Back to landing and the backdrop choice are in the same menu; the standalone backdrop button is gone (`BackdropPicker.tsx` now exports `BackdropChoices`).
+- **Top bar compaction needs a 1440 px step.** The full mockup bar only just fits at 1440 (1430 px with a scrollbar). Below 1440 the wordmark and the word "queued" go; below 1280 the mission tabs become icons and the link time becomes the lamp; below 1024 all tabs are icons (§4.1). The 1440 query is shell-only; pages still use the §3.3 breakpoints. At 1920 the bar and status bar contents line up with the 1760 px main column.
+- **Callouts collapse with a container query on the bay** (`@container bay (max-width: 560px)`), not a viewport breakpoint. The bay is only about 360 px wide at 1024 and 546 px at 1280, where full callouts overlapped each other and the head; they become `I · ACT`-style code chips there and on phones. Full callouts show at 1440 and up (and at 768, where the bay is full width).
+- **Leader lines:** `body3d.ts` exports `turned(anchor, ang)` (the shader's rotY + `toBox`). The twin measures the figure and callout boxes on resize and moves the markers, lines and scan line through refs every frame; there's no React render per frame. Each line runs from the callout edge, through an 18 px knee, to the marker. Without WebGL (and in tests) the markers sit on the SVG twin's fixed spots.
+- **Scan line:** a new `uScan` uniform brightens the particles within about 3% of the line's height, and an SVG line is drawn at the same height. The sweep takes 5.5 s and is off under reduced motion.
+- **Crew avatars keep a small status flag for Watch/Act**, which the mockup doesn't have, so the ring colour isn't the only cue. The selected avatar is filled with its status colour, as in the mockup.
+- **The Isolation chart marks nights outside the Watch band (mean ± 1.8 sd) in red.** That needed the sleep sd, so `MiniData` gained `sleepSd`. `board/mini` is on the §1 keep-as-is list, so this is a deliberate exception: one added field, and the existing fields and loading logic are unchanged.
+- **The bay bar's left label is "◇ Live hologram"**, since there's no drag-rotate (§4.2 said to drop `ROTATE · DRAG` in that case). Next Action's count reads `n / m done`.
+- **The Distance backlog bar keeps its real 0–96 h scale**, so the Act mark sits at 75%, not at the right end as in the mockup.
+- **CSS budget:** the bundle is 66.4 kB (15.0 kB gzip) against the Phase 0 baseline of 45.0 kB (10.5 kB gzip), over §8's +20%. It was already 61.2 kB after Phase 2, because the v2 rules are still there next to v3. Phase 10's legacy removal has to bring it back within budget.
+- **Preview tip:** the PWA service worker serves the previous build after `npm run build`. Unregister it (DevTools → Application, or `navigator.serviceWorker.getRegistrations()`) and clear caches before checking a new build. The preview serves the app under `/app/`.
+
+### 2026-10-27: Phases 5–6
+
+**Done (2 commits on `feat/console-ui-v3`, pushed):**
+- **Phase 5** (`6bb6c58`): Alerts per §4.4. The queue panel has the counted 4-up filter, QueueRows (status edge, hazard code, tag, opened MET, chevron) and a recently resolved list (up to 6; a click opens it under the Resolved filter). The detail is a hero panel in the alert's tone: icon box, eyebrow, the title as the h1, a big tag, the σ box beside the explanation with its figures bolded, the alert-window bar chart and evidence. The action card (progress ring, numbered steps that are still real checkboxes in a `fieldset`, `MARK DONE`, engine note) and the timeline (diamond nodes coloured by level) sit beside it. Loading, empty and error use `StateView`. New: `alerts/AlertChart.tsx`.
+- **Phase 6** (`d878c71`): Trends per §4.3. Biometric channels grouped by hazard (sparkline, latest value, a dot for Watch/Act/out of band, `›››` on the selected row); the focus hero with the metric as the h1, the range Segmented and a legend where Crew median is the compare toggle; the Latest ring gauge with IN / ABOVE / BELOW BAND and the KPI 2×2; the Body region panel; six small multiples. The Recharts restyle is in `TrendChart.tsx`. New: `trends/parts.tsx` (Spark, BodyRegion), `trends/levels.ts` (+ test).
+- Checks after each phase: lint clean, build OK. Tests 211 after Phase 5 (the Alerts tests pass; the full run timed out `SyncPage` once under load and it passes alone) and 213/213 after Phase 6. In the preview build at 390, 768, 1024, 1440 and 1920 wide: no horizontal scroll, no page scroll at 1440×900 or 1920×1080 on either screen, touch targets ≥ 44 px on phones, console clean.
+
+**Left:** Phases 7–10 as planned, starting with Phase 7 (Check-in: mockup first, then §4.5).
+
+**Decisions:**
+- **The alert-window chart is plain SVG, not Recharts.** It's a bar chart with per-bar band colouring and one label, so SVG sized by a ResizeObserver is simpler, and the Alerts chunk drops Recharts (16 kB now). One bar per reading; for hourly metrics over a long alert the bars get thin rather than being binned, so spikes stay visible.
+- **The chart's baseline label uses the band at the trigger point,** so it matches the baseline in the explanation rather than the band as it has adapted since.
+- **The trigger label shows the plotted reading at the crossing,** which can differ from the value in the explanation (the engine's text is written when the alert opens or escalates; the marker snaps to the first reading at or after `openedAt`).
+- **The alert detail is one `<article>`** that spans the detail panel and the right column, so the steps, Done and the timeline stay inside the alert's accessible name, as before.
+- **The action card has its own progress ring** (mockup 3's simple ring) instead of `Gauge kind="ring"`, whose ticks and status-word box don't fit "0/3 STEPS DONE". The old `Progress` is gone.
+- **"Done" is now "Mark done"** (the mockup's label); the acknowledged state still reads "Done · logged". Tests updated.
+- **The timeline adds a "Waiting for steps · NOW" row** while an alert is open (mockup 3). It's a state, not a log entry.
+- **Below 1024 the queue and the detail still take turns** (the existing behaviour, plan §6's matrix); §4.4 said 900 px, but 1023 matches the v3 breakpoints.
+- **The body region is drawn once per change, with no animation loop.** It's the twin renderer at a fixed front angle with the focused hazard lit (`uFocus` + `setStatus`) and one leader line to the region's anchor; without WebGL it falls back to `drawMiniBody`. Nothing runs when nothing changes, so it needs no offscreen pause. The callout has its own grid column so it never leaves the panel.
+- **A metric's level on Trends** is its open alert's level (the two-signal rule counts for sleep and reaction), else **OUT** (amber) when the latest value is outside its band, else NOM. OUT colours the dot, tag and sparkline but not the value (mockup 2). `TrendsView` gained an optional `alertStatus` prop; `TrendsPage` derives it from the alerts it already loads.
+- **Small multiples:** Act, then Watch, then OUT, then the focused hazard's siblings, then metric order; six tiles. Each tile is a `Focus <metric>` button with the text summary inside for screen readers. The list keeps the name "Metric trends"; all 11 metrics stay reachable from the channel list.
+- **Ring gauge fill** is where the latest value sits in the baseline ± 3σ span (so the band edges sit at 20% and 80%). The status word comes from the latest band.
+- **Focus chart ticks are on whole mission days** (3 h steps for 24 h, 5 days for 30 days); Recharts' own ticks repeated day labels.
+- **The focus and Alerts hero panels hide the side rulers** (the mockups show brackets only).
+- **At md the channel list is a horizontal chip row** (no sparklines). The `<select>` fallback at xs from §4.3 wasn't needed: the chip row scrolls at 390 and keeps 44 px targets.
+- **`.resolved-list` moved to `sim.css`;** the Simulator's "Running now" list still uses it until Phase 8.
+- **CSS budget:** 79.3 kB (17.3 kB gzip), up from 66.4 kB after Phase 4. The v2 Alerts and Trends rules were replaced, not kept beside v3, so most of the growth is the new screens. Phase 10's target (within +20% of 45.0 kB) is getting harder; the shared v2 rules in `components.css` and the unconverted screens are where to cut.
+- **Preview tip:** the browser pane in this session was 640×480, so wide viewports were checked with layout measurements plus screenshots of each quarter of the page (a temporary `transform` on `body`, removed after).
+
+### 2026-10-27: Phases 7–9
+
+**Done (7 commits on `feat/console-ui-v3`, pushed). Each phase was a mockup first, approved by the owner, then the build:**
+- **Phase 7 mockup** (`21921a8`): `mockups/checkin.html` with a `?s=` state switch (mood, sleep, symptoms, reaction idle/wait/done, saved) and `mockups/checkin-phone.html`; shots `5-checkin-*.png`, `6-checkin-phone.png`.
+- **Phase 7 build** (`3360294`): Check-in per §4.5. A procedure panel (numbered diamonds, done = green, current = cyan, the answer given under each finished step, mission time and reaction baseline); the question bay with 150 px chamfered answer tiles (rows on phones); symptom toggles; a circular reaction lamp (cyan ring → red → green, the median as a hero readout inside it) with one KPI cell per tap and baseline / vs baseline / lapses; a saved summary. Loading, empty and error use `StateView`.
+- **Phase 8 mockup** (`dc12ce4`): `mockups/sim.html`, shot `7-sim-desktop.png`.
+- **Phase 8 build** (`997eb43`): Simulator per §4.6. The mission clock as a hero readout over a transport strip (+1 h … +3 days, busy shimmer) and a one-line last-run summary with the new and cleared alerts; scenario modules (icon box, duration, metric tags, crew picker, `INJECT`); running scenarios with a bar for the share elapsed (`startTs`→`endTs`) and `END NOW`; a red-edged reset panel; the engine feed as a terminal with per-kind counts.
+- **Phase 9 mockups** (`c097d3f`): `mockups/sync.html`, `mockups/ground.html`; shots `8-sync-desktop.png`, `9-ground-desktop.png`.
+- **Phase 9 build** (`786b9b6`): Sync and Ground per §4.7. Sync: the link hero (octagon stations, the window ring in the link's status colour, status tag), five KPI cells, a controls panel (`SYNC n ENTRIES NOW`, `Switch`es for blackout and auto-sync, CSV), the outbox as packet rows with "Recently synced" under it, and the on-board log with a `Segmented` state filter and a sticky mono header. `.ld-burst` is unchanged. Ground: an amber "Earth is … behind the crew" readout with KPI cells and Refresh, then one profile bay per crew member (hexagon initials, the status-tinted mini body, last check-in and open count, alert rows, an "on board, not yet downlinked" tag).
+- **Also:** a `mockups-win` entry in `.claude/launch.json` (`79c1ac1`) that runs the mockup server with `python`, since `python3` is a Store alias on Windows.
+- **Checks:** lint clean and build OK after every phase. Each screen was checked in the preview build at 1440×900 (one screen, no page scroll), 768 and 390 (no horizontal scroll, phone targets ≥ 44 px), console clean. Check-in was clicked through and saved, a scenario was injected and run, and the Sync blackout switch and log filters were exercised.
+- **Tests:** 213/213 after Phases 7 and 8. After Phase 9 the full run was 210/213 until the test fix below.
+
+**Left:** Phase 10 (legacy CSS and aliases out, the responsive/a11y/performance pass, README screenshots).
+
+**Test fix (`138607a`): `AlertsPage.test.tsx` failed every time, and the full-app tests failed now and then. Now 214/214 on three full runs in a row.**
+- **Cause:** a step's checkbox was fully controlled by the snapshot, so a tick only showed after the write *and* a full `loadSnapshot` reload. In jsdom over the 20k-reading demo seed that took about 1.4 s (measured), just past `waitFor`'s 1 s default. Earlier runs came in just under it, and the commit before this session failed the same way, so it wasn't caused by Phases 7–9.
+- **App fix:** `AlertDetail` shows a tick at once and keeps it until the next copy of the alert arrives from the database, which is then the truth again (a failed write shows the real state). This also helps slow devices. New unit test in `AlertsView.test.tsx`.
+- **Test fixes:** the six tests that boot the whole app (`App`, `a11y`, `AlertsPage`, `SimulatorPage`, `SyncPage`, `TrendsPage`) set `configure({ asyncUtilTimeout: 15_000 })`. Their other waits were also on a database reload or a lazy route, and failed in turn under a parallel run. The waits for the Simulator inject and Sync's +6 h run got more room (120 s and 150 s): a probe measured about 43 s under full load, because every reading goes through the engine in fake IndexedDB. `vite.config.ts` (`maxWorkers: 3`) is unchanged.
+
+**Decisions:**
+- **Mockups were rendered with headless Chrome** (`chrome --headless=new --screenshot`) against a plain `python -m http.server` on 127.0.0.1, because the preview server isn't reachable from the shell in this environment.
+- **Check-in:** the step list is `aria-hidden` (the progressbar still says "Step n of 4: …"), and the `fieldset`/`legend` per question, radios and checkboxes are unchanged, so the tests' names stay. The saved summary doesn't show sleep hours, because they're stored as a reading, not on the check-in. "Your mood, reaction time joins" now reads "Your mood and reaction time join". `KpiCell` gained an optional `className` (the reaction tap cells).
+- **Reaction lamp:** the button keeps its old labels ("Start reaction test", "TAP NOW", "Run again"). In the done state the median is drawn over the lamp as an `aria-hidden` overlay with `pointer-events: none`, so the button's name doesn't change and the status line still announces the result.
+- **Simulator:** the page root is `.sim-page`, not `.sm`. `buttonClass(…, 'sm')` adds a `sm` class, and a page rule on `.sm` turned the End-now button into the whole page grid. Page classes use an `sm-` prefix. The feed's per-kind counts are a `<dl>` outside the `<ol>`, so the feed still has one list item per event. `MissionClock` renders value + unit spans (its text is still "D29 23:00 MET").
+- **Sync:** the link diagram keeps its SVG (lines, flow, break, burst); only the nodes became octagons, and the Ship label carries the queue count. The station labels are hidden below 768 px because the SVG scales them under 11 px; the status line says the same in words. The log table scrolls sideways inside its own box on narrow screens.
+- **Ground:** "Still on board" is labelled "On board" (a test checks that the server-source view never says "still on board"). Bays scroll inside at the one-screen size when a crew member has several alerts. Initials follow the avatars (CO, FE, MO, PI).
+- **Shell:** at exactly 1440 px, a two-digit queue ("10 QUEUED") pushed the top bar 4 px past the edge. Tabs now lose 1 px of padding a side up to 1599 px, which keeps the mockup's wordmark at 1440.
+- **Phone headers:** the panel header's title and meta both don't wrap, so a long title + meta widened the page on phones (mobile emulation then reports a wider `innerWidth`, which hides the problem from a simple `scrollWidth` check). The Sync and Ground heroes hide the meta and let the title wrap below 768 px.
+- **CSS budget:** 103.1 kB (20.9 kB gzip), up from 79.3 kB after Phase 6. The old Check-in, Simulator, Sync and Ground rules were replaced, not kept beside v3, but the v2 shared rules in `components.css` (`.glass`, `.chip`, `.field`, `.sim-steps`, `.badge`, `.sec-title`…) are still there for Phase 10 to remove.
+
+### 2026-10-27: Phase 10
+
+**Done (one commit on `feat/console-ui-v3`):**
+- **Legacy CSS out.** The v2 aliases (`--accent*`, `--data*`, `--text-*`, `--glass-*`, `--line*`, `--r-*`, `--shadow`, `--font-*`, `--holo`, `--violet`, `--void*`, `--nav-h`, `--rail-w`, `--blur`) are gone from `tokens.css`, and nothing reads them. `components.css` lost the glass card, `.btn`, `.chip(s)`, `.field`, `.check`, `.steps`/`.step`, `.badge`, `.sec-title`, `.mini-btn` and `.sim-steps` (none had a user left); it keeps the status colour roles, the hazard chip, and the two helpers other screens share (`.note`, `.form-error`). `.muted` and the `.flush*` utilities went too. Selectors were checked against the TSX with grep first; class names built at run time (`tt-${group}`, `tone-*`, `bd-thumb-*`, `ld-*`, `tc-*`, `readout-*`, `ruler-*`) were kept.
+- **CSS budget met.** The six lazy screens (Alerts, Trends, Check-in, Simulator, Sync, Ground) now import their own stylesheet from their page module, so the entry CSS is **45.8 kB / 10.7 kB gzip** against the Phase 0 baseline of 45.0 / 10.5 (+1.8%; budget +20%). The total shipped CSS is 98.4 kB, and a visit to one screen loads only its own part. Cascade order is unaffected (`@layer` order is declared in `index.css`).
+- **Responsive (§6).** Checked 390, 768, 1024, 1440 and 1920 on all 7 routes: no horizontal scroll, no page scroll on any route at 1440×900 and 1920×1080, one h1 per route. Phone touch targets are now ≥ 44 px: the crew avatars, `⋯` and the link readout in the top bar, and the Board's code chips (their hit area is widened with a pseudo-element). Nothing under 11 px.
+- **Accessibility (§7).** `--t3` raised from 0.58 to 0.74 alpha and `--t2` from 0.78 to 0.88, so both reach ≥ 4.5:1 on `--panel` over the brightest sky frame (computed); the Check-in placeholder moved from `--t4` (decorative only) to `--t3`; links, selection and the global focus ring are cyan instead of orange (colour roles). New test: every route has exactly one h1, and the bell and `⋯` keep their names. The clip-path panels already draw focus inset (`.hp :focus-visible`).
+- **Performance (§8).** No new dependencies; `backdrop-filter` is only on the top bar, the popovers and the phone tabs. Leader lines, traces and pausing were done in earlier phases.
+- **Screenshots.** `docs/screenshots/console-*.jpg` (7) re-shot at 1440×900 with Pilot selected; the README's Run demo line now says it is in the `⋯` menu.
+- **Checks:** lint clean, build OK, tests 215/215 (full run).
+
+**Mistake caught on the way:** deleting `.tt-mission` as "unused" pushed the top bar 93 px past the edge at 1024. The class is built as `tt-${group}`; the rule is back. A string search misses classes composed at run time, so the browser pass is what caught it.
+
+**Not done / for the owner:**
+- Lighthouse mobile on `/board` (a11y ≥ 95, CLS ≈ 0) was not run; no Lighthouse is installed here.
+- Contrast on red `ACT` text is about 3.4:1 only when a panel sits over the very brightest part of the sunrise sky; it is 4.6:1 or better over the rest. A denser panel fill would fix it, at a visible cost to the look.
+- Nothing was exercised with a screen reader; the checks are structural (roles, names, headings) plus tests.

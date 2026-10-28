@@ -53,7 +53,22 @@ export function BarsMini({ values, mean }: { values: number[]; mean: number | nu
   const y = (v: number) => H - PAD - (Math.max(0, v) / hi) * (H - 2 * PAD)
   return (
     <Svg>
-      {values.map((v, i) => <rect key={i} x={PAD + i * bw + bw * 0.14} width={bw * 0.72} y={y(v)} height={H - PAD - y(v)} rx="2" className="mini-bar" />)}
+      {values.map((v, i) => <rect key={i} x={PAD + i * bw + bw * 0.14} width={bw * 0.72} y={y(v)} height={H - PAD - y(v)} className="mini-bar" />)}
+      {mean !== null && <line x1="0" x2={W} y1={y(mean)} y2={y(mean)} className="mini-rule" />}
+    </Svg>
+  )
+}
+
+/** Sleep per night as bars: nights outside this person's Watch band (mean ± 1.8 sd) are drawn in the status colour, with the mean dashed. */
+export function SleepBars({ values, mean, sd, band = 1.8 }: { values: number[]; mean: number | null; sd: number | null; band?: number }) {
+  if (values.length === 0) return <Svg>{null}</Svg>
+  const { hi } = bounds(values, [0, ...(mean === null ? [] : [mean])])
+  const bw = (W - 2 * PAD) / values.length
+  const y = (v: number) => H - PAD - (Math.max(0, v) / hi) * (H - 2 * PAD)
+  const out = (v: number) => mean !== null && sd !== null && Math.abs(v - mean) > band * sd
+  return (
+    <Svg>
+      {values.map((v, i) => <rect key={i} x={PAD + i * bw + bw * 0.12} width={bw * 0.76} y={y(v)} height={H - PAD - y(v)} className={out(v) ? 'mini-bar out' : 'mini-bar'} />)}
       {mean !== null && <line x1="0" x2={W} y1={y(mean)} y2={y(mean)} className="mini-rule" />}
     </Svg>
   )
@@ -73,8 +88,9 @@ export function BacklogBar({ hours }: { hours: number | null | undefined }) {
   return (
     <div className="backlog" aria-hidden="true">
       <span className="backlog-fill" style={{ width: `${pct}%` }} />
-      <i style={{ left: '25%' }} />
-      <i style={{ left: '75%' }} />
+      <i className="mark-watch" />
+      <i className="mark-act" />
+      <b className="backlog-lbl">24H</b>
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import { StateView } from '../ui/StateView'
 import { StatusBoard } from './StatusBoard'
 import { useBoard } from './store'
 import { useMini, useSnapshot } from './hooks'
@@ -6,15 +7,11 @@ export default function BoardPage() {
   const snap = useSnapshot()
   const boot = useBoard((s) => s.boot)
   const mini = useMini(snap?.crewId, snap?.now)
-  if (boot.state === 'error') return <p role="alert" className="glass">Could not open the local database: {boot.error}</p>
+  if (boot.state === 'error') return <StateView kind="error" title="Could not open the local database"><p>{boot.error}</p></StateView>
   if (boot.state !== 'ready' || snap === undefined) {
-    const pct = boot.total > 0 ? Math.round((boot.done / boot.total) * 100) : 0
-    return (
-      <p className="glass muted" role="status">
-        Initializing demo mission data{boot.state === 'seeding' ? ` (${pct}%)` : ''}…
-      </p>
-    )
+    const pct = boot.state === 'seeding' && boot.total > 0 ? (boot.done / boot.total) * 100 : undefined
+    return <StateView kind="loading" label="Initializing demo mission data" progress={pct} />
   }
-  if (snap === null) return <p className="glass muted">No crew data yet.</p>
+  if (snap === null) return <StateView kind="empty" label="No crew data yet." />
   return <StatusBoard snap={snap} mini={mini} />
 }

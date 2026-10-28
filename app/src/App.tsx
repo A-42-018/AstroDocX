@@ -6,10 +6,11 @@ import { Backdrop } from './shell/Backdrop'
 import { ErrorBoundary } from './shell/ErrorBoundary'
 import { useInstallPrompt } from './shell/install'
 import { lazyPage } from './shell/lazyPage'
-import { BottomTabs, Rail, TopBar } from './shell/Chrome'
-import { ROUTES } from './shell/nav'
+import { BottomTabs, StatusBar, TopBar } from './shell/Chrome'
+import { routeFor } from './shell/nav'
 import { ShellDataContext, useShellData } from './shell/useShellData'
 import { useSplashHandoff } from './shell/splash'
+import { StateView } from './ui/StateView'
 
 // The board is the landing screen and loads eagerly; every other screen (Trends carries the chart
 // library) is its own chunk. The service worker precaches all chunks, so they still work offline;
@@ -44,7 +45,7 @@ function useRouteAnnounce(main: React.RefObject<HTMLElement | null>) {
   const { pathname } = useLocation()
   const first = useRef(true)
   useEffect(() => {
-    const label = ROUTES.find((r) => pathname.startsWith(r.path))?.label
+    const label = routeFor(pathname)?.label
     document.title = label ? `${label} · AstroDocX Crew Console` : 'AstroDocX Crew Console'
     if (first.current) { first.current = false; return }
     main.current?.focus()
@@ -65,13 +66,12 @@ export default function App() {
     <div className="shell">
       <Backdrop />
       <a href="#main" className="skip-link">Skip to content</a>
-      <Rail />
       <div className="frame">
         <TopBar data={shell} install={install} />
       <main id="main" ref={main} tabIndex={-1}>
         {/* key: a crash on one screen clears when the crew moves to another */}
         <ErrorBoundary key={pathname} onReset={() => seedDemo().then(() => undefined)}>
-        <Suspense fallback={<p className="glass muted" role="status">Loading…</p>}>
+        <Suspense fallback={<StateView kind="loading" label="Loading screen" />}>
         <Routes>
           <Route path="/" element={<Navigate to="/board" replace />} />
           <Route path="/board" element={<BoardPage />} />
@@ -86,9 +86,9 @@ export default function App() {
         </Suspense>
         </ErrorBoundary>
       </main>
-      <footer className="disclaimer">Prototype, not a medical device.</footer>
+      <StatusBar data={shell} />
       </div>
-      <BottomTabs />
+      <BottomTabs alerts={shell?.crew.find((c) => c.id === shell.crewId)?.alerts ?? 0} />
     </div>
     </ShellDataContext.Provider>
   )

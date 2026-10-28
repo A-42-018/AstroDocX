@@ -20,13 +20,25 @@ it('shows the most urgent alert in the detail pane with why, progress, and repor
   const onDone = vi.fn()
   render(<AlertsView {...props} active={[base, watch]} onStep={onStep} onDone={onDone} />)
   const card = screen.getByLabelText('Sleep last night: ACT')
-  expect(within(card).getByText(/3\.4σ below Pilot/)).toBeTruthy()
+  expect(within(card).getByRole('region', { name: 'Why this fired' }).textContent).toContain('3.4σ below Pilot’s baseline')
   expect(within(card).getByText(/1 of 2 steps done/)).toBeTruthy()
-  expect(within(card).getByText(/3\.4σ from baseline when it opened/)).toBeTruthy()
+  expect(within(card).getByRole('region', { name: 'Why this fired' }).textContent).toContain('3.4σwhen it opened')
+  expect(within(card).getByRole('heading', { level: 1, name: 'Sleep last night' })).toBeTruthy()
   fireEvent.click(within(card).getByLabelText('Dim the cabin lights'))
   expect(onStep).toHaveBeenCalledWith(1, 1, true)
-  fireEvent.click(within(card).getByRole('button', { name: 'Done' }))
+  fireEvent.click(within(card).getByRole('button', { name: 'Mark done' }))
   expect(onDone).toHaveBeenCalledWith(1)
+})
+
+it('shows a tick at once, then follows the database when the alert next arrives', () => {
+  const { rerender } = render(<AlertsView {...props} active={[base, watch]} />)
+  const box = () => within(screen.getByLabelText('Sleep last night: ACT')).getByLabelText('Dim the cabin lights') as HTMLInputElement
+  fireEvent.click(box())
+  expect(box().checked).toBe(true) // before the database has answered
+  expect(screen.getByText(/2 of 2 steps done/)).toBeTruthy()
+  // a newer copy of the alert (the write failed, say) is the truth again
+  rerender(<AlertsView {...props} active={[{ ...base }, watch]} />)
+  expect(box().checked).toBe(false)
 })
 
 it('picks another alert from the list and reports the selection', () => {
@@ -39,17 +51,26 @@ it('picks another alert from the list and reports the selection', () => {
   expect(onSelect).toHaveBeenLastCalledWith(watch)
 })
 
+it('lists recently resolved alerts under the active queue and opens one', () => {
+  const resolved: Alert = { ...base, id: 2, state: 'resolved', status: 'watch', peakStatus: 'act', resolvedAt: 90_000_000 }
+  render(<AlertsView {...props} active={[base]} resolved={[resolved]} />)
+  fireEvent.click(within(screen.getByRole('list', { name: 'Recently resolved' })).getByRole('button'))
+  expect(screen.getByRole('button', { name: /Resolved$/ }).getAttribute('aria-pressed')).toBe('true')
+  expect(within(screen.getByRole('list', { name: 'Resolved alerts' })).getByRole('button').getAttribute('aria-current')).toBe('true')
+})
+
 it('filters by Act, Watch and Resolved', () => {
   const resolved: Alert = { ...base, id: 2, state: 'resolved', status: 'watch', peakStatus: 'act', resolvedAt: 90_000_000 }
   render(<AlertsView {...props} active={[base, watch]} resolved={[resolved]} />)
-  fireEvent.click(screen.getByRole('button', { name: /^Watch/ }))
+  fireEvent.click(screen.getByRole('button', { name: /Watch$/ }))
   expect(within(screen.getByRole('list', { name: 'Active alerts' })).getAllByRole('button')).toHaveLength(1)
   expect(screen.getByLabelText('HRV: WATCH')).toBeTruthy()
-  fireEvent.click(screen.getByRole('button', { name: /^Resolved/ }))
+  fireEvent.click(screen.getByRole('button', { name: /Resolved$/ }))
   const list = screen.getByRole('list', { name: 'Resolved alerts' })
   expect(within(list).getByText(/peak ACT/)).toBeTruthy()
+  expect(screen.queryByRole('list', { name: 'Recently resolved' })).toBeNull()
   // a resolved alert is read-only
-  expect(screen.queryByRole('button', { name: 'Done' })).toBeNull()
+  expect(screen.queryByRole('button', { name: 'Mark done' })).toBeNull()
   expect(screen.getByLabelText('Dim the cabin lights').matches(':disabled')).toBe(true)
 })
 

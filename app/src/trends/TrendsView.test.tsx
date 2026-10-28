@@ -25,15 +25,15 @@ it('summarises each chart in text and reports range changes', () => {
   expect(onRange).toHaveBeenCalledWith('24h')
 })
 
-it('focuses a metric from the chips or a small multiple and shows its statistics and compare toggle', () => {
+it('focuses a metric from the channel list or a small multiple and shows its statistics and compare toggle', () => {
   const onFocus = vi.fn()
   const onCompare = vi.fn()
   const points = [{ ts: 1, value: 7, band: null }, { ts: 2, value: 6, band: [5, 9] as [number, number] }, { ts: 3, value: 3, band: [5, 9] as [number, number] }]
   const s: TrendSeries[] = [{ metric: 'sleep', points, markers: [], latest: 3, outsideBand: true }, { metric: 'co2', points: [], markers: [], latest: 2.4, outsideBand: false }]
   render(<TrendsView crew={crew} crewId="pilot" range="7d" series={s} onRange={() => {}} focus="sleep" onFocus={onFocus} onCompare={onCompare} />)
   const group = screen.getByRole('group', { name: 'Metric' })
-  expect(within(group).getByRole('button', { name: 'Sleep last night' }).getAttribute('aria-pressed')).toBe('true')
-  fireEvent.click(within(group).getByRole('button', { name: 'Cabin CO₂' }))
+  expect(within(group).getByRole('button', { name: /^Sleep last night/ }).getAttribute('aria-pressed')).toBe('true')
+  fireEvent.click(within(group).getByRole('button', { name: /^Cabin CO₂/ }))
   expect(onFocus).toHaveBeenCalledWith('co2')
   fireEvent.click(screen.getByRole('button', { name: 'Focus Cabin CO₂' }))
   expect(onFocus).toHaveBeenLastCalledWith('co2')

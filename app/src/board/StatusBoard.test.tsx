@@ -26,12 +26,14 @@ describe('StatusBoard', () => {
     const list = screen.getByRole('list', { name: 'Hazard status' })
     expect(within(list).getAllByRole('listitem')).toHaveLength(5)
     expect(screen.getByLabelText(/^Isolation: ACT/)).toBeTruthy()
-    expect(screen.getByText(/3\.4σ below Pilot/)).toBeTruthy()
+    expect(within(list).getByText(/3\.4σ below Pilot/)).toBeTruthy()
     expect(screen.getByLabelText(/^Distance: NOMINAL/).textContent).toContain('5.2')
   })
 
-  it('shows readiness, overall status and the mission clock', () => {
+  it('names the crew member in the h1 and shows readiness, overall status and the alert count', () => {
     render(<MemoryRouter><StatusBoard snap={snap} /></MemoryRouter>)
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Pilot')
+    expect(screen.getByRole('region', { name: 'Crew member' }).textContent).toContain('Crew 02 · Pilot')
     expect(screen.getByLabelText(new RegExp(`Crew readiness ${snap.readiness} percent, ACT`))).toBeTruthy()
     expect(screen.getByText('1 active alert')).toBeTruthy()
   })
@@ -41,7 +43,7 @@ describe('StatusBoard', () => {
     render(<MemoryRouter><StatusBoard snap={withSteps} /></MemoryRouter>)
     const next = screen.getByRole('region', { name: 'Next action' })
     expect(next.textContent).toContain('Cool the cabin')
-    expect(next.textContent).toContain('1 of 2 steps done')
+    expect(next.textContent).toContain('1 / 2 done')
     expect(within(next).getByRole('link', { name: /Open action card/ }).getAttribute('href')).toBe('/alerts')
     const twin = screen.getByRole('group', { name: 'Health twin' })
     expect(within(twin).getAllByRole('link')).toHaveLength(5)

@@ -33,6 +33,12 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "5190"],
       "port": 5190
+    },
+    {
+      "name": "mockups-win",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5190"],
+      "port": 5190
     }
   ]
 }

@@ -1,0 +1,13 @@
+/* Status colour roles and the hazard chip (src/shell/icons.tsx). The v3 primitives live in components/*.css. */
+@layer components {
+  .st-nominal { --st: var(--ok); } .st-watch { --st: var(--watch); } .st-act { --st: var(--act); }
+  .hz {
+    width: 34px; height: 34px; display: grid; place-content: center; border-radius: 10px; flex-shrink: 0;
+    color: var(--st, var(--cy)); background: color-mix(in srgb, var(--st, var(--cy)) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--st, var(--cy)) 28%, transparent);
+  }
+  .hz-data { --st: var(--cy); }
+  /* Shared by the Simulator, Sync, Ground and Check-in forms */
+  .note { margin: 8px 0 0; font-size: 0.78rem; }
+  .form-error { color: var(--act); margin: 0; font-weight: 600; }
+}

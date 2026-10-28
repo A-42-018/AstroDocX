@@ -1,0 +1,32 @@
+/* AstroDocX Crew Console — design system v3 "Holo HUD" tokens (console-ui-upgrade-plan.md §3.1, from mockups/hud.css).
+
+   Colour roles are strict:
+   - Cyan = data, navigation state and focus.
+   - Orange = the one primary action per panel.
+   - Green / amber / red = status only.
+   - Periwinkle = "compared with" (the crew median), nothing else.
+   - Glow is allowed on panel edges, readouts, traces, tags, the hologram and the active tab. Never on paragraphs.
+   --t4 is for ticks and rules only; it is too faint for text.
+   --t2 and --t3 stay at 4.5:1 or better on --panel even over the brightest sky frame (checked in Phase 10). */
+@layer tokens {
+  :root {
+    --bg: #02050a;
+    --panel: rgba(5, 14, 22, 0.78); --panel-hi: rgba(8, 22, 32, 0.9);
+    --edge: rgba(70, 225, 245, 0.22); --edge-hi: rgba(70, 225, 245, 0.55);
+    --cy: #36e2f5; --cy-hi: #9ff4ff; --cy-soft: rgba(54, 226, 245, 0.12); --cy-glow: rgba(54, 226, 245, 0.55);
+    --or: #ff8a3d; --or-hi: #ffb27a; --or-soft: rgba(255, 138, 61, 0.14); --on-or: #1a0b02;
+    --data-2: #8b9cff;
+    --ok: #3ddc97; --watch: #ffc53d; --act: #ff4d6a;
+    --t1: #eef8ff; --t2: rgba(214, 238, 250, 0.88); --t3: rgba(170, 214, 232, 0.74); --t4: rgba(150, 200, 220, 0.32);
+    --cut: 14px;
+    --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --disp: 'Space Grotesk', 'Inter', system-ui, -apple-system, sans-serif;
+    --ui: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px; --sp-16: 64px;
+    --dur-1: 120ms; --dur-2: 200ms; --dur-3: 400ms; --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    /* Breakpoints (media queries cannot read custom properties; these are the only widths used):
+       xs < 480 · sm 480–767 · md 768–1023 · lg 1024–1279 · xl ≥ 1280 */
+
+    color-scheme: dark;
+  }
+}

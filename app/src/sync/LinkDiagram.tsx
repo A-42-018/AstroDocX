@@ -6,12 +6,15 @@ import { windowProgress } from './link'
 const R = 38
 const C = 2 * Math.PI * R
 
-function Node({ x, Icon, label }: { x: number; Icon: LucideIcon; label: string }) {
+/** Chamfered octagon around each station, the same cut as the HUD panels. */
+const OCT = '-20,-34 20,-34 34,-20 34,20 20,34 -20,34 -34,20 -34,-20'
+
+function Node({ x, Icon, label, lit }: { x: number; Icon: LucideIcon; label: string; lit?: boolean }) {
   return (
     <g>
-      <circle cx={x} cy="86" r="34" className="ld-node" />
-      <Icon x={x - 16} y={70} size={32} strokeWidth={1.8} className="ld-ico" />
-      <text x={x} y="146" textAnchor="middle" className="ld-label">{label}</text>
+      <polygon points={OCT} transform={`translate(${x} 86)`} className="ld-node" />
+      <Icon x={x - 18} y={68} size={36} strokeWidth={1.6} className="ld-ico" />
+      <text x={x} y="146" textAnchor="middle" className={lit ? 'ld-label lit' : 'ld-label'}>{label}</text>
     </g>
   )
 }
@@ -42,7 +45,7 @@ export function LinkDiagram({ link, now, queued, burst }: { link: LinkInfo; now:
             <path d="M348 72l-4 28M372 72l-4 28" className="ld-spark" />
           </g>
         )}
-        <Node x={90} Icon={Rocket} label="Ship" />
+        <Node x={90} Icon={Rocket} label={queued > 0 ? `Ship · ${queued} queued` : 'Ship'} lit />
         <Node x={360} Icon={Radio} label="Relay" />
         <Node x={630} Icon={Globe} label="Earth" />
         {burst.n > 0 && (

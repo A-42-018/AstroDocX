@@ -1,0 +1,43 @@
+/* Fonts, reset, type defaults, focus, the reduced-motion net and the stage overlay.
+   Fonts are bundled in public/fonts (latin subsets) and precached, so the console looks the same offline.
+   Space Grotesk for headings and big numbers, Inter for UI text, JetBrains Mono for telemetry and labels. */
+@font-face { font-family: 'Space Grotesk'; src: url('/fonts/SpaceGrotesk-var.woff2') format('woff2'); font-weight: 300 700; font-display: swap; }
+@font-face { font-family: 'Inter'; src: url('/fonts/Inter-var.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: 'JetBrains Mono'; src: url('/fonts/JetBrainsMono-var.woff2') format('woff2'); font-weight: 100 800; font-display: swap; }
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body, #root { min-height: 100%; margin: 0; }
+  body {
+    font-family: var(--ui); font-feature-settings: 'cv11', 'ss01', 'tnum'; background: var(--bg); color: var(--t1);
+    font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: rgba(54, 226, 245, 0.35); color: #fff; }
+  a { color: var(--cy-hi); text-decoration: none; }
+  h1, h2, h3 { font-family: var(--disp); letter-spacing: -0.015em; }
+  small { color: var(--t2); font-size: 0.72em; font-weight: 500; }
+  * { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.2) transparent; }
+  .mono { font-family: var(--mono); font-size: 0.92em; }
+
+  /* Stage: a faint dot grid and a vignette over the live sky, so the sky reads as depth behind the instrument */
+  .shell::after {
+    content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(rgba(120, 220, 255, 0.10) 1px, transparent 1.2px) 0 0 / 22px 22px,
+      radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.65));
+  }
+
+  /* Focus */
+  .skip-link {
+    position: absolute; left: 12px; top: -60px; z-index: 10; padding: 10px 16px; 
+    background: var(--or); color: var(--on-or); font-weight: 700;
+  }
+  .skip-link:focus { top: 8px; }
+  main:focus { outline: none; }
+  button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--cy-hi); outline-offset: 2px; }
+
+  /* Safety net: with reduced motion nothing loops and every transition is instant (specific rules also stop their own effects) */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  }
+}

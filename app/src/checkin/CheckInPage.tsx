@@ -1,3 +1,4 @@
+import '../styles/pages/checkin.css'
 import { useEffect, useState } from 'react'
 import { useSnapshot } from '../board/hooks'
 import { db } from '../data/db'
@@ -5,6 +6,7 @@ import { useBoard } from '../board/store'
 import { CheckInForm } from './CheckInForm'
 import { requestPersistentStorage } from '../shell/install'
 import { submitCheckIn } from './submit'
+import { StateView } from '../ui/StateView'
 
 export default function CheckInPage() {
   const snap = useSnapshot()
@@ -17,9 +19,12 @@ export default function CheckInPage() {
     void db.baselines.get([crewId, 'reaction']).then((b) => live && setBaseline({ crewId, mean: b && b.n >= 5 ? b.mean : null }), () => {})
     return () => { live = false }
   }, [crewId])
-  if (boot.state === 'error') return <p role="alert" className="glass">Could not open the local database: {boot.error}</p>
-  if (boot.state !== 'ready' || snap === undefined) return <p className="glass muted" role="status">Initializing demo mission data…</p>
-  if (snap === null) return <p className="glass muted">No crew data yet.</p>
+  if (boot.state === 'error') return <StateView kind="error" title="Could not open the local database"><p>{boot.error}</p></StateView>
+  if (boot.state !== 'ready' || snap === undefined) {
+    const pct = boot.state === 'seeding' && boot.total > 0 ? (boot.done / boot.total) * 100 : undefined
+    return <StateView kind="loading" label="Initializing demo mission data" progress={pct} />
+  }
+  if (snap === null) return <StateView kind="empty" label="No crew data yet." />
   // key: a fresh form per crew member.
   return <CheckInForm key={snap.crewId} crew={snap.crew} crewId={snap.crewId} now={snap.now} baselineMs={baseline?.crewId === snap.crewId ? baseline.mean : null} onSubmit={(i) => submitCheckIn(i).finally(() => void requestPersistentStorage())} />
 }

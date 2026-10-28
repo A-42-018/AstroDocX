@@ -1,0 +1,11 @@
+// v3 "Holo HUD" primitives (console-ui-upgrade-plan.md §3.5). Styles live in src/styles/components/.
+export { HudPanel, PanelHeader, Brackets, Ruler, type PanelTone } from './HudPanel'
+export { StatusTag } from './StatusTag'
+export { STATUS_WORD, STATUS_SHORT } from './status'
+export { Button } from './Button'
+export { buttonClass, type ButtonVariant, type ButtonSize } from './buttonClass'
+export { KpiCell, KpiGrid, Readout } from './Readout'
+export { Gauge } from './Gauge'
+export { Segmented, type SegOption } from './Segmented'
+export { StateView } from './StateView'
+export { Switch } from './Switch'
