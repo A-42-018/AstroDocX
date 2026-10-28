@@ -6,15 +6,19 @@ import * as THREE from 'three'
  * falls back to a procedural globe, so the scene never waits on them. Nothing here takes fog.
  */
 
-/** Where the sun is seen from the hall: up and to the right through the window. */
-export const SUN_DIR = new THREE.Vector3(14, 4.5, -80).normalize()
+/** Where the sun is seen from the hall: just above the limb at the window's upper right, behind the station on EVA. */
+export const SUN_DIR = new THREE.Vector3(0.158, 0.045, -1).normalize()
+export const SUN_AT = SUN_DIR.clone().multiplyScalar(900)
 /** The light on Earth itself: from above and behind the ship, so the side we see is in daylight (artistic, like the references). */
 const EARTH_SUN = new THREE.Vector3(0.55, 0.5, 0.65).normalize()
-const R = 300
+const R = 600
 /** Starting longitude turned toward the ship: Africa and the Atlantic, green and blue rather than polar snow. */
 const SPIN0 = 2.2
-/** Below and ahead of the ship, so the limb arcs across the upper window. */
-export const EARTH_CENTER = new THREE.Vector3(0, -R + 9.5, -340)
+/**
+ * Below and ahead of the ship, in a low orbit (about 0.08 R up): the horizon sits just above eye level ahead, so
+ * the limb crosses the upper window and curves away down the sides, and on EVA Earth fills the lower frame.
+ */
+export const EARTH_CENTER = new THREE.Vector3(0, -591, -251)
 
 export function mulberry(a: number) {
   return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296 }
@@ -51,10 +55,17 @@ const surfaceFrag = /* glsl */ `
       dayC = pow(mix(mix(sea, ground, land), vec3(0.9), ice), vec3(2.2)); // authored in sRGB
       nightC = land * step(0.66, fbm(vObj * 40.0)) * vec3(1.0, 0.72, 0.4) * 0.7;
     }
-    vec3 c = dayC * (0.03 + 0.95 * max(l, 0.0)) * lit + nightC * (1.0 - lit) * 0.9;
-    // a little sun glint on the oceans
+    // the oceans a touch lighter and less saturated, as seen through the air
+    float dl = dot(dayC, vec3(0.2126, 0.7152, 0.0722));
+    dayC = mix(dayC, vec3(dl), 0.18) + vec3(0.006, 0.014, 0.03);
+    vec3 c = dayC * (0.03 + 1.05 * max(l, 0.0)) * lit + nightC * (1.0 - lit) * 0.9;
     vec3 v = normalize(cameraPosition - vW);
+    // a little sun glint on the oceans
     c += pow(max(dot(reflect(-sun, normalize(vN)), v), 0.0), 40.0) * 0.25 * lit;
+    // aerial haze: thicker the more edge-on the ground is seen, so the land fades into a blue-white limb
+    float graze = 1.0 - max(dot(v, normalize(vN)), 0.0);
+    vec3 haze = vec3(0.42, 0.62, 0.95) * (0.08 + 0.9 * max(l, 0.0));
+    c = mix(c, haze, clamp(0.08 + 0.8 * pow(graze, 8.0), 0.0, 0.8));
     gl_FragColor = vec4(c, 1.0);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
@@ -68,7 +79,7 @@ const cloudFrag = /* glsl */ `
     float a = maps > 0.5 ? texture2D(clouds, vUv).r : smoothstep(0.6, 0.85, fbm(vObj * 5.0 + vec3(time * 0.01, 0.0, 0.0)));
     float l = dot(normalize(vN), sun);
     float face = abs(dot(normalize(cameraPosition - vW), normalize(vN))); // seen edge-on, cloud layers stack up: thin them there
-    gl_FragColor = vec4(vec3(0.8) * (0.04 + max(l, 0.0)), a * smoothstep(-0.2, 0.15, l) * (0.15 + 0.55 * smoothstep(0.0, 0.35, face)));
+    gl_FragColor = vec4(vec3(0.95) * (0.04 + max(l, 0.0)), a * smoothstep(-0.2, 0.15, l) * (0.4 + 0.5 * smoothstep(0.0, 0.35, face)));
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
@@ -77,17 +88,22 @@ const atmoVert = /* glsl */ `
   varying vec3 vN; varying vec3 vW;
   void main() { vN = normalize(mat3(modelMatrix) * normal); vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }
 `
+/** The air above the limb: for each view ray, how close it passes to the ground; brightest there, fading with height. */
 const atmoFrag = /* glsl */ `
-  uniform vec3 sun; varying vec3 vN; varying vec3 vW;
+  uniform vec3 sun; uniform vec3 center; uniform float radius; varying vec3 vN; varying vec3 vW;
   void main() {
-    vec3 v = normalize(cameraPosition - vW);
-    float rim = pow(1.0 - abs(dot(v, normalize(vN))), 3.0);
-    float day = smoothstep(-0.3, 0.4, dot(normalize(vN), sun));
-    gl_FragColor = vec4(vec3(0.35, 0.65, 1.0) * rim * (0.25 + 1.4 * day), rim);
+    vec3 d = normalize(vW - cameraPosition);
+    float t = dot(center - cameraPosition, d);
+    vec3 p = cameraPosition + d * max(t, 0.0);
+    float h = max(length(p - center) - radius, 0.0) / radius;
+    float glow = exp(-h / 0.0075), core = exp(-h / 0.0018);
+    float day = smoothstep(-0.3, 0.4, dot(normalize(p - center), sun));
+    vec3 col = mix(vec3(0.22, 0.48, 1.0), vec3(0.78, 0.9, 1.0), core);
+    gl_FragColor = vec4(col * (glow * 0.55 + core * 0.35) * (0.15 + 1.1 * day), 1.0);
   }
 `
 
-function glowTexture(stops: [number, string][]) {
+export function glowTexture(stops: [number, string][]) {
   const c = document.createElement('canvas'); c.width = c.height = 256
   const g = c.getContext('2d')!, gr = g.createRadialGradient(128, 128, 0, 128, 128, 128)
   for (const [o, col] of stops) gr.addColorStop(o, col)
@@ -98,25 +114,57 @@ function glowTexture(stops: [number, string][]) {
 
 export interface Space { group: THREE.Group; sun: THREE.Vector3; update: (t: number, still: number) => void }
 
+/** A sunburst: thin rays of random length round a hot centre. */
+function raysTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 512
+  const g = c.getContext('2d')!, r = mulberry(11)
+  g.translate(256, 256); g.globalCompositeOperation = 'lighter'
+  for (let i = 0; i < 28; i++) {
+    const a = (i / 28) * Math.PI * 2 + r() * 0.12, len = 90 + r() * 166 * (i % 2 ? 0.55 : 1), w = 1.2 + r() * 2.4
+    const gr = g.createLinearGradient(0, 0, Math.cos(a) * len, Math.sin(a) * len)
+    gr.addColorStop(0, 'rgba(255,236,200,0.75)'); gr.addColorStop(1, 'rgba(255,200,130,0)')
+    g.fillStyle = gr; g.beginPath(); g.moveTo(-Math.sin(a) * w, Math.cos(a) * w); g.lineTo(Math.cos(a) * len, Math.sin(a) * len); g.lineTo(Math.sin(a) * w, -Math.cos(a) * w); g.fill()
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace
+  return t
+}
+
+/** The Milky Way: a soft, mottled band of light behind the stars. */
+const bandVert = /* glsl */ `varying vec3 vP; void main() { vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`
+const bandFrag = /* glsl */ `
+  uniform vec3 axis; varying vec3 vP;
+  ${NOISE}
+  void main() {
+    float b = dot(vP, axis);
+    float n = fbm(vP * 6.0), dust = smoothstep(0.45, 0.7, fbm(vP * 11.0 + 4.0));
+    float band = exp(-b * b / 0.018) * (0.45 + 0.9 * n) * (1.0 - 0.6 * dust * exp(-b * b / 0.004));
+    vec3 col = mix(vec3(0.5, 0.55, 0.75), vec3(0.95, 0.85, 0.7), n);
+    gl_FragColor = vec4(col * band * 0.2, 1.0);
+  }
+`
+/** The band's pole: the band runs up from the lower right of the EVA view across the sky behind the astronaut. */
+const BAND_AXIS = new THREE.Vector3(0.45, 0.35, 0.82).normalize()
+
 /**
  * Builds Earth, sun and stars; `textures` is the folder the Earth maps would be in. `sharp` picks the 4K day map
- * ("Earth" by kongle, CC BY-SA 4.0) over NASA's 2K one; phones and small GPUs keep the 2K.
+ * ("Earth" by kongle, CC BY-SA 4.0) over NASA's 2K one; phones and small GPUs keep the 2K. `rich` adds the
+ * Milky Way glow and more stars.
  */
-export function createSpace(scene: THREE.Scene, textures: string, sharp: boolean): Space {
+export function createSpace(scene: THREE.Scene, textures: string, sharp: boolean, rich = true): Space {
   const group = new THREE.Group(); scene.add(group)
   const uniforms = {
     day: { value: null as THREE.Texture | null }, night: { value: null as THREE.Texture | null }, clouds: { value: null as THREE.Texture | null },
-    maps: { value: 0 }, sun: { value: EARTH_SUN }, time: { value: 0 },
+    maps: { value: 0 }, sun: { value: EARTH_SUN }, time: { value: 0 }, center: { value: EARTH_CENTER }, radius: { value: R },
   }
   // tilted so the ship looks down on the tropics, not a pole; `spin` turns about Earth's own axis
-  const earth = new THREE.Group(); earth.position.copy(EARTH_CENTER); earth.rotation.set(1.42, 0, 0.25); group.add(earth)
+  const earth = new THREE.Group(); earth.position.copy(EARTH_CENTER); earth.rotation.set(0.886, 0, 0.25); group.add(earth)
   const spin = new THREE.Group(); earth.add(spin)
-  const geo = new THREE.SphereGeometry(R, 128, 64)
+  const geo = new THREE.SphereGeometry(R, 256, 128)
   spin.add(new THREE.Mesh(geo, new THREE.ShaderMaterial({ uniforms, vertexShader: surfaceVert, fragmentShader: surfaceFrag })))
   const clouds = new THREE.Mesh(geo, new THREE.ShaderMaterial({ uniforms, vertexShader: surfaceVert, fragmentShader: cloudFrag, transparent: true, depthWrite: false }))
   clouds.scale.setScalar(1.006); spin.add(clouds)
   const atmo = new THREE.Mesh(geo, new THREE.ShaderMaterial({ uniforms, vertexShader: atmoVert, fragmentShader: atmoFrag, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.BackSide }))
-  atmo.scale.setScalar(1.035); atmo.position.copy(EARTH_CENTER); group.add(atmo)
+  atmo.scale.setScalar(1.04); atmo.position.copy(EARTH_CENTER); group.add(atmo)
 
   // the real maps, if they are installed; all three or none
   const loader = new THREE.TextureLoader()
@@ -126,26 +174,40 @@ export function createSpace(scene: THREE.Scene, textures: string, sharp: boolean
     .then(([d, n, c]) => { uniforms.day.value = d; uniforms.night.value = n; uniforms.clouds.value = c; uniforms.maps.value = 1 })
     .catch(() => { /* procedural Earth stays */ })
 
-  // the sun: a hot core and a wide soft halo
-  const SUN_AT = SUN_DIR.clone().multiplyScalar(900)
-  for (const [size, tex, op] of [
-    [60, glowTexture([[0, 'rgba(255,255,250,1)'], [0.2, 'rgba(255,240,200,0.9)'], [0.5, 'rgba(255,200,120,0.25)'], [1, 'rgba(255,180,90,0)']]), 1],
-    [520, glowTexture([[0, 'rgba(255,214,150,0.55)'], [0.3, 'rgba(255,180,100,0.12)'], [1, 'rgba(255,160,80,0)']]), 0.9],
-  ] as const) {
+  // the sun: a white-hot core (bright enough to bloom), a wide soft halo and a slowly turning starburst
+  const sunSprites = ([
+    [520, glowTexture([[0, 'rgba(255,214,150,0.6)'], [0.3, 'rgba(255,180,100,0.14)'], [1, 'rgba(255,160,80,0)']]), 0.95, 1],
+    [380, raysTexture(), 0.9, 1.6],
+    [70, glowTexture([[0, 'rgba(255,255,250,1)'], [0.2, 'rgba(255,244,210,0.95)'], [0.5, 'rgba(255,200,120,0.3)'], [1, 'rgba(255,180,90,0)']]), 1, 4],
+  ] as const).map(([size, tex, op, hot]) => {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false, opacity: op }))
-    s.scale.setScalar(size); s.position.copy(SUN_AT); group.add(s)
-  }
+    s.material.color.setScalar(hot); s.scale.setScalar(size); s.position.copy(SUN_AT); group.add(s)
+    return s
+  })
+  const rays = sunSprites[1].material
 
-  // stars: a shell far out, a few brighter ones
-  const r = mulberry(7), n = 2600, pos = new Float32Array(n * 3), col = new Float32Array(n * 3)
+  // the Milky Way glow (not on small GPUs), then the stars: a shell far out, a third of them crowded into the band
+  if (rich) {
+    const band = new THREE.Mesh(new THREE.SphereGeometry(980, 48, 24), new THREE.ShaderMaterial({ uniforms: { axis: { value: BAND_AXIS } }, vertexShader: bandVert, fragmentShader: bandFrag, side: THREE.BackSide, depthWrite: false, fog: false, blending: THREE.AdditiveBlending, transparent: true }))
+    band.renderOrder = -1; group.add(band)
+  }
+  const r = mulberry(7), n = rich ? 6000 : 3000, pos = new Float32Array(n * 3), col = new Float32Array(n * 3)
+  const e1 = new THREE.Vector3(1, 0, 0).cross(BAND_AXIS).normalize(), e2 = BAND_AXIS.clone().cross(e1)
+  const p = new THREE.Vector3()
   for (let i = 0; i < n; i++) {
-    const u = r() * 2 - 1, a = r() * Math.PI * 2, s = Math.sqrt(1 - u * u)
-    pos.set([Math.cos(a) * s * 1000, u * 1000, Math.sin(a) * s * 1000], i * 3)
-    const b = 0.35 + Math.pow(r(), 3) * 0.9, warm = r()
+    if (i % 3 === 0) { // in the band: round the great circle, a gaussian spread off it
+      const a = r() * Math.PI * 2, off = (r() + r() + r() - 1.5) * 0.12
+      p.copy(e1).multiplyScalar(Math.cos(a)).addScaledVector(e2, Math.sin(a)).addScaledVector(BAND_AXIS, off).normalize()
+    } else {
+      const u = r() * 2 - 1, a = r() * Math.PI * 2, s = Math.sqrt(1 - u * u)
+      p.set(Math.cos(a) * s, u, Math.sin(a) * s)
+    }
+    pos.set(p.multiplyScalar(1000).toArray(), i * 3)
+    const b = (i % 3 === 0 ? 0.25 : 0.35) + Math.pow(r(), 4) * 1.1, warm = r()
     col.set([b * (0.9 + warm * 0.1), b * 0.95, b * (1.05 - warm * 0.15)], i * 3)
   }
   const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(pos, 3)); sg.setAttribute('color', new THREE.BufferAttribute(col, 3))
-  group.add(new THREE.Points(sg, new THREE.PointsMaterial({ size: 1.6, sizeAttenuation: false, vertexColors: true, fog: false, depthWrite: false, toneMapped: false })))
+  group.add(new THREE.Points(sg, new THREE.PointsMaterial({ size: 1.7, sizeAttenuation: false, vertexColors: true, fog: false, depthWrite: false, toneMapped: false })))
 
   return {
     group, sun: SUN_AT,
@@ -153,6 +215,7 @@ export function createSpace(scene: THREE.Scene, textures: string, sharp: boolean
       uniforms.time.value = t * still
       spin.rotation.y = SPIN0 + t * 0.004 * still
       clouds.rotation.y = t * 0.0015 * still
+      rays.rotation = t * 0.01 * still
     },
   }
 }

@@ -42,9 +42,19 @@
 
 /* helmet visor: scene.ts fades it out as the tour leaves the first stop */
 .cabin-visor { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
-.visor-shade { position: absolute; inset: 0; background: radial-gradient(ellipse 72% 78% at 50% 48%, transparent 58%, rgba(0, 6, 12, .55) 78%, rgba(0, 3, 8, .96) 100%); }
-.visor-rim { position: absolute; inset: 3vh 4vw; border-radius: 48% / 46%; box-shadow: inset 0 0 0 2px rgba(54, 226, 245, .35), inset 0 0 60px rgba(54, 226, 245, .18), 0 0 0 100vmax rgba(0, 3, 8, .9); }
-.visor-glare { position: absolute; inset: 0; background: linear-gradient(115deg, transparent 18%, rgba(190, 235, 255, .09) 24%, transparent 31%, transparent 64%, rgba(190, 235, 255, .05) 70%, transparent 76%); }
+/* a light edge falloff and four corner brackets, like a helmet-cam frame: the cabin stays in full view */
+.visor-shade { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 85% at 50% 50%, transparent 62%, rgba(0, 6, 12, .28) 86%, rgba(0, 3, 8, .5) 100%); }
+.visor-rim {
+  --c: rgba(54, 226, 245, .5); --l: 34px;
+  position: absolute; inset: 10vh 12vw;
+  background:
+    linear-gradient(var(--c), var(--c)) top left / var(--l) 1px, linear-gradient(var(--c), var(--c)) top left / 1px var(--l),
+    linear-gradient(var(--c), var(--c)) top right / var(--l) 1px, linear-gradient(var(--c), var(--c)) top right / 1px var(--l),
+    linear-gradient(var(--c), var(--c)) bottom left / var(--l) 1px, linear-gradient(var(--c), var(--c)) bottom left / 1px var(--l),
+    linear-gradient(var(--c), var(--c)) bottom right / var(--l) 1px, linear-gradient(var(--c), var(--c)) bottom right / 1px var(--l);
+  background-repeat: no-repeat;
+}
+.visor-glare { position: absolute; inset: 0; background: linear-gradient(115deg, transparent 18%, rgba(190, 235, 255, .05) 24%, transparent 31%, transparent 64%, rgba(190, 235, 255, .03) 70%, transparent 76%); }
 .vhud { position: absolute; font: 500 12px var(--mono); color: var(--cy-hi); text-shadow: 0 0 8px var(--cy-glow); letter-spacing: .08em; display: flex; flex-direction: column; gap: 4px; }
 .vhud b { font-weight: 700; font-size: 13px; }
 .vhud span { color: var(--t2); white-space: nowrap; }
@@ -52,8 +62,8 @@
 .vhud .ok { color: var(--ok); } .vhud .watch { color: var(--watch); }
 .vhud.tl { top: 14vh; left: 15vw; } .vhud.tr { top: 14vh; right: 15vw; text-align: right; }
 .vhud.bl { bottom: 26vh; left: 15vw; } .vhud.br { bottom: 26vh; right: 15vw; text-align: right; }
-.reticle { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border: 1px solid rgba(54, 226, 245, .45); border-radius: 50%; }
-.reticle::before, .reticle::after { content: ''; position: absolute; background: rgba(54, 226, 245, .6); }
+.reticle { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border: 1px solid rgba(54, 226, 245, .3); border-radius: 50%; }
+.reticle::before, .reticle::after { content: ''; position: absolute; background: rgba(54, 226, 245, .4); }
 .reticle::before { left: 50%; top: -10px; bottom: -10px; width: 1px; }
 .reticle::after { top: 50%; left: -10px; right: -10px; height: 1px; }
 .prompt { position: absolute; left: 50%; bottom: 9vh; transform: translateX(-50%); font: 600 13px var(--ui); letter-spacing: .2em; text-transform: uppercase; color: var(--cy-hi); text-shadow: 0 0 10px var(--cy); }
@@ -75,6 +85,7 @@
   .cabin-card { right: var(--sp-3); left: var(--sp-3); width: auto; bottom: auto; top: 64px; }
   .vhud { font-size: 10px; } .vhud b { font-size: 11px; }
   .vhud.tl, .vhud.bl { left: 9vw; } .vhud.tr, .vhud.br { right: 9vw; }
+  .visor-rim { inset: 10vh 6vw; --l: 22px; }
   .cabin-credits { left: var(--sp-3); right: var(--sp-3); font-size: 10px; line-height: 1.35; }
 }
 @media (prefers-reduced-motion: reduce) { .prompt span { animation: none; } }

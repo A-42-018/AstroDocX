@@ -4,10 +4,10 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import type { CabinCrew, CabinData } from './data'
 import { createCrew } from './crew'
-import { createSpace } from './earth'
+import { createSpace, SUN_AT } from './earth'
 import { createEva, EVA, EVA_VIEW, evaCrewId } from './eva'
 import { buildHall } from './hall'
-import { addLights, createPost, createSunBeam, pickQuality } from './lighting'
+import { addLights, createFlare, createPost, createSunBeam, pickQuality } from './lighting'
 import { C, SH, SW, drawAlerts, drawLiveVitals, drawStatusBoard, drawTrends } from './panels'
 
 /*
@@ -60,14 +60,15 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   scene.fog = new THREE.Fog('#05080d', 35, 110)
   const pmrem = new THREE.PMREMGenerator(renderer)
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture // soft reflections for the metal
-  scene.environmentIntensity = 0.6
+  scene.environmentIntensity = 0.45
   const camera = new THREE.PerspectiveCamera(58, size()[0] / size()[1], 0.08, 2000) // far enough for Earth and the stars
-  const post = createPost(renderer, scene, camera, ...size(), quality)
+  const flare = createFlare(camera, SUN_AT)
+  const post = createPost(renderer, scene, camera, ...size(), quality, [flare.pass])
   const { composer } = post
 
   /* ---------- lighting and the hall ---------- */
   const { alarm } = addLights(scene, quality)
-  const space = createSpace(scene, TEXTURES, quality !== 'low' && renderer.capabilities.maxTextureSize >= 4096)
+  const space = createSpace(scene, TEXTURES, quality !== 'low' && renderer.capabilities.maxTextureSize >= 4096, quality !== 'low')
   const beam = createSunBeam(scene, quality)
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder)
   const hallLoaded = buildHall(scene, loader, MODELS, TEXTURES)
@@ -236,7 +237,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
       crew.drawTags(live, t)
     }
     if (p > 5) eva.load()
-    space.update(t, still); beam.update(t, still); post.update(t, still); eva.update(still)
+    space.update(t, still); beam.update(t, still); post.update(t, still); eva.update(still, p); flare.update(reduced)
     if (frameNo++ % 6 === 0) renderer.shadowMap.needsUpdate = true
     composer.render(dt)
     // step down once if the first seconds run slow (frame times are only trusted after the scene is ready)
@@ -246,7 +247,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     }
   }
   frame()
-  void Promise.all([hallLoaded, crew.loaded]).then(() => { if (!disposed) { place(); ready = true; opts.onReady() } })
+  void Promise.all([hallLoaded, crew.loaded]).then(() => { if (!disposed) { place(); renderer.shadowMap.needsUpdate = true; ready = true; opts.onReady() } })
 
   return {
     update(d) { data = d; place() },
@@ -260,7 +261,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('resize', onResize)
-      scene.traverse((o) => {
+      for (const s of [scene, flare.pass.scene]) s.traverse((o) => {
         const m = o as THREE.Mesh
         m.geometry?.dispose()
         for (const mat of ([] as THREE.Material[]).concat(m.material ?? [])) { (mat as THREE.MeshBasicMaterial).map?.dispose(); mat.dispose() }

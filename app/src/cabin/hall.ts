@@ -7,6 +7,8 @@ import { C } from './panels'
  * 15.5 x 31 m hall (walls at x = +-7.8, floor y = -2.5, door at z = +15.4, Earth window at z = -15.4).
  */
 export const HALF = 7.76, LEN = 15.4, TOP = 3.9, FLOOR = -2.5
+/** The opening in the forward bulkhead: Earth fills it from the helmet stop, the sun at its upper right. */
+export const WIN = { x: HALF - 1.8, y0: FLOOR + 0.9, y1: TOP - 1.4, z: -LEN + 0.15 }
 
 /*
  * Surfaces: the model has no textures, so ambientCG maps (CC0) are projected in world space (triplanar).
@@ -81,10 +83,11 @@ export function buildHall(scene: THREE.Scene, loader: GLTFLoader, models: string
   const capMat = new THREE.MeshStandardMaterial({ color: '#3a4550', metalness: 0.6, roughness: 0.5 })
   const glowMat = new THREE.MeshStandardMaterial({ color: '#0b1218', emissive: C.cy, emissiveIntensity: 1.2 })
   const fwd = new THREE.Group(); fwd.position.z = -LEN; scene.add(fwd)
-  for (const [w, x, y, hh] of [[HALF * 2, 0, TOP - 0.9, 1.8], [HALF * 2, 0, FLOOR + 0.6, 1.2], [2.2, -HALF + 1.1, 0.5, h], [2.2, HALF - 1.1, 0.5, h]]) {
+  const side = HALF - WIN.x, top = TOP - WIN.y1, sill = WIN.y0 - FLOOR
+  for (const [w, x, y, hh] of [[HALF * 2, 0, TOP - top / 2, top], [HALF * 2, 0, FLOOR + sill / 2, sill], [side, -HALF + side / 2, 0.5, h], [side, HALF - side / 2, 0.5, h]]) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, hh, 0.3), capMat); m.position.set(x, y, 0); m.castShadow = m.receiveShadow = true; fwd.add(m)
   }
-  for (const y of [FLOOR + 1.2, TOP - 1.8]) { const f = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2 - 4.4, 0.06, 0.05), glowMat); f.position.set(0, y, 0.17); fwd.add(f) }
+  for (const y of [WIN.y0, WIN.y1]) { const f = new THREE.Mesh(new THREE.BoxGeometry(WIN.x * 2, 0.06, 0.05), glowMat); f.position.set(0, y, 0.17); fwd.add(f) }
   const aft = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2, h, 0.3), capMat); aft.position.set(0, FLOOR + h / 2, LEN); aft.receiveShadow = true; scene.add(aft)
   const door = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.2, 0.05), glowMat); door.position.set(0, -0.9, LEN - 0.17); scene.add(door)
   const strip = new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: C.cy, emissiveIntensity: 1.8 })

@@ -9,6 +9,8 @@ export interface Astro { holder: THREE.Group; mixer: THREE.AnimationMixer | null
 
 /** Height of a suited astronaut in the scene, metres. */
 const HEIGHT = 1.85
+/** The sun visor: gold film over the helmet, a mirror for the cabin and the sun. */
+const VISOR = new THREE.MeshPhysicalMaterial({ color: '#ffcf6e', metalness: 1, roughness: 0.07, envMapIntensity: 4.5, clearcoat: 1, clearcoatRoughness: 0.03 })
 
 /** The crew: loads the astronaut ("Animated Floating Astronaut in Space Suit Loop" by LasquetiSpice, CC BY 4.0) once, clones one per crew member on demand and animates them each frame. */
 export function createCrew(scene: THREE.Scene, loader: GLTFLoader, models: string) {
@@ -17,6 +19,11 @@ export function createCrew(scene: THREE.Scene, loader: GLTFLoader, models: strin
   let clip: THREE.AnimationClip | null = null
   const loaded = loader.loadAsync(`${models}astronaut-float.glb`).then((gltf) => {
     const root = gltf.scene, box = new THREE.Box3().setFromObject(root)
+    // the model's visor is its one untextured, dark grey material
+    root.traverse((o) => {
+      const mesh = o as THREE.Mesh, m = mesh.material as THREE.MeshStandardMaterial | undefined
+      if (mesh.isMesh && m?.isMeshStandardMaterial && !m.map && m.color.getHSL({ h: 0, s: 0, l: 0 }).l < 0.25) mesh.material = VISOR
+    })
     const s = HEIGHT / box.getSize(new THREE.Vector3()).y
     root.position.sub(box.getCenter(new THREE.Vector3()))
     template = new THREE.Group().add(root); template.scale.setScalar(s)
@@ -37,7 +44,7 @@ export function createCrew(scene: THREE.Scene, loader: GLTFLoader, models: strin
     const tagTex = new THREE.CanvasTexture(c); tagTex.colorSpace = THREE.SRGBColorSpace
     const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: tagTex, depthTest: false, transparent: true, toneMapped: false }))
     tag.scale.set(1.25, 0.37, 1); tag.renderOrder = 10; scene.add(tag)
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.012, 8, 64), new THREE.MeshBasicMaterial({ color: C.watch, toneMapped: false, transparent: true }))
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.008, 8, 64), new THREE.MeshBasicMaterial({ color: C.watch, toneMapped: false, transparent: true }))
     ring.rotation.x = Math.PI / 2; scene.add(ring)
     const a: Astro = { holder, mixer, base: new THREE.Vector3(), rot: new THREE.Euler(), ctx: c.getContext('2d'), tagTex, tag, ring }
     astros.set(id, a)
@@ -66,9 +73,9 @@ export function createCrew(scene: THREE.Scene, loader: GLTFLoader, models: strin
       if (off) {
         const pulse = 0.5 + 0.5 * Math.sin(t * 3 * still + (reduced ? Math.PI / 2 : 0))
         const ring = a.ring.material as THREE.MeshBasicMaterial
-        ring.color.set(m.status === 'act' ? C.act : C.watch); ring.opacity = 0.35 + pulse * 0.6
+        ring.color.set(m.status === 'act' ? C.act : C.watch); ring.opacity = 0.18 + pulse * 0.32 // a quiet halo: the tag carries the alert
         a.ring.position.copy(a.holder.position); a.ring.scale.setScalar(1 + pulse * 0.08)
-        if (id === focusId) { alarm.color.set(ring.color); alarm.position.copy(a.holder.position).add(new THREE.Vector3(0, 0.6, 0.8)); alarm.intensity = 0.8 + pulse * 2.2 }
+        if (id === focusId) { alarm.color.set(ring.color); alarm.position.copy(a.holder.position).add(new THREE.Vector3(0, 0.6, 0.8)); alarm.intensity = 0.25 + pulse * 0.9 }
       }
       i++
     }
