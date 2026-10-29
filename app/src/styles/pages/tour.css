@@ -1,0 +1,60 @@
+/* The 1-click tour (tour/Tour.tsx): a floating control bar over every screen, and the end card. */
+.tour-bar {
+  position: fixed; z-index: 60; left: 50%; bottom: 44px; transform: translateX(-50%);
+  width: min(620px, calc(100% - 24px)); padding: 10px 14px 0;
+  background: var(--panel-hi); border: 1px solid var(--edge-hi); border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .55), 0 0 0 1px rgba(0, 0, 0, .3); backdrop-filter: blur(14px);
+  overflow: hidden; animation: tour-in .4s var(--ease);
+}
+.tour-bar.in-cabin { bottom: auto; top: 64px; }
+@keyframes tour-in { from { opacity: 0; translate: 0 12px; } }
+
+.tour-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
+.tour-chapters { display: flex; gap: var(--sp-3); margin: 0; padding: 0; list-style: none; font: 600 12px var(--ui); color: var(--t3); letter-spacing: .03em; }
+.tour-chapters li { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.tour-chapters b { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--t4); font: 600 10px var(--mono); }
+.tour-chapters .done { color: var(--t2); }
+.tour-chapters .done b { border-color: var(--ok); color: var(--ok); }
+.tour-chapters [aria-current] { color: var(--cy-hi); }
+.tour-chapters [aria-current] b { border-color: var(--cy); background: var(--cy); color: var(--bg); box-shadow: 0 0 10px var(--cy-glow); }
+
+.tour-ctl { display: flex; gap: 4px; }
+.tour-icon {
+  display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 7px; cursor: pointer;
+  font: 600 12px var(--ui); color: var(--t2); background: transparent; border: 1px solid transparent;
+}
+.tour-icon:hover { background: var(--cy-soft); color: var(--cy-hi); }
+.tour-icon:focus-visible { outline: 2px solid var(--cy); outline-offset: 1px; }
+
+.tour-caption { margin: 8px 0 0; font: 400 13.5px/1.45 var(--ui); color: var(--t1); }
+.tour-progress { height: 3px; margin: 10px -14px 0; background: rgba(255, 255, 255, .06); }
+.tour-progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--cy), var(--or)); transform-origin: left; transition: transform .2s linear; }
+
+.tour-end { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: var(--sp-4); background: rgba(2, 5, 10, .55); backdrop-filter: blur(3px); animation: tour-fade .5s ease; }
+@keyframes tour-fade { from { opacity: 0; } }
+.tour-end-card { width: min(520px, 100%); padding: var(--sp-6); background: var(--panel-hi); border: 1px solid var(--edge-hi); border-radius: 14px; box-shadow: 0 20px 60px rgba(0, 0, 0, .6); }
+.tour-eb { font: 600 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--cy); }
+.tour-end-card h2 { margin: 6px 0 8px; font: 700 26px var(--disp); }
+.tour-end-card p { margin: 0; font: 400 14px/1.55 var(--ui); color: var(--t2); }
+.tour-end-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); margin-top: var(--sp-5); }
+.tour-btn {
+  display: inline-flex; justify-content: center; align-items: center; padding: 10px 12px; border-radius: 8px; cursor: pointer; text-decoration: none;
+  font: 600 13px var(--ui); color: var(--cy-hi); background: transparent; border: 1px solid var(--edge-hi);
+}
+.tour-btn:hover { background: var(--cy-soft); }
+.tour-btn.primary { background: var(--or); border-color: var(--or); color: var(--on-or); }
+.tour-btn.primary:hover { background: var(--or-hi); }
+.tour-btn:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
+.tour-end-note { margin-top: var(--sp-4) !important; font-size: 12px !important; color: var(--t3) !important; }
+
+/* phones: above the bottom tab bar, chapter names shortened to their numbers */
+@media (max-width: 767px) {
+  .tour-bar { bottom: 84px; padding: 8px 10px 0; }
+  .tour-bar.in-cabin { top: 56px; }
+  .tour-chapters li:not([aria-current]) { font-size: 0; gap: 0; }
+  .tour-icon span { display: none; }
+  .tour-caption { font-size: 12.5px; }
+  .tour-progress { margin: 8px -10px 0; }
+  .tour-end-actions { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .tour-bar, .tour-end { animation: none; } }

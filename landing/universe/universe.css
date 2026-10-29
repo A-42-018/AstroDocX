@@ -67,6 +67,24 @@
 
 .uni-hint { position:absolute;z-index:3;left:50%;bottom:22px;transform:translateX(-50%);margin:0;font-family:var(--font-mono);font-size:.68rem;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:rgba(234,242,255,.55);transition:opacity .4s; }
 .uni-hint.is-hidden { opacity:0; }
+/* the 1-click tour's call to action on the first screen (tour.js), above the scroll hint */
+.tour-start { position:absolute;z-index:4;left:50%;bottom:58px;transform:translateX(-50%);display:flex;align-items:center;gap:14px;padding:12px 22px 12px 12px;border-radius:99px;
+  color:#E0FBFF;text-decoration:none;background:rgba(6,16,30,.66);border:1px solid rgba(103,232,249,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  box-shadow:0 0 24px rgba(34,211,238,.28);transition:opacity .4s,box-shadow .25s,background .25s; }
+.tour-start:hover { text-decoration:none;background:rgba(10,30,48,.8);box-shadow:0 0 36px rgba(34,211,238,.5); }
+.tour-start:focus-visible { outline:2px solid #67E8F9;outline-offset:3px; }
+.tour-start-ic { display:grid;place-items:center;width:40px;height:40px;border-radius:50%;padding-left:3px;font-size:15px;color:#02131a;background:linear-gradient(100deg,#22D3EE,#67E8F9);animation:tourPulse 2.4s ease-in-out infinite; }
+.tour-start b { display:block;font-family:var(--font-mono);font-size:.82rem;letter-spacing:.16em;text-transform:uppercase; }
+.tour-start small { display:block;margin-top:2px;font-size:.74rem;color:rgba(224,251,255,.7); }
+.tour-start.is-hidden { opacity:0;pointer-events:none; }
+@keyframes tourPulse { 0%,100% { box-shadow:0 0 0 0 rgba(34,211,238,.55); } 50% { box-shadow:0 0 0 10px rgba(34,211,238,0); } }
+#astrodocx .hero-actions { align-items:center;gap:16px; }
+.adx-tour { padding:17px 26px;font-size:.78rem; }
+.nav-actions { display:flex;align-items:center;gap:10px; }
+.nav-tour { border-radius:999px;padding:6px 14px;font-size:.9rem;color:#E0FBFF;border:1px solid rgba(103,232,249,.55);background:rgba(6,16,30,.5); }
+.nav-tour:hover { text-decoration:none;background:rgba(34,211,238,.14); }
+@media (max-width:900px) { .nav-tour { display:none; } .tour-start { bottom:52px;width:max-content;max-width:calc(100% - 32px); } }
+@media (prefers-reduced-motion:reduce) { .tour-start-ic { animation:none; } }
 
 /* ═══ 02 · Health Twin (#twin) ═══ */
 .tw-lines { position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible; }
