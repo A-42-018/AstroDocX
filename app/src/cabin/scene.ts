@@ -259,16 +259,36 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const skipIntro = () => { if (intro === 'fly' || intro === 'wait') skipAsked = true }
 
   const unfocus = () => { if (focus) { focus = null; opts.onPick(null) } }
-  const goTo = (i: number) => { unfocus(); pTarget = THREE.MathUtils.clamp(i, 0, N - 1); if (reduced) p = pTarget }
+  /* one wheel gesture: a trackpad swipe with its momentum tail, or a run of mouse notches */
+  const wheel = { on: false, anchor: 0, sum: 0, mag: 0, peak: 0 }
+  // settle on a stop in the gesture's direction (not the last event's: a momentum tail ends on 0 or a twitch back)
+  const settle = () => {
+    clearTimeout(snapTimer)
+    if (!wheel.on) return
+    wheel.on = false
+    pTarget = THREE.MathUtils.clamp(wheel.sum > 0 ? Math.ceil(pTarget - 0.05) : Math.floor(pTarget + 0.05), 0, N - 1)
+    if (reduced) p = pTarget
+  }
+  const goTo = (i: number) => { unfocus(); clearTimeout(snapTimer); wheel.on = false; pTarget = THREE.MathUtils.clamp(i, 0, N - 1); if (reduced) p = pTarget }
   const onWheel = (e: WheelEvent) => {
     e.preventDefault()
+    if (e.ctrlKey) return // a trackpad pinch, not a scroll
     if (arriving()) { skipIntro(); return }
     unfocus()
-    pTarget = THREE.MathUtils.clamp(pTarget + e.deltaY * 0.0022, 0, N - 1)
-    const dir = Math.sign(e.deltaY)
+    const d = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1), mag = Math.abs(d)
+    if (!d) return
+    // trackpads send pixel deltas (Chrome/Safari report wheelDeltaY as -3x); mice send notches
+    const wd = (e as WheelEvent & { wheelDeltaY?: number }).wheelDeltaY
+    const pad = e.deltaMode === 0 && (wd === undefined || wd === 0 || Math.abs(wd + 3 * e.deltaY) < 1)
+    // a fresh swipe surging out of a decayed momentum tail is a new gesture
+    if (wheel.on && pad && wheel.mag < wheel.peak * 0.5 && mag > wheel.mag * 2 && mag > 10) settle()
+    if (!wheel.on) Object.assign(wheel, { on: true, anchor: Math.round(pTarget), sum: 0, mag: 0, peak: 0 })
+    wheel.sum += d; wheel.mag = mag; wheel.peak = Math.max(wheel.peak, mag)
+    // a trackpad swipe glides at most one stop: its momentum can't fling the camera down the hall
+    const reach = pad ? 1 : N
+    pTarget = THREE.MathUtils.clamp(wheel.anchor + wheel.sum * 0.0022, Math.max(0, wheel.anchor - reach), Math.min(N - 1, wheel.anchor + reach))
     clearTimeout(snapTimer)
-    // settle on a stop in the direction of travel: even a small flick moves one stop on
-    snapTimer = window.setTimeout(() => { pTarget = THREE.MathUtils.clamp(dir > 0 ? Math.ceil(pTarget - 0.05) : Math.floor(pTarget + 0.05), 0, N - 1); if (reduced) p = pTarget }, 200)
+    snapTimer = window.setTimeout(settle, 180)
     if (reduced) p = pTarget
   }
   const onKey = (e: KeyboardEvent) => {
