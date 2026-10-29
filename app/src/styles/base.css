@@ -12,6 +12,11 @@
     font-family: var(--ui); font-feature-settings: 'cv11', 'ss01', 'tnum'; background: var(--bg); color: var(--t1);
     font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased;
   }
+  html { cursor: var(--cur-default); }
+  a[href], button, select, summary, label[for], [role='button'], [role='tab'] { cursor: var(--cur-pointer); }
+  input:not([type='checkbox']):not([type='radio']):not([type='range']), textarea, [contenteditable='true'] { cursor: var(--cur-text); }
+  button:disabled, [aria-disabled='true'] { cursor: var(--cur-default); }
+  [aria-busy='true'] { cursor: var(--cur-busy); }
   ::selection { background: rgba(54, 226, 245, 0.35); color: #fff; }
   a { color: var(--cy-hi); text-decoration: none; }
   h1, h2, h3 { font-family: var(--disp); letter-spacing: -0.015em; }

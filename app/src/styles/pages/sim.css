@@ -17,14 +17,14 @@
   .sm-run-l b { font-weight: 700; }
   .sm-transport { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--edge); }
   .sm-transport button {
-    height: 46px; display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; padding: 0 6px; border: 0; cursor: pointer; white-space: nowrap;
+    height: 46px; display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; padding: 0 6px; border: 0; cursor: var(--cur-pointer); white-space: nowrap;
     font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cy); background: rgba(54, 226, 245, 0.04);
     transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
   }
   .sm-transport button + button { border-left: 1px solid var(--edge); }
   .sm-transport button:hover:not(:disabled) { color: var(--cy-hi); background: rgba(54, 226, 245, 0.16); box-shadow: inset 0 0 0 1px var(--edge-hi); text-shadow: 0 0 10px var(--cy-glow); }
   .sm-transport button:focus-visible { outline: 2px solid var(--cy); outline-offset: -2px; }
-  .sm-transport button:disabled { opacity: 0.42; cursor: default; }
+  .sm-transport button:disabled { opacity: 0.42; cursor: var(--cur-default); }
   .sm-track { position: relative; height: 4px; background: rgba(70, 225, 245, 0.12); overflow: hidden; }
   .sm-track span { position: absolute; inset: 0 auto 0 0; width: 0; }
   .sm-track.busy span { width: 38%; background: linear-gradient(90deg, transparent, var(--cy), transparent); box-shadow: 0 0 10px var(--cy); animation: sm-shim 1.2s linear infinite; }
@@ -49,7 +49,7 @@
   .sm-who > span:first-child { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--t3); }
   .sm-sel { position: relative; display: block; }
   .sm-sel select {
-    width: 100%; height: 40px; padding: 0 32px 0 10px; appearance: none; font: inherit; font-size: 13px; color: var(--t1); cursor: pointer;
+    width: 100%; height: 40px; padding: 0 32px 0 10px; appearance: none; font: inherit; font-size: 13px; color: var(--t1); cursor: var(--cur-pointer);
     border: 1px solid var(--edge-hi); border-radius: 0; background: rgba(2, 8, 12, 0.8);
   }
   .sm-sel select:focus-visible { outline: 2px solid var(--cy); outline-offset: -2px; }

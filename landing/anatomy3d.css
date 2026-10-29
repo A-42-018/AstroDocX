@@ -28,11 +28,7 @@
 .anat3d[hidden] { display:none; }
 .anat3d.is-open { opacity:1; }
 
-/* The site hides the native cursor; restore it inside the modal
-   (the custom cursor cannot follow the pointer over an iframe). */
-.anat3d, .anat3d * { cursor:auto !important; }
-.anat3d button, .anat3d a { cursor:pointer !important; }
-body.anat3d-lock #cursor-dot, body.anat3d-lock #cursor-ring { opacity:0 !important; }
+.anat3d button, .anat3d a { cursor:var(--cur-pointer); }
 body.anat3d-lock { overflow:hidden; }
 
 .anat3d__box {

@@ -28,7 +28,7 @@
   .al-list, .al-res ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
   .qrow {
     position: relative; width: 100%; display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 4px 12px; align-items: center;
-    padding: 12px 12px 12px 16px; text-align: left; font: inherit; color: var(--t1); cursor: pointer;
+    padding: 12px 12px 12px 16px; text-align: left; font: inherit; color: var(--t1); cursor: var(--cur-pointer);
     background: rgba(5, 14, 22, 0.7); border: 1px solid rgba(70, 225, 245, 0.14);
     transition: border-color var(--dur-1) var(--ease), background var(--dur-1) var(--ease);
   }
@@ -52,7 +52,7 @@
   .al-res ul { gap: 0; }
   .al-res button {
     width: 100%; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 10px 2px; min-height: 40px;
-    font: inherit; font-size: 13px; text-align: left; color: var(--t3); cursor: pointer; background: none; border: 0; border-top: 1px dashed rgba(70, 225, 245, 0.14);
+    font: inherit; font-size: 13px; text-align: left; color: var(--t3); cursor: var(--cur-pointer); background: none; border: 0; border-top: 1px dashed rgba(70, 225, 245, 0.14);
   }
   .al-res button:hover { color: var(--t1); }
   .al-res .q-meta { flex: none; }
@@ -120,10 +120,10 @@
   .al-prog small { font-size: 14px; color: var(--t3); }
   .al-prog span { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t3); }
   .al-steps { margin: 0; padding: 0; border: 0; min-width: 0; }
-  .al-step { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; font-size: 14px; line-height: 1.4; color: var(--t2); border-top: 1px dashed rgba(70, 225, 245, 0.14); cursor: pointer; }
+  .al-step { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; font-size: 14px; line-height: 1.4; color: var(--t2); border-top: 1px dashed rgba(70, 225, 245, 0.14); cursor: var(--cur-pointer); }
   .al-step.cur { color: var(--t1); }
   .al-step.done > span:last-child { color: var(--t3); text-decoration: line-through; }
-  .al-steps:disabled .al-step { cursor: default; }
+  .al-steps:disabled .al-step { cursor: var(--cur-default); }
   .al-n { position: relative; flex: none; width: 22px; height: 22px; }
   .al-n::after {
     content: attr(data-n); position: absolute; inset: 0; display: grid; place-content: center; pointer-events: none;

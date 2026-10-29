@@ -20,7 +20,7 @@
 
 .tour-ctl { display: flex; gap: 4px; }
 .tour-icon {
-  display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 7px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 7px; cursor: var(--cur-pointer);
   font: 600 12px var(--ui); color: var(--t2); background: transparent; border: 1px solid transparent;
 }
 .tour-icon:hover { background: var(--cy-soft); color: var(--cy-hi); }
@@ -38,7 +38,7 @@
 .tour-end-card p { margin: 0; font: 400 14px/1.55 var(--ui); color: var(--t2); }
 .tour-end-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); margin-top: var(--sp-5); }
 .tour-btn {
-  display: inline-flex; justify-content: center; align-items: center; padding: 10px 12px; border-radius: 8px; cursor: pointer; text-decoration: none;
+  display: inline-flex; justify-content: center; align-items: center; padding: 10px 12px; border-radius: 8px; cursor: var(--cur-pointer); text-decoration: none;
   font: 600 13px var(--ui); color: var(--cy-hi); background: transparent; border: 1px solid var(--edge-hi);
 }
 .tour-btn:hover { background: var(--cy-soft); }

@@ -2,7 +2,7 @@
 @layer components {
   .seg { display: flex; border: 1px solid var(--edge); min-width: 0; }
   .seg button {
-    min-height: 36px; padding: 8px 14px; border: 0; background: transparent; cursor: pointer;
+    min-height: 36px; padding: 8px 14px; border: 0; background: transparent; cursor: var(--cur-pointer);
     font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--t3);
     transition: color var(--dur-1) var(--ease), background var(--dur-1) var(--ease);
   }

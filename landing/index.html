@@ -175,38 +175,6 @@
 })();
 </script>
 
-<!-- ═══════════════════════════════════════ CUSTOM CURSOR ══ -->
-<div id="cursor-dot"  aria-hidden="true"></div>
-<div id="cursor-ring" aria-hidden="true"></div>
-
-<script>
-(function () {
-  const dot  = document.getElementById('cursor-dot');
-  const ring = document.getElementById('cursor-ring');
-  if (window.matchMedia('(pointer: coarse)').matches) return;
-  let mx = -100, my = -100;
-  let rx = -100, ry = -100;
-  const EASE = 0.10;
-  document.addEventListener('mousemove', e => {
-    mx = e.clientX; my = e.clientY;
-    dot.style.transform = `translate(${mx}px, ${my}px)`;
-  });
-  (function loop() {
-    rx += (mx - rx) * EASE; ry += (my - ry) * EASE;
-    ring.style.transform = `translate(${rx}px, ${ry}px)`;
-    requestAnimationFrame(loop);
-  })();
-  const targets = 'a, button, [role="button"], input, textarea, label, .btn, .project-card, .skill-category, .project-copy-btn, .copy-email-btn';
-  document.querySelectorAll(targets).forEach(el => {
-    el.addEventListener('mouseenter', () => { ring.classList.add('hovered'); dot.classList.add('hovered'); });
-    el.addEventListener('mouseleave', () => { ring.classList.remove('hovered'); dot.classList.remove('hovered'); });
-  });
-  document.addEventListener('mousedown', () => ring.classList.add('clicked'));
-  document.addEventListener('mouseup',   () => ring.classList.remove('clicked'));
-  document.addEventListener('mouseleave', () => { dot.style.opacity='0'; ring.style.opacity='0'; });
-  document.addEventListener('mouseenter', () => { dot.style.opacity='1'; ring.style.opacity='1'; });
-})();
-</script>
 
 <body>
 
@@ -321,7 +289,7 @@
           </ol>
           <div class="hero-actions adx-reveal">
             <a href="/?tour=full" class="ch-pill adx-tour" data-tour-start>&#9654; 1-Click Tour &middot; 2 min</a>
-            <a href="/app/" class="adx-cta" data-cursor="LAUNCH">
+            <a href="/app/" class="adx-cta">
               <span>Launch Crew Console</span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </a>
