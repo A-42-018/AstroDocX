@@ -86,7 +86,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const quality = pickQuality()
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: quality !== 'low', powerPreference: 'high-performance' })
   const size = () => [canvas.clientWidth || innerWidth, canvas.clientHeight || innerHeight] as const
-  renderer.setPixelRatio(Math.min(devicePixelRatio, quality === 'high' ? 2 : 1.5))
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)) // with 4x MSAA, 2x on a Retina screen looks the same and costs ~1.8x the pixels
   renderer.setSize(...size(), false)
   renderer.toneMapping = THREE.ACESFilmicToneMapping
   renderer.toneMappingExposure = exposureAt(0)
@@ -288,12 +288,14 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   /** The float at a stop: a slow push in once the camera settles, a gentle sway, and a bank into each move between stops. */
   const float = { push: 0, roll: 0, last: new THREE.Vector3(), fov: FOV }
   const fwd = new THREE.Vector3(), side = new THREE.Vector3()
-  let raf = 0, lastDraw = 0, disposed = false, ready = false, downgraded = false
-  const slow = { n: 0, sum: 0 }
+  let raf = 0, lastDraw = 0, disposed = false, ready = false, readyAt = 0
+  const frustum = new THREE.Frustum(), viewProj = new THREE.Matrix4()
+  const seen = (o: THREE.Object3D) => frustum.intersectsObject(o)
   let frameNo = 0
   const frame = () => {
     raf = requestAnimationFrame(frame)
-    const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime, still = reduced ? 0 : 1
+    const raw = clock.getDelta(), dt = Math.min(raw, 0.05), t = clock.elapsedTime, still = reduced ? 0 : 1
+    govern(raw, t)
     if (arriving()) { arrive(t, dt); finishFrame(t, dt, still); return }
     // eased by time, not by frame, so a slow machine tours at the same pace
     p = reduced ? pTarget : THREE.MathUtils.damp(p, pTarget, 4.3, dt)
@@ -376,8 +378,10 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     crew.animate(live, data?.focusId, focus?.id ?? data?.focusId, t, dt, still, reduced, camera, alarm, crewKey)
     if (data && t - lastDraw > 0.05) { // panels and tags at about 20 fps
       lastDraw = t
-      for (const x of panels) if (x.ctx) { x.draw(x.ctx, data, t); x.tex.needsUpdate = true }
-      decor?.draw(data, t)
+      camera.updateMatrixWorld(); frustum.setFromProjectionMatrix(viewProj.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse))
+      // only what is in view, and not under a live screen that has fully faded in over it
+      panels.forEach((x, i) => { if (x.ctx && screens.shown(i) < 0.99 && seen(x.face)) { x.draw(x.ctx, data!, t); x.tex.needsUpdate = true } })
+      decor?.draw(data, t, seen)
       crew.drawTags(live, t)
     }
     if (p > 5 || arriving()) eva.load()
@@ -386,11 +390,22 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     if (frameNo++ % 6 === 0) renderer.shadowMap.needsUpdate = true
     composer.render(dt)
     screens.render(camera, crew.holders().filter((h) => h.visible).map((h) => h.getWorldPosition(new THREE.Vector3())), dt)
-    // step down once if the first seconds run slow (frame times are only trusted after the scene is ready)
-    if (ready && !downgraded) {
-      slow.n++; slow.sum += dt
-      if (slow.n === 90) { downgraded = true; if (slow.sum / slow.n > 1 / 40) post.downgrade() }
-    }
+  }
+  /**
+   * Steps down while frames stay slow, a second at a time: ambient occlusion off first, then the resolution, down to
+   * 0.75 of the screen's. Frame times count from a few seconds after the hall is ready (the screens load then), and
+   * long stalls (a tab switch, a screen loading) are not the steady rate.
+   */
+  const gov = { n: 0, sum: 0, pr: renderer.getPixelRatio() }
+  function govern(raw: number, t: number) {
+    if (!ready || t - readyAt < 3 || document.hidden || raw > 0.25) return
+    gov.n++; gov.sum += raw
+    if (gov.n < 60) return
+    const avg = gov.sum / gov.n
+    gov.n = gov.sum = 0
+    if (avg < 1 / 45 || post.downgrade() || gov.pr <= 0.75) return
+    gov.pr = Math.max(0.75, gov.pr - 0.25)
+    renderer.setPixelRatio(gov.pr); composer.setPixelRatio(gov.pr)
   }
   if (opts.intro) setIntro('fly', 0)
   frame()
@@ -412,7 +427,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
       consoles.settle()
       sunPool?.bake(renderer)
     }
-    placedKey = ''; place(); renderer.shadowMap.needsUpdate = true; ready = true; opts.onReady()
+    placedKey = ''; place(); renderer.shadowMap.needsUpdate = true; ready = true; readyAt = clock.elapsedTime; opts.onReady()
     loadScreens()
   })
   /** The console views follow the cabin: your own board, and vitals, alerts and trends for the focus crew member. */

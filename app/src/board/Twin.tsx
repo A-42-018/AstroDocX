@@ -5,7 +5,7 @@ import { CabinPage } from '../cabin/lazy'
 import { markCabinSeen } from '../shell/cabinSeen'
 import type { Hazard, Status } from '../data/types'
 import { useHeartbeat } from '../live/heartbeat'
-import { useHidden, useReducedMotion } from '../live/usePaused'
+import { isHidden, useHidden, useReducedMotion } from '../live/usePaused'
 import * as A from './anatomy'
 import { useBoard } from './store'
 import { HudPanel } from '../ui/HudPanel'
@@ -158,7 +158,7 @@ function useParticleTwin(statuses: Record<Hazard, Status>, focus: Hazard | null,
     let raf = 0, last = 0
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop)
-      if (document.hidden || !seen || now - last < 1000 / 30 - 2) return
+      if (isHidden() || !seen || now - last < 1000 / 30 - 2) return
       last = now; frame(now)
     }
     frame(performance.now())

@@ -487,7 +487,7 @@ export function addDecor(scene: THREE.Scene, renderer: THREE.WebGLRenderer, maps
   small(new THREE.Vector3(-4.9, 0.1, AFT - 0.012), qa, [1.78, 1.14, 0.02], '#3a4048')
 
   /* --- laptops on arms by the walls, each showing a crew member live --- */
-  const laptops: { ctx: G; tex: THREE.CanvasTexture; n: number }[] = []
+  const laptops: { ctx: G; tex: THREE.CanvasTexture; screen: THREE.Mesh; n: number }[] = []
   const lapMat = '#1d2126'
   for (const [side, z] of [[-1, -7.4], [1, 9.6], [1, -9.8], [-1, 6.6], [1, 1.8]] as const) {
     if (laptops.length >= (low ? 2 : 3)) break
@@ -506,7 +506,7 @@ export function addDecor(scene: THREE.Scene, renderer: THREE.WebGLRenderer, maps
     const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.33, 0.206), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false, color: new THREE.Color(0.8, 0.8, 0.8) }))
     screen.position.set(0, 0.12, 0.001); lid.add(screen)
     decal('velcro', L.clone().add(new THREE.Vector3(0, 0.012, 0)), UP, 0.1)
-    laptops.push({ ctx: c.getContext('2d')!, tex, n: laptops.length + 2 })
+    laptops.push({ ctx: c.getContext('2d')!, tex, screen, n: laptops.length + 2 })
   }
 
   /* --- the Veggie plant chamber by the Alerts screen, glowing magenta --- */
@@ -632,10 +632,10 @@ export function addDecor(scene: THREE.Scene, renderer: THREE.WebGLRenderer, maps
   let boardKey = ''
 
   return {
-    /** The live surfaces (laptops, crew board), on the panels' clock. */
-    draw(d: CabinData, t: number) {
+    /** The live surfaces (laptops, crew board), on the panels' clock; laptops only while `seen`. */
+    draw(d: CabinData, t: number, seen: (o: THREE.Object3D) => boolean) {
       const order = [d.focusId, d.selfId, ...d.crew.map((c) => c.id)]
-      laptops.forEach((l, i) => { const id = order[i] ?? d.crew[0]?.id; drawLaptop(l.ctx, 512, 320, d.crew.find((c) => c.id === id), t, l.n); l.tex.needsUpdate = true })
+      laptops.forEach((l, i) => { if (!seen(l.screen)) return; const id = order[i] ?? d.crew[0]?.id; drawLaptop(l.ctx, 512, 320, d.crew.find((c) => c.id === id), t, l.n); l.tex.needsUpdate = true })
       const key = d.crew.map((c) => `${c.id}${c.status}${Math.round(c.readiness)}`).join() + d.link.pending
       if (key !== boardKey) { boardKey = key; drawBoard(boardCanvas.getContext('2d')!, 1024, 640, d); boardTex.needsUpdate = true }
     },

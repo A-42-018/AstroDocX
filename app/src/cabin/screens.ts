@@ -10,7 +10,7 @@ import type { EmbedView } from '../shell/Embed'
  */
 
 export interface ScreenSpec { view: EmbedView; px: [number, number] }
-interface Screen { obj: CSS3DObject; frame: HTMLIFrameElement; pos: THREE.Vector3; normal: THREE.Vector3; w: number; h: number; loaded: boolean; shown: number; view: EmbedView; crew: string | null | undefined }
+interface Screen { obj: CSS3DObject; frame: HTMLIFrameElement; pos: THREE.Vector3; normal: THREE.Vector3; w: number; h: number; loaded: boolean; shown: number; off: boolean | null; view: EmbedView; crew: string | null | undefined }
 
 export function createScreens(host: HTMLElement, base: string) {
   const css = new CSS3DRenderer()
@@ -31,8 +31,8 @@ export function createScreens(host: HTMLElement, base: string) {
     const obj = new CSS3DObject(frame)
     obj.scale.setScalar(w / spec.px[0])
     scene.add(obj)
-    const s: Screen = { obj, frame, pos: new THREE.Vector3(), normal: new THREE.Vector3(0, 0, 1), w, h, loaded: false, shown: 0, view: spec.view, crew: undefined }
-    frame.addEventListener('load', () => { if (frame.src) setTimeout(() => { s.loaded = true }, 900) }) // the app paints its data shortly after load
+    const s: Screen = { obj, frame, pos: new THREE.Vector3(), normal: new THREE.Vector3(0, 0, 1), w, h, loaded: false, shown: 0, off: null, view: spec.view, crew: undefined }
+    frame.addEventListener('load', () => { s.off = null; if (frame.src) setTimeout(() => { s.loaded = true }, 900) }) // the app paints its data shortly after load
     list.push(s)
     return s
   }
@@ -77,12 +77,17 @@ export function createScreens(host: HTMLElement, base: string) {
       if (s.shown < 0.01) s.shown = want ? s.shown : 0
       s.frame.style.opacity = s.shown.toFixed(3)
       s.frame.style.visibility = s.shown > 0 ? 'visible' : 'hidden' // kept in the DOM (CSS3DRenderer only attaches visible objects) so it loads
+      // a hidden screen pauses its own animation (live/usePaused.ts), which would otherwise run under every cabin frame
+      const off = s.shown === 0
+      if (off !== s.off) { s.off = off; s.frame.dataset.offstage = off ? '1' : '0'; s.frame.contentWindow?.postMessage({ offstage: off }, location.origin) }
     }
     css.render(scene, camera)
   }
 
   return {
     add, place, load, render,
+    /** How far screen `i`'s live view has faded in (1 = fully covering the panel beneath). */
+    shown: (i: number) => list[i].shown,
     setSize: (w: number, h: number) => css.setSize(w, h),
     dispose: () => { for (const s of list) s.frame.src = 'about:blank'; el.remove() },
   }

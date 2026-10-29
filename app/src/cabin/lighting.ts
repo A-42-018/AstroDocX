@@ -246,7 +246,10 @@ export function createPost(renderer: THREE.WebGLRenderer, scene: THREE.Scene, ca
   composer.addPass(new RenderPass(scene, camera))
   let gtao: GTAOPass | null = null
   if (quality !== 'low') {
-    gtao = new GTAOPass(scene, camera, w, h)
+    // at half resolution: it draws the scene a second time for its normals, and the occlusion is soft anyway
+    gtao = new GTAOPass(scene, camera, w / 2, h / 2)
+    const setSize = gtao.setSize.bind(gtao)
+    gtao.setSize = (pw, ph) => setSize(Math.max(1, Math.round(pw / 2)), Math.max(1, Math.round(ph / 2)))
     gtao.blendIntensity = 0.85
     gtao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.4, thickness: 1.2, scale: 1.1, samples: quality === 'high' ? 16 : 8 })
     composer.addPass(gtao)
@@ -259,8 +262,8 @@ export function createPost(renderer: THREE.WebGLRenderer, scene: THREE.Scene, ca
   composer.addPass(new OutputPass())
   return {
     composer,
-    /** Drops ambient occlusion when the device turns out slower than guessed. */
-    downgrade() { if (gtao) { gtao.enabled = false; return true } return false },
+    /** Drops ambient occlusion when the device turns out slower than guessed; false if it is already off. */
+    downgrade() { if (gtao?.enabled) { gtao.enabled = false; return true } return false },
     update(t: number, still: number) { lens.uniforms.time.value = t * still; lens.uniforms.grain.value = 0.035 * (still || 0.4) },
   }
 }
