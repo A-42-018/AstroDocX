@@ -17,10 +17,18 @@ import { createScreens, type ScreenSpec } from './screens'
  */
 
 export const STOP_COUNT = 10
+/** The arrival: flying in from space (`fly`), holding out there while the hall loads (`wait`), the glare (`lock`), the visor clearing (`clear`). */
+export type IntroPhase = 'fly' | 'wait' | 'lock' | 'clear' | 'off'
 export interface CabinOptions {
   reducedMotion: boolean
+  /** Play the arrival from space before the tour; otherwise the tour starts in the helmet. */
+  intro: boolean
   /** Fades and scales with the helmet stop (0 = fully in the helmet). */
   visor: HTMLElement | null
+  /** The arrival's glare, over everything, and the mist on the visor glass, under the HUD. */
+  flash: HTMLElement | null
+  mist: HTMLElement | null
+  onIntro: (phase: IntroPhase) => void
   onStop: (i: number) => void
   onPick: (crewId: string | null) => void
   onReady: () => void
@@ -28,8 +36,22 @@ export interface CabinOptions {
 export interface CabinScene {
   update: (d: CabinData) => void
   goTo: (i: number) => void
+  /** Cut the arrival short (as soon as the hall is ready). */
+  skipIntro: () => void
+  replayIntro: () => void
   dispose: () => void
 }
+
+/*
+ * The arrival: a timed flight from a wide view of Earth, the sun and the station in toward the station, kept behind the
+ * hall (z < -20, looking away from it) since the hall is only modelled from inside. At the sun's glare the camera cuts
+ * to the helmet stop, and the visor closes in, misted, as the glare fades.
+ */
+const FLY = { pos: [new THREE.Vector3(-45, 55, -40), new THREE.Vector3(-8, 26, -58), new THREE.Vector3(15, 14, -80)], look: [new THREE.Vector3(18, 0, -132), new THREE.Vector3(24, 6, -116), new THREE.Vector3(27.9, 10.4, -106.5)] }
+const FLY_S = 4.6, LOCK_S = 0.7, CLEAR_S = 1.5, FLY_EXPOSURE = 0.8
+/** A wide lens for the overall view, narrowing to the tour's as the camera closes in. */
+const FOV = 58, FLY_FOV = 74
+const ease = (x: number) => x * x * (3 - 2 * x)
 
 const MODELS = `${import.meta.env.BASE_URL}models/`, TEXTURES = `${import.meta.env.BASE_URL}textures/`
 type V3 = [number, number, number]
@@ -99,7 +121,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const pmrem = new THREE.PMREMGenerator(renderer)
   scene.environment = pmrem.fromScene(windowEnvironment(), 0.02).texture // the metal reflects the bright window, not a studio
   scene.environmentIntensity = quality === 'low' ? 0.6 : 0.8 // low has no ambient occlusion to darken the crevices
-  const camera = new THREE.PerspectiveCamera(58, size()[0] / size()[1], 0.08, 2000) // far enough for Earth and the stars
+  const camera = new THREE.PerspectiveCamera(FOV, size()[0] / size()[1], 0.08, 2000) // far enough for Earth and the stars
   const flare = createFlare(camera, SUN_AT)
   const post = createPost(renderer, scene, camera, ...size(), quality, [flare.pass])
   const { composer } = post
@@ -238,10 +260,21 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const camPos = posCurve.getPoint(0), camLook = lookCurve.getPoint(0)
   const drag = { on: false, moved: 0, x: 0, y: 0, yaw: 0, pitch: 0 }
 
+  /* ---------- the arrival ---------- */
+  const flyPos = new THREE.CatmullRomCurve3(FLY.pos, false, 'centripetal'), flyLook = new THREE.CatmullRomCurve3(FLY.look, false, 'centripetal')
+  let intro: IntroPhase = 'off', introT0 = 0, skipAsked = false, flyU = 0, creep = 0
+  const setIntro = (ph: IntroPhase, t: number) => { if (ph === 'fly') flyU = creep = 0; intro = ph; introT0 = t; opts.onIntro(ph) }
+  const flashColor = reduced ? '#02070c' : ''
+  if (opts.flash && flashColor) opts.flash.style.background = flashColor // reduced motion: a plain fade through dark
+  const arriving = () => intro !== 'off'
+  /** Any input during the flight asks to be let in: the glare starts once the hall is ready. */
+  const skipIntro = () => { if (intro === 'fly' || intro === 'wait') skipAsked = true }
+
   const unfocus = () => { if (focus) { focus = null; opts.onPick(null) } }
   const goTo = (i: number) => { unfocus(); pTarget = THREE.MathUtils.clamp(i, 0, N - 1); if (reduced) p = pTarget }
   const onWheel = (e: WheelEvent) => {
     e.preventDefault()
+    if (arriving()) { skipIntro(); return }
     unfocus()
     pTarget = THREE.MathUtils.clamp(pTarget + e.deltaY * 0.0022, 0, N - 1)
     const dir = Math.sign(e.deltaY)
@@ -253,6 +286,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const onKey = (e: KeyboardEvent) => {
     const el = e.target as HTMLElement | null
     if (el && /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(el.tagName)) return
+    if (arriving()) { if (e.key !== 'Escape') skipIntro(); return }
     if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); goTo(Math.round(pTarget) + 1) }
     if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); goTo(Math.round(pTarget) - 1) }
   }
@@ -271,7 +305,11 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     opts.onPick(id)
   }
   const onDown = (e: PointerEvent) => { drag.on = true; drag.moved = 0; drag.x = e.clientX; drag.y = e.clientY; canvas.classList.add('dragging') }
-  const onUp = (e: PointerEvent) => { canvas.classList.remove('dragging'); if (drag.on && drag.moved < 5) pick(e); drag.on = false }
+  const onUp = (e: PointerEvent) => {
+    canvas.classList.remove('dragging')
+    if (arriving()) { if (drag.on) skipIntro(); drag.on = false; drag.yaw = drag.pitch = 0; return }
+    if (drag.on && drag.moved < 5) pick(e); drag.on = false
+  }
   const onMove = (e: PointerEvent) => {
     if (!drag.on) return
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y
@@ -300,6 +338,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const frame = () => {
     raf = requestAnimationFrame(frame)
     const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime, still = reduced ? 0 : 1
+    if (arriving()) { arrive(t, dt); finishFrame(t, dt, still); return }
     p += (pTarget - p) * (reduced ? 1 : 0.07)
     const u = p / (N - 1)
     const k = reduced ? 1 : focus ? 0.06 : 0.25
@@ -314,7 +353,53 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     renderer.toneMappingExposure = exposureAt(p)
     const stop = Math.round(p)
     if (stop !== shown) { shown = stop; opts.onStop(stop) }
-
+    finishFrame(t, dt, still)
+  }
+  function setFov(f: number) { if (Math.abs(camera.fov - f) > 0.01) { camera.fov = f; camera.updateProjectionMatrix() } }
+  /** Moves the camera through the arrival and drives its glare, mist and visor. */
+  function arrive(t: number, dt: number) {
+    const e = t - introT0
+    if (intro === 'fly' && e >= (reduced ? 1 : FLY_S)) setIntro('wait', t)
+    if (intro === 'wait' && ready && (skipAsked || reduced || t - introT0 > 0.4)) setIntro('lock', t)
+    if (intro === 'fly' && skipAsked && ready) setIntro('lock', t)
+    const k = t - introT0
+    if (intro === 'lock' && k >= (reduced ? 0.3 : LOCK_S)) {
+      // the cut, hidden by the glare: into the helmet at the door
+      p = pTarget = 0; camPos.copy(posCurve.getPoint(0)); camLook.copy(lookCurve.getPoint(0)); shown = -1
+      setIntro('clear', t)
+      opts.visor?.classList.add('booting')
+    }
+    if (intro === 'clear' && k >= (reduced ? 0.5 : CLEAR_S)) {
+      setIntro('off', t)
+      opts.visor?.classList.remove('booting')
+      if (opts.flash) opts.flash.style.opacity = '0'
+      if (opts.mist) { opts.mist.style.opacity = '0'; opts.mist.style.backdropFilter = '' }
+      return
+    }
+    const flash = opts.flash?.style, mist = opts.mist?.style
+    if (intro === 'clear') {
+      const c = Math.min(1, k / (reduced ? 0.5 : CLEAR_S)), helmetIn = ease(Math.min(1, c * 1.6)), fog = 1 - ease(c)
+      if (flash) flash.opacity = String(1 - ease(Math.min(1, c * 2.4)))
+      if (mist) { mist.opacity = String(reduced ? 0 : fog); mist.backdropFilter = reduced ? '' : `blur(${(fog * 12).toFixed(1)}px)` }
+      if (opts.visor) { opts.visor.style.opacity = String(helmetIn); opts.visor.style.transform = `scale(${reduced ? 1 : 1 + (1 - helmetIn) * 0.45})` }
+      camera.position.copy(camPos); camera.lookAt(camLook); setFov(FOV)
+      renderer.toneMappingExposure = exposureAt(0)
+      return
+    }
+    // out in space: no helmet yet
+    if (opts.visor) { opts.visor.style.opacity = '0'; opts.visor.style.transform = 'scale(1.45)' }
+    if (mist) mist.opacity = '0'
+    if (!reduced && intro === 'fly') flyU = ease(Math.min(1, e / FLY_S)) // a skip freezes it where it is
+    const pos = flyPos.getPoint(flyU), look = flyLook.getPoint(flyU)
+    // after the flight the camera keeps creeping in toward the station, speeding up into the glare
+    if (!reduced && intro !== 'fly') creep += dt * (0.8 + (intro === 'lock' ? k * 40 : 0))
+    pos.addScaledVector(look.clone().sub(pos).normalize(), creep)
+    camera.position.copy(pos); camera.lookAt(look)
+    setFov(THREE.MathUtils.lerp(FLY_FOV, FOV, flyU))
+    if (flash) flash.opacity = intro === 'lock' ? String(ease(Math.min(1, k / (reduced ? 0.3 : LOCK_S)))) : '0'
+    renderer.toneMappingExposure = FLY_EXPOSURE + (intro === 'lock' ? k * 1.2 : 0)
+  }
+  function finishFrame(t: number, dt: number, still: number) {
     const live = new Map<string, CabinCrew>((data?.crew ?? []).map((c) => [c.id, c]))
     crew.animate(live, data?.focusId, focus?.id ?? data?.focusId, t, dt, still, reduced, camera, alarm, crewKey)
     if (data && t - lastDraw > 0.05) { // panels and tags at about 20 fps
@@ -322,8 +407,9 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
       for (const x of panels) if (x.ctx) { x.draw(x.ctx, data, t); x.tex.needsUpdate = true }
       crew.drawTags(live, t)
     }
-    if (p > 5) eva.load()
-    space.update(t, still); beam.update(t, still); post.update(t, still); eva.update(still, p); flare.update(reduced)
+    if (p > 5 || arriving()) eva.load()
+    // the station shows from the forward window on, and all through the arrival
+    space.update(t, still); beam.show(!arriving() || intro === 'clear'); beam.update(t, still); post.update(t, still); eva.update(still, arriving() && intro !== 'clear' ? N - 1 : p); flare.update(reduced)
     if (frameNo++ % 6 === 0) renderer.shadowMap.needsUpdate = true
     composer.render(dt)
     screens.render(camera, crew.holders().filter((h) => h.visible).map((h) => h.getWorldPosition(new THREE.Vector3())), dt)
@@ -333,6 +419,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
       if (slow.n === 90) { downgraded = true; if (slow.sum / slow.n > 1 / 40) post.downgrade() }
     }
   }
+  if (opts.intro) setIntro('fly', 0)
   frame()
   void Promise.all([hallLoaded, crew.loaded]).then(([hall]) => {
     if (disposed) return
@@ -350,6 +437,8 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   return {
     update(d) { data = d; place(); loadScreens() },
     goTo,
+    skipIntro,
+    replayIntro() { unfocus(); skipAsked = false; setIntro('fly', clock.elapsedTime) },
     dispose() {
       disposed = true
       cancelAnimationFrame(raf); clearTimeout(snapTimer)
