@@ -7,11 +7,13 @@ import { C, TAG_H, TAG_W, drawTag } from './panels'
 import { addPatches } from './suit'
 
 /** One astronaut in the room: the model, its live name tag and the ring shown when off-nominal. */
-export interface Astro { holder: THREE.Group; mixer: THREE.AnimationMixer | null; base: THREE.Vector3; rot: THREE.Euler; ctx: CanvasRenderingContext2D | null; tagTex: THREE.CanvasTexture; tag: THREE.Sprite; ring: THREE.Mesh }
+export interface Astro { holder: THREE.Group; mixer: THREE.AnimationMixer | null; base: THREE.Vector3; rot: THREE.Euler; ctx: CanvasRenderingContext2D | null; tagTex: THREE.CanvasTexture; tag: THREE.Sprite; ring: THREE.Mesh; head: THREE.Object3D | null }
 
 /** Height of a suited astronaut in the scene, metres: a touch over life size, so the crew hold their own beside 3 m screens in a 15 m hall. */
 export const HEIGHT = 2.1
 /** The sun visor: gold film over the helmet, a mirror for the cabin and the sun. */
+/** Gap from the head bone to the tag's bottom edge, metres: the helmet top is ~0.26 m above the bone, plus a little air. */
+const TAG_LIFT = 0.34
 const VISOR = new THREE.MeshPhysicalMaterial({ color: '#ffcf6e', metalness: 1, roughness: 0.07, envMapIntensity: 4.5, clearcoat: 1, clearcoatRoughness: 0.03 })
 
 /** The crew: loads the astronaut ("Animated Floating Astronaut in Space Suit Loop" by LasquetiSpice, CC BY 4.0) once, clones one per crew member on demand and animates them each frame. */
@@ -46,10 +48,13 @@ export function createCrew(scene: THREE.Scene, loader: GLTFLoader, models: strin
     const c = document.createElement('canvas'); c.width = TAG_W; c.height = TAG_H
     const tagTex = new THREE.CanvasTexture(c); tagTex.colorSpace = THREE.SRGBColorSpace
     const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: tagTex, depthTest: false, transparent: true, toneMapped: false }))
-    tag.scale.set(1.25, 0.37, 1); tag.renderOrder = 10; scene.add(tag)
+    tag.scale.set(1.25, 0.37, 1); tag.center.set(0.5, 0); tag.renderOrder = 10; scene.add(tag) // anchored by its bottom edge, so it sits on the helmet, never over it
     const ring = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.008, 8, 64), new THREE.MeshBasicMaterial({ color: C.watch, toneMapped: false, transparent: true }))
     ring.rotation.x = Math.PI / 2; scene.add(ring)
-    const a: Astro = { holder, mixer, base: new THREE.Vector3(), rot: new THREE.Euler(), ctx: c.getContext('2d'), tagTex, tag, ring }
+    // the float loop lifts the body ~0.5 m above its bind pose, so the tag follows the head bone, not the bounds
+    let head: THREE.Object3D | null = null
+    holder.traverse((o) => { if (!head && /^head/.test(o.name)) head = o })
+    const a: Astro = { holder, mixer, base: new THREE.Vector3(), rot: new THREE.Euler(), ctx: c.getContext('2d'), tagTex, tag, ring, head }
     astros.set(id, a)
     return a
   }
@@ -74,7 +79,8 @@ export function createCrew(scene: THREE.Scene, loader: GLTFLoader, models: strin
       a.mixer?.update(dt * still * 0.8)
       a.holder.position.set(a.base.x + Math.sin(t * 0.37 + i) * 0.03 * still, a.base.y + Math.sin(t * 0.55 + i * 2) * 0.06 * still, a.base.z)
       a.holder.rotation.set(a.rot.x + Math.sin(t * 0.3 + i) * 0.05 * still, a.rot.y + Math.sin(t * 0.21 + i) * 0.08 * still, a.rot.z + Math.sin(t * 0.27 + i) * 0.05 * still)
-      a.tag.position.copy(a.holder.position).add(new THREE.Vector3(0, HEIGHT / 2 + 0.3, 0))
+      if (a.head) a.head.getWorldPosition(a.tag.position).y += TAG_LIFT
+      else a.tag.position.copy(a.holder.position).y += HEIGHT / 2 + 0.6
       ;(a.tag.material as THREE.SpriteMaterial).opacity = THREE.MathUtils.clamp((camera.position.distanceTo(a.tag.position) - 3.0) / 1.0, 0, 1)
       const off = m.status !== 'nominal'
       a.ring.visible = off

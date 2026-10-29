@@ -123,19 +123,20 @@ function screenShot(s: ScreenAt, withCrew: boolean, walls: Walls | null): { stop
 
 /**
  * The close-up on the crew member the console follows: from the hall side of them at their chest height, 4.2 m
- * off (head to boots in frame), with them on the frame's right third (the caption card sits bottom left).
+ * off (name tag to boots in frame), with them on the frame's right third (the caption card sits bottom left).
  */
 function closeShot(c: THREE.Vector3, s: ScreenAt, walls: Walls | null): { stop: Stop; rot: V3 } {
   const n = s.normal.clone().setY(0).normalize(), a = new THREE.Vector3(0, 0, 1)
   let dir = n.clone().multiplyScalar(0.85).addScaledVector(a, 0.55).normalize()
   for (const turn of [0, 0.4, -0.4, 0.8]) {
     const d = dir.clone().applyAxisAngle(UP, turn)
-    if (!cuts(walls, c.clone().addScaledVector(d, 4.2).setY(c.y + 0.25), c, BODY_R)) { dir = d; break }
+    if (!cuts(walls, c.clone().addScaledVector(d, 4.2).setY(c.y + 0.45), c, BODY_R)) { dir = d; break }
   }
-  const pos = c.clone().addScaledVector(dir, 4.2).setY(c.y + 0.25)
+  // the float loop carries the body ~0.5 m above `c`, and the name tag rides above the helmet: aim high enough for both
+  const pos = c.clone().addScaledVector(dir, 4.2).setY(c.y + 0.45)
   const left = new THREE.Vector3().crossVectors(dir, UP).normalize() // the camera's left, as it looks back along -dir
-  const look = c.clone().setY(c.y + 0.3).addScaledVector(left, 0.75)
-  return { stop: { pos, look, fov: 42 }, rot: [0.06, Math.atan2(dir.x, dir.z) - 0.4, 0.05] }
+  const look = c.clone().setY(c.y + 0.6).addScaledVector(left, 0.75)
+  return { stop: { pos, look, fov: 46 }, rot: [0.06, Math.atan2(dir.x, dir.z) - 0.4, 0.05] }
 }
 
 /**

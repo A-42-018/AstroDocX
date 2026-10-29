@@ -8,8 +8,8 @@ import type { CabinData } from './data'
  * station loads only when the tour gets close.
  */
 
-/** Where the EVA crew member floats, and the camera that frames them with the station and Earth. */
-export const EVA = { pos: [4.75, 0.87, -38.47] as [number, number, number], rot: [0.2, -0.5, 0.22] as [number, number, number] }
+/** Where the EVA crew member floats (low enough that their name tag clears the frame top), and the camera that frames them with the station and Earth. */
+export const EVA = { pos: [4.75, 0.45, -38.47] as [number, number, number], rot: [0.2, -0.5, 0.22] as [number, number, number] }
 /** Looking about 20 degrees right of the sun and slightly down: station and sun upper left, astronaut right, Earth below. */
 export const EVA_VIEW = { pos: new THREE.Vector3(2.4, 1.3, -36.5), look: new THREE.Vector3(12.38, -0.1, -53.78) }
 const ISS_AT = new THREE.Vector3(27.9, 10.4, -106.5), ISS_SPAN = 34
