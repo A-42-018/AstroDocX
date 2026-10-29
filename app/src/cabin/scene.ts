@@ -76,9 +76,9 @@ const PW = 3.2, PH = 1.875, PY = 0.2
 /**
  * Eye adaptation: the exposure at each tour stop, eased between stops as the camera moves. The helmet's visor takes a
  * little light off at the first stop; facing the sun at the forward window the eye stops down, so the sunlit floor
- * there keeps its tread plate instead of burning out.
+ * there keeps its tread plate instead of burning out, and it stays stopped down looking back down the sunlit hall.
  */
-const EXPOSURE = [0.86, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 0.55, 1.1, 1.1]
+const EXPOSURE = [0.86, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 0.55, 0.7, 1.1]
 const exposureAt = (p: number) => {
   const i = Math.min(Math.floor(p), EXPOSURE.length - 2), f = THREE.MathUtils.smoothstep(p - i, 0, 1)
   return THREE.MathUtils.lerp(EXPOSURE[i], EXPOSURE[i + 1], f)
