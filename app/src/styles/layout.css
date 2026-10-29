@@ -180,31 +180,31 @@
   /* ---- Phone bottom tabs (hidden from 768 px up) ---- */
   .tabs { display: none; }
 
-  /* Up to 1599 a two-digit queue would push the full bar past the edge: tighten the tabs a little */
-  @media (max-width: 1599px) { .toptabs a { padding: 0 7px; } }
-  /* Below 1440 the full bar no longer fits: the wordmark and the "queued" word go first */
-  @media (max-width: 1439px) {
-    .brand-text, .strip-ql { display: none; }
-    .toptabs a { padding: 0 7px; letter-spacing: 0.08em; }
-  }
-  /* lg: mission tabs and the link time collapse to an icon and the lamp (names and tooltips stay) */
-  @media (max-width: 1279px) {
-    .tt-mission .tt-label, .strip-link > span[aria-hidden]:not(.lamp):not(.strip-q) { display: none; }
-    .strip-link { padding: 0 12px; }
-  }
-  /* md: tab labels collapse to icons (names and tooltips stay); the strip keeps MET and the lamp */
-  @media (max-width: 1023px) {
-    .tt-label, .strip-q, .strip-link > span[aria-hidden]:not(.lamp):not(.strip-q) { display: none; }
-    .toptabs { margin-left: 0; }
-    .toptabs a { padding: 0 9px; }
-    .tt-n { position: absolute; top: 9px; right: 0; min-width: 15px; height: 15px; padding: 0 3px; font-size: 11px; }
-    .tt-sep { margin: 16px 4px; }
-    .strip-link { padding: 0 12px; }
-    .topbar { gap: 8px; padding: 0 12px; }
-    .av { width: 38px; }
-    .tb-icon { width: 36px; }
-    .tb-cabin { width: 36px; padding: 0; justify-content: center; margin: 0 2px; } .tb-cabin-l { display: none; }   /* icon only, like the tabs; the glow stays */
-  }
+  /* The bar fits itself (shell/useFit.ts): each .fit-N is added in turn, from the full bar, until nothing overflows.
+     Names and tooltips stay on every tab and button whatever is collapsed. Phones (< 768 px) use their own bar below. */
+  /* 1: tighten the tabs a little */
+  .topbar.fit-1 .toptabs a { padding: 0 7px; }
+  /* 2: the wordmark and the "queued" word go first */
+  .topbar.fit-2 :is(.brand-text, .strip-ql) { display: none; }
+  .topbar.fit-2 .toptabs a { letter-spacing: 0.08em; }
+  /* 3: mission tabs and the link time collapse to an icon and the lamp */
+  .topbar.fit-3 :is(.tt-mission .tt-label, .strip-link > span[aria-hidden]:not(.lamp):not(.strip-q)) { display: none; }
+  .topbar.fit-3 .strip-link { padding: 0 12px; }
+  /* 4: every tab label and the 3D Cabin label collapse to icons; the strip keeps MET and the lamp */
+  .topbar.fit-4 :is(.tt-label, .strip-q, .tb-cabin-l) { display: none; }
+  .topbar.fit-4 { gap: 8px; padding: 0 12px; }
+  .topbar.fit-4 .toptabs { margin-left: 0; }
+  .topbar.fit-4 .toptabs a { padding: 0 9px; }
+  .topbar.fit-4 .tt-n { position: absolute; top: 9px; right: 0; min-width: 15px; height: 15px; padding: 0 3px; font-size: 11px; }
+  .topbar.fit-4 .tt-sep { margin: 16px 4px; }
+  .topbar.fit-4 .av { width: 38px; }
+  .topbar.fit-4 .tb-icon { width: 36px; }
+  .topbar.fit-4 .tb-cabin { width: 36px; padding: 0; justify-content: center; margin: 0 2px; }   /* icon only, like the tabs; the glow stays */
+  /* 5: last squeeze for narrow tablets and big crews */
+  .topbar.fit-5 { gap: 4px; }
+  .topbar.fit-5 .toptabs a { padding: 0 7px; }
+  .topbar.fit-5 .strip-eb { display: none; }
+  .topbar.fit-5 .av { width: 34px; }
 
   /* Phones: two-row top bar, 64 px bottom tabs, More sheet */
   @media (max-width: 767px) {
