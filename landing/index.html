@@ -20,6 +20,8 @@
   <meta name="twitter:image"       content="https://astrodocx.vercel.app/assets/og-image.png">
   <link rel="canonical" href="https://astrodocx.vercel.app/">
   <!-- Self-hosted type system (see styles.css TYPOGRAPHY): display + body preloaded -->
+  <link rel="preload" href="assets/loader-insight.webp" as="image" type="image/webp" media="(min-width: 641px)">
+  <link rel="preload" href="assets/loader-insight-1280.webp" as="image" type="image/webp" media="(max-width: 640px)">
   <link rel="preload" href="fonts/SpaceGrotesk-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/Inter-var.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -37,6 +39,12 @@
       background:radial-gradient(ellipse 60% 55% at 50% 45%,#1A1740 0%,#0C0A1E 62%);color:#F8FAFC;
       transition:opacity .45s ease,transform .45s ease,visibility 0s linear .45s}
     #adx-loader.is-done{opacity:0;transform:scale(1.04);visibility:hidden;pointer-events:none}
+    /* backdrop: NASA's InSight art (PIA22229), drifting slowly under a scrim that keeps the mark and boot steps legible */
+    #adx-loader{isolation:isolate;overflow:hidden}
+    #adx-loader::before,#adx-loader::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none}
+    #adx-loader::before{inset:-4%;background:url(assets/loader-insight.webp) 42% 50%/cover no-repeat;animation:adxLdDrift 18s ease-in-out infinite alternate}
+    #adx-loader::after{background:radial-gradient(ellipse 62% 64% at 50% 48%,rgba(12,10,30,.92) 0%,rgba(12,10,30,.72) 45%,rgba(12,10,30,.42) 100%)}
+    @media (max-width:640px){#adx-loader::before{background-image:url(assets/loader-insight-1280.webp)}}
     .adx-ld-mark{font-family:'Space Grotesk','Inter',system-ui,sans-serif;font-weight:600;font-size:clamp(1.5rem,4.2vw,2rem);letter-spacing:-.01em;line-height:1}
     .adx-ld-mark .br{color:#818CF8;opacity:.7}
     .adx-ld-mark .x{color:#22D3EE}
@@ -62,10 +70,11 @@
     @keyframes adxLdBreathe{0%,100%{transform:scale(.94)}50%{transform:scale(1.04)}}
     @keyframes adxLdTwinkle{0%,100%{opacity:.35}50%{opacity:1}}
     @keyframes adxLdEcg{from{stroke-dashoffset:38}to{stroke-dashoffset:-100}}
+    @keyframes adxLdDrift{from{transform:scale(1) translate(0,0)}to{transform:scale(1.06) translate(-1.2%,-.8%)}}
     @media (prefers-reduced-motion:reduce){
       #adx-loader{transition:opacity .2s ease,visibility 0s linear .2s}
       #adx-loader.is-done{transform:none}
-      .adx-ld-orbit,.adx-ld-breathe,.adx-ld-ring circle,.adx-ld-ecg{animation:none}
+      .adx-ld-orbit,.adx-ld-breathe,.adx-ld-ring circle,.adx-ld-ecg,#adx-loader::before{animation:none}
       .adx-ld-ecg{stroke-dasharray:none}
       .adx-ld-bar i,.adx-ld-boot li,.adx-ld-boot .adx-ld-ready{transition:none}
     }
