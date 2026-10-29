@@ -13,6 +13,7 @@ import { CrewSwitcher } from './CrewSwitcher'
 import { duration, greetingFor, linkSummary } from './format'
 import { MORE_ICON, ROUTES, routeFor } from './nav'
 import { Overflow } from './Overflow'
+import { useFit } from './useFit'
 import { usePopover } from './usePopover'
 import type { ShellData } from './useShellData'
 
@@ -102,9 +103,11 @@ export function TopBar({ data, install }: { data: ShellData | null; install: (()
   const navigate = useNavigate()
   const demo = useDemo()
   const startDemo = () => { navigate('/board'); void runDemo(select) }
+  const bar = useRef<HTMLElement>(null)
+  useFit(bar)
 
   return (
-    <header className="topbar">
+    <header ref={bar} className="topbar">
       <div className="brand">
         <span className="logo" aria-hidden="true"><Plus size={20} strokeWidth={3.2} /></span>
         <span className="brand-text"><b>AstroDocX</b><small>Crew Console</small></span>
