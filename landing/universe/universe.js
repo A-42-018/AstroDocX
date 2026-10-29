@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (k > 1 && engine) { const dx = (ADX_ENGINE.SHAPES[2].off[0] - o.look.x) * engine.weights[2]; o.look.x += dx; o.pos.x += dx; }   // portrait: the Crew scene is wider than the screen, centre on it
     return o;
   }
-  function camTwin(o) { const k = small() ? 1.25 : 1; o.pos.set(0, 0.05, 6.4 * k); o.look.set(0, small() ? -0.35 : 0.0, 0); o.fov = 48; return o; }   // close enough that the figure fills the height
+  function camTwin(o) { const k = small() ? 1.25 : 1, dy = small() ? 0 : -0.2; o.pos.set(0, 0.05 + dy, (small() ? 6.4 : 7.0) * k); o.look.set(0, small() ? -0.35 : dy, 0); o.fov = 48; return o; }   // the figure fills the height; desktop: a little smaller and higher, so it stands clear of the readiness card
   function camAdx(o) { const k = pullK(); o.pos.set(0, 0.2, 9 * k); o.look.set(0, 0.2, 0); o.fov = 50; return o; }
   function blend(a, b, t, o) { o.pos.copy(a.pos).lerp(b.pos, t); o.look.copy(a.look).lerp(b.look, t); o.fov = a.fov + (b.fov - a.fov) * t; return o; }
 
