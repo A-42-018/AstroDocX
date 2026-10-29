@@ -10,13 +10,14 @@ import { createEva, EVA, evaCrewId } from './eva'
 import { buildHall, FLOOR, HALF, LEN, SUN_LAYER, TOP } from './hall'
 import { addLights, createFlare, createPost, createSunBeam, pickQuality, windowEnvironment } from './lighting'
 import { C, SH, SW, drawAlerts, drawLiveVitals, drawStatusBoard, drawTrends } from './panels'
+import { createRobots } from './robots'
 import { createScreens, type ScreenSpec } from './screens'
 import { fovFor, layout, type ScreenAt, type Stop, type Walls } from './shots'
 import { wallMap, wallProbe } from './wall'
 
 /*
  * The 3D cabin: the hall (hall.ts, lighting.ts) with its working consoles (consoles.ts), four wall screens running the real console (screens.ts), the crew
- * floating beside them (crew.ts, placed with the camera's stops in shots.ts), and a scroll-driven camera touring ten stops from a helmet view at the
+ * floating beside them (crew.ts, placed with the camera's stops in shots.ts), TARS robots walking the floor (robots.ts), and a scroll-driven camera touring ten stops from a helmet view at the
  * door, past a look back from the window, out to a crew member on EVA beside the station (eva.ts).
  */
 
@@ -108,7 +109,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   /* ---------- lighting and the hall ---------- */
   const { alarm, crewKey, sunPool } = addLights(scene, quality)
   const space = createSpace(scene, TEXTURES, quality !== 'low' && renderer.capabilities.maxTextureSize >= 4096, quality !== 'low')
-  const beam = createSunBeam(scene, quality)
+  const beam = createSunBeam(scene)
   // the loaders all report to three's default manager; files keep joining the queue, so the loader never lets the bar go back
   const manager = THREE.DefaultLoadingManager, prevProgress = manager.onProgress
   manager.onProgress = (_url, loaded, total) => { if (!ready) opts.onProgress?.(total ? loaded / total : 0) }
@@ -180,6 +181,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const crew = createCrew(scene, loader, MODELS)
   const eva = createEva(scene, loader, MODELS)
   const consoles = createConsoles(scene, loader, MODELS)
+  const robots = createRobots(scene, loader, MODELS)
   let placedKey = ''
   function place() {
     if (!data) return
@@ -391,7 +393,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     }
     if (p > 5 || arriving()) eva.load()
     // the station shows from the forward window on, and all through the arrival
-    decor?.update(t, still); consoles.update(t, still); space.update(t, still); beam.show(!arriving() || intro === 'clear'); beam.update(t, still); post.update(t, still); eva.update(still, arriving() && intro !== 'clear' ? N - 1 : p); flare.update(reduced)
+    decor?.update(t, still); consoles.update(t, still); robots.update(dt, still); space.update(t, still); beam.show(!arriving() || intro === 'clear'); beam.update(t, still); post.update(t, still); eva.update(still, arriving() && intro !== 'clear' ? N - 1 : p); flare.update(reduced)
     if (frameNo++ % 6 === 0) renderer.shadowMap.needsUpdate = true
     composer.render(dt)
     screens.render(camera, crew.holders().filter((h) => h.visible).map((h) => h.getWorldPosition(new THREE.Vector3())), dt)
@@ -414,7 +416,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   }
   if (opts.intro) setIntro('fly', 0)
   frame()
-  void Promise.all([hallLoaded, crew.loaded, consoles.loaded]).then(([hall]) => {
+  void Promise.all([hallLoaded, crew.loaded, consoles.loaded, robots.loaded]).then(([hall]) => {
     if (disposed) return
     if (hall) {
       mount(hall)
@@ -430,6 +432,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
         props, walls,
       })
       consoles.settle()
+      robots.mount(hall)
       sunPool?.bake(renderer)
     }
     placedKey = ''; place(); renderer.shadowMap.needsUpdate = true; ready = true; readyAt = clock.elapsedTime; opts.onProgress?.(1); opts.onReady()
