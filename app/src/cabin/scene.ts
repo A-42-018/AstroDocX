@@ -46,6 +46,8 @@ export interface CabinScene {
   /** Cut the arrival short (as soon as the hall is ready). */
   skipIntro: () => void
   replayIntro: () => void
+  /** Play the helmet going on at the first stop: the visor slides down, then the HUD boots. */
+  lowerVisor: () => void
   dispose: () => void
 }
 
@@ -56,6 +58,12 @@ export interface CabinScene {
  */
 const FLY = { pos: [new THREE.Vector3(-45, 55, -40), new THREE.Vector3(-8, 26, -58), new THREE.Vector3(15, 14, -80)], look: [new THREE.Vector3(18, 0, -132), new THREE.Vector3(24, 6, -116), new THREE.Vector3(27.9, 10.4, -106.5)] }
 const FLY_S = 4.6, LOCK_S = 0.7, CLEAR_S = 1.5, FLY_EXPOSURE = 0.8
+/**
+ * The helmet going on at the first stop (after the arrival, on coming back to it, on opening the cabin): the rim closes
+ * in (RIM_S), the visor glass slides down over it (from VISOR_AT, for VISOR_S), then the HUD boots on the glass
+ * (BOOT_S, the CSS stagger in cabin.css) and the caption lands. Off while the tour is away from the helmet.
+ */
+const RIM_S = 0.45, VISOR_AT = 0.25, VISOR_S = 0.7, BOOT_S = 1.0
 /** A wide lens for the overall view, narrowing to the tour's as the camera closes in. */
 const FOV = 58, FLY_FOV = 74
 const ease = (x: number) => x * x * (3 - 2 * x)
@@ -227,6 +235,26 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const flashColor = reduced ? '#02070c' : ''
   if (opts.flash && flashColor) opts.flash.style.background = flashColor // reduced motion: a plain fade through dark
   const arriving = () => intro !== 'off'
+  /* the visor: 'raised' (glass up, HUD off), 'dropping', 'booting', then 'down'; raised with no rim until the page lowers it */
+  type VisorPhase = 'raised' | 'dropping' | 'booting' | 'down'
+  const visor = { phase: (reduced ? 'down' : 'raised') as VisorPhase, away: false, t0: 0, rimIn: false, rim: reduced ? 1 : 0, drop: reduced ? 1 : 0, shown: 1 }
+  const visorClass = (ph: VisorPhase) => { for (const c of ['raised', 'dropping', 'booting']) opts.visor?.classList.toggle(c, c === ph) }
+  const raiseVisor = (away: boolean) => { visor.away = away; if (reduced || visor.phase === 'raised') return; visor.phase = 'raised'; visor.drop = 0; visorClass('raised') }
+  const lowerVisor = (t: number, rimIn: boolean) => {
+    if (reduced) { visor.phase = 'down'; visor.rim = visor.drop = 1; visorClass('down'); return }
+    Object.assign(visor, { phase: 'dropping', away: false, t0: t, rimIn, rim: rimIn ? 0 : 1, drop: 0 }); visorClass('dropping')
+  }
+  visorClass(visor.phase)
+  function stepVisor(t: number) {
+    const k = t - visor.t0
+    if (visor.phase === 'dropping') {
+      visor.rim = visor.rimIn ? ease(Math.min(1, k / RIM_S)) : 1
+      visor.drop = ease(THREE.MathUtils.clamp((k - VISOR_AT) / VISOR_S, 0, 1))
+      if (k >= VISOR_AT + VISOR_S) { visor.phase = 'booting'; visor.t0 = t; visorClass('booting') }
+    } else if (visor.phase === 'booting' && k >= BOOT_S) { visor.phase = 'down'; visorClass('down') }
+    opts.visor?.style.setProperty('--drop', visor.drop.toFixed(3))
+    post.setVisor(visor.shown * visor.rim, visor.drop)
+  }
   /** Any input during the flight asks to be let in: the glare starts once the hall is ready. */
   const skipIntro = () => { if (intro === 'fly' || intro === 'wait') skipAsked = true }
 
@@ -330,7 +358,11 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     camera.rotateZ(float.roll * still)
     float.fov = reduced ? (focus ? 42 : fovAt(p)) : THREE.MathUtils.damp(float.fov, focus ? 42 : fovAt(p), 4, dt)
     setFov(float.fov)
-    if (opts.visor) { opts.visor.style.opacity = String(helmet); opts.visor.style.transform = `scale(${1 + (1 - helmet) * 0.25})` }
+    // away from the helmet the visor goes up; coming back to it, it comes down again
+    if (p > 0.65) raiseVisor(true)
+    else if (visor.phase === 'raised' && visor.away && p < 0.5 && pTarget < 0.5) lowerVisor(t, false)
+    visor.shown = helmet
+    if (opts.visor) { opts.visor.style.opacity = String(helmet * visor.rim); opts.visor.style.transform = `scale(${1 + (1 - helmet) * 0.25 + (1 - visor.rim) * 0.12})` }
     renderer.toneMappingExposure = exposureAt(p)
     const stop = Math.round(p)
     if (stop !== shown) { shown = stop; opts.onStop(stop) }
@@ -348,11 +380,10 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
       // the cut, hidden by the glare: into the helmet at the door
       p = pTarget = 0; camPos.copy(posCurve.getPoint(0)); camLook.copy(lookCurve.getPoint(0)); float.last.copy(camPos); shown = -1
       setIntro('clear', t)
-      opts.visor?.classList.add('booting')
+      lowerVisor(t, false) // the rim closes in with the glare fading, below
     }
     if (intro === 'clear' && k >= (reduced ? 0.5 : CLEAR_S)) {
       setIntro('off', t)
-      opts.visor?.classList.remove('booting')
       if (opts.flash) opts.flash.style.opacity = '0'
       if (opts.mist) { opts.mist.style.opacity = '0'; opts.mist.style.backdropFilter = '' }
       return
@@ -362,12 +393,14 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
       const c = Math.min(1, k / (reduced ? 0.5 : CLEAR_S)), helmetIn = ease(Math.min(1, c * 1.6)), fog = 1 - ease(c)
       if (flash) flash.opacity = String(1 - ease(Math.min(1, c * 2.4)))
       if (mist) { mist.opacity = String(reduced ? 0 : fog); mist.backdropFilter = reduced ? '' : `blur(${(fog * 12).toFixed(1)}px)` }
+      visor.shown = helmetIn
       if (opts.visor) { opts.visor.style.opacity = String(helmetIn); opts.visor.style.transform = `scale(${reduced ? 1 : 1 + (1 - helmetIn) * 0.45})` }
       camera.position.copy(camPos); camera.lookAt(camLook); setFov(float.fov = FOV)
       renderer.toneMappingExposure = exposureAt(0)
       return
     }
     // out in space: no helmet yet
+    raiseVisor(false); visor.shown = 0
     if (opts.visor) { opts.visor.style.opacity = '0'; opts.visor.style.transform = 'scale(1.45)' }
     if (mist) mist.opacity = '0'
     if (!reduced && intro === 'fly') flyU = ease(Math.min(1, e / FLY_S)) // a skip freezes it where it is
@@ -393,7 +426,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     }
     if (p > 5 || arriving()) eva.load()
     // the station shows from the forward window on, and all through the arrival
-    decor?.update(t, still); consoles.update(t, still); robots.update(dt, still); space.update(t, still); beam.show(!arriving() || intro === 'clear'); beam.update(t, still); post.update(t, still); eva.update(still, arriving() && intro !== 'clear' ? N - 1 : p); flare.update(reduced)
+    decor?.update(t, still); consoles.update(t, still); robots.update(dt, still); space.update(t, still); beam.show(!arriving() || intro === 'clear'); beam.update(t, still); post.update(t, still); stepVisor(t); eva.update(still, arriving() && intro !== 'clear' ? N - 1 : p); flare.update(reduced)
     if (frameNo++ % 6 === 0) renderer.shadowMap.needsUpdate = true
     composer.render(dt)
     screens.render(camera, crew.holders().filter((h) => h.visible).map((h) => h.getWorldPosition(new THREE.Vector3())), dt)
@@ -450,6 +483,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     goTo,
     skipIntro,
     replayIntro() { unfocus(); skipAsked = false; setIntro('fly', clock.elapsedTime) },
+    lowerVisor() { if (!arriving() && pTarget < 0.5) lowerVisor(clock.elapsedTime, true) },
     dispose() {
       disposed = true
       manager.onProgress = prevProgress
