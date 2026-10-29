@@ -43,6 +43,13 @@
 /* helmet visor (cabin/VisorHud.tsx): scene.ts fades and grows it as the tour leaves the first stop */
 .cabin-visor { position: absolute; inset: 0; pointer-events: none; z-index: 4; will-change: opacity, transform; }
 .visor-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* the glass slides down from above the opening (1000 user units = the whole box); its lit lower edge shows only while it moves */
+.vz-glass { transform: translateY(calc((var(--drop, 1) - 1) * 1000px)); }
+.vz-glass-edge { opacity: 0; }
+.cabin-visor.dropping .vz-glass-edge { opacity: 1; }
+/* glass up, the HUD has nothing to project on; it boots once the glass is down, and the caption waits for it */
+.cabin-visor.raised .vz-hud, .cabin-visor.dropping .vz-hud { opacity: 0; }
+.cabin-visor.dropping ~ .cabin-caption, .cabin-visor.booting ~ .cabin-caption { opacity: 0; }
 /* the HUD is light projected on the glass: cyan with a dark halo, so it reads over the bright cabin too */
 .vz-hud {
   --data: #36e2f5; --halo: 0 0 2px rgba(0, 8, 14, .95), 0 0 9px rgba(0, 8, 14, .7), 0 0 16px rgba(54, 226, 245, .45);
@@ -131,12 +138,13 @@
 .ca-skip:hover, .cabin-replay:hover { background: var(--cy-soft); }
 .ca-skip:focus-visible, .cabin-replay:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
 .cabin-replay { pointer-events: auto; margin-left: auto; font: 500 12px var(--ui); color: var(--t2); background: transparent; border: 1px solid var(--edge); padding: 6px 12px; cursor: pointer; letter-spacing: .04em; }
-/* the HUD boots panel by panel as the visor clears */
-.cabin-visor.booting .vz { animation: vzBoot .55s ease-out both; }
-.cabin-visor.booting .vz-tc { animation-delay: .15s; }
-.cabin-visor.booting .vz-tl, .cabin-visor.booting .vz-tr { animation-delay: .35s; }
-.cabin-visor.booting .ladder { animation-delay: .55s; }
-.cabin-visor.booting .vz-bl, .cabin-visor.booting .vz-br { animation-delay: .75s; }
+/* the HUD boots panel by panel once the visor is down (scene.ts holds 'booting' for 1 s) */
+.cabin-visor.booting :is(.vz, .vz-reticle, .vz-bar, .vz-motto, .prompt) { animation: vzBoot .45s ease-out both; }
+.cabin-visor.booting :is(.vz-tl, .vz-tr) { animation-delay: .1s; }
+.cabin-visor.booting :is(.ladder, .vz-reticle) { animation-delay: .2s; }
+.cabin-visor.booting :is(.vz-bl, .vz-br) { animation-delay: .3s; }
+.cabin-visor.booting .vz-bar { animation-delay: .4s; }
+.cabin-visor.booting :is(.vz-motto, .prompt) { animation-delay: .5s; }
 @keyframes vzBoot { 0% { opacity: 0; filter: brightness(2.2) blur(2px); } 30% { opacity: .9; } 45% { opacity: .2; } 100% { opacity: 1; filter: none; } }
 
 .cabin-loading { position: absolute; inset: 0; display: grid; place-items: center; font: 600 14px var(--mono); letter-spacing: .2em; color: var(--cy); background: var(--bg); z-index: 10; }
@@ -165,7 +173,7 @@
   .vz-reticle { width: 150px; height: 150px; margin: -75px 0 0 -75px; }
   .cabin-credits { left: var(--sp-3); right: var(--sp-3); font-size: 10px; line-height: 1.35; }
 }
-@media (prefers-reduced-motion: reduce) { .cabin-visor.booting .vz { animation: none; } .prompt span, .vz-reticle .spin, .vz-heart.beat { animation: none; } .vz-gauge .needle { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .cabin-visor.booting :is(.vz, .vz-reticle, .vz-bar, .vz-motto, .prompt) { animation: none; } .prompt span, .vz-reticle .spin, .vz-heart.beat { animation: none; } .vz-gauge .needle { transition: none; } }
 
 /* the real console on the wall screens (cabin/screens.ts): above the canvas, below the HUD, never takes input */
 .cabin-screens { position: absolute !important; inset: 0; z-index: 1; pointer-events: none; }

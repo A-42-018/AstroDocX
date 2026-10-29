@@ -50,14 +50,25 @@ function Helmet() {
           <stop offset="0.6" stopColor="#2a3540" stopOpacity="0.4" />
           <stop offset="0.92" stopColor="#d8efff" stopOpacity="0.75" />
         </linearGradient>
+        <linearGradient id="vz-lip" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffe6b8" stopOpacity="0" />
+          <stop offset="0.75" stopColor="#fff4dc" stopOpacity="0.55" />
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0.9" />
+        </linearGradient>
         <filter id="vz-soft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="6" /></filter>
         <clipPath id="vz-in"><path d={EDGE} /></clipPath>
       </defs>
-      <path d={EDGE} fill="url(#vz-glass)" />
-      {/* reflections on the curved glass: a soft arc top left, a fainter one bottom right */}
-      <g clipPath="url(#vz-in)" filter="url(#vz-soft)">
-        <path d="M70 420 C 90 190, 260 70, 470 52" fill="none" stroke="#cfeeff" strokeOpacity="0.14" strokeWidth="18" />
-        <path d="M940 600 C 925 790, 800 905, 610 935" fill="none" stroke="#cfeeff" strokeOpacity="0.07" strokeWidth="14" />
+      {/* the visor glass, a sheet that slides down inside the opening (--drop, set by scene.ts); its lower edge catches the light as it goes */}
+      <g clipPath="url(#vz-in)">
+        <g className="vz-glass">
+          <path d={EDGE} fill="url(#vz-glass)" />
+          {/* reflections on the curved glass: a soft arc top left, a fainter one bottom right */}
+          <g filter="url(#vz-soft)">
+            <path d="M70 420 C 90 190, 260 70, 470 52" fill="none" stroke="#cfeeff" strokeOpacity="0.14" strokeWidth="18" />
+            <path d="M940 600 C 925 790, 800 905, 610 935" fill="none" stroke="#cfeeff" strokeOpacity="0.07" strokeWidth="14" />
+          </g>
+          <rect className="vz-glass-edge" x="0" y="986" width="1000" height="14" fill="url(#vz-lip)" />
+        </g>
       </g>
       <path d={`M-20 -20H1020V1020H-20Z${EDGE}`} fillRule="evenodd" fill="url(#vz-pad)" />
       {SEAMS.map((d, i) => (

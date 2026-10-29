@@ -190,17 +190,30 @@ export function createSunBeam(scene: THREE.Scene) {
 
 /** A gentle contrast curve, vignette and a whisper of film grain: the lens the references were shot through. */
 const LensShader = {
-  uniforms: { tDiffuse: { value: null }, time: { value: 0 }, grain: { value: 0.035 }, contrast: { value: 0.14 }, balance: { value: new THREE.Vector3(1.0, 1.0, 0.985) } },
+  uniforms: { tDiffuse: { value: null }, time: { value: 0 }, grain: { value: 0.035 }, contrast: { value: 0.14 }, balance: { value: new THREE.Vector3(1.0, 1.0, 0.985) }, visor: { value: 0 }, wipe: { value: 1 } },
   vertexShader: /* glsl */ `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: /* glsl */ `
-    uniform sampler2D tDiffuse; uniform float time; uniform float grain; uniform float contrast; uniform vec3 balance; varying vec2 vUv;
+    uniform sampler2D tDiffuse; uniform float time; uniform float grain; uniform float contrast; uniform vec3 balance; uniform float visor; uniform float wipe; varying vec2 vUv;
     float h(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
     void main() {
-      vec4 c = texture2D(tDiffuse, vUv);
+      vec2 d = vUv - 0.5;
+      // the helmet's visor glass (VisorHud.tsx), down over the view above its sliding lower edge at 1 - wipe: it bends
+      // the view toward the rim (the opening's half-size, in uv, as e = 1), fringes it there, and leaves a bright
+      // ripple along the edge while it slides
+      float edge = 1.0 - wipe, glass = visor * smoothstep(edge - 0.004, edge + 0.004, vUv.y);
+      float r2 = dot(d / vec2(0.452, 0.468), d / vec2(0.452, 0.468));
+      float slide = visor * (1.0 - smoothstep(0.96, 1.0, wipe)) * exp(-pow((vUv.y - edge) / 0.018, 2.0));
+      vec2 bend = d * glass * 0.05 * r2 + vec2(0.0, slide * 0.012), fringe = d * glass * 0.007 * r2;
+      vec4 c = texture2D(tDiffuse, vUv - bend);
+      c.r = texture2D(tDiffuse, vUv - bend - fringe).r; c.b = texture2D(tDiffuse, vUv - bend + fringe).b;
+      c.rgb *= mix(vec3(1.0), vec3(1.035, 0.975, 0.85), glass); // a light gold tint
+      // the curved glass catches the cabin lights in one soft arc across the top
+      float arc = abs(length((vUv - vec2(0.5, 0.2)) / vec2(0.62, 0.7)) - 1.0);
+      c.rgb += glass * (0.4 + 0.06 * sin(time * 0.4)) * smoothstep(0.045, 0.0, arc) * smoothstep(0.6, 0.85, vUv.y) * (1.0 - smoothstep(0.12, 0.4, abs(d.x))) * vec3(1.0, 0.96, 0.88);
+      c.rgb += slide * 0.35 * vec3(1.0, 0.95, 0.85);
       // contrast about mid grey (the input is linear, before tone mapping) and the white balance
       float l = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722));
       c.rgb *= pow(max(l, 1e-4) / 0.18, contrast) * balance; // kept low: the references' shadows are deep but open, their sunlit highlights hold detail; a neutral white balance, the gold is in the light
-      vec2 d = vUv - 0.5;
       c.rgb *= mix(1.0, 0.72, smoothstep(0.45, 0.9, length(d * vec2(1.25, 1.0))));
       c.rgb += (h(vUv * 911.0 + fract(time)) - 0.5) * grain;
       gl_FragColor = c;
@@ -208,7 +221,7 @@ const LensShader = {
   `,
 }
 
-/** Render, ambient occlusion (not on low), bloom, `overlays` (the lens flare), lens, output. */
+/** Render, ambient occlusion (not on low), bloom, `overlays` (the lens flare), lens (with the helmet's visor glass), output. */
 export function createPost(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera, w: number, h: number, quality: Quality, overlays: RenderPass[] = []) {
   // The composer draws into its own targets, so the renderer's antialias does nothing here: without samples of its
   // own the grating and the ceiling ribs crawl as the camera drifts (low draws without antialiasing, as before)
@@ -238,6 +251,8 @@ export function createPost(renderer: THREE.WebGLRenderer, scene: THREE.Scene, ca
     /** Drops ambient occlusion when the device turns out slower than guessed; false if it is already off. */
     downgrade() { if (gtao?.enabled) { gtao.enabled = false; return true } return false },
     update(t: number, still: number) { lens.uniforms.time.value = t * still; lens.uniforms.grain.value = 0.035 * (still || 0.4) },
+    /** The helmet visor's glass: how much of it is in view (0 = none) and how far down it has slid (1 = fully down). */
+    setVisor(amount: number, down: number) { lens.uniforms.visor.value = amount; lens.uniforms.wipe.value = down },
   }
 }
 

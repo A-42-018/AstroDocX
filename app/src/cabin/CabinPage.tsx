@@ -98,6 +98,7 @@ export default function CabinPage() {
     const lift = () => {
       setLoader('fade')
       if (!seenArrival()) scene.current?.replayIntro()
+      else scene.current?.lowerVisor() // straight into the helmet: it goes on as the loading screen lifts
     }
     const wait = window.setTimeout(() => {
       if (document.getElementById('adx-splash')) window.addEventListener('adx:launched', lift, { once: true })

@@ -29,6 +29,7 @@ export function createScreens(host: HTMLElement, base: string) {
     frame.setAttribute('aria-hidden', 'true')
     frame.style.width = `${spec.px[0]}px`; frame.style.height = `${spec.px[1]}px`
     const obj = new CSS3DObject(frame)
+    frame.style.pointerEvents = 'none' // CSS3DObject sets 'auto' inline; the wheel, drag and clicks belong to the canvas beneath
     obj.scale.setScalar(w / spec.px[0])
     scene.add(obj)
     const s: Screen = { obj, frame, pos: new THREE.Vector3(), normal: new THREE.Vector3(0, 0, 1), w, h, loaded: false, shown: 0, off: null, view: spec.view, crew: undefined }
