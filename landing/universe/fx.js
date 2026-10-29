@@ -72,13 +72,23 @@
   const LFS = 'precision mediump float; varying float vA; varying vec3 vC; void main(){ gl_FragColor=vec4(vC*vA,vA); }';
   /* disc + glow share one quad: uMode 0 = black horizon (normal blend), 1 = rim glow (additive) */
   const QVS = 'varying vec2 vP; void main(){ vP=position.xy; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }';
+  /* the glow also carries the two big light shapes of the reference: five soft beams (on the same angles as the
+     hairline beams, turning with them) and three thick shock bands that ride the particle shock rings outward */
   const QFS =
     'precision mediump float; varying vec2 vP; uniform float uMode,uW,uIgn,uBurst,uTime,uHole;' +
+    'float beam(float th,float r,float b,float R){ float d=abs(mod(th-b+3.14159,6.28318)-3.14159)*r, s=.02+.016*(r-R);' +   // d: distance off the spoke
+    ' return exp(-d*d/(2.*s*s))*exp(-(r-R)*.5)*smoothstep(R,R*1.12,r); }' +
     'void main(){ float ign=1.-pow(1.-uIgn,3.), R=mix(.08,1.,ign)*uHole, r=length(vP);' +
     ' if(uMode<.5){ float m=smoothstep(R,R*.93,r)*uW; gl_FragColor=vec4(0.,0.,0.,m*.96); return; }' +
     ' float rim=exp(-pow((r-R)/(.035+.02*sin(uTime*.9)),2.))*step(R*.9,r), haze=exp(-max(r-R,0.)*1.6)*step(R,r)*.22;' +
+    ' float th=atan(vP.y,vP.x)-uTime*.012, bm=0., rg=0.;' +
+    ' bm+=beam(th,r,.42,R)*(.8+.2*sin(uTime*.7)); bm+=beam(th,r,1.31,R)*(.8+.2*sin(uTime*.7+1.9)); bm+=beam(th,r,2.05,R)*(.8+.2*sin(uTime*.7+3.8));' +
+    ' bm+=beam(th,r,3.6,R)*(.8+.2*sin(uTime*.7+5.7)); bm+=beam(th,r,4.9,R)*(.8+.2*sin(uTime*.7+7.6));' +
+    ' for(int i=0;i<3;i++){ float fi=float(i), life=fract(uTime*.042+fi/3.+.15), rr=R*(1.08+life*2.7), w=.06+.26*life;' +   // same cycle as the particle rings (engine.js iris())
+    '  float tex=.6+.4*sin(th*97.+fi*7.)*sin(th*41.-fi*3.+uTime*.2);' +                                                     // streaky, like long-exposure trails
+    '  rg+=exp(-pow((r-rr)/w,2.))*tex*pow(sin(3.14159*life),1.4)*(1.-.45*life); }' +
     ' float fb=clamp(uBurst*2.2,0.,1.), flash=fb*(1.-fb)*4.*exp(-r*r*1.8)*.32;' +                      // a short, soft collapse flash at the core
-    ' float a=(rim*.28+haze)*uW*ign*(1.-uBurst)+flash*uW; gl_FragColor=vec4(vec3(.82,.9,1.)*a,a); }';
+    ' float a=(rim*.28+haze+bm*.42+rg*.32)*uW*ign*(1.-uBurst)+flash*uW; gl_FragColor=vec4(vec3(.82,.92,1.)*a,a); }';
 
   function singularity(scene) {
     const TAU = Math.PI * 2, rnd = Math.random;
