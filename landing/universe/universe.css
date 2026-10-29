@@ -76,7 +76,7 @@
 
 .tw-head { position:absolute;z-index:3;left:var(--pad-x,24px);top:calc(var(--nav-h,64px) + 24px);max-width:min(38.75rem,46vw); }   /* rem, not px: grows with the browser font-size setting like the text does */
 .tw-head .ch-title { font-size:clamp(1.8rem,3.4vw,3.3rem); }
-.tw-head .ch-title span + span { font-size:.7em;letter-spacing:.14em;margin-top:6px; }   /* HEALTH MONITOR SYSTEM on one line */
+.tw-head .ch-title span + span { margin-top:14px;font-size:.4em;font-weight:500;letter-spacing:.34em;color:rgba(234,242,255,.72);-webkit-text-stroke:0; }   /* HEALTH MONITOR SYSTEM: a quiet solid line, not a second outlined headline */
 .tw-head .ch-sub { margin-bottom:18px; }
 /* "NASA" as a mark: same gradient + glow as the <em> words, an orbit swoosh with a glint and a telescope */
 .nasa-mark { display:inline-block !important;vertical-align:-.36em;text-shadow:none;filter:drop-shadow(0 0 18px rgba(34,211,238,.35)); }
@@ -92,19 +92,21 @@
 .tw-label[data-side="right"] { right:var(--pad-x,24px); }
 /* the left column never starts above the bottom of the heading block (--tw-head-b, set from its real height), so the 3D anatomy button is never covered */
 #twin { --tw-l1:max(47vh,calc(var(--tw-head-b,0px) + 20px)); }
-.tw-label:nth-of-type(1) { top:var(--tw-l1); } .tw-label:nth-of-type(2) { top:calc(var(--tw-l1) + 16vh); } .tw-label:nth-of-type(3) { top:calc(var(--tw-l1) + 32vh); }
-.tw-label:nth-of-type(4) { top:24vh; } .tw-label:nth-of-type(5) { top:44vh; } .tw-label:nth-of-type(6) { top:64vh; }
+/* left: the environment (air, radiation, ground link) stacks under the heading; right: the body (brain, heart, legs).
+   health-twin.js moves each right label to the height of its organ, so its leader line runs straight across */
+.tw-label[data-side="left"] { top:calc(var(--tw-l1) + var(--row,0) * 15vh); }
+.tw-label[data-side="right"] { top:calc(22vh + var(--row,0) * 22vh); }
 .tw-kick { display:flex;align-items:center;gap:8px;margin:0 0 6px;font-family:var(--font-mono);font-size:.68rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#E0FBFF; }
 .tw-kick i { width:7px;height:7px;border-radius:50%;background:#3EE6A0;box-shadow:0 0 8px #3EE6A0;flex:none; }
 .tw-kick b { margin-left:auto;padding:2px 8px;border-radius:99px;font-size:.58rem;letter-spacing:.14em;color:#3EE6A0;border:1px solid rgba(62,230,160,.45); }
 [data-state="act"] > .tw-kick i, .tw-card .tw-kick i { background:#F5A623;box-shadow:0 0 8px #F5A623;animation:twPulse 1.3s ease-in-out infinite; }
 [data-state="act"] > .tw-kick b, .tw-card .tw-kick b { color:#F5A623;border-color:rgba(245,166,35,.55); }
 @keyframes twPulse { 50% { opacity:.4; } }
-.tw-val { margin:0;font-family:var(--font-display);font-weight:800;font-size:clamp(1.3rem,2vw,1.8rem);line-height:1.1;letter-spacing:.04em;color:#fff; }
-.tw-val small { font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(234,242,255,.6);margin-left:4px; }
+.tw-val { margin:0;font-family:var(--font-display);font-weight:800;font-size:clamp(1.4rem,2.1vw,1.95rem);line-height:1.1;letter-spacing:.02em;color:#fff;font-variant-numeric:tabular-nums lining-nums;text-shadow:0 0 22px rgba(34,211,238,.18),0 2px 18px rgba(2,3,10,.95); }
+.tw-val small { font-family:var(--font-mono);font-size:.66rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(234,242,255,.8);margin-left:6px;text-shadow:none; }
 [data-state="act"] .tw-val small { color:#F5A623; }
 
-.tw-final { position:absolute;left:50%;bottom:4vh;transform:translateX(-50%);width:min(94vw,600px);display:flex;gap:22px;align-items:center;opacity:0;
+.tw-final { position:absolute;left:50%;bottom:2.5vh;transform:translateX(-50%);width:min(94vw,600px);display:flex;gap:22px;align-items:center;opacity:0;
   padding:14px 20px;border-radius:16px;background:rgba(4,10,22,.72);border:1px solid rgba(34,211,238,.22);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px); }
 .tw-ready { flex:none; }
 .tw-ready .ch-no { margin-bottom:4px;font-size:.62rem;color:rgba(234,242,255,.6); }

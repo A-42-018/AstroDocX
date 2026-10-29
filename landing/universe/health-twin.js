@@ -39,7 +39,18 @@
     const SVGNS = 'http://www.w3.org/2000/svg';
     const lines = labels.map(() => { const l = document.createElementNS(SVGNS, 'polyline'); l.setAttribute('class', 'tw-line'); linesSvg.appendChild(l); return l; });
     const dots = labels.map(() => { const c = document.createElementNS(SVGNS, 'circle'); c.setAttribute('r', 3.2); c.setAttribute('class', 'tw-dot'); linesSvg.appendChild(c); return c; });
+    lines.forEach(l => { l.setAttribute('pathLength', 1); l.style.strokeDasharray = '1 1'; });   // drawn out from the organ as the stage opens
     const tmp = new THREE.Vector3();
+    /* each reading counts up from 0 as its stage opens: the number is the text before <small> */
+    const counts = labels.map(el => {
+      const n = el.querySelector('.tw-val').firstChild, m = n && n.nodeType === 3 && n.nodeValue.match(/^(\s*)([\d.]+)(.*)$/s);
+      return m ? { n: n, pre: m[1], to: parseFloat(m[2]), dec: (m[2].split('.')[1] || '').length, post: m[3], shown: null } : null;
+    });
+    function count(i, k) {
+      const c = counts[i]; if (!c) return;
+      const t = (c.to * (1 - Math.pow(1 - k, 3))).toFixed(c.dec);
+      if (t !== c.shown) { c.shown = t; c.n.nodeValue = c.pre + t + c.post; }
+    }
 
     /* body regions (engine uniforms) for chapter progress p */
     function body(U, p, rig) {
@@ -61,8 +72,9 @@
     function dom(p, cur) {
       const fv = clamp((p - FINAL_AT) / 0.05, 0, 1);
       labels.forEach((el, i) => {
-        const v = clamp((p - (T0 + i * STEP)) / 0.04, 0, 1);
-        el.style.opacity = (small() ? (i === cur && p < FINAL_AT ? v : 0) : v * (1 - 0.7 * fv)).toFixed(3);
+        const v = clamp((p - (T0 + i * STEP)) / 0.04, 0, 1), act = el.dataset.state === 'act';
+        el.style.opacity = (small() ? (i === cur && p < FINAL_AT ? v : 0) : v * (1 - (act ? 0 : 0.3) * fv)).toFixed(3);   // the verdict keeps the readings readable; the one to act on stays full
+        count(i, clamp((p - (T0 + i * STEP)) / (STEP * 0.8), 0, 1));
         el.classList.toggle('is-current', i === cur && p < FINAL_AT);
         el.style.translate = '0 ' + ((1 - v) * 16).toFixed(1) + 'px';
       });
@@ -84,18 +96,33 @@
     /* leader lines: out of the label, along a vertical lane clear of every text block, then across to the organ.
        Lanes are in "distance from the label column" (k); lines going up nest outward top to bottom, lines going
        down nest outward bottom to top, so no two lines cross. */
-    const GAP = 18, LANE = 14, CHAMFER = 8;
+    const GAP = 18, LANE = 14, CHAMFER = 8, KICK = 10;
+    function anchor(i, camera, c, s, rig, box) {
+      const a = (rig.at && rig.at[i]) || STAGES[i].at;                                   // the baked body brings its own anchors
+      tmp.set(c * a[0] + s * a[2], a[1], -s * a[0] + c * a[2]).project(camera);
+      return [(tmp.x * 0.5 + 0.5) * box.width, (-tmp.y * 0.5 + 0.5) * box.height];
+    }
+    /* right column (the body): each label sits at its organ's height so the line runs straight across;
+       top to bottom they keep a gap and stay below the nav and above the readiness card */
+    function placeRight(camera, c, s, rig, box) {
+      const nav = parseFloat(getComputedStyle(root).getPropertyValue('--nav-h')) || 64, cardTop = final ? final.getBoundingClientRect().top - box.top : box.height;
+      let prev = nav + 16;
+      labels.forEach((el, i) => {
+        if (el.dataset.side !== 'right') return;
+        const h = el.offsetHeight, top = clamp(anchor(i, camera, c, s, rig, box)[1] - KICK, prev, Math.max(prev, cardTop - h - 16));
+        el.style.top = top.toFixed(1) + 'px'; prev = top + h + 20;
+      });
+    }
     function drawLines(camera, ang, rig) {
-      const box = root.getBoundingClientRect(), W = box.width, H = box.height, c = Math.cos(ang), s = Math.sin(ang);
+      const box = root.getBoundingClientRect(), c = Math.cos(ang), s = Math.sin(ang);
+      if (!small()) placeRight(camera, c, s, rig, box); else labels.forEach(el => { el.style.top = ''; });   // phones: one card at the bottom (CSS)
       const obs = small() ? [] : obstacles(box), route = [];
       labels.forEach((el, i) => {
         const v = parseFloat(el.style.opacity) || 0, ln = lines[i], dt = dots[i];
         if (small() || v < 0.02) { ln.style.opacity = 0; dt.style.opacity = 0; return; }
-        const a = (rig.at && rig.at[i]) || STAGES[i].at;                               // the baked body brings its own anchors
-        tmp.set(c * a[0] + s * a[2], a[1], -s * a[0] + c * a[2]).project(camera);
-        const ax = (tmp.x * 0.5 + 0.5) * W, ay = (-tmp.y * 0.5 + 0.5) * H;
+        const [ax, ay] = anchor(i, camera, c, s, rig, box);
         const r = el.getBoundingClientRect(), left = el.dataset.side === 'left', dir = left ? 1 : -1;
-        const sx = (left ? r.right : r.left) - box.left + dir * 10, sy = r.top - box.top + 10;
+        const sx = (left ? r.right : r.left) - box.left + dir * 10, sy = r.top - box.top + KICK;
         /* k: how far out from sx the lane must sit to pass every obstacle spanning the line's vertical run */
         const y0 = Math.min(sy, ay) - 6, y1 = Math.max(sy, ay) + 6;
         let k = GAP;
@@ -112,6 +139,7 @@
       }));
       route.forEach(q => {
         const { ln, dt, el, v, dir, sx, sy, ax, ay } = q;
+        ln.style.strokeDashoffset = (-(1 - v)).toFixed(3);
         const lane = sx + dir * Math.min(q.k, Math.max(GAP, dir * (ax - sx) - GAP));   // never past the organ
         const dy = ay - sy, ch = Math.min(CHAMFER, Math.abs(dy) / 2, Math.abs(lane - sx), Math.abs(ax - lane)), sg = Math.sign(dy);
         ln.setAttribute('points', [[sx, sy], [lane - dir * ch, sy], [lane, sy + sg * ch], [lane, ay - sg * ch], [lane + dir * ch, ay], [ax, ay]].map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' '));
@@ -132,7 +160,7 @@
       makeStatic: function () {
         root.classList.add('is-static');
         if (readyEl) readyEl.textContent = READY;
-        labels.forEach(l => { l.style.cssText = ''; l.style.opacity = 1; });
+        labels.forEach((l, i) => { l.style.translate = l.style.top = ''; l.style.opacity = 1; count(i, 1); });   // keep --row
         if (final) { final.style.cssText = ''; final.style.opacity = 1; }
       },
       stages: STAGES.length, T0: T0, STEP: STEP, FINAL_AT: FINAL_AT
