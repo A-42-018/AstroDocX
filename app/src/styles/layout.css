@@ -95,6 +95,30 @@
   }
   .tb-icon:hover, .tb-icon[aria-expanded='true'] { color: var(--cy-hi); }
   .tb-icon:focus-visible { outline: 2px solid var(--cy); outline-offset: -2px; }
+  /* 3D Cabin: the one labelled, glowing button in the bar, so first-time visitors find the cabin (+ the once-only hint) */
+  .tb-3d { position: relative; flex: none; display: flex; }
+  .tb-cabin {
+    display: inline-flex; align-items: center; gap: 7px; height: 32px; margin: 0 6px; padding: 0 13px; border-radius: 999px;
+    font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none;
+    color: var(--cy-hi); background: var(--cy-soft); border: 1px solid rgba(54, 226, 245, 0.55);
+    animation: cabinGlow 3.2s ease-in-out infinite; transition: background var(--dur-2), color var(--dur-2);
+  }
+  .tb-cabin:hover, .tb-cabin:focus-visible { color: #02121a; background: var(--cy); text-decoration: none; }
+  .tb-cabin:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  @keyframes cabinGlow { 0%, 100% { box-shadow: 0 0 0 rgba(54, 226, 245, 0); } 50% { box-shadow: 0 0 16px var(--cy-glow); } }
+  .cabin-hint {
+    position: absolute; z-index: 60; top: calc(100% + 12px); right: 0; width: 250px; max-width: calc(100vw - 24px); white-space: normal; display: flex; align-items: flex-start; gap: 6px;
+    padding: 12px 10px 12px 14px; border-radius: 12px; background: rgba(4, 16, 24, 0.96); border: 1px solid rgba(54, 226, 245, 0.55);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55), 0 0 22px rgba(54, 226, 245, 0.18); animation: cabinHintIn var(--dur-3) var(--ease) both;
+  }
+  .cabin-hint::before { content: ''; position: absolute; top: -6px; right: 34px; width: 10px; height: 10px; transform: rotate(45deg); background: inherit; border: inherit; border-right: 0; border-bottom: 0; }
+  .cabin-hint-go { flex: 1; display: grid; gap: 4px; color: var(--t2); text-decoration: none; font-size: 13px; line-height: 1.4; }
+  .cabin-hint-go b { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cy-hi); }
+  .cabin-hint-go:hover { text-decoration: none; color: var(--t1); }
+  .cabin-hint-x { flex: none; width: 24px; height: 24px; display: grid; place-content: center; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--t3); cursor: pointer; }
+  .cabin-hint-x:hover { color: var(--t1); background: rgba(255, 255, 255, 0.06); }
+  @keyframes cabinHintIn { from { opacity: 0; transform: translateY(-6px); } }
+  @media (prefers-reduced-motion: reduce) { .tb-cabin, .cabin-hint { animation: none; } }
   .bell b {
     position: absolute; top: 6px; right: 2px; min-width: 16px; padding: 1px 4px; font-family: var(--mono); font-size: 11px; font-weight: 700; line-height: 1.2;
     color: #2a0510; background: var(--st, var(--act)); box-shadow: 0 0 10px var(--st, var(--act));
@@ -179,6 +203,7 @@
     .topbar { gap: 8px; padding: 0 12px; }
     .av { width: 38px; }
     .tb-icon { width: 36px; }
+    .tb-cabin { width: 36px; padding: 0; justify-content: center; margin: 0 2px; } .tb-cabin-l { display: none; }   /* icon only, like the tabs; the glow stays */
   }
 
   /* Phones: two-row top bar, 64 px bottom tabs, More sheet */

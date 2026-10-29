@@ -1,4 +1,8 @@
+import { ArrowRight, Box } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { CabinPage } from '../cabin/lazy'
+import { markCabinSeen } from '../shell/cabinSeen'
 import type { Hazard, Status } from '../data/types'
 import { useHeartbeat } from '../live/heartbeat'
 import { useHidden, useReducedMotion } from '../live/usePaused'
@@ -314,6 +318,9 @@ export function Twin({ tiles, overall, hr = 62, name, top }:
           return t ? <Callout key={s.id} t={t} s={s} linked={focus === s.id} setFocus={setFocus} chipRef={(el) => { chips.current[s.id] = el }} /> : null
         })}
       </div>
+      <Link to="/cabin" className="twin-enter" onPointerEnter={() => CabinPage.preload()} onFocus={() => CabinPage.preload()} onClick={markCabinSeen}>
+        <Box size={14} strokeWidth={2} aria-hidden="true" /><span>Step inside<small>Walk through the crew module</small></span><ArrowRight size={14} aria-hidden="true" />
+      </Link>
       <footer className="baybar">
         <span>◇ Live hologram</span>
         {top

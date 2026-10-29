@@ -53,6 +53,17 @@
   .tc-val small { margin-left: 6px; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: var(--t3); }
   .tc-sub { font-size: 12px; color: var(--t3); }
 
+  /* the way into the 3D cabin, on the panel everyone looks at first */
+  .twin-enter {
+    position: absolute; z-index: 5; top: 50px; right: 30px; display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px 7px 11px;
+    border-radius: 10px; font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none;
+    color: var(--cy-hi); background: rgba(4, 18, 26, 0.78); border: 1px solid rgba(54, 226, 245, 0.45); transition: background var(--dur-2), color var(--dur-2), box-shadow var(--dur-2);
+  }
+  .twin-enter small { display: block; max-height: 0; overflow: hidden; font-size: 10px; font-weight: 500; letter-spacing: 0.06em; text-transform: none; color: var(--t2); opacity: 0; transition: max-height var(--dur-3) var(--ease), opacity var(--dur-3); }
+  .bay:hover .twin-enter, .twin-enter:focus-visible { box-shadow: 0 0 18px var(--cy-glow); border-color: var(--cy); }
+  .bay:hover .twin-enter small, .twin-enter:focus-visible small { max-height: 16px; opacity: 1; }
+  .twin-enter:hover { color: #02121a; background: var(--cy); text-decoration: none; } .twin-enter:hover small { color: #053040; }
+  .twin-enter:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   .baybar {
     position: absolute; z-index: 4; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; gap: 16px; padding: 11px 22px;
     border-top: 1px solid var(--edge); background: linear-gradient(0deg, rgba(2, 8, 12, 0.9), transparent);
@@ -77,6 +88,7 @@
     .tc-I { top: 6%; } .tc-R { top: 46%; } .tc-E { top: 34%; } .tc-D { top: 14%; } .tc-G { top: 74%; }
     .tc-code { display: inline; font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--st); }
     .tc-name, .tc-val, .tc-sub { display: none; }
+    .twin-enter { top: 14px; right: 14px; padding: 6px 9px; } .twin-enter small { display: none; }
     .tc-row { gap: 4px; }
     .tc .tag { height: auto; padding: 0; gap: 4px; border: 0; background: none; text-shadow: none; color: var(--st); }
     .tc .tag::before { content: '·'; width: auto; height: auto; background: none; box-shadow: none; animation: none; }
