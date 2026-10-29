@@ -5,13 +5,13 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
-import { glowTexture, mulberry } from './earth'
+import { glowTexture } from './earth'
 import { FLOOR, SUN_LAYER, TOP, WIN } from './hall'
 import { C } from './panels'
 
 /*
  * One light story, after the golden helmet-view reference: a golden sun through the forward window (hard shadows, a
- * visible beam, dust in it) that turns the floor and the ceiling above it gold, while the walls in shade stay a
+ * visible beam) that turns the floor and the ceiling above it gold, while the walls in shade stay a
  * near-neutral metal falling to deep shadow in the pipework; the cyan of the HUD kept as an accent. Quality tiers
  * drop the costly parts on small or slow devices.
  */
@@ -160,23 +160,8 @@ const beamFrag = /* glsl */ `
     gl_FragColor = vec4(color * fade * edge * shafts * near * strength, 1.0);
   }
 `
-const dustVert = /* glsl */ `
-  uniform float time; uniform float px; attribute float seed; varying float vA;
-  void main() {
-    vec3 p = position + vec3(sin(time * 0.11 + seed * 6.3), sin(time * 0.07 + seed * 4.1), cos(time * 0.09 + seed * 5.7)) * 0.35;
-    vec4 mv = modelViewMatrix * vec4(p, 1.0);
-    gl_PointSize = px * (0.6 + seed) * (6.0 / -mv.z);
-    vA = smoothstep(0.4, 2.0, -mv.z) * (0.4 + 0.6 * fract(seed * 7.0));
-    gl_Position = projectionMatrix * mv;
-  }
-`
-const dustFrag = /* glsl */ `
-  varying float vA;
-  void main() { float d = length(gl_PointCoord - 0.5); gl_FragColor = vec4(vec3(1.0, 0.84, 0.6) * smoothstep(0.5, 0.0, d) * vA * 0.8, 1.0); }
-`
-
-/** The visible sunbeam from the window and the dust drifting in it. */
-export function createSunBeam(scene: THREE.Scene, quality: Quality) {
+/** The visible sunbeam from the window. */
+export function createSunBeam(scene: THREE.Scene) {
   const L = 22
   // four open sides of the window prism, extruded along the beam; `along` runs 0 at the glass to 1 at the far end
   const c = [[-WIN.x, WIN.y0], [WIN.x, WIN.y0], [WIN.x, WIN.y1], [-WIN.x, WIN.y1]].map(([x, y]) => new THREE.Vector3(x, y, WIN.z))
@@ -196,22 +181,10 @@ export function createSunBeam(scene: THREE.Scene, quality: Quality) {
   const beam = new THREE.Mesh(g, new THREE.ShaderMaterial({ uniforms: beamU, vertexShader: beamVert, fragmentShader: beamFrag, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false }))
   beam.frustumCulled = false; scene.add(beam)
 
-  const n = quality === 'high' ? 1100 : quality === 'mid' ? 600 : 0
-  const r = mulberry(5), dp = new Float32Array(n * 3), seed = new Float32Array(n)
-  for (let i = 0; i < n; i++) {
-    const p = new THREE.Vector3(THREE.MathUtils.lerp(-WIN.x, WIN.x, r()), THREE.MathUtils.lerp(WIN.y0, WIN.y1, r()), WIN.z).addScaledVector(BEAM_DIR, Math.pow(r(), 0.8) * L * 0.8)
-    if (p.y < FLOOR + 0.1) p.y = FLOOR + 0.1 + r() * 2
-    dp.set(p.toArray(), i * 3); seed[i] = r()
-  }
-  const dg = new THREE.BufferGeometry(); dg.setAttribute('position', new THREE.BufferAttribute(dp, 3)); dg.setAttribute('seed', new THREE.BufferAttribute(seed, 1))
-  const dustU = { time: { value: 0 }, px: { value: 3 * Math.min(devicePixelRatio, 2) } }
-  const dust = new THREE.Points(dg, new THREE.ShaderMaterial({ uniforms: dustU, vertexShader: dustVert, fragmentShader: dustFrag, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }))
-  dust.visible = n > 0; scene.add(dust)
-
   return {
-    update(t: number, still: number) { beamU.time.value = t * still; dustU.time.value = t * still },
-    /** The shaft and its dust only make sense from inside the hall: hidden while the camera is out in space. */
-    show(on: boolean) { beam.visible = on; dust.visible = on && n > 0 },
+    update(t: number, still: number) { beamU.time.value = t * still },
+    /** The shaft only makes sense from inside the hall: hidden while the camera is out in space. */
+    show(on: boolean) { beam.visible = on },
   }
 }
 
