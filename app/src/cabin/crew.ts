@@ -8,8 +8,8 @@ import { C, TAG_H, TAG_W, drawTag } from './panels'
 /** One astronaut in the room: the model, its live name tag and the ring shown when off-nominal. */
 export interface Astro { holder: THREE.Group; mixer: THREE.AnimationMixer | null; base: THREE.Vector3; rot: THREE.Euler; ctx: CanvasRenderingContext2D | null; tagTex: THREE.CanvasTexture; tag: THREE.Sprite; ring: THREE.Mesh }
 
-/** Height of a suited astronaut in the scene, metres. */
-const HEIGHT = 1.85
+/** Height of a suited astronaut in the scene, metres: a touch over life size, so the crew hold their own beside 3 m screens in a 15 m hall. */
+export const HEIGHT = 2.1
 /** The sun visor: gold film over the helmet, a mirror for the cabin and the sun. */
 const VISOR = new THREE.MeshPhysicalMaterial({ color: '#ffcf6e', metalness: 1, roughness: 0.07, envMapIntensity: 4.5, clearcoat: 1, clearcoatRoughness: 0.03 })
 
@@ -45,7 +45,7 @@ export function createCrew(scene: THREE.Scene, loader: GLTFLoader, models: strin
     const tagTex = new THREE.CanvasTexture(c); tagTex.colorSpace = THREE.SRGBColorSpace
     const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: tagTex, depthTest: false, transparent: true, toneMapped: false }))
     tag.scale.set(1.25, 0.37, 1); tag.renderOrder = 10; scene.add(tag)
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.008, 8, 64), new THREE.MeshBasicMaterial({ color: C.watch, toneMapped: false, transparent: true }))
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.008, 8, 64), new THREE.MeshBasicMaterial({ color: C.watch, toneMapped: false, transparent: true }))
     ring.rotation.x = Math.PI / 2; scene.add(ring)
     const a: Astro = { holder, mixer, base: new THREE.Vector3(), rot: new THREE.Euler(), ctx: c.getContext('2d'), tagTex, tag, ring }
     astros.set(id, a)
@@ -72,7 +72,7 @@ export function createCrew(scene: THREE.Scene, loader: GLTFLoader, models: strin
       a.mixer?.update(dt * still * 0.8)
       a.holder.position.set(a.base.x + Math.sin(t * 0.37 + i) * 0.03 * still, a.base.y + Math.sin(t * 0.55 + i * 2) * 0.06 * still, a.base.z)
       a.holder.rotation.set(a.rot.x + Math.sin(t * 0.3 + i) * 0.05 * still, a.rot.y + Math.sin(t * 0.21 + i) * 0.08 * still, a.rot.z + Math.sin(t * 0.27 + i) * 0.05 * still)
-      a.tag.position.copy(a.holder.position).add(new THREE.Vector3(0, 1.25, 0))
+      a.tag.position.copy(a.holder.position).add(new THREE.Vector3(0, HEIGHT / 2 + 0.3, 0))
       ;(a.tag.material as THREE.SpriteMaterial).opacity = THREE.MathUtils.clamp((camera.position.distanceTo(a.tag.position) - 3.0) / 1.0, 0, 1)
       const off = m.status !== 'nominal'
       a.ring.visible = off

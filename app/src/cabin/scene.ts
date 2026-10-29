@@ -6,16 +6,17 @@ import { createConsoles } from './consoles'
 import { createCrew } from './crew'
 import { addDecor } from './decor'
 import { createSpace, SUN_AT } from './earth'
-import { createEva, EVA, EVA_VIEW, evaCrewId } from './eva'
-import { buildHall, HALF } from './hall'
+import { createEva, EVA, evaCrewId } from './eva'
+import { buildHall, FLOOR, HALF, LEN, SUN_LAYER, TOP } from './hall'
 import { addLights, createFlare, createPost, createSunBeam, pickQuality, windowEnvironment } from './lighting'
 import { C, SH, SW, drawAlerts, drawLiveVitals, drawStatusBoard, drawTrends } from './panels'
 import { createScreens, type ScreenSpec } from './screens'
-import { wallProbe } from './wall'
+import { fovFor, layout, type ScreenAt, type Stop, type Walls } from './shots'
+import { wallMap, wallProbe } from './wall'
 
 /*
  * The 3D cabin: the hall (hall.ts, lighting.ts) with its working consoles (consoles.ts), four wall screens running the real console (screens.ts), the crew
- * floating beside them (crew.ts), and a scroll-driven camera touring nine stops from a helmet view at the
+ * floating beside them (crew.ts, placed with the camera's stops in shots.ts), and a scroll-driven camera touring ten stops from a helmet view at the
  * door, past a look back from the window, out to a crew member on EVA beside the station (eva.ts).
  */
 
@@ -57,7 +58,6 @@ const FOV = 58, FLY_FOV = 74
 const ease = (x: number) => x * x * (3 - 2 * x)
 
 const MODELS = `${import.meta.env.BASE_URL}models/`, TEXTURES = `${import.meta.env.BASE_URL}textures/`
-type V3 = [number, number, number]
 
 /**
  * The wall screens, left (-1) and right (+1) of the hall, in tour order: Status Board, Live Vitals, Alerts, Trends.
@@ -164,24 +164,13 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
       p.g.updateMatrixWorld(); p.at()
     })
   }
-  /** Beside panel `i`: a metre in front of it and 2.4 m toward its outer edge. */
-  const beside = (i: number, dy: number): V3 => {
-    const p = panels[i], t = new THREE.Vector3(-p.normal.z, 0, p.normal.x).multiplyScalar(PANELS[i].side < 0 ? 1 : -1)
-    return p.pos.clone().addScaledVector(p.normal, 1.0).addScaledVector(t, 2.4).add(new THREE.Vector3(0, dy, 0)).toArray() as V3
-  }
-
-  /* ---------- crew: the focus member beside Live Vitals, the rest by roster order ---------- */
-  const slots = (): { pos: V3; rot: V3 }[] => [
-    { pos: beside(1, -0.9), rot: [0, -0.8, 0.08] },
-    { pos: [-2.2, -0.9, -11.5], rot: [0, 0.9, 0.05] },
-    { pos: [2.2, -0.4, -11.8], rot: [0.2, -0.9, -0.15] },
-    { pos: beside(0, -0.9), rot: [0, 0.8, -0.08] },
-    { pos: beside(2, -1.0), rot: [0.1, 0.8, 0.06] },
-    { pos: beside(3, 0.7), rot: [Math.PI - 0.25, -0.8, 0] },
-    { pos: [-1.6, 1.2, 4], rot: [0.4, 0.3, 0.6] },
-    { pos: [1.8, 1.4, -4], rot: [-0.3, -0.5, -0.5] },
-  ]
-  let SLOTS = slots()
+  /* ---------- crew and tour: placed and framed in shots.ts ---------- */
+  const screensAt = (): ScreenAt[] => panels.map((x) => ({ pos: x.pos.clone(), normal: x.normal.clone(), w: PW, h: PH }))
+  let walls: Walls | null = null // the walls' depth maps, once the hall has loaded
+  let inHall = 5
+  let plan = layout(screensAt(), inHall)
+  let SLOTS = plan.slots, STOPS: Stop[] = plan.stops
+  function relayout(count: number) { inHall = count; plan = layout(screensAt(), count, walls); SLOTS = plan.slots; STOPS = plan.stops; buildPath() }
   let decor: ReturnType<typeof addDecor> | null = null
   const crew = createCrew(scene, loader, MODELS)
   const eva = createEva(scene, loader, MODELS)
@@ -194,7 +183,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     const key = `${data.focusId}|${out}|${data.crew.map((c) => c.id).join(',')}`
     if (key === placedKey || !crew.get(order[0])) return // not loaded yet
     placedKey = key
-    SLOTS = slots()
+    if (order.length !== inHall) relayout(order.length)
     order.forEach((id, i) => {
       const a = crew.get(id), slot = SLOTS[i % SLOTS.length]
       if (!a) return
@@ -203,26 +192,18 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     const spacewalker = out ? crew.get(out) : null
     if (spacewalker) { spacewalker.base.set(...EVA.pos); spacewalker.rot.set(...EVA.rot) }
     crew.hideOthers(out ? [...order, out] : order)
-    buildPath()
   }
 
   /* ---------- the tour ---------- */
-  const facing = (i: number, d = 3.1) => ({ pos: panels[i].pos.clone().addScaledVector(panels[i].normal, d), look: panels[i].pos.clone() })
-  const v = (a: V3) => new THREE.Vector3(...a)
   let posCurve = new THREE.CatmullRomCurve3(), lookCurve = new THREE.CatmullRomCurve3()
   function buildPath() {
-    const f = SLOTS[0], front = new THREE.Vector3(Math.sin(f.rot[1]), 0, Math.cos(f.rot[1]))
-    const close = { pos: v(f.pos).addScaledVector(front, 2.8).add(new THREE.Vector3(0, 0.55, 0)), look: v(f.pos).add(new THREE.Vector3(0, 0.25, 0)) }
-    const stops = [
-      { pos: v([0, 0.4, 14]), look: v([0, -0.6, 0]) },
-      { pos: v([3.5, 2.4, 13]), look: v([-0.5, -1, -1]) },
-      facing(0), facing(1), close, facing(2), facing(3),
-      { pos: v([0, 0.4, -5.5]), look: v([0, 0.3, -16]) },
-      { pos: v([0, 2.0, -13.6]), look: v([0, -0.8, 10]) },
-      { pos: EVA_VIEW.pos.clone(), look: EVA_VIEW.look.clone() },
-    ]
-    posCurve = new THREE.CatmullRomCurve3(stops.map((s) => s.pos), false, 'centripetal')
-    lookCurve = new THREE.CatmullRomCurve3(stops.map((s) => s.look), false, 'centripetal')
+    posCurve = new THREE.CatmullRomCurve3(STOPS.map((x) => x.pos.clone()), false, 'centripetal')
+    lookCurve = new THREE.CatmullRomCurve3(STOPS.map((x) => x.look.clone()), false, 'centripetal')
+  }
+  /** The lens along the tour, eased between stops like the exposure; a stop's own lens depends on the window's shape. */
+  const fovAt = (q: number) => {
+    const i = Math.min(Math.floor(q), STOPS.length - 2), f = THREE.MathUtils.smoothstep(q - i, 0, 1)
+    return THREE.MathUtils.lerp(fovFor(STOPS[i], camera.aspect), fovFor(STOPS[i + 1], camera.aspect), f)
   }
   buildPath()
 
@@ -273,7 +254,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     const id = hit.object.userData.crew as string | undefined, a = id ? crew.find(id) : undefined
     if (!id || !a) return
     const toCam = camera.position.clone().sub(a.base).setY(0).normalize()
-    focus = { pos: a.base.clone().addScaledVector(toCam, 2.6).add(new THREE.Vector3(0, 0.35, 0)), look: a.base.clone(), id }
+    focus = { pos: a.base.clone().addScaledVector(toCam, 3.2).add(new THREE.Vector3(0, 0.3, 0)), look: a.base.clone().add(new THREE.Vector3(0, 0.25, 0)), id }
     opts.onPick(id)
   }
   const onDown = (e: PointerEvent) => { drag.on = true; drag.moved = 0; drag.x = e.clientX; drag.y = e.clientY; canvas.classList.add('dragging') }
@@ -304,6 +285,9 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   /* ---------- loop ---------- */
   const clock = new THREE.Clock()
   const up = new THREE.Vector3(0, 1, 0)
+  /** The float at a stop: a slow push in once the camera settles, a gentle sway, and a bank into each move between stops. */
+  const float = { push: 0, roll: 0, last: new THREE.Vector3(), fov: FOV }
+  const fwd = new THREE.Vector3(), side = new THREE.Vector3()
   let raf = 0, lastDraw = 0, disposed = false, ready = false, downgraded = false
   const slow = { n: 0, sum: 0 }
   let frameNo = 0
@@ -311,16 +295,32 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     raf = requestAnimationFrame(frame)
     const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime, still = reduced ? 0 : 1
     if (arriving()) { arrive(t, dt); finishFrame(t, dt, still); return }
-    p += (pTarget - p) * (reduced ? 1 : 0.07)
+    // eased by time, not by frame, so a slow machine tours at the same pace
+    p = reduced ? pTarget : THREE.MathUtils.damp(p, pTarget, 4.3, dt)
     const u = p / (N - 1)
-    const k = reduced ? 1 : focus ? 0.06 : 0.25
+    const k = reduced ? 1 : 1 - Math.exp(-(focus ? 3.7 : 17) * dt)
     camPos.lerp(focus ? focus.pos : posCurve.getPoint(u), k); camLook.lerp(focus ? focus.look : lookCurve.getPoint(u), k)
-    if (!drag.on) { drag.yaw *= 0.94; drag.pitch *= 0.94 }
+    if (!drag.on) { drag.yaw *= Math.exp(-3.7 * dt); drag.pitch *= Math.exp(-3.7 * dt) }
     const helmet = THREE.MathUtils.clamp(1 - p * 1.6, 0, 1)
-    camera.position.copy(camPos); camera.position.y += Math.sin(t * 1.3) * 0.012 * (0.4 + helmet) * still
+    fwd.copy(camLook).sub(camPos).normalize(); side.crossVectors(fwd, up).normalize()
+    // settled on a stop (out of the helmet): ease 0.18 m in over a few seconds, let go quickly on the next move
+    const settled = !focus && !drag.on && Math.abs(pTarget - p) < 0.03 && p > 0.5
+    float.push = THREE.MathUtils.damp(float.push, settled ? 0.18 : 0, settled ? 0.35 : 3, dt)
+    // bank into the move: roll against the camera's sideways speed, at most 3 degrees, level again on arrival
+    const lateral = dt > 0 ? camPos.clone().sub(float.last).dot(side) / dt : 0
+    float.last.copy(camPos)
+    float.roll = THREE.MathUtils.damp(float.roll, THREE.MathUtils.clamp(-lateral * 0.012, -0.05, 0.05), 3, dt)
+    camera.position.copy(camPos).addScaledVector(fwd, float.push * still)
+    // outside, a wider slow arc round the spacewalker, so the station drifts behind them
+    const outside = THREE.MathUtils.clamp(p - (N - 2), 0, 1)
+    camera.position.addScaledVector(side, Math.sin(t * 0.13) * (0.07 + 0.16 * outside) * (1 - helmet) * still)
+    camera.position.y += (Math.sin(t * 1.3) * 0.012 * helmet + Math.sin(t * 0.09) * 0.04 * (1 - helmet)) * still
     const dir = camLook.clone().sub(camPos).normalize().applyAxisAngle(up, drag.yaw)
     dir.applyAxisAngle(new THREE.Vector3().crossVectors(dir, up).normalize(), drag.pitch)
     camera.lookAt(camera.position.clone().add(dir))
+    camera.rotateZ(float.roll * still)
+    float.fov = reduced ? (focus ? 42 : fovAt(p)) : THREE.MathUtils.damp(float.fov, focus ? 42 : fovAt(p), 4, dt)
+    setFov(float.fov)
     if (opts.visor) { opts.visor.style.opacity = String(helmet); opts.visor.style.transform = `scale(${1 + (1 - helmet) * 0.25})` }
     renderer.toneMappingExposure = exposureAt(p)
     const stop = Math.round(p)
@@ -337,7 +337,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     const k = t - introT0
     if (intro === 'lock' && k >= (reduced ? 0.3 : LOCK_S)) {
       // the cut, hidden by the glare: into the helmet at the door
-      p = pTarget = 0; camPos.copy(posCurve.getPoint(0)); camLook.copy(lookCurve.getPoint(0)); shown = -1
+      p = pTarget = 0; camPos.copy(posCurve.getPoint(0)); camLook.copy(lookCurve.getPoint(0)); float.last.copy(camPos); shown = -1
       setIntro('clear', t)
       opts.visor?.classList.add('booting')
     }
@@ -354,7 +354,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
       if (flash) flash.opacity = String(1 - ease(Math.min(1, c * 2.4)))
       if (mist) { mist.opacity = String(reduced ? 0 : fog); mist.backdropFilter = reduced ? '' : `blur(${(fog * 12).toFixed(1)}px)` }
       if (opts.visor) { opts.visor.style.opacity = String(helmetIn); opts.visor.style.transform = `scale(${reduced ? 1 : 1 + (1 - helmetIn) * 0.45})` }
-      camera.position.copy(camPos); camera.lookAt(camLook); setFov(FOV)
+      camera.position.copy(camPos); camera.lookAt(camLook); setFov(float.fov = FOV)
       renderer.toneMappingExposure = exposureAt(0)
       return
     }
@@ -398,14 +398,16 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     if (disposed) return
     if (hall) {
       mount(hall)
-      SLOTS = slots(); buildPath()
+      const box = { y0: FLOOR + 0.12, y1: TOP - 0.15, z0: -LEN + 0.2, z1: LEN - 0.2 }
+      walls = { [-1]: wallMap(renderer, scene, -1, SUN_LAYER, box), [1]: wallMap(renderer, scene, 1, SUN_LAYER, box) }
+      relayout(inHall)
       const props = consoles.mount(hall)
       decor = addDecor(scene, renderer, maps, {
         quality, reduced, screenSize: [PW, PH],
         screens: panels.map((x, i) => ({ pos: x.pos.clone(), side: PANELS[i].side })),
-        crew: SLOTS.map((s) => v(s.pos)),
+        crew: SLOTS.map((s) => new THREE.Vector3(...s.pos)),
         path: Array.from({ length: 80 }, (_, i) => posCurve.getPoint(i / 79)),
-        props,
+        props, walls,
       })
       consoles.settle()
       sunPool?.bake(renderer)

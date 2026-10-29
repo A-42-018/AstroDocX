@@ -27,6 +27,8 @@ export interface DecorOptions {
   path: THREE.Vector3[]
   /** The room the consoles take (consoles.ts), kept clear. */
   props: THREE.Box3[]
+  /** The walls' depth maps when already made (the tour's framing reads them too); else mapped here. */
+  walls?: Record<-1 | 1, WallMap> | null
 }
 
 const MONO = "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace"
@@ -267,7 +269,7 @@ export function addDecor(scene: THREE.Scene, renderer: THREE.WebGLRenderer, maps
   const rand = mulberry(29), pick = <T,>(xs: readonly T[]) => xs[Math.floor(rand() * xs.length)]
   const low = o.quality === 'low', root = new THREE.Group(); root.name = 'decor'; scene.add(root)
   const box = { y0: FLOOR + 0.12, y1: TOP - 0.15, z0: -LEN + 0.2, z1: LEN - 0.2 }
-  const walls: Record<-1 | 1, WallMap> = { [-1]: wallMap(renderer, scene, -1, SUN_LAYER, box), [1]: wallMap(renderer, scene, 1, SUN_LAYER, box) }
+  const walls: Record<-1 | 1, WallMap> = o.walls ?? { [-1]: wallMap(renderer, scene, -1, SUN_LAYER, box), [1]: wallMap(renderer, scene, 1, SUN_LAYER, box) }
   const [SW, SH] = o.screenSize
 
   /** True where a thing of radius `r` at `p` would not crowd a screen, a crew member or the camera. */
