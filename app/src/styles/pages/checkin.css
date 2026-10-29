@@ -38,7 +38,7 @@
 
   .ci-tiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
   .ci-tile {
-    --c: 12px; position: relative; isolation: isolate; height: 150px; display: grid; justify-items: center; align-content: center; gap: 8px; cursor: pointer; color: var(--t2);
+    --c: 12px; position: relative; isolation: isolate; height: 150px; display: grid; justify-items: center; align-content: center; gap: 8px; cursor: var(--cur-pointer); color: var(--t2);
     clip-path: polygon(0 var(--c), var(--c) 0, 100% 0, 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, 0 100%);
     background: linear-gradient(160deg, rgba(70, 225, 245, 0.32), rgba(70, 225, 245, 0.12) 40%, rgba(70, 225, 245, 0.12) 70%, rgba(70, 225, 245, 0.3));
     transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
@@ -70,7 +70,7 @@
 
   .ci-chips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
   .ci-chip {
-    position: relative; display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 16px; cursor: pointer; font-size: 15px; font-weight: 500; color: var(--t2);
+    position: relative; display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 16px; cursor: var(--cur-pointer); font-size: 15px; font-weight: 500; color: var(--t2);
     border: 1px solid rgba(70, 225, 245, 0.2); background: rgba(4, 13, 20, 0.85); transition: border-color var(--dur-1) var(--ease), background var(--dur-1) var(--ease);
   }
   .ci-chip:hover { border-color: var(--edge-hi); }
@@ -90,7 +90,7 @@
   .ci-lamp-ring { fill: none; stroke: rgba(70, 225, 245, 0.22); }
   .ci-lamp.wait { --lamp: var(--act); } .ci-lamp.go { --lamp: var(--ok); }
   .ci-pad {
-    position: absolute; inset: 17.3%; border-radius: 50%; border: 0; padding: 12px; cursor: pointer;
+    position: absolute; inset: 17.3%; border-radius: 50%; border: 0; padding: 12px; cursor: var(--cur-pointer);
     font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cy-hi);
     background: radial-gradient(circle, rgba(54, 226, 245, 0.16), rgba(54, 226, 245, 0.03) 70%);
     box-shadow: inset 0 0 0 2px var(--cy), 0 0 30px -6px var(--cy), inset 0 0 30px -10px var(--cy);

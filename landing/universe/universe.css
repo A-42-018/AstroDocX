@@ -26,7 +26,7 @@
   filter:drop-shadow(0 0 18px rgba(34,211,238,.35)); }   /* highlighted words, same gradient as the X */
 .ch-sub { margin:18px 0 0;max-width:34ch;font-family:var(--font-body);font-size:clamp(.95rem,1.4vw,1.2rem);line-height:1.55;color:rgba(234,242,255,.78);text-shadow:0 2px 24px rgba(2,3,10,.9); }
 .ch-sub strong { color:#fff;font-weight:600; }
-.ch-pill { display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:99px;cursor:pointer;
+.ch-pill { display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:99px;cursor:var(--cur-pointer);
   font-family:var(--font-mono);font-size:.72rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;line-height:1.2;color:#E0FBFF;
   background:rgba(6,16,30,.6);border:1px solid rgba(34,211,238,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   transition:opacity .3s,border-color .2s,background .2s,box-shadow .2s,transform .2s; }
@@ -57,7 +57,7 @@
 .uni-skip.is-hidden { opacity:0;pointer-events:none; }
 
 .uni-rail { position:absolute;z-index:4;left:var(--pad-x,24px);top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;list-style:none;margin:0;padding:0; }
-.uni-tick { display:flex;align-items:center;gap:10px;height:22px;padding:0;background:none;border:0;cursor:pointer;color:rgba(234,242,255,.55); }
+.uni-tick { display:flex;align-items:center;gap:10px;height:22px;padding:0;background:none;border:0;cursor:var(--cur-pointer);color:rgba(234,242,255,.55); }
 .uni-tick:focus-visible { outline:2px solid #fff;outline-offset:3px; }
 .uni-tick i { display:block;width:14px;height:2px;border-radius:2px;background:rgba(234,242,255,.3);transition:width .25s,background .25s; }
 .uni-tick b { font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;opacity:0;transform:translateX(-6px);transition:opacity .2s,transform .2s;white-space:nowrap; }
@@ -233,11 +233,6 @@
 
 /* ── nav appears with the last intro scene ───────────────── */
 
-/* ── cursor label over [data-cursor] ─────────────────────── */
-#cursor-ring.has-label { width:84px;height:84px;margin-left:-42px;margin-top:-42px;border-color:var(--holo,#22D3EE);background:rgba(34,211,238,.1); }
-#cursor-ring.has-label::after { content:attr(data-label);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  font-family:var(--font-mono);font-size:.58rem;font-weight:700;letter-spacing:.16em;color:#E0FBFF; }
-
 /* the footer sits on the same near-black as the journey */
 #footer { background:#02030a;border-top:1px solid rgba(127,168,255,.12); }
 .footer-logo, .footer-copy, .footer-links a { font-family:var(--font-mono); }
@@ -245,7 +240,7 @@
 .footer-links a { font-size:.7rem;letter-spacing:.16em;text-transform:uppercase; }
 
 /* ── soundtrack toggle (sound.js): a round speaker emoji top right; while it plays the emoji becomes a moving wave ── */
-.sound-toggle { position:fixed;z-index:90;top:calc(var(--nav-h,64px) + 10px);right:var(--pad-x,24px);width:42px;height:42px;padding:0;border-radius:50%;cursor:pointer;
+.sound-toggle { position:fixed;z-index:90;top:calc(var(--nav-h,64px) + 10px);right:var(--pad-x,24px);width:42px;height:42px;padding:0;border-radius:50%;cursor:var(--cur-pointer);
   display:flex;align-items:center;justify-content:center;color:var(--holo,#22D3EE);
   background:rgba(6,16,30,.6);border:1px solid rgba(34,211,238,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   transition:border-color .2s,background .2s,box-shadow .2s,transform .2s; }

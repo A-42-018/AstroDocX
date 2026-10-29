@@ -285,14 +285,6 @@ document.addEventListener('DOMContentLoaded', function () {
     resize(); if (!running) renderOnce();
   }, 120); }, { passive: true });
 
-  /* ── cursor: reuse the site cursor, add a label over [data-cursor] elements ── */
-  const ring = document.getElementById('cursor-ring');
-  skip.dataset.cursor = 'SKIP';
-  if (ring) journey.querySelectorAll('[data-cursor]').forEach(el => {
-    el.addEventListener('mouseenter', () => { ring.dataset.label = el.dataset.cursor; ring.classList.add('has-label'); });
-    el.addEventListener('mouseleave', () => ring.classList.remove('has-label'));
-  });
-
   /* ── 8. scroll: one pin for the whole journey ── */
   let st = null;
   const yAtG = g => st ? st.start + (st.end - st.start) * clamp(g, 0, 1) : 0;

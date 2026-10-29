@@ -69,11 +69,11 @@
   .next-steps li { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; font-size: 13px; line-height: 1.35; color: var(--t2); border-top: 1px dashed rgba(70, 225, 245, 0.14); }
   .next-steps li.cur { color: var(--t1); }
   .next-steps li.done > span:last-child { color: var(--t3); text-decoration: line-through; }
-  .next-steps label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+  .next-steps label { display: flex; gap: 10px; align-items: flex-start; cursor: var(--cur-pointer); }
   .next-box, .next-steps input {
     flex: none; width: 16px; height: 16px; margin: 1px 0 0; border: 1.5px solid var(--edge-hi); background: transparent; border-radius: 0;
   }
-  .next-steps input { appearance: none; cursor: pointer; border-color: var(--acc); box-shadow: 0 0 8px color-mix(in srgb, var(--acc) 50%, transparent); }
+  .next-steps input { appearance: none; cursor: var(--cur-pointer); border-color: var(--acc); box-shadow: 0 0 8px color-mix(in srgb, var(--acc) 50%, transparent); }
   .next-steps input:focus-visible { outline: 2px solid var(--cy-hi); outline-offset: 2px; }
   .next-steps li.done .next-box { background: color-mix(in srgb, var(--cy) 40%, transparent); border-color: var(--cy); }
   .next-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 10px; }
