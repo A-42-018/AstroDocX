@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import type { CabinCrew, CabinData } from './data'
+import { createConsoles } from './consoles'
 import { createCrew } from './crew'
 import { addDecor } from './decor'
 import { createSpace, SUN_AT } from './earth'
@@ -13,7 +14,7 @@ import { createScreens, type ScreenSpec } from './screens'
 import { wallProbe } from './wall'
 
 /*
- * The 3D cabin: the hall (hall.ts, lighting.ts), four wall screens running the real console (screens.ts), the crew
+ * The 3D cabin: the hall (hall.ts, lighting.ts) with its working consoles (consoles.ts), four wall screens running the real console (screens.ts), the crew
  * floating beside them (crew.ts), and a scroll-driven camera touring nine stops from a helmet view at the
  * door, past a look back from the window, out to a crew member on EVA beside the station (eva.ts).
  */
@@ -184,6 +185,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   let decor: ReturnType<typeof addDecor> | null = null
   const crew = createCrew(scene, loader, MODELS)
   const eva = createEva(scene, loader, MODELS)
+  const consoles = createConsoles(scene, loader, MODELS)
   let placedKey = ''
   function place() {
     if (!data) return
@@ -380,7 +382,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     }
     if (p > 5 || arriving()) eva.load()
     // the station shows from the forward window on, and all through the arrival
-    decor?.update(t, still); space.update(t, still); beam.show(!arriving() || intro === 'clear'); beam.update(t, still); post.update(t, still); eva.update(still, arriving() && intro !== 'clear' ? N - 1 : p); flare.update(reduced)
+    decor?.update(t, still); consoles.update(t, still); space.update(t, still); beam.show(!arriving() || intro === 'clear'); beam.update(t, still); post.update(t, still); eva.update(still, arriving() && intro !== 'clear' ? N - 1 : p); flare.update(reduced)
     if (frameNo++ % 6 === 0) renderer.shadowMap.needsUpdate = true
     composer.render(dt)
     screens.render(camera, crew.holders().filter((h) => h.visible).map((h) => h.getWorldPosition(new THREE.Vector3())), dt)
@@ -392,17 +394,20 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   }
   if (opts.intro) setIntro('fly', 0)
   frame()
-  void Promise.all([hallLoaded, crew.loaded]).then(([hall]) => {
+  void Promise.all([hallLoaded, crew.loaded, consoles.loaded]).then(([hall]) => {
     if (disposed) return
     if (hall) {
       mount(hall)
       SLOTS = slots(); buildPath()
+      const props = consoles.mount(hall)
       decor = addDecor(scene, renderer, maps, {
         quality, reduced, screenSize: [PW, PH],
         screens: panels.map((x, i) => ({ pos: x.pos.clone(), side: PANELS[i].side })),
         crew: SLOTS.map((s) => v(s.pos)),
         path: Array.from({ length: 80 }, (_, i) => posCurve.getPoint(i / 79)),
+        props,
       })
+      consoles.settle()
       sunPool?.bake(renderer)
     }
     placedKey = ''; place(); renderer.shadowMap.needsUpdate = true; ready = true; opts.onReady()

@@ -25,6 +25,8 @@ export interface DecorOptions {
   crew: THREE.Vector3[]
   /** Points along the camera's tour, kept clear. */
   path: THREE.Vector3[]
+  /** The room the consoles take (consoles.ts), kept clear. */
+  props: THREE.Box3[]
 }
 
 const MONO = "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace"
@@ -273,6 +275,7 @@ export function addDecor(scene: THREE.Scene, renderer: THREE.WebGLRenderer, maps
     for (const s of o.screens) if (Math.sign(p.x) === s.side && Math.abs(p.x) > Math.abs(s.pos.x) - 1.4 - r && Math.abs(p.z - s.pos.z) < SW / 2 + 0.3 + r && Math.abs(p.y - s.pos.y) < SH / 2 + 0.3 + r) return false
     for (const c of o.crew) if (c.distanceTo(p) < 1.1 + r) return false
     for (const q of o.path) if (q.distanceTo(p) < path + r) return false
+    for (const b of o.props) if (b.distanceToPoint(p) < r + 0.15) return false
     return true
   }
   /** The wall's surface on `side` at (y, z): the point and its normal into the hall; null over a port. */

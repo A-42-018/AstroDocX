@@ -12,7 +12,7 @@ export const WIN = { x: HALF - 1.8, y0: FLOOR + 0.9, y1: TOP - 1.4, z: -LEN + 0.
 /** The layer of everything in the hall that shades the sun (the shadow casters), for the low tier's sun pool (lighting.ts). */
 export const SUN_LAYER = 1
 /** Casts and takes shadows, and is on the sun layer. */
-const shades = (o: THREE.Object3D) => { o.castShadow = o.receiveShadow = true; o.layers.enable(SUN_LAYER) }
+export const shades = (o: THREE.Object3D) => { o.castShadow = o.receiveShadow = true; o.layers.enable(SUN_LAYER) }
 
 /*
  * Surfaces: the model has no textures, so ambientCG maps (CC0) are projected in world space (triplanar).
