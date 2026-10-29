@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { alertTitle, met } from '../engine/actions'
 import { evidenceFor } from '../engine/evidence'
+import { standardFor } from '../engine/nasa'
 import { METRICS, type Alert } from '../data/types'
 import { HAZARDS } from '../board/snapshot'
 import { HazardIcon } from '../shell/icons'
@@ -60,6 +61,7 @@ export function AlertDetail({ alert: a, detail, onStep, onDone, onBack }: Props)
   const sigma = a.z
   const timeline = buildTimeline(a, detail?.alertId === id ? detail.log : [])
   const evidence = evidenceFor(a.metric)
+  const standard = standardFor(a.metric)
   const hz = HAZARDS.find((h) => h.id === a.hazard)
   const series = detail && detail.alertId === id && detail.series.points.length > 1 ? detail.series : null
   const current = steps.findIndex((s) => !s.done)
@@ -97,10 +99,17 @@ export function AlertDetail({ alert: a, detail, onStep, onDone, onBack }: Props)
           {series ? <AlertChart series={series} status={a.status} highlightTs={series.markers[0]?.ts} /> : <div className="ac ac-wait" aria-hidden="true" />}
         </div>
 
-        {evidence.length > 0 && (
-          <section className="al-ev" aria-label="Evidence">
-            <PanelHeader level={3} title="Evidence" meta="Context, not a diagnosis" />
+        {(evidence.length > 0 || standard) && (
+          <section className="al-ev" aria-label="NASA evidence">
+            <PanelHeader level={3} title="NASA evidence" meta="Context, not a diagnosis" />
             <ul>
+              {standard && (
+                <li className="ev ev-std">
+                  <span className="ev-src">NASA limit</span>
+                  <a href={standard.url} target="_blank" rel="noopener noreferrer">{standard.title}<span className="sr-only"> (opens in a new tab)</span></a>
+                  <span className="ev-why">{standard.value} · {standard.use}</span>
+                </li>
+              )}
               {evidence.map((e) => (
                 <li key={e.url} className="ev">
                   <span className="ev-src">{e.source}</span>

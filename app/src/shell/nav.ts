@@ -1,4 +1,4 @@
-import { ChartLine, ClipboardCheck, Ellipsis, EllipsisVertical, Globe, LayoutDashboard, Radio, Rocket, Siren, type LucideIcon } from 'lucide-react'
+import { ChartLine, ClipboardCheck, Ellipsis, EllipsisVertical, Globe, LayoutDashboard, Library, Radio, Rocket, Siren, type LucideIcon } from 'lucide-react'
 
 export interface NavRoute {
   path: string
@@ -23,6 +23,7 @@ export const ROUTES: readonly NavRoute[] = [
   { path: '/simulator', label: 'Simulator', tab: 'Simulator', icon: Rocket, primary: false, group: 'mission' },
   { path: '/sync', label: 'Ground Sync', tab: 'Sync', icon: Radio, primary: false, group: 'mission' },
   { path: '/ground', label: 'Ground View', tab: 'Ground', icon: Globe, primary: false, group: 'mission' },
+  { path: '/nasa', label: 'NASA Data', tab: 'NASA Data', mini: 'NASA', icon: Library, primary: false, group: 'mission' },
 ]
 
 export const MORE_ICON = Ellipsis

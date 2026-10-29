@@ -23,6 +23,7 @@ const CheckInPage = lazyPage(() => import('./checkin/CheckInPage'))
 const SimulatorPage = lazyPage(() => import('./sim/SimulatorPage'))
 const SyncPage = lazyPage(() => import('./sync/SyncPage'))
 const GroundPage = lazyPage(() => import('./ground/GroundPage'))
+const NasaPage = lazyPage(() => import('./nasa/NasaPage'))
 import { useBootDemo } from './board/hooks'
 import { useBoard } from './board/store'
 
@@ -31,7 +32,7 @@ function usePreloadPages() {
   const ready = useBoard((s) => s.boot.state === 'ready')
   useEffect(() => {
     if (!ready) return
-    const pages = [AlertsPage, TrendsPage, CheckInPage, SimulatorPage, SyncPage, GroundPage]
+    const pages = [AlertsPage, TrendsPage, CheckInPage, SimulatorPage, SyncPage, GroundPage, NasaPage]
     const warm = () => pages.forEach((p) => p.preload())
     if ('requestIdleCallback' in window) {
       const id = requestIdleCallback(warm, { timeout: 3000 })
@@ -98,6 +99,7 @@ export default function App() {
           <Route path="/simulator" element={<SimulatorPage />} />
           <Route path="/sync" element={<SyncPage />} />
           <Route path="/ground" element={<GroundPage />} />
+          <Route path="/nasa" element={<NasaPage />} />
           <Route path="*" element={<Navigate to="/board" replace />} />
         </Routes>
         </Suspense>

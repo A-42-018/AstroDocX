@@ -85,3 +85,14 @@ it('says so when there are no active alerts', () => {
   expect(screen.getByText(/No active alerts\./)).toBeTruthy()
   expect(screen.queryByRole('list', { name: 'Active alerts' })).toBeNull()
 })
+
+it('names the NASA limit a CO₂ alert is checked against, above the NASA evidence', () => {
+  const co2: Alert = { ...base, id: 4, ruleId: 'co2', kind: 'limit', metric: 'co2', hazard: 'E', explanation: 'CO₂ has exceeded the 3 mmHg habitat limit for 6 consecutive hours.' }
+  render(<AlertsView {...props} active={[co2]} />)
+  const ev = screen.getByRole('region', { name: 'NASA evidence' })
+  const items = within(ev).getAllByRole('listitem')
+  expect(items[0].textContent).toContain('NASA limit')
+  expect(within(items[0]).getByRole('link').getAttribute('href')).toMatch(/^https:\/\/www\.nasa\.gov\/.*carbon-dioxide\.pdf$/)
+  expect(items[0].textContent).toContain('3 mmHg ppCO₂, 1-hour average')
+  expect(items[1].textContent).toContain('NASA NTRS')
+})

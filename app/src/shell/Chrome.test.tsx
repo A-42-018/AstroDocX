@@ -18,10 +18,10 @@ const data: ShellData = {
 }
 
 describe('navigation', () => {
-  it('top tabs link to all seven screens in two groups and mark the current one', () => {
+  it('top tabs link to all eight screens in two groups and mark the current one', () => {
     render(<MemoryRouter initialEntries={['/trends']}><TopTabs alerts={3} /></MemoryRouter>)
     const nav = screen.getByRole('navigation', { name: 'Crew Console' })
-    expect(within(nav).getAllByRole('link').map((l) => l.getAttribute('href'))).toEqual(['/board', '/alerts', '/trends', '/checkin', '/simulator', '/sync', '/ground'])
+    expect(within(nav).getAllByRole('link').map((l) => l.getAttribute('href'))).toEqual(['/board', '/alerts', '/trends', '/checkin', '/simulator', '/sync', '/ground', '/nasa'])
     expect(within(nav).getByRole('link', { name: 'Trends' }).getAttribute('aria-current')).toBe('page')
     expect(within(nav).getByRole('link', { name: 'Ground Sync' }).textContent).toBe('Sync')
     expect(within(nav).getByRole('link', { name: 'Alerts' }).textContent).toBe('Alerts3')
@@ -37,7 +37,7 @@ describe('navigation', () => {
     fireEvent.click(more)
     expect(more.getAttribute('aria-expanded')).toBe('true')
     const sheet = screen.getByRole('dialog', { name: 'More screens' })
-    expect(within(sheet).getAllByRole('link').map((l) => l.textContent)).toEqual(['Simulator', 'Ground Sync', 'Ground View'])
+    expect(within(sheet).getAllByRole('link').map((l) => l.textContent)).toEqual(['Simulator', 'Ground Sync', 'Ground View', 'NASA Data'])
     expect(document.activeElement).toBe(within(sheet).getAllByRole('link')[0])
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' })
     expect(document.activeElement?.textContent).toBe('Ground Sync')
