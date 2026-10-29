@@ -2,6 +2,7 @@ import { Suspense, useEffect, useRef } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import BoardPage from './board/BoardPage'
 import { CabinPage } from './cabin/lazy'
+import { CabinLoader } from './cabin/CabinLoader'
 import { seedDemo } from './data/demo'
 import { Backdrop } from './shell/Backdrop'
 import { Embed, embedFromUrl } from './shell/Embed'
@@ -75,7 +76,7 @@ export default function App() {
   if (pathname.startsWith('/cabin')) return (
     <ShellDataContext.Provider value={shell}>
       <ErrorBoundary key={pathname} onReset={() => seedDemo().then(() => undefined)}>
-        <Suspense fallback={<StateView kind="loading" label="Loading 3D cabin" />}><CabinPage /></Suspense>
+        <Suspense fallback={<CabinLoader />}><CabinPage /></Suspense>
       </ErrorBoundary>
     </ShellDataContext.Provider>
   )

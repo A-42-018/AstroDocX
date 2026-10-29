@@ -36,6 +36,8 @@ export interface CabinOptions {
   onStop: (i: number) => void
   onPick: (crewId: string | null) => void
   onReady: () => void
+  /** 0–1 as the models and textures arrive, for the loading screen. */
+  onProgress?: (fraction: number) => void
 }
 export interface CabinScene {
   update: (d: CabinData) => void
@@ -107,6 +109,9 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const { alarm, crewKey, sunPool } = addLights(scene, quality)
   const space = createSpace(scene, TEXTURES, quality !== 'low' && renderer.capabilities.maxTextureSize >= 4096, quality !== 'low')
   const beam = createSunBeam(scene, quality)
+  // the loaders all report to three's default manager; files keep joining the queue, so the loader never lets the bar go back
+  const manager = THREE.DefaultLoadingManager, prevProgress = manager.onProgress
+  manager.onProgress = (_url, loaded, total) => { if (!ready) opts.onProgress?.(total ? loaded / total : 0) }
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder)
   const { maps, loaded: hallLoaded } = buildHall(scene, loader, MODELS, TEXTURES)
 
@@ -427,7 +432,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
       consoles.settle()
       sunPool?.bake(renderer)
     }
-    placedKey = ''; place(); renderer.shadowMap.needsUpdate = true; ready = true; readyAt = clock.elapsedTime; opts.onReady()
+    placedKey = ''; place(); renderer.shadowMap.needsUpdate = true; ready = true; readyAt = clock.elapsedTime; opts.onProgress?.(1); opts.onReady()
     loadScreens()
   })
   /** The console views follow the cabin: your own board, and vitals, alerts and trends for the focus crew member. */
@@ -444,6 +449,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     replayIntro() { unfocus(); skipAsked = false; setIntro('fly', clock.elapsedTime) },
     dispose() {
       disposed = true
+      manager.onProgress = prevProgress
       cancelAnimationFrame(raf); clearTimeout(snapTimer)
       canvas.removeEventListener('wheel', onWheel)
       canvas.removeEventListener('pointerdown', onDown)
