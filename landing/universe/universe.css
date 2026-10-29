@@ -139,6 +139,12 @@
 .adx-steps b { font-family:var(--font-mono);font-size:.68rem;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:rgba(234,242,255,.7); }
 .adx-steps li:nth-child(3) b { color:#fff; }
 #astrodocx .hero-actions { display:flex;justify-content:center; }
+/* the NASA basis under the call to action: a quiet line of sources and a link to the console's NASA Data screen */
+.adx-nasa { display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px 18px;max-width:760px;margin:34px auto 0;padding:14px 0 0;border-top:1px solid rgba(34,211,238,.18);
+  font-family:var(--font-mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(234,242,255,.6); }
+.adx-nasa-k { flex-basis:100%;text-align:center;font-weight:700;letter-spacing:.28em;color:var(--holo,#22D3EE); }
+.adx-nasa a { color:#E0FBFF;text-decoration:underline;text-decoration-color:rgba(34,211,238,.5);text-underline-offset:4px; }
+.adx-nasa a:hover, .adx-nasa a:focus-visible { color:var(--holo,#22D3EE); }
 /* the one call to action: big, glowing, a light sweep and a sliding arrow */
 .adx-cta { position:relative;display:inline-flex;align-items:center;gap:14px;padding:19px 38px;border-radius:99px;overflow:hidden;isolation:isolate;
   font-family:var(--font-mono);font-size:.9rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:#02131a;text-decoration:none;

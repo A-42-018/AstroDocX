@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import type { Hazard, Status } from '../data/types'
 import { CO2_LIMIT_MMHG } from '../engine/limits'
+import { HAZARD_BASIS, hazardTag } from '../engine/nasa'
+import { NasaRef } from '../ui/NasaRef'
 import { useHidden, useReducedMotion } from '../live/usePaused'
 import { LiveVitals } from '../live/LiveVitals'
 import { useLiveTelemetry } from '../live/useLiveTelemetry'
@@ -137,7 +139,7 @@ export function StatusBoard({ snap, mini }: Props) {
             <StatusTag status={snap.overall} label={`${STATUS_WORD[snap.overall]} · ${n ? `${n} alert${n > 1 ? 's' : ''}` : 'no alerts'}`} />
           </div>
         </section>
-        <HudPanel className="bd-ready" title="Readiness" meta="RIDGE · 5 hazards" aria-label={`Readiness for ${name}`}>
+        <HudPanel className="bd-ready" title="Readiness" meta={<Link to="/nasa" className="bd-ridge" title="NASA’s five hazards of human spaceflight: the NASA basis">RIDGE · 5 hazards</Link>} aria-label={`Readiness for ${name}`}>
           <ReadinessRing value={snap.readiness} status={snap.overall} />
           <p className="bd-held">
             {held ? <>Held back by <b className={`st-${held.status}`}>{held.name}</b></> : 'All five hazards nominal'}
@@ -189,7 +191,10 @@ export function StatusBoard({ snap, mini }: Props) {
                 ? <span className="hz-sig">{snap.pendingSync} pending</span>
                 : t.sigma !== undefined && <span className="hz-sig" title="Against this person’s own baseline">{sigmaText(t.sigma)}</span>}
             </p>
-            <p className="hz-lbl">{caption(t)}</p>
+            <p className="hz-lbl">
+              <span>{caption(t)}</span>
+              <NasaRef to={`/nasa#nasa-${t.hazard}`} label={hazardTag(t.hazard)} title={`${HAZARD_BASIS.find((h) => h.id === t.hazard)?.nasaName}: the NASA basis`} />
+            </p>
             {mini && <div className="hz-chart"><Mini hazard={t.hazard} mini={mini} oldestPendingH={snap.oldestPendingH} /></div>}
             <p className="hz-ph" aria-hidden="true">{STATUS_SHORT[t.status]}</p>
             <p className="sr-only">{t.alerts.length > 0 ? t.alerts[0].explanation : t.tracks}</p>

@@ -96,6 +96,12 @@
   .hz-unit { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); }
   .hz-sig { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--t2); }
   .hz-mod.st-act .hz-val b, .hz-mod.st-watch .hz-val b, .hz-mod.st-act .hz-sig, .hz-mod.st-watch .hz-sig { color: var(--st); }
+  /* the caption gives way to the NASA source tag */
+  .hz-lbl { display: flex; align-items: center; gap: 8px; }
+  .hz-lbl > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .hz-lbl .nref { margin-left: auto; }
+  .bd-ridge { color: inherit; text-decoration: underline; text-decoration-color: rgba(54, 226, 245, 0.35); text-underline-offset: 3px; }
+  .bd-ridge:hover { color: var(--cy-hi); }
   .hz-lbl { margin: 0; font-size: 12px; color: var(--t3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .hz-chart { margin-top: auto; padding-top: 6px; }
   .hz-ph { display: none; }

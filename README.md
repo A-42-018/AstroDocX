@@ -36,6 +36,7 @@ AstroDocX learns each astronaut's **personal baseline**, spots drift early, and 
 | Mission Simulator | Mission clock, fast-forward, 4 injectable scenarios (solar event, CO₂ fault, insomnia, deconditioning); watch the engine react |
 | Ground Sync | Delay-tolerant outbox: link windows, 12-minute delay, blackout, auto-sync, CSV log export |
 | Ground View | Flight-surgeon view rebuilt only from synced entries (shows what Earth knows, and when); each crew card shows the 3D body in its status colour |
+| NASA Data | The NASA basis of the console in one screen: for each of NASA's five hazards, what AstroDocX monitors, the NASA-STD-3001 limit it checks and the NASA studies cited; every alert and Status Board tile carries a NASA source tag |
 | Platform | Offline-first installable PWA, IndexedDB on the device, 4-crew 30-day demo mission preloaded |
 
 **Not built yet (Roadmap):** wearable sensor integration, a real Supabase ground backend with proper policies, vision/SANS self-tests, blood pressure, bone density, a multi-device ground station.
@@ -142,14 +143,27 @@ AstroDocX/
 ## Use of AI
 No AI runs inside the product: every number, alert and explanation comes from tested, deterministic code. Claude Code helped write the code, and Tripo Studio generated the anatomy render behind the Health Twin body. Tools, prompts and the team's own work: [`docs/AI_USE.md`](docs/AI_USE.md).
 
-## Data & references
-- [NASA Human Research Program](https://www.nasa.gov/hrp/): the five hazards of human spaceflight (RIDGE)
-- [NASA Open Science Data Repository (OSDR)](https://osdr.nasa.gov/): studies cited in the alerts: [OSD-484](https://osdr.nasa.gov/bio/repo/data/studies/OSD-484) (heart), [OSD-942](https://osdr.nasa.gov/bio/repo/data/studies/OSD-942) (exercise and bed rest), [OSD-993](https://osdr.nasa.gov/bio/repo/data/studies/OSD-993) (space radiation)
-- [NASA Technical Reports Server (NTRS)](https://ntrs.nasa.gov/): Human Research Program reports cited in the alerts: cardiac rhythm ([20170005625](https://ntrs.nasa.gov/citations/20170005625)), sleep loss and performance ([20160003864](https://ntrs.nasa.gov/citations/20160003864)), behavioural health ([20160004365](https://ntrs.nasa.gov/citations/20160004365)), CO₂ and headaches on the ISS ([20160012725](https://ntrs.nasa.gov/citations/20160012725))
-- [NASA Twins Study](https://www.nasa.gov/twins-study/)
-- [PhysioNet](https://physionet.org/): public physiological signals (ECG / HRV)
+## NASA data used
+AstroDocX is built on NASA science. The console's **NASA Data** screen (`/app/nasa`) lists all of it, hazard by hazard, and every alert names its NASA basis. All of it comes from [`app/src/engine/nasa.ts`](app/src/engine/nasa.ts) and [`app/src/engine/evidence.ts`](app/src/engine/evidence.ts).
 
-Landing-page numbers (the Health Twin panels and Crew Readiness) come from the console's seeded demo mission (synthetic data). Only the CO₂ and dose limits are cited (NASA-STD-3001).
+| NASA hazard (RIDGE) | AstroDocX monitors | NASA limit checked | NASA evidence cited |
+|---|---|---|---|
+| **R** · Space Radiation | Dose rate, cumulative dose | NASA-STD-3001 Vol. 1: 250 mSv per solar particle event, 600 mSv career ([technical brief](https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf)) | OSDR [OSD-993](https://osdr.nasa.gov/bio/repo/data/studies/OSD-993) (space radiation and cell senescence) |
+| **I** · Isolation & Confinement | Sleep, mood, reaction time (PVT) | Personal baseline | NTRS [20160003864](https://ntrs.nasa.gov/citations/20160003864) (sleep loss and performance), [20160004365](https://ntrs.nasa.gov/citations/20160004365) (behavioural health) |
+| **D** · Distance from Earth | Ground link, unsent data | Watch at 24 h, Act at 72 h without sync (AstroDocX design) | NASA's [five hazards](https://www.nasa.gov/hrp/hazards/) |
+| **G** · Gravity Fields | Exercise load, heart rate, HRV | Personal baseline | NTRS [20170005625](https://ntrs.nasa.gov/citations/20170005625) (cardiac rhythm); OSDR [OSD-484](https://osdr.nasa.gov/bio/repo/data/studies/OSD-484) (heart), [OSD-942](https://osdr.nasa.gov/bio/repo/data/studies/OSD-942) (exercise and bed rest) |
+| **E** · Hostile/Closed Environments | Cabin CO₂, SpO₂, temperature, noise | NASA-STD-3001 Vol. 2 [V2 6004]: CO₂ 3 mmHg, 1-hour average ([technical brief](https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-004-carbon-dioxide.pdf)) | NTRS [20160012725](https://ntrs.nasa.gov/citations/20160012725) (CO₂ and headaches on the ISS) |
+
+NASA services and programmes used:
+- [NASA Human Research Program: the five hazards](https://www.nasa.gov/hrp/hazards/): the RIDGE framework the Status Board and readiness score are organised by
+- [NASA Open Science Data Repository (OSDR)](https://osdr.nasa.gov/) and [NASA Technical Reports Server (NTRS)](https://ntrs.nasa.gov/): the studies and reports cited under each alert
+- [NASA Office of the Chief Health & Medical Officer](https://www.nasa.gov/ochmo/): NASA-STD-3001 and its technical briefs
+- [NASA Human Research Roadmap](https://humanresearchroadmap.nasa.gov/) and the [NASA Twins Study](https://www.nasa.gov/twins-study/)
+- [NASA Visible Earth](https://visibleearth.nasa.gov/) (Earth in the 3D cabin) and [NASA 3D Resources](https://science.nasa.gov/3d-resources/) (the landing page's models)
+
+Other data: [PhysioNet](https://physionet.org/) public physiological signals (ECG / HRV).
+
+Landing-page numbers (the Health Twin panels and Crew Readiness) come from the console's seeded demo mission (synthetic data). Only the CO₂ and dose limits are cited (NASA-STD-3001); other thresholds are illustrative and labelled so. AstroDocX is an independent Space Apps project using NASA open data; it is not affiliated with or endorsed by NASA.
 
 ## Credits
 The visual theme (nebula, 3D astronaut, scroll system) is adapted from team lead Alif Mahmud's own portfolio template.

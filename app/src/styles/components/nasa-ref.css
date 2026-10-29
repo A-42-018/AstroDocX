@@ -1,0 +1,13 @@
+/* NasaRef (src/ui/NasaRef.tsx): a two-part source tag, "NASA" in a filled cell, then the source. Data colour (cyan). */
+@layer components {
+  .nref {
+    display: inline-flex; align-items: stretch; height: 18px; flex: none; vertical-align: middle; white-space: nowrap; text-decoration: none;
+    font-family: var(--mono); font-size: 10px; font-weight: 700; line-height: 1; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--cy-hi); border: 1px solid var(--edge-hi); background: rgba(54, 226, 245, 0.06);
+    transition: border-color var(--dur-1) var(--ease), background var(--dur-1) var(--ease);
+  }
+  .nref > span { display: inline-flex; align-items: center; padding: 0 6px; }
+  .nref-n { color: var(--bg); background: var(--cy); letter-spacing: 0.12em; }
+  .nref:hover { border-color: var(--cy); background: rgba(54, 226, 245, 0.14); }
+  .nref:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
+}

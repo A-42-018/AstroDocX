@@ -4,6 +4,7 @@ import { clone as skeletonClone } from 'three/examples/jsm/utils/SkeletonUtils.j
 import type { CabinCrew } from './data'
 import { CREW_KEY } from './lighting'
 import { C, TAG_H, TAG_W, drawTag } from './panels'
+import { addPatches } from './suit'
 
 /** One astronaut in the room: the model, its live name tag and the ring shown when off-nominal. */
 export interface Astro { holder: THREE.Group; mixer: THREE.AnimationMixer | null; base: THREE.Vector3; rot: THREE.Euler; ctx: CanvasRenderingContext2D | null; tagTex: THREE.CanvasTexture; tag: THREE.Sprite; ring: THREE.Mesh }
@@ -28,6 +29,7 @@ export function createCrew(scene: THREE.Scene, loader: GLTFLoader, models: strin
     const s = HEIGHT / box.getSize(new THREE.Vector3()).y
     root.position.sub(box.getCenter(new THREE.Vector3()))
     template = new THREE.Group().add(root); template.scale.setScalar(s)
+    addPatches(template) // NASA insignia and flag, cloned with the suit
     clip = gltf.animations[0] ?? null
   }).catch((err) => console.warn('cabin: astronaut-float.glb failed', err))
 

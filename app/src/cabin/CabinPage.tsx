@@ -8,6 +8,7 @@ import { evaCrewId } from './eva'
 import { createCabin, STOP_COUNT, type CabinScene, type IntroPhase } from './scene'
 import { useCabinData } from './useCabinData'
 import { VisorHud } from './VisorHud'
+import { CabinLoader, loaderShownMs } from './CabinLoader'
 
 /** Caption for each tour stop, in scene order; names come from the live data. */
 function stops(d: CabinData | null) {
@@ -31,6 +32,9 @@ function stops(d: CabinData | null) {
 /** The arrival from space plays on the first visit to the cabin in a browser session; after that the tour starts in the helmet. */
 const ARRIVED = 'adx-cabin-arrived'
 const seenArrival = () => { try { return sessionStorage.getItem(ARRIVED) === '1' } catch { return false } }
+/** Keep the loader up at least this long, so a warm cache does not flash it; then fade it over FADE_MS. */
+const MIN_LOADER_MS = 1400, FADE_MS = 800
+
 const markArrived = () => { try { sessionStorage.setItem(ARRIVED, '1') } catch { /* private mode: it just plays again */ } }
 
 /** Can this browser draw WebGL at all? Checked once, before the scene is built. */
@@ -55,6 +59,9 @@ export default function CabinPage() {
   const [intro, setIntro] = useState<IntroPhase>('off')
   const scene = useRef<CabinScene | null>(null)
   const [state, setState] = useState<'loading' | 'ready' | 'unsupported'>(() => (webglAvailable() ? 'loading' : 'unsupported'))
+  const [progress, setProgress] = useState(0)
+  // 'show' while loading, 'fade' once the scene is ready (the arrival starts underneath), 'gone' after the fade
+  const [loader, setLoader] = useState<'show' | 'fade' | 'gone'>('show')
   const [stop, setStop] = useState(0)
   const [picked, setPicked] = useState<string | null>(null)
   const leave = () => (location.key === 'default' ? navigate('/board') : navigate(-1))
@@ -64,9 +71,10 @@ export default function CabinPage() {
     let s: CabinScene
     try {
       s = createCabin(canvas.current, {
-        reducedMotion: reduced, intro: !seenArrival(), visor: visor.current, flash: flash.current, mist: mist.current,
+        // the arrival waits for the loading screen to lift (below), so it is not spent behind it
+        reducedMotion: reduced, intro: false, visor: visor.current, flash: flash.current, mist: mist.current,
         onIntro: (ph) => { setIntro(ph); if (ph === 'clear') markArrived() },
-        onStop: setStop, onPick: setPicked, onReady: () => setState('ready'),
+        onStop: setStop, onPick: setPicked, onReady: () => setState('ready'), onProgress: setProgress,
       })
     } catch (err) {
       console.warn('cabin: no WebGL context', err)
@@ -74,16 +82,33 @@ export default function CabinPage() {
       return
     }
     scene.current = s
-    // opened straight onto /cabin: the console's launch screen is still up, so start the arrival once it has gone
-    const launching = document.getElementById('adx-splash') && !seenArrival()
-    const onLaunched = () => s.replayIntro()
-    if (launching) window.addEventListener('adx:launched', onLaunched, { once: true })
-    return () => { window.removeEventListener('adx:launched', onLaunched); s.dispose(); scene.current = null }
+    return () => { s.dispose(); scene.current = null }
     // `state` only matters for the first run; a ready scene is not rebuilt when it loads.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reduced])
 
   useEffect(() => { if (data) scene.current?.update(data) }, [data, state])
+
+  // Lift the loading screen once the scene is ready (and has been up long enough not to flash), and start the
+  // arrival under it on the first visit. Opened straight onto /cabin, the console's launch screen is still up:
+  // the arrival then waits for that to go too.
+  useEffect(() => {
+    if (state !== 'ready' || loader !== 'show') return
+    const lift = () => {
+      setLoader('fade')
+      if (!seenArrival()) scene.current?.replayIntro()
+    }
+    const wait = window.setTimeout(() => {
+      if (document.getElementById('adx-splash')) window.addEventListener('adx:launched', lift, { once: true })
+      else lift()
+    }, reduced ? 0 : Math.max(0, MIN_LOADER_MS - loaderShownMs()))
+    return () => { window.clearTimeout(wait); window.removeEventListener('adx:launched', lift) }
+  }, [state, loader, reduced])
+  useEffect(() => {
+    if (loader !== 'fade') return
+    const gone = window.setTimeout(() => setLoader('gone'), reduced ? 0 : FADE_MS)
+    return () => window.clearTimeout(gone)
+  }, [loader, reduced])
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
@@ -151,15 +176,16 @@ export default function CabinPage() {
         Module: “<a href="https://sketchfab.com/3d-models/space-ship-interior-08f117102f2f4e48ab583b7ae22db1c1" target="_blank" rel="noopener noreferrer">Space Ship Interior</a>” by Ryley Burnett · Astronaut: “<a href="https://sketchfab.com/3d-models/e2c4b146e58141e4b87917456a9970b1" target="_blank" rel="noopener noreferrer">Animated Floating Astronaut</a>” by LasquetiSpice · Station: “<a href="https://sketchfab.com/3d-models/813f5b296e584c26bf386ca39de6c3d4" target="_blank" rel="noopener noreferrer">ISS</a>” by uperesito · Consoles: “<a href="https://sketchfab.com/3d-models/sci-fi-computer-desk-console-28c67457f2ef4973a0bbc8b667bb183f" target="_blank" rel="noopener noreferrer">Sci-Fi Computer Desk Console</a>” and “<a href="https://sketchfab.com/3d-models/large-wall-mounted-computer-console-298b7d9b68064618a3819d1a8fae4baf" target="_blank" rel="noopener noreferrer">Large Wall-Mounted Computer Console</a>” by Inditrion Dradnon, “<a href="https://sketchfab.com/3d-models/sci-fi-supercomputer-9464e880c35e4fd29c0cdb6fefe5ebba" target="_blank" rel="noopener noreferrer">Sci-fi Supercomputer</a>” by Jungle Jim · all CC BY 4.0 · Surfaces: <a href="https://ambientcg.com" target="_blank" rel="noopener noreferrer">ambientCG</a>, CC0 · Earth: <a href="https://visibleearth.nasa.gov" target="_blank" rel="noopener noreferrer">NASA Visible Earth</a> and “<a href="https://sketchfab.com/3d-models/earth-63d902b12fd14868b4dc2f19dc21d7c2" target="_blank" rel="noopener noreferrer">Earth</a>” by kongle, CC BY-SA 4.0
       </footer>
 
-      {state !== 'ready' && intro === 'off' && (
+      {state !== 'unsupported' && loader !== 'gone' && (
+        <CabinLoader progress={0.15 + 0.85 * progress} leaving={loader === 'fade'} reduced={reduced} onBack={leave} />
+      )}
+      {state === 'unsupported' && (
         <div className="cabin-loading" role="status">
-          {state === 'loading' ? 'Pressurising cabin…' : (
-            <div className="cabin-panel cabin-nogl">
-              <h1>3D mode needs WebGL</h1>
-              <p>This browser or device cannot draw the 3D cabin. Everything it shows is on the console screens.</p>
-              <button type="button" className="cabin-back" onClick={leave}>← Back to the console</button>
-            </div>
-          )}
+          <div className="cabin-panel cabin-nogl">
+            <h1>3D mode needs WebGL</h1>
+            <p>This browser or device cannot draw the 3D cabin. Everything it shows is on the console screens.</p>
+            <button type="button" className="cabin-back" onClick={leave}>← Back to the console</button>
+          </div>
         </div>
       )}
     </div>
