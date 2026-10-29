@@ -5,7 +5,7 @@ import { useReducedMotion } from '../live/usePaused'
 import type { CabinData } from './data'
 import { statusColor, statusLabel } from './panels'
 import { evaCrewId } from './eva'
-import { createCabin, STOP_COUNT, type CabinScene } from './scene'
+import { createCabin, STOP_COUNT, type CabinScene, type IntroPhase } from './scene'
 import { useCabinData } from './useCabinData'
 import { VisorHud } from './VisorHud'
 
@@ -28,6 +28,11 @@ function stops(d: CabinData | null) {
   ]
 }
 
+/** The arrival from space plays on the first visit to the cabin in a browser session; after that the tour starts in the helmet. */
+const ARRIVED = 'adx-cabin-arrived'
+const seenArrival = () => { try { return sessionStorage.getItem(ARRIVED) === '1' } catch { return false } }
+const markArrived = () => { try { sessionStorage.setItem(ARRIVED, '1') } catch { /* private mode: it just plays again */ } }
+
 /** Can this browser draw WebGL at all? Checked once, before the scene is built. */
 function webglAvailable() {
   try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') ?? c.getContext('webgl')) } catch { return false }
@@ -45,6 +50,9 @@ export default function CabinPage() {
   const location = useLocation()
   const canvas = useRef<HTMLCanvasElement>(null)
   const visor = useRef<HTMLDivElement>(null)
+  const flash = useRef<HTMLDivElement>(null)
+  const mist = useRef<HTMLDivElement>(null)
+  const [intro, setIntro] = useState<IntroPhase>('off')
   const scene = useRef<CabinScene | null>(null)
   const [state, setState] = useState<'loading' | 'ready' | 'unsupported'>(() => (webglAvailable() ? 'loading' : 'unsupported'))
   const [stop, setStop] = useState(0)
@@ -55,14 +63,22 @@ export default function CabinPage() {
     if (!canvas.current || state === 'unsupported') return
     let s: CabinScene
     try {
-      s = createCabin(canvas.current, { reducedMotion: reduced, visor: visor.current, onStop: setStop, onPick: setPicked, onReady: () => setState('ready') })
+      s = createCabin(canvas.current, {
+        reducedMotion: reduced, intro: !seenArrival(), visor: visor.current, flash: flash.current, mist: mist.current,
+        onIntro: (ph) => { setIntro(ph); if (ph === 'clear') markArrived() },
+        onStop: setStop, onPick: setPicked, onReady: () => setState('ready'),
+      })
     } catch (err) {
       console.warn('cabin: no WebGL context', err)
       void Promise.resolve().then(() => setState('unsupported')) // the context can still fail after the check
       return
     }
     scene.current = s
-    return () => { s.dispose(); scene.current = null }
+    // opened straight onto /cabin: the console's launch screen is still up, so start the arrival once it has gone
+    const launching = document.getElementById('adx-splash') && !seenArrival()
+    const onLaunched = () => s.replayIntro()
+    if (launching) window.addEventListener('adx:launched', onLaunched, { once: true })
+    return () => { window.removeEventListener('adx:launched', onLaunched); s.dispose(); scene.current = null }
     // `state` only matters for the first run; a ready scene is not rebuilt when it loads.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reduced])
@@ -81,16 +97,25 @@ export default function CabinPage() {
   const who = picked ? data?.crew.find((c) => c.id === picked) : undefined
 
   return (
-    <div className="cabin">
+    <div className={intro === 'off' ? 'cabin' : 'cabin is-arriving'}>
       <canvas ref={canvas} className="cabin-gl" role="img" aria-label="3D crew module. Scroll, use the arrow keys or the stop list to move through the tour." />
 
+      <div ref={mist} className="cabin-mist" aria-hidden="true" />
       <div ref={visor} className="cabin-visor" aria-hidden="true">
         <VisorHud data={data} reduced={reduced} />
       </div>
+      <div ref={flash} className="cabin-flash" aria-hidden="true" />
+      {(intro === 'fly' || intro === 'wait') && (
+        <div className="cabin-arrive">
+          <span className="ca-status" role="status">{intro === 'wait' && state !== 'ready' ? 'Pressurising cabin…' : 'Approaching the station'}</span>
+          <button type="button" className="ca-skip" onClick={() => scene.current?.skipIntro()}>Skip ›</button>
+        </div>
+      )}
 
       <header className="cabin-top">
         <button type="button" className="cabin-back" onClick={leave}>← Console</button>
         <div className="cabin-brand">AstroDocX <span>· 3D Cabin</span></div>
+        <button type="button" className="cabin-replay" onClick={() => scene.current?.replayIntro()}>↺ Replay arrival</button>
       </header>
 
       <nav className="cabin-stops" aria-label="Tour stops">
@@ -123,10 +148,10 @@ export default function CabinPage() {
       )}
 
       <footer className="cabin-credits">
-        Module: “<a href="https://sketchfab.com/3d-models/space-ship-interior-08f117102f2f4e48ab583b7ae22db1c1" target="_blank" rel="noopener noreferrer">Space Ship Interior</a>” by Ryley Burnett · Astronaut: “<a href="https://sketchfab.com/3d-models/e2c4b146e58141e4b87917456a9970b1" target="_blank" rel="noopener noreferrer">Animated Floating Astronaut</a>” by LasquetiSpice · Station: “<a href="https://sketchfab.com/3d-models/813f5b296e584c26bf386ca39de6c3d4" target="_blank" rel="noopener noreferrer">ISS</a>” by uperesito · all CC BY 4.0 · Surfaces: <a href="https://ambientcg.com" target="_blank" rel="noopener noreferrer">ambientCG</a>, CC0 · Earth: <a href="https://visibleearth.nasa.gov" target="_blank" rel="noopener noreferrer">NASA Visible Earth</a> and “<a href="https://sketchfab.com/3d-models/earth-63d902b12fd14868b4dc2f19dc21d7c2" target="_blank" rel="noopener noreferrer">Earth</a>” by kongle, CC BY-SA 4.0
+        Module: “<a href="https://sketchfab.com/3d-models/space-ship-interior-08f117102f2f4e48ab583b7ae22db1c1" target="_blank" rel="noopener noreferrer">Space Ship Interior</a>” by Ryley Burnett · Astronaut: “<a href="https://sketchfab.com/3d-models/e2c4b146e58141e4b87917456a9970b1" target="_blank" rel="noopener noreferrer">Animated Floating Astronaut</a>” by LasquetiSpice · Station: “<a href="https://sketchfab.com/3d-models/813f5b296e584c26bf386ca39de6c3d4" target="_blank" rel="noopener noreferrer">ISS</a>” by uperesito · Consoles: “<a href="https://sketchfab.com/3d-models/sci-fi-computer-desk-console-28c67457f2ef4973a0bbc8b667bb183f" target="_blank" rel="noopener noreferrer">Sci-Fi Computer Desk Console</a>” and “<a href="https://sketchfab.com/3d-models/large-wall-mounted-computer-console-298b7d9b68064618a3819d1a8fae4baf" target="_blank" rel="noopener noreferrer">Large Wall-Mounted Computer Console</a>” by Inditrion Dradnon, “<a href="https://sketchfab.com/3d-models/sci-fi-supercomputer-9464e880c35e4fd29c0cdb6fefe5ebba" target="_blank" rel="noopener noreferrer">Sci-fi Supercomputer</a>” by Jungle Jim · all CC BY 4.0 · Surfaces: <a href="https://ambientcg.com" target="_blank" rel="noopener noreferrer">ambientCG</a>, CC0 · Earth: <a href="https://visibleearth.nasa.gov" target="_blank" rel="noopener noreferrer">NASA Visible Earth</a> and “<a href="https://sketchfab.com/3d-models/earth-63d902b12fd14868b4dc2f19dc21d7c2" target="_blank" rel="noopener noreferrer">Earth</a>” by kongle, CC BY-SA 4.0
       </footer>
 
-      {state !== 'ready' && (
+      {state !== 'ready' && intro === 'off' && (
         <div className="cabin-loading" role="status">
           {state === 'loading' ? 'Pressurising cabin…' : (
             <div className="cabin-panel cabin-nogl">

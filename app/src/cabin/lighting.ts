@@ -210,6 +210,8 @@ export function createSunBeam(scene: THREE.Scene, quality: Quality) {
 
   return {
     update(t: number, still: number) { beamU.time.value = t * still; dustU.time.value = t * still },
+    /** The shaft and its dust only make sense from inside the hall: hidden while the camera is out in space. */
+    show(on: boolean) { beam.visible = on; dust.visible = on && n > 0 },
   }
 }
 

@@ -12,7 +12,7 @@ export const WIN = { x: HALF - 1.8, y0: FLOOR + 0.9, y1: TOP - 1.4, z: -LEN + 0.
 /** The layer of everything in the hall that shades the sun (the shadow casters), for the low tier's sun pool (lighting.ts). */
 export const SUN_LAYER = 1
 /** Casts and takes shadows, and is on the sun layer. */
-const shades = (o: THREE.Object3D) => { o.castShadow = o.receiveShadow = true; o.layers.enable(SUN_LAYER) }
+export const shades = (o: THREE.Object3D) => { o.castShadow = o.receiveShadow = true; o.layers.enable(SUN_LAYER) }
 
 /*
  * Surfaces: the model has no textures, so ambientCG maps (CC0) are projected in world space (triplanar).
@@ -76,10 +76,10 @@ function surfaceMaps(textures: string) {
     plateTint: { value: new THREE.Vector3(5.8, 4.2, 2.2) }, // the texture is a cool dark grey: brightened to bronze
   }
 }
-type SurfaceMaps = ReturnType<typeof surfaceMaps>
+export type SurfaceMaps = ReturnType<typeof surfaceMaps>
 
 /** Worn triplanar metal (bronze tread plate where it is floor); `panel` (metres) adds recessed panel seams, `rough` raises the least roughness. */
-function hallMaterial(maps: SurfaceMaps, color = '#c6c3be', o: { metalness?: number; rough?: number; panel?: [number, number] } = {}) {
+export function hallMaterial(maps: SurfaceMaps, color = '#c6c3be', o: { metalness?: number; rough?: number; panel?: [number, number] } = {}) {
   const u = { ...maps, panel: { value: new THREE.Vector2(...(o.panel ?? [0, 0])) }, roughBase: { value: o.rough ?? 0.28 } }
   const m = new THREE.MeshStandardMaterial({ color, metalness: o.metalness ?? 0.5, roughness: 1 })
   m.onBeforeCompile = (sh) => {
@@ -103,8 +103,11 @@ function hallMaterial(maps: SurfaceMaps, color = '#c6c3be', o: { metalness?: num
   return m
 }
 
-/** Adds the hall's shell, bulkheads, window and light strips at once; the detailed walls arrive with the returned promise (null if they failed). */
-export function buildHall(scene: THREE.Scene, loader: GLTFLoader, models: string, textures: string): Promise<THREE.Object3D | null> {
+/**
+ * Adds the hall's shell, bulkheads, window and light strips at once; the detailed walls arrive with `loaded` (null if
+ * they failed). `maps` are the surface maps, for the decor's own worn metal.
+ */
+export function buildHall(scene: THREE.Scene, loader: GLTFLoader, models: string, textures: string): { maps: SurfaceMaps; loaded: Promise<THREE.Object3D | null> } {
   const h = TOP - FLOOR
   const maps = surfaceMaps(textures)
   const hullMat = new THREE.MeshStandardMaterial({ color: '#4a5058', metalness: 0.3, roughness: 0.8, side: THREE.BackSide })
@@ -155,7 +158,7 @@ export function buildHall(scene: THREE.Scene, loader: GLTFLoader, models: string
   for (const [x, y] of [[-5.6, FLOOR + 0.08], [5.6, FLOOR + 0.08], [-3, TOP - 0.08], [3, TOP - 0.08]]) {
     const b = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.04, LEN * 2 - 1), strip); b.position.set(x, y, 0); scene.add(b)
   }
-  return loader.loadAsync(`${models}corridor.glb`).then((gltf) => {
+  const loaded = loader.loadAsync(`${models}corridor.glb`).then((gltf) => {
     const metal = hallMaterial(maps)
     gltf.scene.traverse((o) => { if ((o as THREE.Mesh).isMesh) { (o as THREE.Mesh).material = metal; shades(o) } })
     // The model is one wall with floor and ceiling, open in front: a mirrored twin closes the hall.
@@ -167,4 +170,5 @@ export function buildHall(scene: THREE.Scene, loader: GLTFLoader, models: string
     scene.add(pivot)
     return pivot
   }).catch((err) => { console.warn('cabin: corridor.glb failed', err); return null })
+  return { maps, loaded }
 }

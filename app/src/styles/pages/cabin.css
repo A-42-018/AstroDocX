@@ -118,6 +118,27 @@
 .prompt span { display: inline-block; animation: cabin-bob 1.4s ease-in-out infinite; }
 @keyframes cabin-bob { 50% { transform: translateY(4px); } }
 
+/* the arrival from space: glare over everything, mist on the visor glass under the HUD, the tour UI out of the way */
+.cabin-flash { position: absolute; inset: 0; z-index: 7; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle at 62% 38%, #fff 0, #eefaff 30%, #bfe6ff 70%, #8ccdf2 100%); }
+.cabin-mist { position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 48%, rgba(214, 236, 248, .2), rgba(214, 236, 248, .1) 60%, rgba(214, 236, 248, .04)); }
+.cabin.is-arriving .cabin-top, .cabin.is-arriving .cabin-stops, .cabin.is-arriving .cabin-caption, .cabin.is-arriving .cabin-credits { opacity: 0; pointer-events: none; }
+.cabin-top, .cabin-stops, .cabin-caption, .cabin-credits { transition: opacity .6s ease; }
+.cabin-arrive { position: absolute; left: var(--sp-6); right: var(--sp-6); bottom: var(--sp-6); z-index: 6; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
+.ca-status { font: 600 12px var(--mono); letter-spacing: .24em; text-transform: uppercase; color: var(--cy-hi); text-shadow: 0 0 10px rgba(0, 8, 14, .9); }
+.ca-skip { pointer-events: auto; font: 600 13px var(--ui); color: var(--cy-hi); background: var(--panel); border: 1px solid var(--edge-hi); padding: var(--sp-2) 14px; cursor: pointer; letter-spacing: .04em; }
+.ca-skip:hover, .cabin-replay:hover { background: var(--cy-soft); }
+.ca-skip:focus-visible, .cabin-replay:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
+.cabin-replay { pointer-events: auto; margin-left: auto; font: 500 12px var(--ui); color: var(--t2); background: transparent; border: 1px solid var(--edge); padding: 6px 12px; cursor: pointer; letter-spacing: .04em; }
+/* the HUD boots panel by panel as the visor clears */
+.cabin-visor.booting .vz { animation: vzBoot .55s ease-out both; }
+.cabin-visor.booting .vz-tc { animation-delay: .15s; }
+.cabin-visor.booting .vz-tl, .cabin-visor.booting .vz-tr { animation-delay: .35s; }
+.cabin-visor.booting .ladder { animation-delay: .55s; }
+.cabin-visor.booting .vz-bl, .cabin-visor.booting .vz-br { animation-delay: .75s; }
+@keyframes vzBoot { 0% { opacity: 0; filter: brightness(2.2) blur(2px); } 30% { opacity: .9; } 45% { opacity: .2; } 100% { opacity: 1; filter: none; } }
+
 .cabin-loading { position: absolute; inset: 0; display: grid; place-items: center; font: 600 14px var(--mono); letter-spacing: .2em; color: var(--cy); background: var(--bg); z-index: 10; }
 .cabin-nogl { max-width: 420px; padding: var(--sp-6); letter-spacing: normal; font: 400 14px/1.5 var(--ui); color: var(--t2); }
 .cabin-nogl h1 { margin: 0 0 var(--sp-2); font: 700 20px var(--ui); color: var(--t1); }
@@ -144,7 +165,7 @@
   .vz-reticle { width: 150px; height: 150px; margin: -75px 0 0 -75px; }
   .cabin-credits { left: var(--sp-3); right: var(--sp-3); font-size: 10px; line-height: 1.35; }
 }
-@media (prefers-reduced-motion: reduce) { .prompt span, .vz-reticle .spin, .vz-heart.beat { animation: none; } .vz-gauge .needle { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .cabin-visor.booting .vz { animation: none; } .prompt span, .vz-reticle .spin, .vz-heart.beat { animation: none; } .vz-gauge .needle { transition: none; } }
 
 /* the real console on the wall screens (cabin/screens.ts): above the canvas, below the HUD, never takes input */
 .cabin-screens { position: absolute !important; inset: 0; z-index: 1; pointer-events: none; }
