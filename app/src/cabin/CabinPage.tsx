@@ -9,6 +9,7 @@ import { createCabin, STOP_COUNT, type CabinScene, type IntroPhase } from './sce
 import { useCabinData } from './useCabinData'
 import { VisorHud } from './VisorHud'
 import { CabinLoader, loaderShownMs } from './CabinLoader'
+import { useTour } from '../tour/store'
 
 /** Caption for each tour stop, in scene order; names come from the live data. */
 function stops(d: CabinData | null) {
@@ -109,6 +110,13 @@ export default function CabinPage() {
     const gone = window.setTimeout(() => setLoader('gone'), reduced ? 0 : FADE_MS)
     return () => window.clearTimeout(gone)
   }, [loader, reduced])
+  // The 1-click tour steers the camera once the scene is loaded and the arrival is over.
+  useEffect(() => {
+    if (state === 'unsupported') { useTour.getState().set({ cabinFailed: true }); return }
+    if (state !== 'ready' || loader !== 'gone' || intro !== 'off') return
+    useTour.getState().set({ cabin: { goTo: (i) => scene.current?.goTo(i) } })
+    return () => useTour.getState().set({ cabin: null })
+  }, [state, loader, intro])
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return

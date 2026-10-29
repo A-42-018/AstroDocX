@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const textBox = root.querySelector('.uni-text');
   const rail    = root.querySelector('.uni-rail');
   const skip    = root.querySelector('.uni-skip');
+  const tourBtn = root.querySelector('.tour-start');
   const hint    = root.querySelector('.uni-hint');
   const REDUCE  = window.matchMedia('(prefers-reduced-motion: reduce)').matches || /[?&]reduce=1\b/.test(location.search);   // ?reduce=1 forces the static path for QA
   const clamp   = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -122,6 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (inEnd !== wasEnd) wasEnd = inEnd;
     skip.classList.toggle('is-hidden', inEnd);
     hint.classList.toggle('is-hidden', p > 0.02);
+    if (tourBtn) tourBtn.classList.toggle('is-hidden', p > 0.02);
   }
 
   /* chapter layers: only the chapter(s) on screen are visible (and clickable) */

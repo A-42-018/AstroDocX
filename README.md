@@ -5,6 +5,9 @@
 > NASA Space Apps Challenge 2026 · Challenge: *Create Health Monitoring Software for Astronauts on Space Missions*
 > Team AstroDocX · Dhaka, Bangladesh
 
+### ▶ [Take the 1-click tour (2 min)](https://astrodocx.vercel.app/?tour=full)
+No time to click around? This link plays the whole project by itself: the landing page, the Crew Console's main screens with a live CO₂ fault demo, and the 3D cabin out to the astronaut on EVA. Pause, skip or exit any time from the bar at the bottom.
+
 ![AstroDocX Health Twin: a real human shape made of particles, with the brain, heart, lungs, skeleton and arteries inside](docs/screenshots/health-twin.jpg)
 
 ## The problem
@@ -73,6 +76,7 @@ AstroDocX learns each astronaut's **personal baseline**, spots drift early, and 
 The live waves on the board (ECG, pulse oximeter, breathing) are **simulated telemetry** built around the latest real readings; they never change alerts.
 
 ## Try it
+- **1-click tour:** press *1-Click Tour* on the landing page (or open [`/?tour=full`](https://astrodocx.vercel.app/?tour=full)) for a guided two-minute run through the landing page, the console and the 3D cabin. Space pauses, Esc exits, a scroll or click pauses so you can look closer.
 - **Health Twin:** scroll through the section. The scan runs head to feet, six system panels appear, Crew Readiness counts up, then the Pilot's real Act alert from the demo mission appears as an action card. Panel values are the demo mission's latest readings.
 - **Run demo (Crew Console):** press *Run demo* in the top bar's `⋯` menu to inject a CO₂ scrubber fault and watch the board, twin and alerts react (about 20 s); *Reset demo* restores the mission data.
 - **Mission Simulator (Crew Console, `/app/simulator`):** inject a scenario (solar particle event, CO₂ scrubber fault, insomnia streak, skipped exercise) for one crew member or the whole crew, then tick the action-card steps on Alerts and sync the log from Ground Sync in the next link window.
@@ -126,7 +130,7 @@ AstroDocX/
 │   ├── index.html
 │   ├── styles.css
 │   ├── script.js   # nav, typewriter, back-to-top
-│   ├── tour.js     # ?tour=1 self-scrolling video mode
+│   ├── tour.js     # 1-click tour (landing chapter) and ?tour=1 video mode
 │   ├── universe/   # the particle journey: one canvas for intro -> Health Twin -> AstroDocX
 │   │               #   scenes.js (copy + chapter lengths), engine.js (8 shapes), universe.js (director),
 │   │               #   health-twin.js, reveal.js (chapter UI), stars.js, camera.js, fx.js, sound.js, universe.css

@@ -14,6 +14,7 @@ import { routeFor } from './shell/nav'
 import { ShellDataContext, useShellData } from './shell/useShellData'
 import { useSplashHandoff } from './shell/splash'
 import { StateView } from './ui/StateView'
+import { Tour } from './tour/Tour'
 
 // The board is the landing screen and loads eagerly; every other screen (Trends carries the chart
 // library) is its own chunk. The service worker precaches all chunks, so they still work offline;
@@ -78,6 +79,7 @@ export default function App() {
       <ErrorBoundary key={pathname} onReset={() => seedDemo().then(() => undefined)}>
         <Suspense fallback={<CabinLoader />}><CabinPage /></Suspense>
       </ErrorBoundary>
+      <Tour />
     </ShellDataContext.Provider>
   )
   return (
@@ -109,6 +111,7 @@ export default function App() {
       <StatusBar data={shell} />
       </div>
       <BottomTabs alerts={shell?.crew.find((c) => c.id === shell.crewId)?.alerts ?? 0} />
+      <Tour />
     </div>
     </ShellDataContext.Provider>
   )
