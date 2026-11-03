@@ -1,5 +1,6 @@
 import { ArrowLeft, ArrowRight, BatteryCharging, BatteryFull, BatteryLow, BatteryMedium, BatteryWarning, Check, Frown, Annoyed, Info, Laugh, Meh, Smile, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
+import { confirmChime } from '../audio/sfx'
 import { Link } from 'react-router-dom'
 import { alertTitle, met } from '../engine/actions'
 import type { CrewMember } from '../data/types'
@@ -112,6 +113,7 @@ export function CheckInForm({ crew, crewId, now, onSubmit, baselineMs, reactionT
     try {
       setResult(await onSubmit({ crewId, ts: now, mood, sleepQuality, sleepHours: hours.trim() === '' ? undefined : Number(hours), symptoms, reactionMs: pvt?.medianMs ?? undefined }))
       reset()
+      confirmChime()
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     } finally {

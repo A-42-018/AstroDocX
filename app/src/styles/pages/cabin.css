@@ -135,6 +135,11 @@
 .cabin-arrive { position: absolute; left: var(--sp-6); right: var(--sp-6); bottom: var(--sp-6); z-index: 6; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
 .ca-status { font: 600 12px var(--mono); letter-spacing: .24em; text-transform: uppercase; color: var(--cy-hi); text-shadow: 0 0 10px rgba(0, 8, 14, .9); }
 .ca-skip { pointer-events: auto; font: 600 13px var(--ui); color: var(--cy-hi); background: var(--panel); border: 1px solid var(--edge-hi); padding: var(--sp-2) 14px; cursor: var(--cur-pointer); letter-spacing: .04em; }
+.cabin-sound { pointer-events: auto; margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font: 500 12px var(--ui); color: var(--t2); background: transparent; border: 1px solid var(--edge); padding: 6px 12px; cursor: var(--cur-pointer); letter-spacing: .04em; }
+.cabin-sound[aria-pressed="false"] { color: var(--t3); }
+.cabin-sound + .cabin-replay { margin-left: 0; }
+.cabin-sound:hover { background: var(--cy-soft); }
+.cabin-sound:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
 .ca-skip:hover, .cabin-replay:hover { background: var(--cy-soft); }
 .ca-skip:focus-visible, .cabin-replay:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
 .cabin-replay { pointer-events: auto; margin-left: auto; font: 500 12px var(--ui); color: var(--t2); background: transparent; border: 1px solid var(--edge); padding: 6px 12px; cursor: var(--cur-pointer); letter-spacing: .04em; }
