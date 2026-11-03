@@ -1,12 +1,13 @@
-import { Box, Download, House, Play, RotateCcw, Square } from 'lucide-react'
+import { Box, Download, House, Play, RotateCcw, Square, Volume2, VolumeX } from 'lucide-react'
 import { useId, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { useSound } from '../audio/sfx'
 import { DEMO_MAX_STEPS, resetDemo, useDemo } from '../sim/demoRun'
 import { BackdropChoices } from './BackdropPicker'
 import { OVERFLOW_ICON } from './nav'
 import { usePopover } from './usePopover'
 
-/** The `⋯` menu at the end of the top bar: Run demo, 3D mode, the backdrop, Install and the way back to the landing page. */
+/** The `⋯` menu at the end of the top bar: Run demo, 3D mode, sound, the backdrop, Install and the way back to the landing page. */
 export function Overflow({ crewId, crewName, install, onDemo }:
   { crewId: string; crewName: string; install: (() => Promise<void>) | null; onDemo: () => void }) {
   const btn = useRef<HTMLButtonElement>(null)
@@ -14,6 +15,7 @@ export function Overflow({ crewId, crewName, install, onDemo }:
   const [open, setOpen] = usePopover(btn, panel)
   const id = useId()
   const demo = useDemo()
+  const sound = useSound()
   const Icon = OVERFLOW_ICON
   const run = (fn: () => void) => () => { setOpen(false); fn() }
   return (
@@ -39,6 +41,10 @@ export function Overflow({ crewId, crewName, install, onDemo }:
           <Link to="/cabin" className="ovf-item" onClick={() => setOpen(false)}>
             <Box size={16} aria-hidden="true" /><span>3D mode<small>Walk through the crew module</small></span>
           </Link>
+          <button type="button" className="ovf-item" aria-pressed={sound.on} onClick={sound.toggle}>
+            {sound.on ? <Volume2 size={16} aria-hidden="true" /> : <VolumeX size={16} aria-hidden="true" />}
+            <span>{sound.on ? 'Sound on' : 'Sound off'}<small>{sound.on ? 'Tap to mute console and cabin sound' : 'Tap to hear alerts and the cabin'}</small></span>
+          </button>
           {install && (
             <button type="button" className="ovf-item" onClick={run(() => void install())}>
               <Download size={16} aria-hidden="true" /><span>Install<small>Use the console offline as an app</small></span>

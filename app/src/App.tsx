@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useRef } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { alertChime, navTick } from './audio/sfx'
 import BoardPage from './board/BoardPage'
 import { CabinPage } from './cabin/lazy'
 import { CabinLoader } from './cabin/CabinLoader'
@@ -11,7 +12,7 @@ import { useInstallPrompt } from './shell/install'
 import { lazyPage } from './shell/lazyPage'
 import { BottomTabs, StatusBar, TopBar } from './shell/Chrome'
 import { routeFor } from './shell/nav'
-import { ShellDataContext, useShellData } from './shell/useShellData'
+import { ShellDataContext, useShellData, type ShellData } from './shell/useShellData'
 import { useSplashHandoff } from './shell/splash'
 import { StateView } from './ui/StateView'
 import { Tour } from './tour/Tour'
@@ -57,6 +58,25 @@ function useRouteAnnounce(main: React.RefObject<HTMLElement | null>) {
   }, [pathname, main])
 }
 
+/** A tick on moving between screens, and a chime when the crew's open alerts go up (more urgent if anyone is at Act). */
+function useShellSounds(shell: ShellData | null, quiet: boolean) {
+  const { pathname } = useLocation()
+  const page = useRef(pathname)
+  useEffect(() => {
+    if (pathname === page.current) return
+    page.current = pathname
+    if (!quiet) navTick()
+  }, [pathname, quiet])
+  const total = shell ? shell.crew.reduce((n, c) => n + c.alerts, 0) : null
+  const act = !!shell?.crew.some((c) => c.status === 'act')
+  const was = useRef<number | null>(null)
+  useEffect(() => {
+    if (total === null) return
+    if (was.current !== null && total > was.current && !quiet) alertChime(act)
+    was.current = total
+  }, [total, act, quiet])
+}
+
 export default function App() {
   useBootDemo()
   useSplashHandoff()
@@ -68,6 +88,7 @@ export default function App() {
   const { pathname, search } = useLocation()
   // A single screen without the frame, for the 3D cabin's wall screens.
   const embed = embedFromUrl(search)
+  useShellSounds(shell, !!embed)
   if (embed) return (
     <ShellDataContext.Provider value={shell}>
       <ErrorBoundary key={pathname} onReset={() => seedDemo().then(() => undefined)}><Embed {...embed} /></ErrorBoundary>
