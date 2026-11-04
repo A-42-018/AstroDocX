@@ -7,12 +7,12 @@ import { statusColor, statusLabel } from './panels'
 import { evaCrewId } from './eva'
 import { createCabin, STOP_COUNT, type CabinScene, type IntroPhase } from './scene'
 import { useCabinData } from './useCabinData'
+import { FloatHint, FloatPad } from './FloatPad'
 import { VisorHud } from './VisorHud'
 import { CabinLoader, loaderShownMs } from './CabinLoader'
 import { useTour } from '../tour/store'
 import * as sfx from '../audio/sfx'
 import { SoundToggle } from '../audio/SoundToggle'
-import { MusicToggle } from '../audio/MusicToggle'
 import { disposeMusic } from '../audio/music'
 import { introduce, startChatter, stopChatter } from '../audio/voice'
 
@@ -37,6 +37,33 @@ function stops(d: CabinData | null) {
     { title: 'Outside', text: `${out ? `The ${name(out)} on EVA beside the station, tethered to the ship. AstroDocX tracks every heartbeat out here too.` : 'The station beyond the window, Earth below.'} Press Esc or “Console” to return.` },
   ]
 }
+
+/**
+ * What VITA says at each tour stop: the same ten stops as stops(), in short spoken sentences with numbers in words.
+ * Names come from the live data, as in the captions.
+ */
+function spokenStops(d: CabinData | null) {
+  const name = (id?: string) => d?.crew.find((c) => c.id === id)?.name ?? 'crew member'
+  const focus = name(d?.focusId)
+  const out = d ? evaCrewId(d) : null
+  const n = d?.crew.length ?? 6
+  const words = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten']
+  return [
+    `This is the view from the ${name(d?.selfId)}’s helmet. The visor display is wired to Astro Doc X. It shows readiness, live vitals, the five hazard modules, the crew and the ground link. Scroll, and you float forward.`,
+    `${words[n] ?? n} astronauts at work in microgravity. Every floating tag is live. Name, heart rate and status, from the same engine as the console.`,
+    `The real console, on the wall. This is the ${name(d?.selfId)}’s Status Board, with readiness, the body twin, vitals and the five hazard modules.`,
+    `Live vitals for the ${focus}. Heart trace, oxygen and breathing, with their next action. This screen follows whoever needs attention most.`,
+    `And here is the ${focus}, the person behind the numbers. When someone is off nominal, their tag pulses and a ring of light surrounds them. You can see the alert in the room, not only on a screen.`,
+    'Explainable alerts. Each one says why, in the engine’s own words, and gives the next step. No black box warnings.',
+    `Trends. Thirty days of the ${focus}’s heart rate, against their personal baseline band and the crew median.`,
+    'Earth, through the forward window. The view the crew works under every day.',
+    'The whole module, looking back from the window. The crew, four console screens, one system.',
+    out ? `Outside. The ${name(out)} is on a spacewalk, tethered to the ship. Astro Doc X tracks every heartbeat out here too. Press Escape when you want to go back to the console.` : 'Outside, the station, and Earth below. Press Escape when you want to go back to the console.',
+  ]
+}
+
+/** Named stops for /cabin?shot=… */
+const SHOTS: Record<string, number> = { helmet: 0, crew: 1, board: 2, vitals: 3, alerts: 5, trends: 6, window: 7, eva: 9, outside: 9 }
 
 /** The arrival from space plays on the first visit to the cabin in a browser session; after that the tour starts in the helmet. */
 const ARRIVED = 'adx-cabin-arrived'
@@ -73,6 +100,9 @@ export default function CabinPage() {
   const [loader, setLoader] = useState<'show' | 'fade' | 'gone'>('show')
   const [stop, setStop] = useState(0)
   const [picked, setPicked] = useState<string | null>(null)
+  /** Float mode: drifting freely through the hall instead of following the tour. */
+  const [floating, setFloating] = useState(false)
+  const touch = typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches
   const dataRef = useRef(data)
   useEffect(() => { dataRef.current = data })
   const lastStop = useRef(-1)
@@ -107,7 +137,13 @@ export default function CabinPage() {
           else if (ph === 'booting') sfx.hudBoot()
           else if (ph === 'raised' && visorWas.current !== 'raised') sfx.visorOpen()
           visorWas.current = ph
-        }, onReady: () => setState('ready'), onProgress: setProgress,
+        },
+        onFloat: (on) => {
+          setFloating(on)
+          // exploring on your own pauses a running guided tour (and VITA with it)
+          if (on && useTour.getState().phase === 'running') useTour.getState().set({ paused: true })
+        },
+        onReady: () => setState('ready'), onProgress: setProgress,
       })
     } catch (err) {
       console.warn('cabin: no WebGL context', err)
@@ -155,13 +191,22 @@ export default function CabinPage() {
   useEffect(() => {
     if (state === 'unsupported') { useTour.getState().set({ cabinFailed: true }); return }
     if (state !== 'ready' || loader !== 'gone' || intro !== 'off') return
-    useTour.getState().set({ cabin: { goTo: (i) => scene.current?.goTo(i) } })
+    useTour.getState().set({ cabin: { goTo: (i) => scene.current?.goTo(i), spoken: (i) => spokenStops(dataRef.current)[i] ?? '' } })
     return () => useTour.getState().set({ cabin: null })
   }, [state, loader, intro])
+  // /cabin?shot=eva (from VITA's answers) opens on that stop once the arrival is over
+  const shot = new URLSearchParams(location.search).get('shot')
+  useEffect(() => {
+    const at = shot ? SHOTS[shot.toLowerCase()] : undefined
+    if (at === undefined || state !== 'ready' || loader !== 'gone' || intro !== 'off') return
+    scene.current?.goTo(at)
+  }, [shot, state, loader, intro])
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
-      if (picked) { setPicked(null); scene.current?.goTo(stop) } else leave()
+      if (picked) { setPicked(null); scene.current?.goTo(stop) }
+      else if (floating) scene.current?.setFloat(false)
+      else leave()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -171,7 +216,7 @@ export default function CabinPage() {
   const who = picked ? data?.crew.find((c) => c.id === picked) : undefined
 
   return (
-    <div className={intro === 'off' ? 'cabin' : 'cabin is-arriving'}>
+    <div className={`${intro === 'off' ? 'cabin' : 'cabin is-arriving'}${floating ? ' is-floating' : ''}`}>
       <canvas ref={canvas} className="cabin-gl" role="img" aria-label="3D crew module. Scroll, use the arrow keys or the stop list to move through the tour." />
 
       <div ref={mist} className="cabin-mist" aria-hidden="true" />
@@ -189,8 +234,11 @@ export default function CabinPage() {
       <header className="cabin-top">
         <button type="button" className="cabin-back" onClick={leave}>← Console</button>
         <div className="cabin-brand">AstroDocX <span>· 3D Cabin</span></div>
-        <MusicToggle className="cabin-sound" />
-        <SoundToggle className="cabin-sound" />
+        <SoundToggle className="cabin-sound" music />
+        <button type="button" className="cabin-explore" aria-pressed={floating} aria-keyshortcuts="F" disabled={state !== 'ready' || intro !== 'off'}
+          onClick={() => scene.current?.setFloat(!floating)} title={floating ? 'Fly back to the tour (F or Esc)' : 'Drift freely through the module (F)'}>
+          {floating ? '↩ Back to tour' : '✥ Explore'}
+        </button>
         <button type="button" className="cabin-replay" onClick={() => scene.current?.replayIntro()}>↺ Replay arrival</button>
       </header>
 
@@ -201,6 +249,9 @@ export default function CabinPage() {
           </button>
         ))}
       </nav>
+
+      {floating && <FloatHint touch={touch} />}
+      {floating && touch && <FloatPad onMove={(x, y, v) => scene.current?.move(x, y, v)} />}
 
       <section className="cabin-caption cabin-panel" aria-live="polite">
         <div className="cap-step">{String(stop + 1).padStart(2, '0')} / {String(STOP_COUNT).padStart(2, '0')}</div>

@@ -1,43 +1,51 @@
-/* The loading screen between the console and the 3D cabin (cabin/CabinLoader.tsx). Ships with the main bundle,
-   because it is also the fallback while the cabin chunk downloads. --cl-t is a negative delay shared by every
-   animation, so the loader that replaces the fallback carries on mid-drift. */
+/* The loading screen between the console and the 3D cabin (cabin/CabinLoader.tsx). Same look as the briefing page and
+   the launch screen: the dawn sky, twinkling stars, a particle Earth limb, and a chamfered HUD panel. All CSS, no images.
+   Ships with the main bundle, because it is also the fallback while the cabin chunk downloads. --cl-t is a negative
+   delay shared by every animation, so the loader that replaces the fallback carries on mid-drift. */
 .cabin-loader {
   position: fixed; inset: 0; z-index: 60; overflow: hidden; isolation: isolate;
-  display: flex; align-items: flex-end; justify-content: flex-end;
-  padding: clamp(32px, 9vh, 96px) clamp(28px, 6vw, 112px);
-  background: #0a0503; color: var(--t1); font-family: var(--ui);
+  display: grid; place-items: center; padding: clamp(28px, 6vh, 72px) clamp(20px, 5vw, 72px);
+  background: #02050a; color: var(--t1); font-family: var(--ui);
   transition: opacity .75s var(--ease), filter .75s var(--ease), transform .9s var(--ease);
 }
 .cabin-loader * { animation-delay: var(--cl-t, 0s); }
 .cabin-loader.is-leaving { opacity: 0; filter: blur(6px) brightness(1.6); transform: scale(1.04); pointer-events: none; }
 
-/* the art, full bleed, drifting slowly towards the astronaut and the rover */
-.cl-art { position: absolute; inset: 0; z-index: -3; background: var(--cl-art) 30% 60% / cover no-repeat; transform-origin: 28% 62%; animation: clKen 32s ease-in-out infinite alternate; }
-.is-fresh .cl-art { animation: clReveal 1.6s var(--ease) both, clKen 32s ease-in-out 1.6s infinite alternate; }
-.cabin-loader::before { /* darken the open canyon on the right for the readout; keep the crew in the light */
-  content: ''; position: absolute; inset: 0; z-index: -2;
-  background:
-    radial-gradient(ellipse 62% 75% at 100% 100%, rgba(6, 3, 2, .9) 0%, rgba(6, 3, 2, .62) 45%, transparent 75%),
-    linear-gradient(180deg, transparent 55%, rgba(6, 3, 2, .55) 100%);
+/* the dawn: deep blue-black sky, orange glow low on the right */
+.cl-sky {
+  position: absolute; inset: 0; z-index: -4;
+  background: radial-gradient(ellipse 60% 55% at 72% 108%, rgba(255, 140, 70, .36), transparent 70%), linear-gradient(180deg, #050608 0%, #0a0f1a 60%, #0d1a2c 100%);
+}
+.is-fresh .cl-sky { animation: clReveal 1.2s var(--ease) both; }
+.cl-stars { position: absolute; inset: 0; z-index: -3; pointer-events: none; }
+.cl-stars i { position: absolute; inset: 0; background-repeat: repeat; animation: clTwinkle 5s ease-in-out infinite alternate; }
+.cl-stars i:nth-child(1) {
+  background-size: 270px 230px; opacity: .6;
+  background-image: radial-gradient(1px 1px at 12% 18%, #d6eefa 0 60%, transparent 100%), radial-gradient(1px 1px at 63% 42%, #d6eefa 0 60%, transparent 100%),
+    radial-gradient(1.4px 1.4px at 86% 12%, #fff 0 60%, transparent 100%), radial-gradient(1px 1px at 38% 71%, #d6eefa 0 60%, transparent 100%);
+}
+.cl-stars i:nth-child(2) {
+  background-size: 430px 350px; opacity: .45; animation-duration: 7s; animation-delay: calc(var(--cl-t, 0s) - 2s);
+  background-image: radial-gradient(1.2px 1.2px at 25% 60%, #fff 0 60%, transparent 100%), radial-gradient(1px 1px at 72% 25%, #9ff4ff 0 60%, transparent 100%),
+    radial-gradient(1px 1px at 52% 88%, #d6eefa 0 60%, transparent 100%);
+}
+
+/* a particle Earth limb, rising from the bottom edge: green land and cyan sea dots drifting round, a lit cyan rim */
+.cl-earth {
+  position: absolute; z-index: -2; left: 50%; width: max(210vw, 210vh); aspect-ratio: 1; translate: -50% 0; border-radius: 50%; pointer-events: none;
+  top: calc(100% - clamp(100px, 22vh, 240px));
+  background: radial-gradient(circle at 50% 0%, rgba(54, 226, 245, .14), transparent 24%), #03070d;
+  box-shadow: 0 -1.5px 0 rgba(54, 226, 245, .8), 0 -10px 46px rgba(54, 226, 245, .28), inset 0 16px 60px -22px rgba(54, 226, 245, .4);
+}
+.cl-earth::before {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle, #3ddc97 0 1.1px, transparent 1.7px) 0 0 / 10px 10px, radial-gradient(circle, #36e2f5 0 .9px, transparent 1.5px) 5px 5px / 15px 15px;
+  -webkit-mask: radial-gradient(ellipse 50% 13% at 50% 0%, #000 0 24%, transparent 100%); mask: radial-gradient(ellipse 50% 13% at 50% 0%, #000 0 24%, transparent 100%);
+  animation: clSpin 140s linear infinite;
 }
 .cabin-loader::after { /* vignette */
   content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: radial-gradient(ellipse 120% 95% at 50% 45%, transparent 58%, rgba(0, 0, 0, .65) 100%);
-}
-
-/* dust blowing across the canyon, three depths */
-.cl-dust { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
-.cl-dust i { position: absolute; inset: -50% -10%; opacity: .55; background-repeat: repeat; animation: clDust 26s linear infinite; }
-.cl-dust i:nth-child(1) { background-image: radial-gradient(1.5px 1.5px at 20% 30%, #ffc89a, transparent), radial-gradient(1px 1px at 70% 80%, #ffb27a, transparent); background-size: 220px 180px; }
-.cl-dust i:nth-child(2) { background-image: radial-gradient(2px 2px at 50% 50%, #ffd8b0, transparent); background-size: 340px 290px; opacity: .35; animation-duration: 17s; }
-.cl-dust i:nth-child(3) { background-image: radial-gradient(3px 3px at 30% 60%, rgba(255, 190, 140, .8), transparent); background-size: 520px 460px; opacity: .22; filter: blur(1px); animation-duration: 11s; }
-
-/* faint scanlines, and a scanner line sweeping down the frame */
-.cl-scan { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .45; mix-blend-mode: overlay; background: repeating-linear-gradient(0deg, rgba(255, 255, 255, .05) 0 1px, transparent 1px 3px); }
-.cl-scan::after {
-  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 18%;
-  background: linear-gradient(180deg, transparent, rgba(159, 244, 255, .08) 85%, rgba(159, 244, 255, .35) 100%);
-  animation: clScan 6s cubic-bezier(.5, 0, .5, 1) infinite; animation-delay: var(--cl-t, 0s);
+  background: radial-gradient(ellipse 120% 95% at 50% 45%, transparent 58%, rgba(0, 0, 0, .6) 100%);
 }
 
 /* the HUD frame round the screen */
@@ -49,53 +57,60 @@
 .cl-corner.br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
 .cl-tag { position: absolute; top: 4px; left: 34px; font: 600 10px var(--mono); letter-spacing: .2em; color: var(--cy-hi); text-shadow: 0 0 8px rgba(0, 0, 0, .9); }
 
-/* ---------- the readout ---------- */
-.cl-copy { position: relative; z-index: 3; width: min(460px, 100%); }
+/* ---------- the readout: a chamfered panel (the briefing page's .hp and .ph) ---------- */
+.cl-copy {
+  --cut: 14px; position: relative; z-index: 3; isolation: isolate; width: min(480px, 100%); padding: 14px clamp(18px, 3vw, 28px) 22px;
+  clip-path: polygon(0 var(--cut), var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%);
+  background: linear-gradient(160deg, var(--edge-hi), var(--edge) 30%, var(--edge) 70%, var(--edge-hi));
+}
+.cl-copy::before {
+  content: ''; position: absolute; inset: 1px; z-index: -1;
+  clip-path: polygon(0 calc(var(--cut) - .5px), calc(var(--cut) - .5px) 0, 100% 0, 100% calc(100% - var(--cut) + .5px), calc(100% - var(--cut) + .5px) 100%, 0 100%);
+  background: linear-gradient(180deg, rgba(54, 226, 245, .06), transparent 40%), var(--panel); backdrop-filter: blur(14px);
+}
 .is-fresh .cl-copy { animation: clIn .9s var(--ease) .25s both; }
-.cl-brand { font: 600 12px var(--mono); letter-spacing: .3em; text-transform: uppercase; color: var(--or-hi); }
-.cl-brand span { color: var(--t3); }
-.cl-title { margin: var(--sp-3) 0 var(--sp-6); font: 700 clamp(32px, 3.8vw, 54px)/1.02 var(--disp); letter-spacing: -.02em; text-shadow: 0 4px 30px rgba(0, 0, 0, .6); }
+.cl-ph { display: flex; align-items: center; gap: 10px; margin-bottom: var(--sp-4); font: 600 11px/1.4 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--cy); }
+.cl-ph::before { content: ''; flex: none; width: 6px; height: 6px; background: var(--cy); box-shadow: 0 0 8px var(--cy); transform: rotate(45deg); }
+.cl-ph::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(54, 226, 245, .55), transparent); }
+.cl-brand { font: 600 clamp(24px, 3vw, 32px)/1 var(--disp); letter-spacing: -.01em; }
+.cl-brand b { font-weight: 600; color: var(--cy); }
+.cl-brand em { font-style: normal; color: var(--or); }
+.cl-title { margin: var(--sp-2) 0 var(--sp-5); font: 600 11px var(--mono); letter-spacing: .3em; text-transform: uppercase; color: var(--cy-hi); }
 
-.cl-status { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-4); font: 600 13px var(--mono); letter-spacing: .14em; text-transform: uppercase; }
-.cl-step { color: var(--cy-hi); text-shadow: 0 0 10px rgba(0, 8, 14, .9); }
+.cl-status { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-4); font: 600 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; }
+.cl-step { color: var(--t2); }
 .cl-dots i { font-style: normal; animation: clBlink 1.2s steps(1) infinite; }
 .cl-dots i:nth-child(2) { animation-delay: .2s; }
 .cl-dots i:nth-child(3) { animation-delay: .4s; }
 .cl-pct { font: 700 28px var(--mono); letter-spacing: 0; color: var(--t1); font-variant-numeric: tabular-nums; }
 .cl-pct > span { color: var(--or-hi); }
-.cl-track { position: relative; height: 4px; margin-top: var(--sp-3); background: rgba(255, 255, 255, .1); overflow: hidden; }
-.cl-fill { position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, var(--or), var(--or-hi) 70%, #fff); box-shadow: 0 0 14px var(--or); }
+.cl-track { position: relative; height: 4px; margin-top: var(--sp-3); background: rgba(54, 226, 245, .16); overflow: hidden; }
+.cl-fill { position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, var(--cy), var(--cy-hi)); box-shadow: 0 0 14px var(--cy-glow); }
 .cl-track::after { /* a glint running along the bar */
   content: ''; position: absolute; top: 0; bottom: 0; width: 80px; left: -80px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent); animation: clGlint 1.8s ease-in-out infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .5), transparent); animation: clGlint 1.8s ease-in-out infinite;
 }
 .cl-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: var(--sp-3) 0 0; padding: 0; list-style: none; }
-.cl-steps li { height: 2px; background: rgba(255, 255, 255, .18); transition: background var(--dur-3); }
+.cl-steps li { height: 2px; background: rgba(255, 255, 255, .16); transition: background var(--dur-3); }
 .cl-steps li.done { background: var(--cy); }
-.cl-steps li.now { background: var(--cy-hi); animation: clPulse 1s ease-in-out infinite alternate; }
+.cl-steps li.now { background: var(--or); animation: clPulse 1s ease-in-out infinite alternate; }
 
-.cl-fact { margin: var(--sp-6) 0 0; min-height: 4.5em; font: 400 14px/1.55 var(--ui); color: var(--t2); text-shadow: 0 1px 8px rgba(0, 0, 0, .8); animation: clFact .6s var(--ease) both; animation-delay: 0s; }
+.cl-fact { margin: var(--sp-5) 0 0; min-height: 4.5em; font: 400 14px/1.55 var(--ui); color: var(--t2); animation: clFact .6s var(--ease) both; animation-delay: 0s; }
 .cl-fact span { display: block; margin-bottom: var(--sp-1); font: 600 10px var(--mono); letter-spacing: .24em; color: var(--t3); }
 
 .cl-back { margin-top: var(--sp-4); font: 500 13px var(--ui); color: var(--t2); background: rgba(2, 5, 10, .5); border: 1px solid var(--edge); padding: var(--sp-2) 14px; cursor: var(--cur-pointer); letter-spacing: .04em; }
 .cl-back:hover { background: var(--cy-soft); color: var(--t1); }
 .cl-back:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
 
-/* portrait and phones: crop to the astronaut and rover, readout across the bottom */
-@media (max-aspect-ratio: 1/1), (max-width: 767px) {
-  .cabin-loader { justify-content: stretch; padding: var(--sp-6) var(--sp-5) calc(var(--sp-8) + env(safe-area-inset-bottom)); }
-  .cl-art { background-position: 24% 50%; transform-origin: 24% 55%; }
-  .cabin-loader::before { background: linear-gradient(180deg, rgba(6, 3, 2, .1) 0%, transparent 35%, rgba(6, 3, 2, .8) 62%, #060302 82%); }
-  .cl-copy { width: 100%; }
-  .cl-title { margin-bottom: var(--sp-5); font-size: clamp(28px, 8vw, 40px); }
-  .cl-fact { margin-top: var(--sp-5); min-height: 3em; font-size: 13px; }
+@media (max-width: 767px) {
+  .cabin-loader { padding: var(--sp-6) var(--sp-4) calc(var(--sp-6) + env(safe-area-inset-bottom)); }
+  .cl-fact { min-height: 3.6em; font-size: 13px; }
   .cl-tag { display: none; }
 }
 
-@keyframes clKen { from { transform: scale(1.04) translate3d(0, 0, 0); } to { transform: scale(1.14) translate3d(1.5%, -1%, 0); } }
-@keyframes clReveal { from { opacity: 0; transform: scale(1.12); filter: blur(10px) brightness(.4); } to { opacity: 1; transform: scale(1.04); filter: none; } }
-@keyframes clScan { from { transform: translateY(-100%); } to { transform: translateY(560%); } }
-@keyframes clDust { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-14%, 10%, 0); } }
+@keyframes clReveal { from { opacity: 0; filter: brightness(.4); } to { opacity: 1; filter: none; } }
+@keyframes clTwinkle { from { opacity: .25; } to { opacity: 1; } }
+@keyframes clSpin { to { background-position: 600px 0, 605px 5px; } }
 @keyframes clBlink { 0% { opacity: 1; } 50% { opacity: .15; } }
 @keyframes clPulse { from { opacity: .45; } to { opacity: 1; } }
 @keyframes clGlint { from { left: -80px; } to { left: 100%; } }

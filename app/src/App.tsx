@@ -17,6 +17,7 @@ import { ShellDataContext, useShellData, type ShellData } from './shell/useShell
 import { useSplashHandoff } from './shell/splash'
 import { StateView } from './ui/StateView'
 import { Tour } from './tour/Tour'
+import { VitaDock } from './vita/VitaDock'
 
 // The board is the landing screen and loads eagerly; every other screen (Trends carries the chart
 // library) is its own chunk. The service worker precaches all chunks, so they still work offline;
@@ -122,6 +123,7 @@ export default function App() {
         <Suspense fallback={<CabinLoader />}><CabinPage /></Suspense>
       </ErrorBoundary>
       <Tour />
+      <VitaDock />
     </ShellDataContext.Provider>
   )
   return (
@@ -154,6 +156,7 @@ export default function App() {
       </div>
       <BottomTabs alerts={shell?.crew.find((c) => c.id === shell.crewId)?.alerts ?? 0} />
       <Tour />
+      <VitaDock />
     </div>
     </ShellDataContext.Provider>
   )

@@ -5,8 +5,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 // The console is served under /app/ on the same Netlify site as the landing page.
 export default defineConfig({
   base: '/app/',
-  // The 3D twin uses the landing page's baked body (one source of truth); let the dev server read that folder.
-  server: { fs: { allow: ['.', '../landing/universe/targets'] } },
+  // The 3D twin uses the landing page's baked body, and VITA's chat the landing page's ask module (one source of truth each); let the dev server read those folders.
+  server: { fs: { allow: ['.', '../landing/universe/targets', '../landing/vita'] } },
   // Four test files seed the 20k-reading demo mission; cap workers so they do not starve each other.
   test: { maxWorkers: 3 },
   plugins: [
@@ -19,8 +19,8 @@ export default defineConfig({
         short_name: 'AstroDocX',
         description:
           'Offline-first astronaut health co-pilot: detect, explain, act, log, sync later. Prototype, not a medical device.',
-        theme_color: '#0C0A1E',
-        background_color: '#0C0A1E',
+        theme_color: '#02050a',
+        background_color: '#02050a',
         display: 'standalone',
         start_url: '/app/',
         scope: '/app/',

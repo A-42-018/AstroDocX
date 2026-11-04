@@ -137,11 +137,20 @@
 .ca-skip { pointer-events: auto; font: 600 13px var(--ui); color: var(--cy-hi); background: var(--panel); border: 1px solid var(--edge-hi); padding: var(--sp-2) 14px; cursor: var(--cur-pointer); letter-spacing: .04em; }
 .cabin-sound { pointer-events: auto; margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font: 500 12px var(--ui); color: var(--t2); background: transparent; border: 1px solid var(--edge); padding: 6px 12px; cursor: var(--cur-pointer); letter-spacing: .04em; }
 .cabin-sound[aria-pressed="false"] { color: var(--t3); }
-.cabin-sound + .cabin-replay, .cabin-sound + .cabin-sound { margin-left: 0; }
+.cabin-sound-group { pointer-events: auto; margin-left: auto; display: inline-flex; }
+.cabin-sound-group .cabin-sound { margin-left: 0; }
+.cabin-sound-group .cabin-sound + .cabin-sound { border-left: 0; padding: 6px 10px; }
+.cabin-sound-group + .cabin-replay, .cabin-sound + .cabin-replay, .cabin-sound + .cabin-sound { margin-left: 0; }
 .cabin-sound:hover { background: var(--cy-soft); }
 .cabin-sound:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
 .ca-skip:hover, .cabin-replay:hover { background: var(--cy-soft); }
 .ca-skip:focus-visible, .cabin-replay:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
+.cabin-explore { pointer-events: auto; font: 500 12px var(--ui); color: var(--cy-hi); background: transparent; border: 1px solid var(--edge-hi); padding: 6px 12px; cursor: var(--cur-pointer); letter-spacing: .04em; }
+.cabin-explore:hover:not(:disabled) { background: var(--cy-soft); }
+.cabin-explore:disabled { opacity: .45; cursor: default; }
+.cabin-explore[aria-pressed="true"] { color: var(--bg); background: var(--or); border-color: var(--or); }
+.cabin-explore:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
+.cabin-explore + .cabin-replay { margin-left: 0; }
 .cabin-replay { pointer-events: auto; margin-left: auto; font: 500 12px var(--ui); color: var(--t2); background: transparent; border: 1px solid var(--edge); padding: 6px 12px; cursor: var(--cur-pointer); letter-spacing: .04em; }
 /* the HUD boots panel by panel once the visor is down (scene.ts holds 'booting' for 1 s) */
 .cabin-visor.booting :is(.vz, .vz-reticle, .vz-bar, .vz-motto, .prompt) { animation: vzBoot .45s ease-out both; }
@@ -183,3 +192,28 @@
 /* the real console on the wall screens (cabin/screens.ts): above the canvas, below the HUD, never takes input */
 .cabin-screens { position: absolute !important; inset: 0; z-index: 1; pointer-events: none; }
 .cabin-screens iframe { display: block; border: 0; background: #03080e; pointer-events: none; opacity: 0; }
+
+/* float mode (cabin/FloatPad.tsx): the tour's caption makes way for the controls */
+.cabin.is-floating .cabin-caption, .cabin.is-floating .cabin-visor .prompt { opacity: 0; pointer-events: none; }
+.cabin-float { position: absolute; left: 50%; bottom: var(--sp-5); translate: -50% 0; width: min(640px, calc(100% - 40px)); padding: var(--sp-3) var(--sp-5) 14px; z-index: 5; pointer-events: none; animation: cl-in .35s var(--ease); }
+.cabin-float p { margin: 4px 0 0; font: 400 13px/1.7 var(--ui); color: var(--t2); }
+.cabin-float kbd { display: inline-block; min-width: 20px; margin: 0 2px; padding: 0 5px; text-align: center; font: 600 11px/18px var(--mono); color: var(--cy-hi); border: 1px solid var(--edge-hi); border-radius: 4px; background: rgba(0, 0, 0, .35); }
+.cabin-float b { color: var(--or-hi); }
+@keyframes cl-in { from { opacity: 0; translate: -50% 10px; } }
+.float-pad { position: absolute; left: var(--sp-5); right: var(--sp-5); bottom: calc(var(--sp-5) + 12px); z-index: 6; display: flex; justify-content: space-between; align-items: flex-end; pointer-events: none; }
+.float-stick { pointer-events: auto; touch-action: none; position: relative; width: 120px; height: 120px; border-radius: 50%; background: var(--panel); border: 1px solid var(--edge-hi); backdrop-filter: blur(8px); }
+.float-stick i { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; background: var(--cy-soft); border: 2px solid var(--cy); box-shadow: 0 0 14px var(--cy-glow); }
+.float-lift { pointer-events: auto; display: flex; flex-direction: column; gap: 10px; }
+.float-lift button { touch-action: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; color: var(--cy-hi); background: var(--panel); border: 1px solid var(--edge-hi); }
+.float-lift button:active { background: var(--cy-soft); }
+@media (max-width: 767px) { .float-pad { order: 2; } .cabin-float { bottom: 150px; } .cabin-explore { padding: 6px 9px; } }
+@media (prefers-reduced-motion: reduce) { .cabin-float { animation: none; } }
+
+/* phones: room for the controls that matter (back, sound, explore); the title and the arrival replay step aside */
+@media (max-width: 767px) {
+  .cabin-top { gap: var(--sp-2); }
+  .cabin-brand, .cabin-replay { display: none; }
+  .cabin-sound-group { margin-left: auto; }
+  .cabin-sound-group .cabin-sound:first-child span { display: none; }
+  .cabin-explore { margin-left: 0; }
+}

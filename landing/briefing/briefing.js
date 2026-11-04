@@ -12,6 +12,7 @@
 ============================================================ */
 import { createScene } from './vita.js'
 import { sound } from './sound.js'
+import { voice } from './voice.js'
 
 const $ = (s, r = document) => r.querySelector(s)
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -36,7 +37,11 @@ const INTRO = [
   { text: "Three doors, pick one. Or ask me anything about astronaut health. I answer from NASA's own research and I'll show you where it came from." },
 ]
 const RETURN_LINE = { text: "Welcome back. Pick a door, or ask me anything about astronaut health. I'll show you where each answer comes from." }
-const CHIPS = ['How do you catch a CO₂ fault?', 'What does radiation do to astronauts?', 'Show me bone loss in space', 'Take me to the EVA']
+const CHIPS = ['How do you catch a CO₂ fault?', 'What does radiation do to astronauts?', 'Show me bone loss in space', 'Take me to the EVA', 'Give me the full tour']
+/* Asking for the tour starts the full guide. The console's dock uses the same pattern (app/src/vita/intent.ts). */
+const TOUR_INTENT = /full (tour|guide)|\btour\b|guide me|show me (everything|around)|walk me through/i
+const TOUR_REPLY = "Sure, follow me. I'll show you everything."
+
 const DOOR_LINE = {
   console: 'The console is where the crew lives: try the CO₂ fault demo and watch an alert become an action.',
   cabin: 'The cabin is the station in 3D. The tour ends outside with an astronaut on EVA.',
@@ -130,13 +135,17 @@ function addBot({ source, hover } = {}) {
 function dropHover() { const last = thread.lastElementChild; if (last && last.classList.contains('hover')) last.remove() }
 
 /** Type a message out, character by character (instantly with reduced motion). Resolves false if cancelled. */
-async function say(item, { instant = false } = {}) {
+async function say(item, { instant = false, quiet = false } = {}) {
   dropHover()
   const tok = token
   const d = addBot({ source: item.source })
   const body = $('.body', d)
   const html = safe(item.text)
-  $('.sr-only', d).textContent = 'VITA: ' + plain(html.replace(/&[a-z#0-9]+;/gi, (e) => { const t = document.createElement('textarea'); t.innerHTML = e; return t.value }))
+  const text = plain(html.replace(/&[a-z#0-9]+;/gi, (e) => { const t = document.createElement('textarea'); t.innerHTML = e; return t.value }))
+  $('.sr-only', d).textContent = 'VITA: ' + text
+  // VITA speaks while the line types out (only with Sound on); the line ends when she stops talking
+  const spoken = quiet ? null : voice.speak(text)
+  if (spoken) { scene.talk(true); vitaId.classList.add('busy'); vitaState.textContent = 'Speaking' }
   if (instant || REDUCED) {
     body.innerHTML = html
   } else {
@@ -144,15 +153,27 @@ async function say(item, { instant = false } = {}) {
     const units = html.match(/<\/?em>|&[a-z#0-9]+;|[\s\S]/gi) || []
     let out = '', n = 0
     for (const u of units) {
-      if (tok !== token) { d.classList.remove('typing'); scene.talk(false); return false }
+      if (tok !== token) { d.classList.remove('typing'); scene.talk(false); if (spoken) voice.cancel(); return false }
       while (paused) { if (!(await sleep(80, tok))) return false }
       out += u; body.innerHTML = out
       if (u.length === 1 && u !== ' ') { n++; if (n % 3 === 0) sound.blip() }
       if (u.length === 1 || u[0] === '&') { scrollDown(); await new Promise((r) => setTimeout(r, 16)) }
     }
-    d.classList.remove('typing'); scene.talk(false); setBusy(false)
+    d.classList.remove('typing'); setBusy(false)
+    if (spoken) { vitaId.classList.add('busy'); vitaState.textContent = 'Speaking' } else scene.talk(false)
   }
   extras(d, item)
+  if (spoken && !(await untilQuiet(spoken, tok))) return false
+  return tok === token
+}
+
+/** Wait for VITA to finish speaking; stops her if something else takes over (a question, Skip, a door). */
+async function untilQuiet(spoken, tok) {
+  let done = false
+  spoken.then(() => { done = true })
+  while (!done && tok === token) await new Promise((r) => setTimeout(r, 60))
+  if (!done) voice.cancel()
+  if (tok === token && !voice.speaking) { scene.talk(false); if (!busy) { vitaId.classList.remove('busy'); vitaState.textContent = 'Mission guide' } }
   return tok === token
 }
 
@@ -214,14 +235,14 @@ async function runIntro() {
   return true
 }
 
-function skipIntro() {
-  token++; scene.talk(false); setBusy(false)
+function skipIntro({ quiet = false } = {}) {
+  token++; voice.cancel(); scene.talk(false); setBusy(false)
   thread.textContent = ''
-  say(INTRO[INTRO.length - 1], { instant: true })
+  say(INTRO[INTRO.length - 1], { instant: true, quiet })
   markSeen(); goReady()
   input.focus({ preventScroll: true })
 }
-skipBtn.addEventListener('click', skipIntro)
+skipBtn.addEventListener('click', () => skipIntro())
 
 /* ───────────────────────── ask ───────────────────────── */
 let askMod = null
@@ -254,12 +275,18 @@ async function answer(q) {
 async function ask(q) {
   q = String(q || '').trim()
   if (!q || (busy && ready)) return
-  if (!ready) skipIntro()
+  if (!ready) skipIntro({ quiet: true })   // the answer is coming; don't start reading the intro out
   dropHover()
   addMine(q)
   chatLog.push({ role: 'user', text: q })
   const tok = ++token
+  voice.cancel()
   scene.perk(); sound.tick()
+  if (TOUR_INTENT.test(q) && window.ADX_TOUR) {
+    chatLog.push({ role: 'assistant', text: TOUR_REPLY })
+    if ((await say({ text: TOUR_REPLY })) && tok === token) window.ADX_TOUR.start({ mode: 'full' })
+    return
+  }
   setBusy(true, 'Thinking')
   const wait = addBot()
   $('.body', wait).innerHTML = '<span class="dots"><i></i><i></i><i></i></span>'
@@ -299,6 +326,7 @@ if (SR && mic) {
   let rec = null
   mic.addEventListener('click', () => {
     if (rec) { rec.stop(); return }
+    voice.cancel()   // don't let the mic hear VITA
     rec = new SR(); rec.lang = 'en-US'; rec.interimResults = true; rec.maxAlternatives = 1
     mic.classList.add('listening'); mic.setAttribute('aria-label', 'Stop listening')
     rec.onresult = (e) => {
@@ -329,8 +357,8 @@ function go(a) {
   if (a.kind === 'library') return openLibrary(a.target || null)
   if (a.kind === 'tour') { if (window.ADX_TOUR) window.ADX_TOUR.start(); return }
   const url = a.kind === 'console' ? consoleUrl(a.target) : cabinUrl(a.target)
-  token++; setBusy(false); scene.talk(false)
-  say({ text: GO_LINE[a.kind] }, { instant: true })
+  token++; voice.cancel(); setBusy(false); scene.talk(false)
+  say({ text: GO_LINE[a.kind] }, { instant: true, quiet: true })
   sound.chime()
   setTimeout(() => { location.href = url }, REDUCED ? 0 : 350)
 }
@@ -428,12 +456,29 @@ addEventListener('keydown', (e) => { if (e.key === 'Escape' && !ov.hidden && !li
 const sBtn = $('#sound'), sLbl = $('#soundLbl')
 function showSound() { sBtn.setAttribute('aria-pressed', String(sound.on)); sLbl.textContent = sound.on ? 'Sound on' : 'Sound off' }
 if (!sound.available) sBtn.hidden = true
-sBtn.addEventListener('click', () => { sound.set(!sound.on); showSound() })
+sBtn.addEventListener('click', () => {
+  sound.set(!sound.on); voice.set(sound.on); showSound()
+  if (sound.on) { voice.unlock(); if (ready && !busy) say({ text: "Voice on. I'll read my answers out loud." }) }
+})
 if (sound.wanted()) {
-  const resume = () => { if (!sound.on) { sound.set(true); showSound() } }
+  const resume = () => { if (!sound.on) { sound.set(true); voice.set(true); voice.unlock(); showSound() } }
   addEventListener('pointerdown', resume, { once: true }); addEventListener('keydown', resume, { once: true })
 }
 showSound()
+
+/* ───────────────────────── hand-off to the console ─────────────────────────
+   VITA follows the visitor into the console and the cabin (app/src/vita): as this page closes it leaves the Sound choice,
+   the tour that was asked for and the last six chat messages in sessionStorage ('adx-vita'). */
+function saveHandoff() {
+  try {
+    const old = JSON.parse(sessionStorage.getItem('adx-vita') || 'null') || {}
+    sessionStorage.setItem('adx-vita', JSON.stringify({
+      ...old, sound: sound.on, tour: window.ADX_TOUR_MODE || null,
+      chat: chatLog.slice(-6).map((m) => ({ role: m.role, text: String(m.text).slice(0, 1200) })),
+    }))
+  } catch { /* storage off: the console starts fresh */ }
+}
+addEventListener('pagehide', saveHandoff)
 
 /* ───────────────────────── 1-click tour hooks (tour.js) ───────────────────────── */
 window.ADX_BRIEFING = {
@@ -446,7 +491,7 @@ window.ADX_BRIEFING = {
     await say({ text: "First stop: the <em>Crew Console</em>. I'll meet you in the cabin later.", door: 'console' })
     return sleep(1200, tok)
   },
-  setPaused(v) { paused = !!v; scene.talk(!paused && busy) },
+  setPaused(v) { paused = !!v; scene.talk(!paused && busy); paused ? voice.pause() : voice.resume() },
   /** The tour was exited: give the visitor the room. */
   endTour() { paused = false; if (!ready) skipIntro() },
   /** 0..1 through the briefing, for the tour bar */
