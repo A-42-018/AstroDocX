@@ -1,0 +1,823 @@
+{
+ "_note": "Hand-picked NASA items. Metadata from images-api.nasa.gov. Built by tools/build-collections.mjs. Not affiliated with or endorsed by NASA.",
+ "collections": [
+  {
+   "id": "bone-muscle",
+   "title": "Bone and muscle",
+   "intro": "Without gravity, bones lose mineral and muscles shrink. Watch how crews fight back with about two hours of exercise a day.",
+   "items": [
+    {
+     "nasa_id": "iss009e19798",
+     "media_type": "image",
+     "title": "Fincke exercises on the RED in the Node 1 module during Expedition 9",
+     "center": "JSC",
+     "date": "2004-08-23",
+     "caption": "The interim resistive exercise device (IRED) gave early station crews a way to load their legs and spine with squats and lifts.",
+     "thumb": "https://images-assets.nasa.gov/image/iss009e19798/iss009e19798~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss003e7408",
+     "media_type": "image",
+     "title": "Culbertson exercises on TVIS in the Service Module during Expedition Three",
+     "center": "JSC",
+     "date": "2001-10-01",
+     "caption": "Running on the TVIS treadmill, held down by a harness. Impact loading helps protect bone density in the legs and hips.",
+     "thumb": "https://images-assets.nasa.gov/image/iss003e7408/iss003e7408~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss006e45265",
+     "media_type": "image",
+     "title": "Flight Engineer Donald R. Pettit exercises on the TVIS in the SM during Expedition Six",
+     "center": "JSC",
+     "date": "2003-03-20",
+     "caption": "Treadmill runs are a daily countermeasure: they keep the heart, legs and bones working against a pull that is no longer there.",
+     "thumb": "https://images-assets.nasa.gov/image/iss006e45265/iss006e45265~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss040e074772",
+     "media_type": "image",
+     "title": "Swanson exercises on COLBERT in Node 3",
+     "center": "JSC",
+     "date": "2014-07-24",
+     "caption": "COLBERT, the station treadmill. Crews log many kilometres on it to preserve fitness and bone.",
+     "thumb": "https://images-assets.nasa.gov/image/iss040e074772/iss040e074772~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss030e033056",
+     "media_type": "image",
+     "title": "Burbank exercises on the ARED in the Node 3",
+     "center": "JSC",
+     "date": "2012-01-09",
+     "caption": "The ARED lifts real loads without gravity, using vacuum cylinders. It is the main defence against bone and muscle loss on station.",
+     "thumb": "https://images-assets.nasa.gov/image/iss030e033056/iss030e033056~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss031e157839",
+     "media_type": "image",
+     "title": "Kuipers exercises on the ARED",
+     "center": "JSC",
+     "date": "2012-06-05",
+     "caption": "Squats and deadlifts on the ARED load the hips and spine, the bones that lose the most in orbit.",
+     "thumb": "https://images-assets.nasa.gov/image/iss031e157839/iss031e157839~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss018e025456",
+     "media_type": "image",
+     "title": "ISS Expedition 18 Sandra Magnus uses Advanced Resistive Exercise Device (ARED)",
+     "center": "JSC",
+     "date": "2009-02-01",
+     "caption": "Resistance exercise has to be done with the body strapped in so the force goes into the bones, not the room.",
+     "thumb": "https://images-assets.nasa.gov/image/iss018e025456/iss018e025456~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss034e026550",
+     "media_type": "image",
+     "title": "Hadfield exercises on the ARED in the Node 3",
+     "center": "JSC",
+     "date": "2013-01-11",
+     "caption": "Strength training on the ARED. Exercise time is scheduled into every crew day like any other task.",
+     "thumb": "https://images-assets.nasa.gov/image/iss034e026550/iss034e026550~thumb.jpg"
+    },
+    {
+     "nasa_id": "jsc2018e087584",
+     "media_type": "image",
+     "title": "CCP Astronauts - CMS Advanced Resistive Exercise Device (ARED) O",
+     "center": "KSC",
+     "date": "2018-10-18",
+     "caption": "Crews practise on the ground before flight so the routine is familiar when it counts.",
+     "thumb": "https://images-assets.nasa.gov/image/jsc2018e087584/jsc2018e087584~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss052e024957",
+     "media_type": "image",
+     "title": "MARES",
+     "center": "JSC",
+     "date": "2017-08-01",
+     "caption": "MARES measures how strongly astronauts' joints and muscles can work, to see how spaceflight changes them.",
+     "thumb": "https://images-assets.nasa.gov/image/iss052e024957/iss052e024957~thumb.jpg"
+    },
+    {
+     "nasa_id": "jsc2025m000002_How_Do_Astronauts_Exercise_in_Space_250106-MP4",
+     "media_type": "video",
+     "title": "How Do Astronauts Exercise in Space?",
+     "center": "JSC",
+     "date": "2025-01-08",
+     "caption": "A plain-language tour of the running, cycling and lifting that keeps crews healthy.",
+     "thumb": "https://images-assets.nasa.gov/video/jsc2025m000002_How_Do_Astronauts_Exercise_in_Space_250106-MP4/jsc2025m000002_How_Do_Astronauts_Exercise_in_Space_250106-MP4~thumb.jpg"
+    },
+    {
+     "nasa_id": "jsc2018m000791-ARED_PT_Hopkins_1",
+     "media_type": "video",
+     "title": "ARED physical training with Mike Hopkins",
+     "center": "JSC",
+     "date": "2019-05-06",
+     "caption": "A commercial crew astronaut trains on the same resistive device the station uses.",
+     "thumb": "https://images-assets.nasa.gov/video/jsc2018m000791-ARED_PT_Hopkins_1/jsc2018m000791-ARED_PT_Hopkins_1~thumb.jpg"
+    },
+    {
+     "nasa_id": "What Are the Dangers of Going to Space",
+     "media_type": "video",
+     "title": "What Are the Dangers of Going to Space | We Asked a NASA Expert",
+     "center": "LaRC",
+     "date": "2025-04-01",
+     "caption": "A NASA scientist explains the main hazards, including bone loss and DNA damage.",
+     "thumb": "https://images-assets.nasa.gov/video/What Are the Dangers of Going to Space/What Are the Dangers of Going to Space~thumb.jpg"
+    },
+    {
+     "nasa_id": "Ep370_Spaceflight_Adaptation",
+     "media_type": "audio",
+     "title": "Spaceflight adaptation (podcast)",
+     "center": "JSC",
+     "date": "2025-01-31",
+     "caption": "NASA's Chief Health and Medical Officer on the biggest long-duration health challenges."
+    },
+    {
+     "nasa_id": "Ep377_Mission_Control_Crew_Health",
+     "media_type": "audio",
+     "title": "Mission Control: crew health consoles (podcast)",
+     "center": "JSC",
+     "date": "2025-03-21",
+     "caption": "Flight surgeons explain how they watch each astronaut's health from the ground."
+    },
+    {
+     "nasa_id": "Ep442_CHAPEA_2_Audio_Log_4",
+     "media_type": "audio",
+     "title": "CHAPEA 2, audio log 4 (podcast)",
+     "center": "JSC",
+     "date": "2026-10-23",
+     "caption": "A simulated-Mars crew describes the resistance and cardio work that guards against bone and muscle loss."
+    }
+   ]
+  },
+  {
+   "id": "radiation",
+   "title": "Radiation",
+   "intro": "Beyond Earth's magnetic shield, radiation is the hazard with no easy fix. These are the instruments and dummies that measure it.",
+   "items": [
+    {
+     "nasa_id": "iss051e051544",
+     "media_type": "image",
+     "title": "Pesquet conducts ESA-Active-Dosimeters Experiment OPS in Columbus",
+     "center": "JSC",
+     "date": "2017-05-29",
+     "caption": "An astronaut works with active dosimeters, small instruments that log the radiation dose a crew receives.",
+     "thumb": "https://images-assets.nasa.gov/image/iss051e051544/iss051e051544~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss034e034506",
+     "media_type": "image",
+     "title": "Hadfield holds bubble detectors for the RaDI-N Experiment in the Columbus Module",
+     "center": "JSC",
+     "date": "2013-01-25",
+     "caption": "Bubble detectors grow tiny bubbles when neutrons hit them, a simple way to count radiation dose.",
+     "thumb": "https://images-assets.nasa.gov/image/iss034e034506/iss034e034506~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss056e097010",
+     "media_type": "image",
+     "title": "Active Tissue Equivalent Dosimeter",
+     "center": "JSC",
+     "date": "2018-07-17",
+     "caption": "A tissue-equivalent dosimeter, built to read dose the way human tissue would absorb it.",
+     "thumb": "https://images-assets.nasa.gov/image/iss056e097010/iss056e097010~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss058e013161",
+     "media_type": "image",
+     "title": "ISS HERA",
+     "center": "JSC",
+     "date": "2019-02-13",
+     "caption": "HERA, a monitor that tracks radiation levels around the station in real time.",
+     "thumb": "https://images-assets.nasa.gov/image/iss058e013161/iss058e013161~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss014e09097",
+     "media_type": "image",
+     "title": "Matroshka-R Phantom experiment",
+     "center": "JSC",
+     "date": "2006-12-01",
+     "caption": "The Matroshka phantom is a human-shaped model packed with detectors, showing how deep radiation reaches inside a body.",
+     "thumb": "https://images-assets.nasa.gov/image/iss014e09097/iss014e09097~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss023e031527",
+     "media_type": "image",
+     "title": "Matroshka-2 Kibo Hardware",
+     "center": "JSC",
+     "date": "2010-05-04",
+     "caption": "A Matroshka phantom set up in the Kibo module, measuring dose at the organs.",
+     "thumb": "https://images-assets.nasa.gov/image/iss023e031527/iss023e031527~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss018e040944",
+     "media_type": "image",
+     "title": "MATRYOSHKA-R (RBO-3-2) Radiation Suite in the Service Module (SM)",
+     "center": "JSC",
+     "date": "2009-03-14",
+     "caption": "Radiation detectors in the Service Module, part of a long-running dose-mapping effort.",
+     "thumb": "https://images-assets.nasa.gov/image/iss018e040944/iss018e040944~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss061e145988",
+     "media_type": "image",
+     "title": "iss061e145988",
+     "center": "JSC",
+     "date": "2020-01-28",
+     "caption": "The AstroRad vest is designed to shield blood-forming organs during a solar particle event.",
+     "thumb": "https://images-assets.nasa.gov/image/iss061e145988/iss061e145988~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss002e6080",
+     "media_type": "image",
+     "title": "Phantom torso in the Human Research Facility",
+     "center": "JSC",
+     "date": "2001-05-02",
+     "caption": "A torso model with dosimeters inside, used to measure how much radiation reaches the organs.",
+     "thumb": "https://images-assets.nasa.gov/image/iss002e6080/iss002e6080~thumb.jpg"
+    },
+    {
+     "nasa_id": "GSFC_20190807_m13275_Astronaut_Radiation",
+     "media_type": "video",
+     "title": "How NASA Will Protect Astronauts From Space Radiation",
+     "center": "GSFC",
+     "date": "2019-08-07",
+     "caption": "How NASA plans to protect astronauts from solar and cosmic radiation on longer trips.",
+     "thumb": "https://images-assets.nasa.gov/video/GSFC_20190807_m13275_Astronaut_Radiation/GSFC_20190807_m13275_Astronaut_Radiation~thumb.jpg"
+    },
+    {
+     "nasa_id": "Artemis II Science - AVATAR Horizontal Video",
+     "media_type": "video",
+     "title": "Artemis II Science - AVATAR Horizontal Video",
+     "center": "HQ",
+     "date": "2026-01-14",
+     "caption": "Organ-on-a-chip tissue flies on Artemis II to see how deep-space radiation affects human cells.",
+     "thumb": "https://images-assets.nasa.gov/video/Artemis II Science - AVATAR Horizontal Video/Artemis II Science - AVATAR Horizontal Video~thumb.jpg"
+    },
+    {
+     "nasa_id": "jsc2024m000002-Linear_Energy_Transfer_Spectrometer_Overview_social",
+     "media_type": "video",
+     "title": "Linear Energy Transfer Spectrometer overview",
+     "center": "JSC",
+     "date": "2024-01-08",
+     "caption": "A radiation instrument that measures how hard each particle hits, which sets biological risk.",
+     "thumb": "https://images-assets.nasa.gov/video/jsc2024m000002-Linear_Energy_Transfer_Spectrometer_Overview_social/jsc2024m000002-Linear_Energy_Transfer_Spectrometer_Overview_social~thumb.jpg"
+    },
+    {
+     "nasa_id": "What Are the Dangers of Going to Space",
+     "media_type": "video",
+     "title": "What Are the Dangers of Going to Space | We Asked a NASA Expert",
+     "center": "LaRC",
+     "date": "2025-04-01",
+     "caption": "Radiation and DNA damage, explained by a NASA scientist.",
+     "thumb": "https://images-assets.nasa.gov/video/What Are the Dangers of Going to Space/What Are the Dangers of Going to Space~thumb.jpg"
+    },
+    {
+     "nasa_id": "Ep370_Spaceflight_Adaptation",
+     "media_type": "audio",
+     "title": "Spaceflight adaptation (podcast)",
+     "center": "JSC",
+     "date": "2025-01-31",
+     "caption": "NASA's Chief Health and Medical Officer calls radiation the 'elephant in the room'."
+    },
+    {
+     "nasa_id": "Ep391_Mars_Is_Hard",
+     "media_type": "audio",
+     "title": "Mars is hard. Here's why. (podcast)",
+     "center": "JSC",
+     "date": "2025-06-27",
+     "caption": "Why Mars crews would need to dig in: radiation there is not friendly to human health."
+    }
+   ]
+  },
+  {
+   "id": "sleep-isolation",
+   "title": "Sleep and isolation",
+   "intro": "Sixteen sunrises a day, small cabins and months away from home. Sleep and mood need as much care as muscle.",
+   "items": [
+    {
+     "nasa_id": "iss026e012158",
+     "media_type": "image",
+     "title": "Coleman in sleeping quarters",
+     "center": "JSC",
+     "date": "2010-12-25",
+     "caption": "A station sleeping quarters. Each crew member gets a small private booth with a sleeping bag tied to the wall.",
+     "thumb": "https://images-assets.nasa.gov/image/iss026e012158/iss026e012158~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss026e012169",
+     "media_type": "image",
+     "title": "Expedition 26 Crewmembers in sleeping quarters",
+     "center": "JSC",
+     "date": "2010-12-25",
+     "caption": "Three crew members peek out of their sleeping quarters on Christmas morning. Sleep stays on a fixed schedule even though the sun rises every 90 minutes.",
+     "thumb": "https://images-assets.nasa.gov/image/iss026e012169/iss026e012169~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss054e022260",
+     "media_type": "image",
+     "title": "View inside the crew quarters",
+     "center": "JSC",
+     "date": "2018-01-16",
+     "caption": "The inside of a crew quarters booth: the quiet, dark place an astronaut uses to sleep.",
+     "thumb": "https://images-assets.nasa.gov/image/iss054e022260/iss054e022260~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss042e023422",
+     "media_type": "image",
+     "title": "Cristoforetti in Crew quarters",
+     "center": "JSC",
+     "date": "2014-12-06",
+     "caption": "An astronaut in her sleeping bag in her personal crew quarters. A private space helps with sleep and mood on long missions.",
+     "thumb": "https://images-assets.nasa.gov/image/iss042e023422/iss042e023422~thumb.jpg"
+    },
+    {
+     "nasa_id": "sl2-03-205",
+     "media_type": "image",
+     "title": "Skylab astronaut strapped into a sleep restraint",
+     "center": "JSC",
+     "date": "1973-06-01",
+     "caption": "On Skylab in 1973, sleep restraints stopped crew drifting off while they slept.",
+     "thumb": "https://images-assets.nasa.gov/image/sl2-03-205/sl2-03-205~thumb.jpg"
+    },
+    {
+     "nasa_id": "S111E5122",
+     "media_type": "image",
+     "title": "Whitson in her TeSS in the Destiny U.S. Lab during STS-111 UF-2 docked OPS",
+     "center": "JSC",
+     "date": "2002-06-09",
+     "caption": "Peggy Whitson at the temporary sleep station set up in the US lab in 2002, before permanent crew quarters.",
+     "thumb": "https://images-assets.nasa.gov/image/S111E5122/S111E5122~thumb.jpg"
+    },
+    {
+     "nasa_id": "jsc2025m000028_How_Do_Astronauts_Practice_Self-Care_in_Space_250331",
+     "media_type": "video",
+     "title": "How Do Astronauts Practice Self-Care in Space?",
+     "center": "JSC",
+     "date": "2025-04-07",
+     "caption": "Music, movies and rest: how crews recharge when home is 250 miles below.",
+     "thumb": "https://images-assets.nasa.gov/video/jsc2025m000028_How_Do_Astronauts_Practice_Self-Care_in_Space_250331/jsc2025m000028_How_Do_Astronauts_Practice_Self-Care_in_Space_250331~thumb.jpg"
+    },
+    {
+     "nasa_id": "jsc2026m000031_How_Will_Deep_Space_Travel_Affect_Artemis_Astronauts’_Health_and_Performance_260205",
+     "media_type": "video",
+     "title": "How Will Deep Space Travel Affect Artemis Astronauts’ Health and Performance?",
+     "center": "JSC",
+     "date": "2026-02-05",
+     "caption": "Wristbands record sleep and movement on Artemis II to show how crews adjust to a small cabin.",
+     "thumb": "https://images-assets.nasa.gov/video/jsc2026m000031_How_Will_Deep_Space_Travel_Affect_Artemis_Astronauts’_Health_and_Performance_260205/jsc2026m000031_How_Will_Deep_Space_Travel_Affect_Artemis_Astronauts’_Health_and_Performance_260205~thumb.jpg"
+    },
+    {
+     "nasa_id": "jsc2021m000261_HERA_Groundlink_C6M1_Final_v4",
+     "media_type": "video",
+     "title": "HERA crew answers students",
+     "center": "JSC",
+     "date": "2021-11-10",
+     "caption": "A crew living in an Earth-based isolation habitat tells students what the confinement is like.",
+     "thumb": "https://images-assets.nasa.gov/video/jsc2021m000261_HERA_Groundlink_C6M1_Final_v4/jsc2021m000261_HERA_Groundlink_C6M1_Final_v4~thumb.jpg"
+    },
+    {
+     "nasa_id": "jsc2026m000044_10_Days_in_Orion",
+     "media_type": "video",
+     "title": "10 Days in Orion",
+     "center": "JSC",
+     "date": "2026-03-25",
+     "caption": "How four astronauts will live, eat and sleep in the Orion capsule on a Moon trip.",
+     "thumb": "https://images-assets.nasa.gov/video/jsc2026m000044_10_Days_in_Orion/jsc2026m000044_10_Days_in_Orion~thumb.jpg"
+    },
+    {
+     "nasa_id": "Ep411_CHAPEA_2_AudioLog_1",
+     "media_type": "audio",
+     "title": "CHAPEA 2, audio log 1 (podcast)",
+     "center": "JSC",
+     "date": "2026-02-13",
+     "caption": "The commander describes the first night in the Mars habitat."
+    },
+    {
+     "nasa_id": "Ep423_CHAPEA_2_Audio_Log_2",
+     "media_type": "audio",
+     "title": "CHAPEA 2, audio log 2 (podcast)",
+     "center": "JSC",
+     "date": "2026-05-22",
+     "caption": "What a typical day looks like for a crew shut in for a year."
+    },
+    {
+     "nasa_id": "Ep431_CHAPEA_2_Audio_Log_3",
+     "media_type": "audio",
+     "title": "CHAPEA 2, audio log 3 (podcast)",
+     "center": "JSC",
+     "date": "2026-07-31",
+     "caption": "The crew talks about sleep patterns, activity and interaction, the things NASA is tracking."
+    },
+    {
+     "nasa_id": "Ep427_ISS_Results_Wayfinding",
+     "media_type": "audio",
+     "title": "ISS results: wayfinding (podcast)",
+     "center": "JSC",
+     "date": "2026-02-26",
+     "caption": "Researchers discuss how sleep, isolation and confinement affect astronauts on top of weightlessness."
+    }
+   ]
+  },
+  {
+   "id": "twins-study",
+   "title": "Twins Study",
+   "intro": "Scott Kelly spent a year in orbit while his identical twin Mark stayed on Earth. Their differences show what space does to a body.",
+   "items": [
+    {
+     "nasa_id": "iss045e028258",
+     "media_type": "image",
+     "title": "Kelly during Twins Study Experiment Operations",
+     "center": "JSC",
+     "date": "2015-09-24",
+     "caption": "Scott Kelly gives himself a flu shot for the immune-system part of the Twins Study. Mark got the same study on Earth.",
+     "thumb": "https://images-assets.nasa.gov/image/iss045e028258/iss045e028258~thumb.jpg"
+    },
+    {
+     "nasa_id": "201503260026HQ",
+     "media_type": "image",
+     "title": "Expedition 43 Kelly Brothers",
+     "center": "HQ",
+     "date": "2015-03-26",
+     "caption": "Scott and Mark Kelly before launch. Having an identical twin on the ground made this a one-of-a-kind comparison.",
+     "thumb": "https://images-assets.nasa.gov/image/201503260026HQ/201503260026HQ~thumb.jpg"
+    },
+    {
+     "nasa_id": "201503260005HQ",
+     "media_type": "image",
+     "title": "Expedition 43 Kelly Brothers",
+     "center": "HQ",
+     "date": "2015-03-26",
+     "caption": "The twins pose together at Baikonur before Scott launches on his one-year mission.",
+     "thumb": "https://images-assets.nasa.gov/image/201503260005HQ/201503260005HQ~thumb.jpg"
+    },
+    {
+     "nasa_id": "201503260024HQ",
+     "media_type": "image",
+     "title": "Expedition 43 Press Conference",
+     "center": "HQ",
+     "date": "2015-03-26",
+     "caption": "Mark Kelly fist-bumps his twin through the glass before launch.",
+     "thumb": "https://images-assets.nasa.gov/image/201503260024HQ/201503260024HQ~thumb.jpg"
+    },
+    {
+     "nasa_id": "jsc2015e004178",
+     "media_type": "image",
+     "title": "Mark and Scott Kelly talk to news media",
+     "center": "JSC",
+     "date": "2015-01-19",
+     "caption": "The brothers speak with reporters about the mission. Researchers followed both for blood, genes, gut bacteria and more.",
+     "thumb": "https://images-assets.nasa.gov/image/jsc2015e004178/jsc2015e004178~thumb.jpg"
+    },
+    {
+     "nasa_id": "201010100007HQ",
+     "media_type": "image",
+     "title": "Expedition 25 Docking",
+     "center": "HQ",
+     "date": "2010-10-09",
+     "caption": "Mark Kelly speaks to his twin by phone while Scott was aboard the station in 2010.",
+     "thumb": "https://images-assets.nasa.gov/image/201010100007HQ/201010100007HQ~thumb.jpg"
+    },
+    {
+     "nasa_id": "jsc2011e026383",
+     "media_type": "image",
+     "title": "jsc2011e026383",
+     "center": "JSC",
+     "date": "2011-03-17",
+     "caption": "The twins reunited after an earlier flight. Both are astronauts, which made them closely matched test subjects.",
+     "thumb": "https://images-assets.nasa.gov/image/jsc2011e026383/jsc2011e026383~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss043e194316",
+     "media_type": "image",
+     "title": "Kelly in Node 1",
+     "center": "JSC",
+     "date": "2015-05-15",
+     "caption": "Scott Kelly in the station's Node 1, partway through his year in space.",
+     "thumb": "https://images-assets.nasa.gov/image/iss043e194316/iss043e194316~thumb.jpg"
+    },
+    {
+     "nasa_id": "NHQ_2020_0212_AskNASA - Whats it Like to be in Space for a Year",
+     "media_type": "video",
+     "title": "#AskNASA - What's It Like To Be In Space For A Year?",
+     "center": "HQ",
+     "date": "2020-02-12",
+     "caption": "Christina Koch on her long stay in space and the medical research behind longer missions.",
+     "thumb": "https://images-assets.nasa.gov/video/NHQ_2020_0212_AskNASA - Whats it Like to be in Space for a Year/NHQ_2020_0212_AskNASA - Whats it Like to be in Space for a Year~thumb.jpg"
+    },
+    {
+     "nasa_id": "jsc2020m000073_Advice_on_Returning_to_Earth_for_Koch_from_Scott_Kelly_2_MP4",
+     "media_type": "video",
+     "title": "Advice on Returning to Earth for Astronaut Christina Koch from Scott Kelly",
+     "center": "JSC",
+     "date": "2020-02-06",
+     "caption": "Scott Kelly, who spent 340 days in space, gives advice on readjusting to life on Earth.",
+     "thumb": "https://images-assets.nasa.gov/video/jsc2020m000073_Advice_on_Returning_to_Earth_for_Koch_from_Scott_Kelly_2_MP4/jsc2020m000073_Advice_on_Returning_to_Earth_for_Koch_from_Scott_Kelly_2_MP4~thumb.jpg"
+    },
+    {
+     "nasa_id": "Frank_Rubio-A_Year_of_Science_in_Space",
+     "media_type": "video",
+     "title": "Frank Rubio: A Year of Science in Space",
+     "center": "JSC",
+     "date": "2023-09-18",
+     "caption": "A year-long mission's worth of science, in the long-stay tradition that began with the Kellys.",
+     "thumb": "https://images-assets.nasa.gov/video/Frank_Rubio-A_Year_of_Science_in_Space/Frank_Rubio-A_Year_of_Science_in_Space~thumb.jpg"
+    },
+    {
+     "nasa_id": "Ep414_Science_In_Space",
+     "media_type": "audio",
+     "title": "Science in space (podcast)",
+     "center": "JSC",
+     "date": "2026-03-06",
+     "caption": "Includes how stress in space changes telomeres, a finding tied to the Twins Study."
+    },
+    {
+     "nasa_id": "Ep407_A_Place_in_Space_to_Call_Home_Part_1",
+     "media_type": "audio",
+     "title": "A place in space to call home, part 1 (podcast)",
+     "center": "JSC",
+     "date": "2026-01-16",
+     "caption": "Station veterans, including crew who flew with Scott Kelly, describe long-duration life."
+    }
+   ]
+  },
+  {
+   "id": "life-support",
+   "title": "Life support / CO₂",
+   "intro": "Every breath adds CO₂ to a sealed cabin. Scrubbers, oxygen makers and water recyclers keep the air safe.",
+   "items": [
+    {
+     "nasa_id": "iss025e007248",
+     "media_type": "image",
+     "title": "Sabatier",
+     "center": "JSC",
+     "date": "2010-10-14",
+     "caption": "Installing the Sabatier system, which turns CO₂ and hydrogen into water and methane so the station recovers more water.",
+     "thumb": "https://images-assets.nasa.gov/image/iss025e007248/iss025e007248~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss033e007246",
+     "media_type": "image",
+     "title": "Node-3 CDRA (Carbon Dioxide Removal Assembly) R&R",
+     "center": "JSC",
+     "date": "2012-09-25",
+     "caption": "Replacing parts of the CO₂ removal assembly (CDRA) in Node 3. It scrubs carbon dioxide from cabin air.",
+     "thumb": "https://images-assets.nasa.gov/image/iss033e007246/iss033e007246~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss043e181459",
+     "media_type": "image",
+     "title": "Node 3 CDRA Replacement",
+     "center": "JSC",
+     "date": "2015-05-07",
+     "caption": "Scott Kelly and Terry Virts replace a CDRA part, routine upkeep that keeps CO₂ low.",
+     "thumb": "https://images-assets.nasa.gov/image/iss043e181459/iss043e181459~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss034e063336",
+     "media_type": "image",
+     "title": "Marshburn performs maintenance on the CDRA in the JPM",
+     "center": "JSC",
+     "date": "2013-03-08",
+     "caption": "Maintenance on the CDRA in the Japanese module. Crews fix their own air system in orbit.",
+     "thumb": "https://images-assets.nasa.gov/image/iss034e063336/iss034e063336~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss071e549503",
+     "media_type": "image",
+     "title": "iss071e549503",
+     "center": "JSC",
+     "date": "2024-08-27",
+     "caption": "An astronaut removes a carbon dioxide system part during a repair.",
+     "thumb": "https://images-assets.nasa.gov/image/iss071e549503/iss071e549503~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss056e014502",
+     "media_type": "image",
+     "title": "Hydrogen Sensor Oxygen Generation System (OGS) Remove and Replace (R&R)",
+     "center": "JSC",
+     "date": "2018-06-18",
+     "caption": "Hydrogen sensor work on the oxygen generator, which splits water to make breathable air.",
+     "thumb": "https://images-assets.nasa.gov/image/iss056e014502/iss056e014502~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss066e003338",
+     "media_type": "image",
+     "title": "OGA Hydrogen ORU R&R - NOD3A5 Part 5",
+     "center": "JSC",
+     "date": "2021-10-20",
+     "caption": "Swapping a part of the oxygen generation assembly, the machine that makes the station's air.",
+     "thumb": "https://images-assets.nasa.gov/image/iss066e003338/iss066e003338~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss018e011530",
+     "media_type": "image",
+     "title": "ISS Expedition 18 Water Recovery System (WRS) Leak Check",
+     "center": "JSC",
+     "date": "2008-12-08",
+     "caption": "Checking the water recovery system for leaks. It turns sweat and urine back into drinking water.",
+     "thumb": "https://images-assets.nasa.gov/image/iss018e011530/iss018e011530~thumb.jpg"
+    },
+    {
+     "nasa_id": "0102168",
+     "media_type": "image",
+     "title": "Water recovery and management on the ISS (diagram)",
+     "center": "MSFC",
+     "date": "2000-01-01",
+     "caption": "A diagram of how water flows through the station's recycling loop.",
+     "thumb": "https://images-assets.nasa.gov/image/0102168/0102168~thumb.jpg"
+    },
+    {
+     "nasa_id": "MSFC-1501156",
+     "media_type": "image",
+     "title": "Dava Newman tours the ECLSS lab",
+     "center": "MSFC",
+     "date": "2015-08-06",
+     "caption": "NASA's life support lab at Marshall, where the next generation of air and water hardware is tested.",
+     "thumb": "https://images-assets.nasa.gov/image/MSFC-1501156/MSFC-1501156~thumb.jpg"
+    },
+    {
+     "nasa_id": "320_ECLSSOverview-Final",
+     "media_type": "video",
+     "title": "NASA ScienceCasts: ECLSS on Station",
+     "center": "HQ",
+     "date": "2023-10-25",
+     "caption": "How the station's life support system keeps the air breathable and the water clean.",
+     "thumb": "https://images-assets.nasa.gov/video/320_ECLSSOverview-Final/320_ECLSSOverview-Final~thumb.jpg"
+    },
+    {
+     "nasa_id": "318_ECLSSWaterRec",
+     "media_type": "video",
+     "title": "NASA ScienceCasts: Water Recovery on the Space Station",
+     "center": "JSC",
+     "date": "2023-06-20",
+     "caption": "The station now recycles 98% of the water its crew uses.",
+     "thumb": "https://images-assets.nasa.gov/video/318_ECLSSWaterRec/318_ECLSSWaterRec~thumb.jpg"
+    },
+    {
+     "nasa_id": "MSFC ECLSS CO2 Scrubber draft broll",
+     "media_type": "video",
+     "title": "Next-generation CO₂ scrubber",
+     "center": "MSFC",
+     "date": "2021-07-06",
+     "caption": "A new four-bed scrubber that pulls carbon dioxide out of cabin air.",
+     "thumb": "https://images-assets.nasa.gov/video/MSFC ECLSS CO2 Scrubber draft broll/MSFC ECLSS CO2 Scrubber draft broll~thumb.jpg"
+    },
+    {
+     "nasa_id": "Ep406_The_Evolution_of_the_Laboratory",
+     "media_type": "audio",
+     "title": "The evolution of the laboratory (podcast)",
+     "center": "JSC",
+     "date": "2025-12-19",
+     "caption": "Engineers on how life support grew from the first modules to Mars-ready hardware."
+    },
+    {
+     "nasa_id": "Ep413_Low_Earth_Orbit_and_Beyond",
+     "media_type": "audio",
+     "title": "Low Earth orbit and beyond (podcast)",
+     "center": "JSC",
+     "date": "2026-02-27",
+     "caption": "A life support veteran recalls designing the systems now flying on the station."
+    }
+   ]
+  },
+  {
+   "id": "spacewalks",
+   "title": "Spacewalks",
+   "intro": "A spacewalk means hours in a pressurised suit, a long day for the heart, hands and nerves. Here is how crews prepare.",
+   "items": [
+    {
+     "nasa_id": "iss042e277376",
+     "media_type": "image",
+     "title": "EMU 3003 and 3005 OFV",
+     "center": "JSC",
+     "date": "2015-02-16",
+     "caption": "Suit hardware being prepared. The spacesuit is a personal spacecraft that supplies oxygen and keeps pressure steady.",
+     "thumb": "https://images-assets.nasa.gov/image/iss042e277376/iss042e277376~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss023e021529",
+     "media_type": "image",
+     "title": "Mastracchio during EVA 2",
+     "center": "JSC",
+     "date": "2010-04-11",
+     "caption": "An astronaut outside the station on a spacewalk. Hours of suit work tire the hands and shoulders.",
+     "thumb": "https://images-assets.nasa.gov/image/iss023e021529/iss023e021529~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss016e017370",
+     "media_type": "image",
+     "title": "Whitson during EVA 13",
+     "center": "JSC",
+     "date": "2007-12-18",
+     "caption": "Peggy Whitson on a spacewalk. Suits are pressurised, so even gripping a tool takes effort.",
+     "thumb": "https://images-assets.nasa.gov/image/iss016e017370/iss016e017370~thumb.jpg"
+    },
+    {
+     "nasa_id": "iss036e019658",
+     "media_type": "image",
+     "title": "Spacewalk 23 view",
+     "center": "JSC",
+     "date": "2013-07-16",
+     "caption": "A view from a spacewalk where a crew member works at the end of a long day outside.",
+     "thumb": "https://images-assets.nasa.gov/image/iss036e019658/iss036e019658~thumb.jpg"
+    },
+    {
+     "nasa_id": "sts088-318-023",
+     "media_type": "image",
+     "title": "View during 2nd EVA on ISS stack",
+     "center": "JSC",
+     "date": "1998-12-09",
+     "caption": "A view during the second spacewalk on the early station stack, 1998.",
+     "thumb": "https://images-assets.nasa.gov/image/sts088-318-023/sts088-318-023~thumb.jpg"
+    },
+    {
+     "nasa_id": "s115e05753",
+     "media_type": "image",
+     "title": "Tanner performs first EVA during STS-115 / Expedition 13 joint operations",
+     "center": "JSC",
+     "date": "2006-09-12",
+     "caption": "A shuttle-era spacewalk during the building of the station.",
+     "thumb": "https://images-assets.nasa.gov/image/s115e05753/s115e05753~thumb.jpg"
+    },
+    {
+     "nasa_id": "S112E05239",
+     "media_type": "image",
+     "title": "MS Wolf prepares for EVA 2",
+     "center": "JSC",
+     "date": "2002-10-12",
+     "caption": "An astronaut gets ready for a spacewalk. Preparing the suit and body is half the job.",
+     "thumb": "https://images-assets.nasa.gov/image/S112E05239/S112E05239~thumb.jpg"
+    },
+    {
+     "nasa_id": "s94-39771",
+     "media_type": "image",
+     "title": "STS-64 Extravehicular activity (EVA) training view in WETF",
+     "center": "JSC",
+     "date": "1994-08-10",
+     "caption": "Training for spacewalks in the pool, which mimics weightlessness for suited astronauts.",
+     "thumb": "https://images-assets.nasa.gov/image/s94-39771/s94-39771~thumb.jpg"
+    },
+    {
+     "nasa_id": "jsc2026m000932_Spacewalk_101_AVAIL1080p",
+     "media_type": "video",
+     "title": "Spacewalk 101",
+     "center": "JSC",
+     "date": "2026-10-01",
+     "caption": "A NASA flight director explains how spacewalks work and what crews go through.",
+     "thumb": "https://images-assets.nasa.gov/video/jsc2026m000932_Spacewalk_101_AVAIL1080p/jsc2026m000932_Spacewalk_101_AVAIL1080p~thumb.jpg"
+    },
+    {
+     "nasa_id": "jsc2019m000990_Suiting_Up_for_a_Spacewalk_MP4",
+     "media_type": "video",
+     "title": "Suiting Up for a Spacewalk",
+     "center": "JSC",
+     "date": "2019-11-13",
+     "caption": "The long process of getting into a suit before stepping outside.",
+     "thumb": "https://images-assets.nasa.gov/video/jsc2019m000990_Suiting_Up_for_a_Spacewalk_MP4/jsc2019m000990_Suiting_Up_for_a_Spacewalk_MP4~thumb.jpg"
+    },
+    {
+     "nasa_id": "jsc2026m000053_How_Does_NASA_Test_Health_Responses_to_Pressure_Changes_Astronauts_Experience_in_Space-260325",
+     "media_type": "video",
+     "title": "How Does NASA Test Health Responses to Pressure Changes Astronauts Experience in Space?",
+     "center": "JSC",
+     "date": "2026-03-25",
+     "caption": "Volunteers live in a pressure chamber to test how the body responds to the pressure changes of a spacewalk.",
+     "thumb": "https://images-assets.nasa.gov/video/jsc2026m000053_How_Does_NASA_Test_Health_Responses_to_Pressure_Changes_Astronauts_Experience_in_Space-260325/jsc2026m000053_How_Does_NASA_Test_Health_Responses_to_Pressure_Changes_Astronauts_Experience_in_Space-260325~thumb.jpg"
+    },
+    {
+     "nasa_id": "APACHE - Spacewalking in Virtual Reality",
+     "media_type": "video",
+     "title": "APACHE: Spacewalking in Virtual Reality",
+     "center": "JSC",
+     "date": "2025-07-07",
+     "caption": "A virtual reality lab where astronauts rehearse spacewalks.",
+     "thumb": "https://images-assets.nasa.gov/video/APACHE - Spacewalking in Virtual Reality/APACHE - Spacewalking in Virtual Reality~thumb.jpg"
+    },
+    {
+     "nasa_id": "Ep383_MCC_Special_Operations",
+     "media_type": "audio",
+     "title": "Mission Control special operations (podcast)",
+     "center": "JSC",
+     "date": "2025-05-01",
+     "caption": "The flight controllers who plan spacewalks, from training to the moment the hatch opens."
+    },
+    {
+     "nasa_id": "Ep392_Ask_An_Astronaut_On_Our_Anniversary",
+     "media_type": "audio",
+     "title": "Ask an astronaut (podcast)",
+     "center": "JSC",
+     "date": "2025-07-11",
+     "caption": "Astronauts explain how they prepare their bodies for a spacewalk, including exercise to clear nitrogen."
+    },
+    {
+     "nasa_id": "Ep379_Commercial_Lunar_Spacesuits",
+     "media_type": "audio",
+     "title": "Commercial lunar spacesuits (podcast)",
+     "center": "JSC",
+     "date": "2025-04-04",
+     "caption": "A spacesuit engineer on the next generation of suits with more mobility and better safety."
+    }
+   ]
+  }
+ ]
+}
