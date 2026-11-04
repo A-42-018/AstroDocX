@@ -36,6 +36,8 @@ export interface CabinOptions {
   onIntro: (phase: IntroPhase) => void
   onStop: (i: number) => void
   onPick: (crewId: string | null) => void
+  /** The visor going up, sliding down, and the HUD booting, for sound. */
+  onVisor?: (phase: 'raised' | 'dropping' | 'booting' | 'down') => void
   onReady: () => void
   /** 0–1 as the models and textures arrive, for the loading screen. */
   onProgress?: (fraction: number) => void
@@ -238,7 +240,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   /* the visor: 'raised' (glass up, HUD off), 'dropping', 'booting', then 'down'; raised with no rim until the page lowers it */
   type VisorPhase = 'raised' | 'dropping' | 'booting' | 'down'
   const visor = { phase: (reduced ? 'down' : 'raised') as VisorPhase, away: false, t0: 0, rimIn: false, rim: reduced ? 1 : 0, drop: reduced ? 1 : 0, shown: 1 }
-  const visorClass = (ph: VisorPhase) => { for (const c of ['raised', 'dropping', 'booting']) opts.visor?.classList.toggle(c, c === ph) }
+  const visorClass = (ph: VisorPhase) => { for (const c of ['raised', 'dropping', 'booting']) opts.visor?.classList.toggle(c, c === ph); opts.onVisor?.(ph) }
   const raiseVisor = (away: boolean) => { visor.away = away; if (reduced || visor.phase === 'raised') return; visor.phase = 'raised'; visor.drop = 0; visorClass('raised') }
   const lowerVisor = (t: number, rimIn: boolean) => {
     if (reduced) { visor.phase = 'down'; visor.rim = visor.drop = 1; visorClass('down'); return }

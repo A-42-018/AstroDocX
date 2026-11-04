@@ -1,6 +1,8 @@
 import { Bell, Box, Plus, RotateCcw, Square } from 'lucide-react'
 import { Fragment, useId, useRef } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { demoStart } from '../audio/sfx'
+import { announce } from '../audio/voice'
 import { useBoard } from '../board/store'
 import { CabinPage } from '../cabin/lazy'
 import { CabinHint } from './CabinHint'
@@ -102,7 +104,7 @@ export function TopBar({ data, install }: { data: ShellData | null; install: (()
   const open = who?.alerts ?? 0
   const navigate = useNavigate()
   const demo = useDemo()
-  const startDemo = () => { navigate('/board'); void runDemo(select) }
+  const startDemo = () => { navigate('/board'); demoStart(); window.setTimeout(() => announce('Demo started. Carbon dioxide scrubber fault detected.'), 600); void runDemo(select) }
   const bar = useRef<HTMLElement>(null)
   useFit(bar)
 

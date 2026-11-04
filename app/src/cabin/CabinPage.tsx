@@ -10,6 +10,14 @@ import { useCabinData } from './useCabinData'
 import { VisorHud } from './VisorHud'
 import { CabinLoader, loaderShownMs } from './CabinLoader'
 import { useTour } from '../tour/store'
+import * as sfx from '../audio/sfx'
+import { SoundToggle } from '../audio/SoundToggle'
+import { MusicToggle } from '../audio/MusicToggle'
+import { disposeMusic } from '../audio/music'
+import { introduce, startChatter, stopChatter } from '../audio/voice'
+
+/** The arrival's phases and the visor, heard as well as seen. */
+const INTRO_SOUND: Partial<Record<IntroPhase, () => void>> = { fly: sfx.flyRumble, lock: sfx.glare, clear: sfx.pressurise }
 
 /** Caption for each tour stop, in scene order; names come from the live data. */
 function stops(d: CabinData | null) {
@@ -65,6 +73,10 @@ export default function CabinPage() {
   const [loader, setLoader] = useState<'show' | 'fade' | 'gone'>('show')
   const [stop, setStop] = useState(0)
   const [picked, setPicked] = useState<string | null>(null)
+  const dataRef = useRef(data)
+  useEffect(() => { dataRef.current = data })
+  const lastStop = useRef(-1)
+  const visorWas = useRef<string>('raised')
   const leave = () => (location.key === 'default' ? navigate('/board') : navigate(-1))
 
   useEffect(() => {
@@ -74,8 +86,28 @@ export default function CabinPage() {
       s = createCabin(canvas.current, {
         // the arrival waits for the loading screen to lift (below), so it is not spent behind it
         reducedMotion: reduced, intro: false, visor: visor.current, flash: flash.current, mist: mist.current,
-        onIntro: (ph) => { setIntro(ph); if (ph === 'clear') markArrived() },
-        onStop: setStop, onPick: setPicked, onReady: () => setState('ready'), onProgress: setProgress,
+        onIntro: (ph) => {
+          setIntro(ph); if (ph === 'clear') markArrived()
+          INTRO_SOUND[ph]?.()
+          sfx.humOutside(ph === 'fly' || ph === 'wait' || ph === 'lock' ? 1 : 0)
+        },
+        onStop: (i) => {
+          // the first stop shown is the start, not a move
+          if (lastStop.current >= 0 && i !== lastStop.current) sfx.whoosh()
+          lastStop.current = i
+          sfx.humOutside(i === STOP_COUNT - 1 ? 1 : 0)
+          setStop(i)
+        },
+        onPick: (id) => {
+          if (id) { sfx.select(); const c = dataRef.current?.crew.find((x) => x.id === id); if (c) introduce(c.role) }
+          setPicked(id)
+        },
+        onVisor: (ph) => {
+          if (ph === 'dropping') sfx.visorSeal()
+          else if (ph === 'booting') sfx.hudBoot()
+          else if (ph === 'raised' && visorWas.current !== 'raised') sfx.visorOpen()
+          visorWas.current = ph
+        }, onReady: () => setState('ready'), onProgress: setProgress,
       })
     } catch (err) {
       console.warn('cabin: no WebGL context', err)
@@ -106,6 +138,14 @@ export default function CabinPage() {
     }, reduced ? 0 : Math.max(0, MIN_LOADER_MS - loaderShownMs()))
     return () => { window.clearTimeout(wait); window.removeEventListener('adx:launched', lift) }
   }, [state, loader, reduced])
+  // life support hums from the moment the loading screen lifts until the crew leaves the cabin
+  const lifted = loader !== 'show'
+  useEffect(() => {
+    if (!lifted) return
+    sfx.cabinHum(true)
+    startChatter()
+    return () => { sfx.cabinHum(false); stopChatter(); disposeMusic() }
+  }, [lifted])
   useEffect(() => {
     if (loader !== 'fade') return
     const gone = window.setTimeout(() => setLoader('gone'), reduced ? 0 : FADE_MS)
@@ -149,6 +189,8 @@ export default function CabinPage() {
       <header className="cabin-top">
         <button type="button" className="cabin-back" onClick={leave}>← Console</button>
         <div className="cabin-brand">AstroDocX <span>· 3D Cabin</span></div>
+        <MusicToggle className="cabin-sound" />
+        <SoundToggle className="cabin-sound" />
         <button type="button" className="cabin-replay" onClick={() => scene.current?.replayIntro()}>↺ Replay arrival</button>
       </header>
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { lampGo, tapEarly, tapTick } from '../audio/sfx'
 import { KpiCell } from '../ui'
 import { LAPSE_MS, MIN_VALID_TRIALS, TRIALS, WAIT_MS, summarize, type PvtSummary } from './pvt'
 
@@ -34,6 +35,7 @@ export function ReactionTest({ onResult, waitMs = randomWait, baselineMs }: Prop
     timer.current = setTimeout(() => {
       shownAt.current = performance.now()
       setPhase('go')
+      lampGo()
     }, waitMs())
     setTrials(done)
   }
@@ -45,6 +47,7 @@ export function ReactionTest({ onResult, waitMs = randomWait, baselineMs }: Prop
   }
   const record = (t: number | 'early') => {
     const all = [...trials, t]
+    if (t === 'early') tapEarly(); else tapTick()
     setNote(t === 'early' ? 'Too early, that attempt does not count.' : `${Math.round(t)} ms`)
     if (all.length >= TRIALS) finish(all)
     else arm(all)
