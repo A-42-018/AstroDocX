@@ -1,0 +1,386 @@
+[
+  {
+    "id": "adx-overview",
+    "topic": "astrodocx",
+    "label": "AstroDocX overview (README)",
+    "url": "https://github.com/A-42-018/AstroDocX",
+    "text": "Astronaut + Doctor + X — an offline-first health co-pilot for astronauts on long-duration missions. Built by Team AstroDocX in Dhaka, Bangladesh for the NASA Space Apps Challenge 2026 challenge \"Create Health Monitoring Software for Astronauts on Space Missions\". The loop is Detect, Explain, Act, Log, Sync later. AstroDocX is a prototype and not a medical device. It runs on synthetic demo data (a 4-crew 30-day demo mission). It is an independent Space Apps project using NASA open data and is not affiliated with or endorsed by NASA. No AI runs inside the product itself: every number, alert and explanation comes from tested, deterministic code. Only the CO2 and radiation dose limits are NASA-STD-3001 cited; other thresholds are illustrative and labelled so."
+  },
+  {
+    "id": "adx-personal-baselines",
+    "topic": "astrodocx",
+    "label": "AstroDocX: Personal baselines",
+    "url": "https://github.com/A-42-018/AstroDocX",
+    "text": "Personal baselines: Learns each astronaut's own normal for 11 metrics (HR, HRV, SpO₂, sleep, exercise, reaction time, mood, CO₂, cabin temperature, noise, radiation dose) with Welford + EWMA; it only learns while nominal, so slow drift is not \"learned away\""
+  },
+  {
+    "id": "adx-detection",
+    "topic": "astrodocx",
+    "label": "AstroDocX: Detection",
+    "url": "https://github.com/A-42-018/AstroDocX",
+    "text": "Detection: Smoothed z-scores plus cited absolute limits (NASA-STD-3001 CO₂ and dose), persistence (2–3 readings in a row) and two-signal rules (sleep + reaction); Nominal / Watch / Act with hysteresis"
+  },
+  {
+    "id": "adx-explainable-alerts",
+    "topic": "astrodocx",
+    "label": "AstroDocX: Explainable alerts",
+    "url": "https://astrodocx.vercel.app/app/alerts",
+    "text": "Explainable alerts: Each alert says what changed, by how much, against whose baseline and since when, and links the published NASA evidence behind it (OSDR studies with DOIs, Human Research Program reports on NTRS); context, never a diagnosis",
+    "route": "/alerts"
+  },
+  {
+    "id": "adx-action-cards",
+    "topic": "astrodocx",
+    "label": "AstroDocX: Action cards",
+    "url": "https://astrodocx.vercel.app/app/alerts",
+    "text": "Action cards: Checkable countermeasure steps with progress and Done; open → escalate → ease → resolve lifecycle, all logged",
+    "route": "/alerts"
+  },
+  {
+    "id": "adx-status-board",
+    "topic": "astrodocx",
+    "label": "AstroDocX: Status Board",
+    "url": "https://astrodocx.vercel.app/app/board",
+    "text": "Status Board: Five RIDGE tiles, crew readiness score, crew overview, next action, live vitals strip (ECG-style waves, heart pulse)",
+    "route": "/board"
+  },
+  {
+    "id": "adx-health-twin-console",
+    "topic": "astrodocx",
+    "label": "AstroDocX: Health Twin (console)",
+    "url": "https://astrodocx.vercel.app/app/board",
+    "text": "Health Twin (console): A 3D particle body (the same baked human as the landing page) turning gently: the heart beats with the live ECG, a pulse runs down the arteries, and each hazard colours its own part (brain, lungs, legs, skin, transmitter arm) amber or red",
+    "route": "/board"
+  },
+  {
+    "id": "adx-trends",
+    "topic": "astrodocx",
+    "label": "AstroDocX: Trends",
+    "url": "https://astrodocx.vercel.app/app/trends",
+    "text": "Trends: 11 charts with the personal baseline band, alert markers, 24 h / 7 d / 30 d",
+    "route": "/trends"
+  },
+  {
+    "id": "adx-daily-check-in",
+    "topic": "astrodocx",
+    "label": "AstroDocX: Daily Check-in",
+    "url": "https://astrodocx.vercel.app/app/checkin",
+    "text": "Daily Check-in: Mood, sleep quality, hours slept, 8 symptom chips and a 5-tap reaction test (PVT-style); symptoms and sleep quality raise alerts",
+    "route": "/checkin"
+  },
+  {
+    "id": "adx-mission-simulator",
+    "topic": "astrodocx",
+    "label": "AstroDocX: Mission Simulator",
+    "url": "https://astrodocx.vercel.app/app/simulator",
+    "text": "Mission Simulator: Mission clock, fast-forward, 4 injectable scenarios (solar event, CO₂ fault, insomnia, deconditioning); watch the engine react",
+    "route": "/simulator"
+  },
+  {
+    "id": "adx-ground-sync",
+    "topic": "astrodocx",
+    "label": "AstroDocX: Ground Sync",
+    "url": "https://astrodocx.vercel.app/app/sync",
+    "text": "Ground Sync: Delay-tolerant outbox: link windows, 12-minute delay, blackout, auto-sync, CSV log export",
+    "route": "/sync"
+  },
+  {
+    "id": "adx-ground-view",
+    "topic": "astrodocx",
+    "label": "AstroDocX: Ground View",
+    "url": "https://astrodocx.vercel.app/app/ground",
+    "text": "Ground View: Flight-surgeon view rebuilt only from synced entries (shows what Earth knows, and when); each crew card shows the 3D body in its status colour",
+    "route": "/ground"
+  },
+  {
+    "id": "adx-nasa-data",
+    "topic": "astrodocx",
+    "label": "AstroDocX: NASA Data",
+    "url": "https://astrodocx.vercel.app/app/nasa",
+    "text": "NASA Data: The NASA basis of the console in one screen: for each of NASA's five hazards, what AstroDocX monitors, the NASA-STD-3001 limit it checks and the NASA studies cited; every alert and Status Board tile carries a NASA source tag",
+    "route": "/nasa"
+  },
+  {
+    "id": "adx-platform",
+    "topic": "astrodocx",
+    "label": "AstroDocX: Platform",
+    "url": "https://github.com/A-42-018/AstroDocX",
+    "text": "Platform: Offline-first installable PWA, IndexedDB on the device, 4-crew 30-day demo mission preloaded"
+  },
+  {
+    "id": "adx-roadmap",
+    "topic": "astrodocx",
+    "label": "AstroDocX roadmap (README)",
+    "url": "https://github.com/A-42-018/AstroDocX",
+    "text": "Not built yet (Roadmap): wearable sensor integration, a real Supabase ground backend with proper policies, vision/SANS self-tests, blood pressure, bone density, a multi-device ground station."
+  },
+  {
+    "id": "adx-screens",
+    "topic": "astrodocx",
+    "label": "AstroDocX Crew Console screens",
+    "url": "https://astrodocx.vercel.app/app/",
+    "text": "The Crew Console at /app/ has 8 screens: Status Board (/board), Alerts (/alerts), Trends (/trends), Check-in (/checkin), Simulator (/simulator), Ground Sync (/sync), Ground View (/ground), NASA Data (/nasa). It is an offline-first installable PWA.",
+    "routes": [
+      "/board",
+      "/alerts",
+      "/trends",
+      "/checkin",
+      "/simulator",
+      "/sync",
+      "/ground",
+      "/nasa"
+    ]
+  },
+  {
+    "id": "adx-cabin",
+    "topic": "astrodocx",
+    "label": "AstroDocX 3D cabin",
+    "url": "https://astrodocx.vercel.app/app/cabin",
+    "text": "The 3D cabin (/app/cabin) is a scroll-driven tour of a space-station hall with 10 camera stops. It starts inside an astronaut's helmet, where a visor HUD wired to AstroDocX shows crew readiness, the five hazard modules, the ground link and the engine's next action. It passes four wall screens running the real Crew Console, with crew members floating beside them and TARS robots walking the floor, looks back from the window, and ends outside with a crew member on a spacewalk (EVA) beside the station."
+  },
+  {
+    "id": "adx-how-detection-works",
+    "topic": "astrodocx",
+    "label": "How AstroDocX detection works (engine)",
+    "url": "https://astrodocx.vercel.app/app/alerts",
+    "text": "AstroDocX monitors 11 metrics: Heart rate (bpm, hazard G); HRV (ms, hazard G); SpO₂ (%, hazard E); Sleep last night (h, hazard I); Exercise load (min, hazard G); Reaction time (ms, hazard I); Mood (1-5, hazard I); Cabin CO₂ (mmHg, hazard E); Cabin temperature (°C, hazard E); Cabin noise (dBA, hazard E); Dose rate (µSv/h, hazard R). For each crew member it learns a personal baseline with Welford running statistics and an EWMA-smoothed z-score, and only learns while the status is nominal so slow drift is not learned away. A status is Nominal, Watch or Act, with hysteresis; a statistical Watch or Act needs 2 readings in a row. Absolute limits come from NASA-STD-3001 for CO2 and radiation dose. A two-signal rule combines low sleep with slow reaction time. Each alert says what changed, by how much, against whose baseline and since when, and links published NASA evidence. This is context, never a diagnosis."
+  },
+  {
+    "id": "adx-limits",
+    "topic": "limits",
+    "label": "AstroDocX limits (limits.ts)",
+    "url": "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-004-carbon-dioxide.pdf",
+    "text": "CO2: NASA-STD-3001 Vol. 2 [V2 6004] limits the average 1-hour habitat ppCO2 to 3 mmHg. AstroDocX raises Watch after 3 consecutive hourly readings over the limit and Act after 6; a single reading of 4.5 mmHg or more is an illustrative emergency level (AstroDocX's own choice, not a NASA value). Radiation: NASA-STD-3001 Vol. 1 sets a career effective dose of 600 mSv and 250 mSv per solar particle event; AstroDocX compares a rolling 24-hour dose with the per-event limit, Watch at 125 mSv and Act at 250 mSv. Ground Sync flags data not yet sent to Earth: Watch at 24 h, Act at 72 h (AstroDocX design, not a NASA value)."
+  },
+  {
+    "id": "std-std-3001-v2-6004-3",
+    "topic": "limits",
+    "label": "NASA-STD-3001 Vol. 2 [V2 6004]: habitat carbon dioxide",
+    "url": "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-004-carbon-dioxide.pdf",
+    "text": "NASA-STD-3001 Vol. 2 [V2 6004]: habitat carbon dioxide: 3 mmHg ppCO₂, 1-hour average. How AstroDocX applies it: Watch after 3 consecutive hours over the limit, Act after 6."
+  },
+  {
+    "id": "std-std-3001-v1-250",
+    "topic": "limits",
+    "label": "NASA-STD-3001 Vol. 1: solar particle event dose",
+    "url": "https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf",
+    "text": "NASA-STD-3001 Vol. 1: solar particle event dose: 250 mSv effective dose per event. How AstroDocX applies it: Rolling 24-hour dose: Watch at 125 mSv, Act at 250 mSv."
+  },
+  {
+    "id": "std-std-3001-v1-600",
+    "topic": "limits",
+    "label": "NASA-STD-3001 Vol. 1: career radiation dose",
+    "url": "https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf",
+    "text": "NASA-STD-3001 Vol. 1: career radiation dose: 600 mSv effective dose, career. How AstroDocX applies it: The ceiling the cumulative dose is read against."
+  },
+  {
+    "id": "hazard-r",
+    "topic": "hazards",
+    "label": "NASA hazard R: Space Radiation",
+    "url": "https://www.nasa.gov/hrp/hazards/",
+    "text": "Space Radiation (R in RIDGE). Outside Earth’s protective field, radiation raises long-term risks such as cancer and damage to the nervous system. AstroDocX: Tracks dose rate and cumulative dose, and checks the last 24 hours against the NASA per-event limit. Metrics: Dose rate. Limits checked: 250 mSv effective dose per event; 600 mSv effective dose, career."
+  },
+  {
+    "id": "hazard-i",
+    "topic": "hazards",
+    "label": "NASA hazard I: Isolation & Confinement",
+    "url": "https://www.nasa.gov/hrp/hazards/",
+    "text": "Isolation & Confinement (I in RIDGE). Long missions in a small crew and a closed space wear on sleep, mood and performance. AstroDocX: Tracks sleep, mood and a psychomotor vigilance (reaction time) test against each person’s own baseline. Metrics: Sleep last night, Reaction time, Mood."
+  },
+  {
+    "id": "hazard-d",
+    "topic": "hazards",
+    "label": "NASA hazard D: Distance from Earth",
+    "url": "https://www.nasa.gov/hrp/hazards/",
+    "text": "Distance from Earth (D in RIDGE). Far from Earth, help and communication are delayed, so the crew must handle problems on board. AstroDocX: Works fully offline; action cards guide the crew, and Ground Sync flags data not yet sent to Earth (Watch at 24 h, Act at 72 h). Metrics: ."
+  },
+  {
+    "id": "hazard-g",
+    "topic": "hazards",
+    "label": "NASA hazard G: Gravity Fields",
+    "url": "https://www.nasa.gov/hrp/hazards/",
+    "text": "Gravity Fields (G in RIDGE). Weightlessness unloads muscle and bone and changes how the heart works. AstroDocX: Tracks exercise load, heart rate and heart rate variability against each person’s own baseline. Metrics: Heart rate, HRV, Exercise load."
+  },
+  {
+    "id": "hazard-e",
+    "topic": "hazards",
+    "label": "NASA hazard E: Hostile/Closed Environments",
+    "url": "https://www.nasa.gov/hrp/hazards/",
+    "text": "Hostile/Closed Environments (E in RIDGE). The cabin is a closed system: its air, temperature and noise affect crew health directly. AstroDocX: Tracks cabin CO₂ against the NASA habitat limit, plus SpO₂, temperature and noise. Metrics: SpO₂, Cabin CO₂, Cabin temperature, Cabin noise. Limits checked: 3 mmHg ppCO₂, 1-hour average."
+  },
+  {
+    "id": "ev-20170005625",
+    "topic": "evidence",
+    "label": "NASA NTRS 20170005625: Risk of Cardiac Rhythm Problems During Spaceflight",
+    "url": "https://ntrs.nasa.gov/citations/20170005625",
+    "text": "NASA NTRS 20170005625, \"Risk of Cardiac Rhythm Problems During Spaceflight\". Why AstroDocX cites it: Human Research Program evidence on heart rate and rhythm changes in flight."
+  },
+  {
+    "id": "ev-osd-484",
+    "topic": "evidence",
+    "label": "NASA OSDR OSD-484 · doi:10.26030/semj-9y19: Astronauts plasma-derived exosomes induced gene expression in AC16 cells",
+    "url": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-484",
+    "text": "NASA OSDR OSD-484 · doi:10.26030/semj-9y19, \"Astronauts plasma-derived exosomes induced gene expression in AC16 cells\". Why AstroDocX cites it: Astronaut blood after flight changes gene expression in human heart cells."
+  },
+  {
+    "id": "ev-osd-942",
+    "topic": "evidence",
+    "label": "NASA OSDR OSD-942 · doi:10.26030/2ngb-7470: Exercise Training Attenuates the Muscle Mitochondria Genomic Response to Bed Rest (microarray data)",
+    "url": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-942",
+    "text": "NASA OSDR OSD-942 · doi:10.26030/2ngb-7470, \"Exercise Training Attenuates the Muscle Mitochondria Genomic Response to Bed Rest (microarray data)\". Why AstroDocX cites it: Without exercise, unloaded muscle loses mitochondrial gene activity; training limits the loss."
+  },
+  {
+    "id": "ev-20160003864",
+    "topic": "evidence",
+    "label": "NASA NTRS 20160003864: Risk of Performance Decrements and Adverse Health Outcomes Resulting from Sleep Loss, Circadian Desynchronization, and Work Overload",
+    "url": "https://ntrs.nasa.gov/citations/20160003864",
+    "text": "NASA NTRS 20160003864, \"Risk of Performance Decrements and Adverse Health Outcomes Resulting from Sleep Loss, Circadian Desynchronization, and Work Overload\". Why AstroDocX cites it: Human Research Program evidence linking short sleep to slower reactions and errors."
+  },
+  {
+    "id": "ev-20160004365",
+    "topic": "evidence",
+    "label": "NASA NTRS 20160004365: Risk of Adverse Cognitive or Behavioral Conditions and Psychiatric Disorders: Evidence Report",
+    "url": "https://ntrs.nasa.gov/citations/20160004365",
+    "text": "NASA NTRS 20160004365, \"Risk of Adverse Cognitive or Behavioral Conditions and Psychiatric Disorders: Evidence Report\". Why AstroDocX cites it: Human Research Program evidence on mood and behavioural health in isolation and confinement."
+  },
+  {
+    "id": "ev-osd-993",
+    "topic": "evidence",
+    "label": "NASA OSDR OSD-993 · doi:10.26030/4kkv-z246: Space radiation induces distinct senescent phenotypes: Implications for space travel [bulk RNA-Seq]",
+    "url": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-993",
+    "text": "NASA OSDR OSD-993 · doi:10.26030/4kkv-z246, \"Space radiation induces distinct senescent phenotypes: Implications for space travel [bulk RNA-Seq]\". Why AstroDocX cites it: Space-like radiation drives human cells into senescence, a long-term health risk of dose."
+  },
+  {
+    "id": "ev-20160012725",
+    "topic": "evidence",
+    "label": "NASA NTRS 20160012725: Relationship Between Carbon Dioxide Levels and Reported Congestion and Headaches on the International Space Station",
+    "url": "https://ntrs.nasa.gov/citations/20160012725",
+    "text": "NASA NTRS 20160012725, \"Relationship Between Carbon Dioxide Levels and Reported Congestion and Headaches on the International Space Station\". Why AstroDocX cites it: ISS crew reports of headache and congestion rise with cabin CO₂."
+  },
+  {
+    "id": "nasa-resources",
+    "topic": "evidence",
+    "label": "NASA resources AstroDocX draws on",
+    "url": "https://osdr.nasa.gov/bio/",
+    "text": "NASA Human Research Program: the five hazards: The RIDGE framework the Status Board and readiness score are organised by. (https://www.nasa.gov/hrp/hazards/) NASA Open Science Data Repository (OSDR): Spaceflight and analogue studies cited as evidence for heart, muscle and radiation alerts. (https://osdr.nasa.gov/bio/) NASA Technical Reports Server (NTRS): Human Research Program evidence reports on heart rhythm, sleep loss, behavioural health and CO₂. (https://ntrs.nasa.gov/) NASA Office of the Chief Health & Medical Officer: Publishes NASA-STD-3001 and the technical briefs behind the CO₂ and radiation limits. (https://www.nasa.gov/ochmo/) NASA Human Research Roadmap: Where each Human Research Program risk and its evidence are tracked. (https://humanresearchroadmap.nasa.gov/) NASA Visible Earth: Earth imagery seen from the 3D cabin window. (https://visibleearth.nasa.gov/) NASA 3D Resources: The Z2 spacesuit, Orion and TDRS models on the landing page. (https://science.nasa.gov/3d-resources/)"
+  },
+  {
+    "id": "res-nasa-gov-hrp-hazards",
+    "topic": "resources",
+    "label": "NASA Human Research Program: the five hazards",
+    "url": "https://www.nasa.gov/hrp/hazards/",
+    "text": "NASA Human Research Program: the five hazards: The RIDGE framework the Status Board and readiness score are organised by."
+  },
+  {
+    "id": "res-osdr-nasa-gov-bio",
+    "topic": "resources",
+    "label": "NASA Open Science Data Repository (OSDR)",
+    "url": "https://osdr.nasa.gov/bio/",
+    "text": "NASA Open Science Data Repository (OSDR): Spaceflight and analogue studies cited as evidence for heart, muscle and radiation alerts."
+  },
+  {
+    "id": "res-ntrs-nasa-gov",
+    "topic": "resources",
+    "label": "NASA Technical Reports Server (NTRS)",
+    "url": "https://ntrs.nasa.gov/",
+    "text": "NASA Technical Reports Server (NTRS): Human Research Program evidence reports on heart rhythm, sleep loss, behavioural health and CO₂."
+  },
+  {
+    "id": "res-nasa-gov-ochmo",
+    "topic": "resources",
+    "label": "NASA Office of the Chief Health & Medical Officer",
+    "url": "https://www.nasa.gov/ochmo/",
+    "text": "NASA Office of the Chief Health & Medical Officer: Publishes NASA-STD-3001 and the technical briefs behind the CO₂ and radiation limits."
+  },
+  {
+    "id": "res-humanresearchroadmap-nasa-gov",
+    "topic": "resources",
+    "label": "NASA Human Research Roadmap",
+    "url": "https://humanresearchroadmap.nasa.gov/",
+    "text": "NASA Human Research Roadmap: Where each Human Research Program risk and its evidence are tracked."
+  },
+  {
+    "id": "res-visibleearth-nasa-gov",
+    "topic": "resources",
+    "label": "NASA Visible Earth",
+    "url": "https://visibleearth.nasa.gov/",
+    "text": "NASA Visible Earth: Earth imagery seen from the 3D cabin window."
+  },
+  {
+    "id": "res-science-nasa-gov-3d-resources",
+    "topic": "resources",
+    "label": "NASA 3D Resources",
+    "url": "https://science.nasa.gov/3d-resources/",
+    "text": "NASA 3D Resources: The Z2 spacesuit, Orion and TDRS models on the landing page."
+  },
+  {
+    "id": "gen-bone-loss",
+    "topic": "bone-muscle",
+    "label": "NASA: Counteracting Bone and Muscle Loss in Microgravity",
+    "url": "https://www.nasa.gov/missions/station/iss-research/counteracting-bone-and-muscle-loss-in-microgravity/",
+    "text": "In space, astronauts' weight-bearing bones become roughly 1% less dense for every month. Bone-building cells slow down while the cells that break down old or damaged bone keep working at their normal pace. Muscles weaken because they no longer need to work as hard. Crews exercise an average of about two hours a day, using treadmills, stationary bicycles and the Advanced Resistive Exercise Device (ARED), which simulates weightlifting. Pre-flight exercise training improves performance on station. Researchers found decreased expression of genes related to muscle growth and metabolism in microgravity, and drugs such as myostatin inhibitors may help prevent bone and muscle loss."
+  },
+  {
+    "id": "gen-exercise",
+    "topic": "bone-muscle",
+    "label": "NASA: Astronaut Exercise",
+    "url": "https://www.nasa.gov/missions/station/iss-research/astronaut-exercise/",
+    "text": "Astronauts on the space station average two hours of exercise per day to maintain bone and muscle health. Equipment includes ARED (a piston and flywheel system that mimics weightlifting in weightlessness), the T2 treadmill and CEVIS, a computer-controlled cycle ergometer with vibration isolation. Without Earth's gravity both bone and muscle atrophy, becoming smaller and weaker. Early programmes of long, low-intensity workouts proved ineffective; high-intensity, low-volume exercise was found more effective, which also saves crew time and equipment wear."
+  },
+  {
+    "id": "gen-sans",
+    "topic": "vision",
+    "label": "NASA: Risk of Spaceflight Associated Neuro-ocular Syndrome (SANS)",
+    "url": "https://www.nasa.gov/reference/risk-of-spaceflight-associated-neuro-ocular-syndrome-sans/",
+    "text": "Spaceflight Associated Neuro-ocular Syndrome (SANS) is a set of eye and brain changes linked to weightlessness. Chronic weightlessness can shift blood and cerebrospinal fluid toward the head, which can lead to optic nerve swelling, folds in the retina, flattening of the back of the eye and swelling in the brain. Approximately 70 percent of astronauts aboard the International Space Station experience some swelling in the back of their eyes. Some astronauts have only mild changes; others have clinically significant outcomes. The risk is higher on longer missions. The long-term health outcome is unknown and actively being investigated. NASA is investigating nutritional supplements that could protect the eyes and mechanical interventions that may help reverse headward fluid shifts. AstroDocX does not yet include vision or SANS self-tests; they are on its roadmap."
+  },
+  {
+    "id": "gen-radiation",
+    "topic": "radiation",
+    "label": "NASA HRP: Space Radiation hazard",
+    "url": "https://www.nasa.gov/hrp/hazard-space-radiation/",
+    "text": "NASA considers space radiation one of the most hazardous aspects of spaceflight. The sources are high-energy galactic cosmic rays, which are remnants of supernovas, and solar storms such as solar particle events and coronal mass ejections. Radiation exposure increases cancer risk, damages the central nervous system, can alter cognitive function, reduce motor function and prompt behavioral changes. Astronauts cannot see or feel it. NASA scientists are studying its effects on the human body and developing ways to monitor and protect against it."
+  },
+  {
+    "id": "gen-isolation",
+    "topic": "isolation",
+    "label": "NASA HRP: Isolation and Confinement hazard",
+    "url": "https://www.nasa.gov/hrp/hazard-isolation-and-confinement/",
+    "text": "Behavioral responses occur among groups of people far from Earth who are isolated and confined in a small space over a long period. Sleep loss, circadian desynchronization and work overload compound this and may lead to decreased performance, adverse health outcomes and compromised mission objectives. NASA's Human Research Program studies behavioral health monitoring, workload and performance, circadian rhythm management and team dynamics. Countermeasures include careful crew selection, training and support, journaling tools, and analog missions in habitats such as HERA and CHAPEA that simulate confinement."
+  },
+  {
+    "id": "gen-behavioral-report",
+    "topic": "isolation",
+    "label": "NTRS 20160004365: Risk of Adverse Cognitive or Behavioral Conditions and Psychiatric Disorders",
+    "url": "https://ntrs.nasa.gov/citations/20160004365",
+    "text": "NASA's evidence report says the average incidence of an adverse behavioral health event during a space mission is relatively low under current conditions, but that the likelihood of an adverse cognitive or behavioral condition or psychiatric disorder greatly increases with mission length. Mood and anxiety disturbances have occurred historically, with no severe behavioral emergencies documented on missions to date. Even when they do not threaten the mission, such conditions adversely affect individual and crew health, welfare and performance, so prevention, early detection and treatment countermeasures are essential."
+  },
+  {
+    "id": "gen-sleep",
+    "topic": "sleep",
+    "label": "NTRS 20160003864: Risk of Performance Decrements from Sleep Loss, Circadian Desynchronization, and Work Overload",
+    "url": "https://ntrs.nasa.gov/citations/20160003864",
+    "text": "NASA's evidence report states that astronauts consistently average less sleep during spaceflight than on the ground. Ground evidence indicates the amount of sleep astronauts get is likely to lead to performance impairment and short- and long-term health consequences. The causes of the sleep loss remain unknown, and the report calls for tools to measure individual sleep needs. It also flags sleep inertia: ground studies show it takes two to four hours to reach optimal performance after waking from a sleep episode, a hazard when crews must respond quickly to an emergency."
+  },
+  {
+    "id": "gen-co2-headache",
+    "topic": "co2",
+    "label": "NTRS 20160012725: CO2 levels, congestion and headaches on the ISS",
+    "url": "https://ntrs.nasa.gov/citations/20160012725",
+    "text": "A NASA analysis of International Space Station expeditions 2 to 31 found that for each 1 mmHg increase in CO2, the odds of a crew member reporting congestion doubled, and that congestion emerges at roughly 1 mmHg lower than headache reports. To keep the chance of congestion below 1 percent, the average 7-day CO2 level would need to stay under 1.5 mmHg. The study confirmed earlier findings linking CO2 to headaches."
+  },
+  {
+    "id": "gen-twins-immune",
+    "topic": "immune",
+    "label": "NASA: Landmark Twins Study Reveals Resilience of Human Body in Space",
+    "url": "https://www.nasa.gov/news-release/nasas-landmark-twins-study-reveals-resilience-of-human-body-in-space/",
+    "text": "In NASA's Twins Study, astronaut Scott Kelly spent nearly a year on the space station while his identical twin stayed on Earth. The flu vaccine given in space worked as it does on Earth, so the immune system responded properly. Scott's telomere length unexpectedly increased in space and shortened after he returned, going back to normal within six months; his twin's stayed stable. Most gene-expression changes normalized within six months of return, but a small percentage of genes related to the immune system and DNA repair did not return to baseline. The study also found changes in cognitive function and vision-related changes. Most physiological changes reversed within six months back on Earth."
+  },
+  {
+    "id": "gen-hazard-gravity",
+    "topic": "bone-muscle",
+    "label": "NASA HRP: The five hazards of human spaceflight",
+    "url": "https://www.nasa.gov/hrp/hazards/",
+    "text": "NASA's Human Research Program groups spaceflight risk into five hazards. Gravity Fields: astronauts' entire bodies, including muscles, bones, inner ear and organs, must adjust to the new gravities they encounter. Distance from Earth: instructions, new supplies and medical care become increasingly challenging to receive from Earth. Hostile/Closed Environments: maintaining a safe ecosystem inside a spacecraft presents unique challenges, including temperature, pressure and microbial monitoring. Space Radiation and Isolation and Confinement are the other two."
+  }
+]
