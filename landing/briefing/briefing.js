@@ -420,7 +420,9 @@ addEventListener('popstate', () => {
   if (m) openLibrary(m[1] || null, null, { push: false })
   else { pushedLib = false; closeLibrary({ fromHistory: true }) }
 })
-addEventListener('keydown', (e) => { if (e.key === 'Escape' && !ov.hidden) { e.preventDefault(); closeLibrary() } })
+/* Esc: once the real library is mounted it owns Escape (it closes its own media modal first, then calls onClose);
+   this only covers the loading state and the fallback panel */
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && !ov.hidden && !lib) { e.preventDefault(); closeLibrary() } })
 
 /* ───────────────────────── sound button ───────────────────────── */
 const sBtn = $('#sound'), sLbl = $('#soundLbl')
