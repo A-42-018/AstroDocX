@@ -139,7 +139,7 @@ export function StatusBoard({ snap, mini }: Props) {
             <StatusTag status={snap.overall} label={`${STATUS_WORD[snap.overall]} · ${n ? `${n} alert${n > 1 ? 's' : ''}` : 'no alerts'}`} />
           </div>
         </section>
-        <HudPanel className="bd-ready" title="Readiness" meta={<Link to="/nasa" className="bd-ridge" title="NASA’s five hazards of human spaceflight: the NASA basis">RIDGE · 5 hazards</Link>} aria-label={`Readiness for ${name}`}>
+        <HudPanel className="bd-ready" data-tour="readiness" title="Readiness" meta={<Link to="/nasa" className="bd-ridge" title="NASA’s five hazards of human spaceflight: the NASA basis">RIDGE · 5 hazards</Link>} aria-label={`Readiness for ${name}`}>
           <ReadinessRing value={snap.readiness} status={snap.overall} />
           <p className="bd-held">
             {held ? <>Held back by <b className={`st-${held.status}`}>{held.name}</b></> : 'All five hazards nominal'}
@@ -174,7 +174,7 @@ export function StatusBoard({ snap, mini }: Props) {
         <NextAction snap={snap} />
       </div>
 
-      <ul className="hz-row" aria-label="Hazard status">
+      <ul className="hz-row" aria-label="Hazard status" data-tour="hazards">
         {snap.tiles.map((t) => (
           <li key={t.hazard} id={`hz-${t.hazard}`} tabIndex={0}
             className={`hp hz-mod st-${t.status}${t.status !== 'nominal' ? ` tone-${t.status}` : ''}${focus === t.hazard ? ' is-linked' : ''}`}

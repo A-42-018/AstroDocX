@@ -19,7 +19,10 @@
   'use strict';
   var q = new URLSearchParams(location.search);
   var mode = q.get('tour');                    // '1' video, 'full' 1-click from a link
-  var CONSOLE = '/app/?tour=1';
+  /* Which tour: 'quick' (about two minutes) or 'full' (the whole project, VITA narrating every screen). /?tour=full&mode=full
+     starts the full one from a link; the chat's "give me the full tour" and the dock in the console ask for it too. */
+  var guide = q.get('mode') === 'full' ? 'full' : 'quick';
+  function consoleUrl() { return '/app/?tour=1' + (guide === 'full' ? '&mode=full' : ''); }
   var BRIEF = !!document.body && document.body.getAttribute('data-page') === 'briefing';
   /* the video mode scrolls the particle story, which now lives on its own page */
   if (BRIEF && mode === '1') { location.replace('/story.html' + location.search + location.hash); return; }
@@ -154,10 +157,20 @@
       w.addEventListener('statechange', function () { if (w.state === 'activated' || w.state === 'redundant') once(); });
     }, once);
   }
+  /* VITA carries on in the console: tell it which tour was asked for (sound and chat are left by briefing.js as the page closes). */
+  function handOff() {
+    window.ADX_TOUR_MODE = guide;
+    try {
+      var old = JSON.parse(sessionStorage.getItem('adx-vita') || 'null') || {};
+      old.tour = guide;
+      sessionStorage.setItem('adx-vita', JSON.stringify(old));
+    } catch (e) { /* private mode: the address says it too */ }
+  }
   function toConsole() {
     stopped = true; cancelAnimationFrame(raf);
     if (capEl) capEl.textContent = 'Opening the Crew Console…';
-    freshConsole(function () { location.href = CONSOLE; });
+    handOff();
+    freshConsole(function () { location.href = consoleUrl(); });
   }
 
   function run() {
@@ -265,10 +278,11 @@
     });
   }
 
-  function startOneClick() {
+  function startOneClick(opts) {
     if (!stopped) return;
+    if (opts && opts.mode) guide = opts.mode === 'full' ? 'full' : 'quick';
     if (BRIEF) {
-      if (!window.ADX_BRIEFING) { setTimeout(startOneClick, 150); return; }   // briefing.js is a module: give it a moment
+      if (!window.ADX_BRIEFING) { setTimeout(function () { startOneClick(opts); }, 150); return; }   // briefing.js is a module: give it a moment
       cfg = { speed: 1, holdScale: 0.5, oneClick: true };
       document.documentElement.classList.add('tour-1click');
       if (!bar) makeBar();
@@ -278,7 +292,7 @@
       runBriefing();
       return;
     }
-    if (window.ADX_JOURNEY && !ADX_JOURNEY.live) { freshConsole(function () { location.href = CONSOLE; }); return; }   // no particle journey (reduced motion, no WebGL): straight to the console
+    if (window.ADX_JOURNEY && !ADX_JOURNEY.live) { handOff(); freshConsole(function () { location.href = consoleUrl(); }); return; }   // no particle journey (reduced motion, no WebGL): straight to the console
     cfg = { speed: Math.max(1, innerHeight * 0.8 / 330), holdScale: 0.5, oneClick: true };
     stop();
     document.documentElement.classList.add('tour-1click');
@@ -288,7 +302,7 @@
     wire();
     run();
   }
-  window.ADX_TOUR = { start: startOneClick };
+  window.ADX_TOUR = { start: function (opts) { startOneClick(opts); } };
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('[data-tour-start]');
     if (!b) return;

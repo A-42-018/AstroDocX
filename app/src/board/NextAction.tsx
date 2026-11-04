@@ -12,7 +12,7 @@ export function NextAction({ snap }: { snap: Snapshot }) {
   const alert = snap.alerts[0]
   if (!alert) {
     return (
-      <HudPanel className="next" aria-label="Next action" title="Next action" meta="All clear">
+      <HudPanel className="next" data-tour="next-action" aria-label="Next action" title="Next action" meta="All clear">
         <h3 className="next-title"><CircleCheck size={20} aria-hidden="true" /> Nothing needs doing</h3>
         <p className="next-note">Every hazard is within this person’s own baseline. A daily check-in keeps the baseline honest.</p>
         <div className="next-foot">
@@ -24,7 +24,7 @@ export function NextAction({ snap }: { snap: Snapshot }) {
   const index = alert.steps.findIndex((s) => !s.done)
   const done = alert.steps.filter((s) => s.done).length
   return (
-    <HudPanel className="next" tone={alert.status} aria-label="Next action" title="Next action" meta={`1 of ${snap.alerts.length} alert${snap.alerts.length > 1 ? 's' : ''}`}>
+    <HudPanel className="next" data-tour="next-action" tone={alert.status} aria-label="Next action" title="Next action" meta={`1 of ${snap.alerts.length} alert${snap.alerts.length > 1 ? 's' : ''}`}>
       <h3 className="next-title">{METRICS[alert.metric].label} <StatusTag status={alert.status} /></h3>
       {alert.steps.length > 0 ? (
         <ul className="next-steps">

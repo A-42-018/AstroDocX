@@ -38,6 +38,33 @@ function stops(d: CabinData | null) {
   ]
 }
 
+/**
+ * What VITA says at each tour stop: the same ten stops as stops(), in short spoken sentences with numbers in words.
+ * Names come from the live data, as in the captions.
+ */
+function spokenStops(d: CabinData | null) {
+  const name = (id?: string) => d?.crew.find((c) => c.id === id)?.name ?? 'crew member'
+  const focus = name(d?.focusId)
+  const out = d ? evaCrewId(d) : null
+  const n = d?.crew.length ?? 6
+  const words = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten']
+  return [
+    `This is the view from the ${name(d?.selfId)}’s helmet. The visor display is wired to Astro Doc X. It shows readiness, live vitals, the five hazard modules, the crew and the ground link. Scroll, and you float forward.`,
+    `${words[n] ?? n} astronauts at work in microgravity. Every floating tag is live. Name, heart rate and status, from the same engine as the console.`,
+    `The real console, on the wall. This is the ${name(d?.selfId)}’s Status Board, with readiness, the body twin, vitals and the five hazard modules.`,
+    `Live vitals for the ${focus}. Heart trace, oxygen and breathing, with their next action. This screen follows whoever needs attention most.`,
+    `And here is the ${focus}, the person behind the numbers. When someone is off nominal, their tag pulses and a ring of light surrounds them. You can see the alert in the room, not only on a screen.`,
+    'Explainable alerts. Each one says why, in the engine’s own words, and gives the next step. No black box warnings.',
+    `Trends. Thirty days of the ${focus}’s heart rate, against their personal baseline band and the crew median.`,
+    'Earth, through the forward window. The view the crew works under every day.',
+    'The whole module, looking back from the window. The crew, four console screens, one system.',
+    out ? `Outside. The ${name(out)} is on a spacewalk, tethered to the ship. Astro Doc X tracks every heartbeat out here too. Press Escape when you want to go back to the console.` : 'Outside, the station, and Earth below. Press Escape when you want to go back to the console.',
+  ]
+}
+
+/** Named stops for /cabin?shot=… */
+const SHOTS: Record<string, number> = { helmet: 0, crew: 1, board: 2, vitals: 3, alerts: 5, trends: 6, window: 7, eva: 9, outside: 9 }
+
 /** The arrival from space plays on the first visit to the cabin in a browser session; after that the tour starts in the helmet. */
 const ARRIVED = 'adx-cabin-arrived'
 const seenArrival = () => { try { return sessionStorage.getItem(ARRIVED) === '1' } catch { return false } }
@@ -155,9 +182,16 @@ export default function CabinPage() {
   useEffect(() => {
     if (state === 'unsupported') { useTour.getState().set({ cabinFailed: true }); return }
     if (state !== 'ready' || loader !== 'gone' || intro !== 'off') return
-    useTour.getState().set({ cabin: { goTo: (i) => scene.current?.goTo(i) } })
+    useTour.getState().set({ cabin: { goTo: (i) => scene.current?.goTo(i), spoken: (i) => spokenStops(dataRef.current)[i] ?? '' } })
     return () => useTour.getState().set({ cabin: null })
   }, [state, loader, intro])
+  // /cabin?shot=eva (from VITA's answers) opens on that stop once the arrival is over
+  const shot = new URLSearchParams(location.search).get('shot')
+  useEffect(() => {
+    const at = shot ? SHOTS[shot.toLowerCase()] : undefined
+    if (at === undefined || state !== 'ready' || loader !== 'gone' || intro !== 'off') return
+    scene.current?.goTo(at)
+  }, [shot, state, loader, intro])
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
