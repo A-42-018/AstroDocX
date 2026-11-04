@@ -1,8 +1,0 @@
-{
-  "name": "astrodocx-api",
-  "private": true,
-  "type": "module",
-  "description": "VITA question-answering endpoint (Vercel Node function).",
-  "engines": { "node": ">=22" },
-  "dependencies": { "@anthropic-ai/sdk": "^1.4.0" }
-}
