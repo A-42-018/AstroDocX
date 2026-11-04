@@ -86,7 +86,7 @@
           "target": "/board"
         }
       ],
-      "weight": 1
+      "weight": 0.6
     },
     {
       "id": "how-detection",
@@ -122,7 +122,8 @@
           "kind": "console",
           "target": "/simulator"
         }
-      ]
+      ],
+      "weight": 0.35
     },
     {
       "id": "baseline",

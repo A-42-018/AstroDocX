@@ -4,6 +4,8 @@ dist/
 Thumbs.db
 *.log
 .env
+.env.*
+!.env.example
 .netlify/
 landing/app/
 
