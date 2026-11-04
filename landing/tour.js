@@ -1,12 +1,15 @@
 /*
- * Two tours of the landing page, both scrolling it top to bottom at a steady, eased pace.
+ * The tours of the landing site. Loaded by both the Mission Briefing homepage (index.html, body[data-page=briefing])
+ * and the scroll story (story.html, body[data-page=story]).
  *
- * 1-click tour (for judges): any [data-tour-start] button, or opening the page with ?tour=full. A control bar shows
- * the chapter, a caption and progress (Pause · Skip · Exit); when the page is done it opens the Crew Console with
- * ?tour=1, which carries on through the console and the 3D cabin (app/src/tour). About two minutes in all.
- * A scroll or tap pauses it; Space pauses, Esc exits.
+ * 1-click tour (for judges): any [data-tour-start] button, or opening / with ?tour=full. A control bar shows the
+ * chapter, a caption and progress (Pause · Skip · Exit). On the homepage, chapter 1 is the briefing room: VITA plays
+ * her 4-step intro (window.ADX_BRIEFING, briefing/briefing.js). On the story page it scrolls the particle journey.
+ * Either way it then opens the Crew Console with ?tour=1, which carries on through the console and the 3D cabin
+ * (app/src/tour). About two minutes in all. A scroll or tap pauses it; Space pauses, Esc exits.
  *
- * Video mode (for the project video): ?tour=1 scrolls itself with no controls, so a screen recording is smooth.
+ * Video mode (for the project video): ?tour=1 scrolls the story by itself with no controls, so a screen recording is
+ * smooth (/?tour=1 forwards to /story.html?tour=1).
  *   &speed=1.25   faster (default 1; 0.8 is slower)
  *   &delay=4      lead-in seconds before the first move (default 3)
  * Keys: Space pause/resume · Esc stop and give the page back · R restart from the top.
@@ -17,6 +20,9 @@
   var q = new URLSearchParams(location.search);
   var mode = q.get('tour');                    // '1' video, 'full' 1-click from a link
   var CONSOLE = '/app/?tour=1';
+  var BRIEF = !!document.body && document.body.getAttribute('data-page') === 'briefing';
+  /* the video mode scrolls the particle story, which now lives on its own page */
+  if (BRIEF && mode === '1') { location.replace('/story.html' + location.search + location.hash); return; }
 
   /* One entry per section: how long to hold when the section's top reaches the screen (s), then the scroll
      speed through the section (px/s) until the next section's top.
@@ -78,6 +84,7 @@
   /* ── the 1-click bar ── */
   var bar = null, capEl = null, progEl = null, pauseBtn = null, lastCap = '';
   var CAPTIONS = {
+    briefing: 'Mission briefing: VITA, our guide, explains why a crew far from Earth has to be its own clinic.',
     intro: 'The story: on missions months from home, the crew has to be its own clinic.',
     twin: 'Health Twin: one scan across six body systems gives one readiness score and a clear action card.',
     adx: 'AstroDocX: detect, explain, act, log, sync later. Next stop: the real Crew Console.'
@@ -93,7 +100,7 @@
     bar.setAttribute('role', 'region');
     bar.setAttribute('aria-label', '1-click tour');
     bar.innerHTML =
-      '<div class="tb-row"><ol aria-label="Tour chapters"><li class="on" aria-current="step"><b>1</b>Landing</li><li><b>2</b>Console</li><li><b>3</b>3D Cabin</li></ol>' +
+      '<div class="tb-row"><ol aria-label="Tour chapters"><li class="on" aria-current="step"><b>1</b>' + (BRIEF ? 'Briefing' : 'Story') + '</li><li><b>2</b>Console</li><li><b>3</b>3D Cabin</li></ol>' +
       '<div class="tb-ctl"><button type="button" data-a="pause" aria-label="Pause the tour">&#10073;&#10073;<span>Pause</span></button>' +
       '<button type="button" data-a="skip" aria-label="Skip to the console">&#9197;<span>Skip</span></button>' +
       '<button type="button" data-a="exit" aria-label="Exit the tour">&#10005;</button></div></div>' +
@@ -110,6 +117,7 @@
   }
   function setPaused(v) {
     paused = v;
+    if (BRIEF && window.ADX_BRIEFING) ADX_BRIEFING.setPaused(v);
     if (pauseBtn) {
       pauseBtn.innerHTML = v ? '&#9654;<span>Resume</span>' : '&#10073;&#10073;<span>Pause</span>';
       pauseBtn.setAttribute('aria-label', v ? 'Resume the tour' : 'Pause the tour');
@@ -117,6 +125,7 @@
   }
   function showProgress() {
     if (!progEl || stopped) return;
+    if (BRIEF) { progEl.style.transform = 'scaleX(' + ((window.ADX_BRIEFING ? ADX_BRIEFING.progress() : 0) / 3) + ')'; return; }
     var end = (window.ADX_JOURNEY && ADX_JOURNEY.live) ? ADX_JOURNEY.end : maxScroll();
     // the landing is the first of three chapters: a third of the bar
     progEl.style.transform = 'scaleX(' + (Math.min(1, scrollY / Math.max(1, end)) / 3) + ')';
@@ -217,13 +226,19 @@
     if (bar) { bar.remove(); bar = null; }
     if (!cfg.oneClick) document.title += ' (tour finished)';
   }
-  function stop() { stopped = true; paused = false; cancelAnimationFrame(raf); timers.forEach(clearInterval); timers = []; finish(); }
+  function stop() {
+    var was = !stopped;
+    stopped = true; paused = false; cancelAnimationFrame(raf); timers.forEach(clearInterval); timers = []; finish();
+    if (BRIEF && was && window.ADX_BRIEFING) ADX_BRIEFING.endTour();
+  }
 
   var wired = false;
   function wire() {
     if (wired) return; wired = true;
     addEventListener('keydown', function (e) {
       if (stopped) return;
+      var tg = e.target, typing = tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA' || tg.isContentEditable);
+      if (e.key === ' ' && typing) return;
       if (e.key === ' ') { setPaused(!paused); e.preventDefault(); }
       else if (e.key === 'Escape') stop();
       else if (!cfg.oneClick && (e.key === 'r' || e.key === 'R')) { stop(); document.documentElement.classList.add('touring'); run(); }
@@ -238,8 +253,31 @@
   }
 
   /* The 1-click tour: from a button (a click, so the browser also allows the soundtrack) or ?tour=full. */
+  /* Chapter 1 on the homepage: VITA's briefing, then on to the console. */
+  function runBriefing() {
+    stopped = false;
+    var tick = setInterval(function () { if (stopped) clearInterval(tick); else showProgress(); }, 200);
+    timers.push(tick);
+    ADX_BRIEFING.runTour().then(function (ok) {
+      if (stopped || !ok) return;
+      showProgress();
+      later(toConsole, 0.5);
+    });
+  }
+
   function startOneClick() {
     if (!stopped) return;
+    if (BRIEF) {
+      if (!window.ADX_BRIEFING) { setTimeout(startOneClick, 150); return; }   // briefing.js is a module: give it a moment
+      cfg = { speed: 1, holdScale: 0.5, oneClick: true };
+      document.documentElement.classList.add('tour-1click');
+      if (!bar) makeBar();
+      setPaused(false); lastCap = ''; caption('briefing'); showProgress();
+      checkConsole();
+      wire();
+      runBriefing();
+      return;
+    }
     if (window.ADX_JOURNEY && !ADX_JOURNEY.live) { freshConsole(function () { location.href = CONSOLE; }); return; }   // no particle journey (reduced motion, no WebGL): straight to the console
     cfg = { speed: Math.max(1, innerHeight * 0.8 / 330), holdScale: 0.5, oneClick: true };
     stop();
