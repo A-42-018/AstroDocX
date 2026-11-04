@@ -64,7 +64,7 @@ it('loads the demo mission: six crew, worst alerts first, a 30-day trend with a 
   expect(trend.days).toHaveLength(30)
   expect(trend.median).toHaveLength(30)
   expect(trend.band?.[0]).toBeLessThan(trend.band![1])
-})
+}, 60_000) // seeds the 20k-reading demo mission: about 4 s alone, more with the other test files running
 
 it('a browser with the old 4-person crew counts as not loaded, so it is re-seeded', async () => {
   const d = new ConsoleDB('cabin-old-roster')

@@ -12,6 +12,7 @@ import { addLights, createFlare, createPost, createSunBeam, pickQuality, windowE
 import { C, SH, SW, drawAlerts, drawLiveVitals, drawStatusBoard, drawTrends } from './panels'
 import { createRobots } from './robots'
 import { createScreens, type ScreenSpec } from './screens'
+import { BOOST, PITCH_MAX, anglesOf, constrain, dirOf, wanted, type HallBounds } from './float'
 import { fovFor, layout, type ScreenAt, type Stop, type Walls } from './shots'
 import { wallMap, wallProbe } from './wall'
 
@@ -39,12 +40,18 @@ export interface CabinOptions {
   /** The visor going up, sliding down, and the HUD booting, for sound. */
   onVisor?: (phase: 'raised' | 'dropping' | 'booting' | 'down') => void
   onReady: () => void
+  /** Float mode went on or off (also when the scene ends it itself, e.g. a stop was picked). */
+  onFloat?: (on: boolean) => void
   /** 0–1 as the models and textures arrive, for the loading screen. */
   onProgress?: (fraction: number) => void
 }
 export interface CabinScene {
   update: (d: CabinData) => void
   goTo: (i: number) => void
+  /** Float mode: drift freely through the hall, kept inside it. Off flies back to the nearest stop. */
+  setFloat: (on: boolean) => void
+  /** The on-screen stick and lift buttons: strafe and forward in -1..1 (forward up is +1), lift -1..1. */
+  move: (strafe: number, forward: number, lift?: number) => void
   /** Cut the arrival short (as soon as the hall is ready). */
   skipIntro: () => void
   replayIntro: () => void
@@ -229,6 +236,16 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   let focus: { pos: THREE.Vector3; look: THREE.Vector3; id: string } | null = null
   const camPos = posCurve.getPoint(0), camLook = lookCurve.getPoint(0)
   const drag = { on: false, moved: 0, x: 0, y: 0, yaw: 0, pitch: 0 }
+  /* float mode: a free camera kept inside the hall (float.ts). The tour's own position (p) is parked while it runs. */
+  const fl = { on: false, want: false, back: false, pos: new THREE.Vector3(), vel: new THREE.Vector3(), yaw: 0, pitch: 0, roll: 0, fov: FOV, exposure: 1.1, impulse: 0 }
+  const keys = new Set<string>(), pad = { x: 0, y: 0, v: 0 }
+  const hall = (): HallBounds => {
+    const zs = STOPS.slice(0, N - 1).map((s) => s.pos.z)
+    return {
+      y0: FLOOR + 0.05, y1: TOP - 0.05, z0: Math.min(-LEN + 1.0, ...zs) - 0.2, z1: Math.max(LEN - 1.0, ...zs) + 0.2,
+      reach: (side, y, z) => walls?.[side].reach(y, z) ?? null, half: HALF - 0.1,
+    }
+  }
 
   /* ---------- the arrival ---------- */
   const flyPos = new THREE.CatmullRomCurve3(FLY.pos, false, 'centripetal'), flyLook = new THREE.CatmullRomCurve3(FLY.look, false, 'centripetal')
@@ -271,11 +288,45 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     pTarget = THREE.MathUtils.clamp(wheel.sum > 0 ? Math.ceil(pTarget - 0.05) : Math.floor(pTarget + 0.05), 0, N - 1)
     if (reduced) p = pTarget
   }
-  const goTo = (i: number) => { unfocus(); clearTimeout(snapTimer); wheel.on = false; pTarget = THREE.MathUtils.clamp(i, 0, N - 1); if (reduced) p = pTarget }
+  /** Ends float mode: the camera flies on from where it is to the nearest stop in the hall (or on to the one asked for). */
+  function leaveFloat() {
+    const was = fl.on || fl.want
+    fl.want = false
+    if (fl.on) {
+      fl.on = false; keys.clear(); fl.vel.set(0, 0, 0)
+      camPos.copy(camera.position); camLook.copy(camera.position).addScaledVector(dirOf(fl.yaw, fl.pitch), 4)
+      let best = 0, near = Infinity
+      STOPS.slice(0, N - 1).forEach((s, i) => { const d = s.pos.distanceTo(camera.position); if (d < near) { near = d; best = i } })
+      p = pTarget = best; fl.back = true
+      float.last.copy(camPos)
+    }
+    if (was) opts.onFloat?.(false)
+  }
+  function beginFloat() {
+    fl.want = false; fl.on = true; fl.back = false
+    unfocus(); clearTimeout(snapTimer); wheel.on = false
+    fl.pos.copy(camera.position); fl.vel.set(0, 0, 0)
+    const a = anglesOf(camera.getWorldDirection(new THREE.Vector3()))
+    // the helmet looks a little down the hall: start level, so W does not dive into the floor
+    fl.yaw = a.yaw; fl.pitch = Math.abs(a.pitch) < 0.25 ? 0 : a.pitch
+    drag.yaw = drag.pitch = 0
+    fl.fov = camera.fov; fl.roll = 0; fl.exposure = renderer.toneMappingExposure
+    if (p > 0.65) raiseVisor(true)
+  }
+  const setFloat = (on: boolean) => {
+    if (!on) { leaveFloat(); return }
+    if (arriving() || fl.on || fl.want) return
+    unfocus()
+    opts.onFloat?.(true)
+    // outside the station there is nothing to explore: come back in to the look from the window first
+    if (p > N - 1.6) { fl.want = true; pTarget = N - 2 } else beginFloat()
+  }
+  const goTo = (i: number) => { leaveFloat(); unfocus(); clearTimeout(snapTimer); wheel.on = false; pTarget = THREE.MathUtils.clamp(i, 0, N - 1); if (reduced) p = pTarget }
   const onWheel = (e: WheelEvent) => {
     e.preventDefault()
     if (e.ctrlKey) return // a trackpad pinch, not a scroll
     if (arriving()) { skipIntro(); return }
+    if (fl.on) { fl.impulse = THREE.MathUtils.clamp(fl.impulse - e.deltaY * (e.deltaMode === 1 ? 16 : 1) * 0.004, -4, 4); return } // scrolling flies you along your view
     unfocus()
     const d = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1), mag = Math.abs(d)
     if (!d) return
@@ -297,9 +348,17 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     const el = e.target as HTMLElement | null
     if (el && /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(el.tagName)) return
     if (arriving()) { if (e.key !== 'Escape') skipIntro(); return }
+    if ((e.key === 'f' || e.key === 'F') && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); setFloat(!(fl.on || fl.want)); return }
+    if (fl.on) {
+      const k = e.key.length === 1 ? e.key.toLowerCase() : e.key
+      if (['w', 'a', 's', 'd', 'q', 'e', 'c', ' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Shift'].includes(k)) { e.preventDefault(); keys.add(k) }
+      return
+    }
     if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); goTo(Math.round(pTarget) + 1) }
     if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); goTo(Math.round(pTarget) - 1) }
   }
+  const onKeyUp = (e: KeyboardEvent) => { keys.delete(e.key.length === 1 ? e.key.toLowerCase() : e.key) }
+  const onBlur = () => keys.clear()
   const ray = new THREE.Raycaster()
   const pick = (e: PointerEvent) => {
     const r = canvas.getBoundingClientRect()
@@ -310,6 +369,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     if (panel !== undefined) { goTo([2, 3, 5, 6][panel]); return }
     const id = hit.object.userData.crew as string | undefined, a = id ? crew.find(id) : undefined
     if (!id || !a) return
+    leaveFloat()
     const toCam = camera.position.clone().sub(a.base).setY(0).normalize()
     focus = { pos: a.base.clone().addScaledVector(toCam, 3.2).add(new THREE.Vector3(0, 0.3, 0)), look: a.base.clone().add(new THREE.Vector3(0, 0.25, 0)), id }
     opts.onPick(id)
@@ -324,6 +384,10 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     if (!drag.on) return
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y
     drag.moved += Math.abs(dx) + Math.abs(dy); drag.x = e.clientX; drag.y = e.clientY
+    if (fl.on) { // float mode: a free look that stays where you leave it
+      fl.yaw -= dx * 0.003; fl.pitch = THREE.MathUtils.clamp(fl.pitch - dy * 0.003, -PITCH_MAX, PITCH_MAX)
+      return
+    }
     drag.yaw = THREE.MathUtils.clamp(drag.yaw - dx * 0.003, -0.9, 0.9)
     drag.pitch = THREE.MathUtils.clamp(drag.pitch - dy * 0.003, -0.6, 0.6)
   }
@@ -337,6 +401,8 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   window.addEventListener('pointerup', onUp)
   window.addEventListener('pointermove', onMove)
   window.addEventListener('keydown', onKey)
+  window.addEventListener('keyup', onKeyUp)
+  window.addEventListener('blur', onBlur)
   window.addEventListener('resize', onResize)
 
   /* ---------- loop ---------- */
@@ -354,11 +420,14 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     const raw = clock.getDelta(), dt = Math.min(raw, 0.05), t = clock.elapsedTime, still = reduced ? 0 : 1
     govern(raw, t)
     if (arriving()) { arrive(t, dt); finishFrame(t, dt, still); return }
+    if (fl.want && Math.abs(p - pTarget) < 0.05) beginFloat()
+    if (fl.on) { stepFloat(t, dt, still); finishFrame(t, dt, still); return }
     // eased by time, not by frame, so a slow machine tours at the same pace
     p = reduced ? pTarget : THREE.MathUtils.damp(p, pTarget, 4.3, dt)
     const u = p / (N - 1)
-    const k = reduced ? 1 : 1 - Math.exp(-(focus ? 3.7 : 17) * dt)
+    const k = reduced ? 1 : 1 - Math.exp(-(focus || fl.back ? 3.7 : 17) * dt)
     camPos.lerp(focus ? focus.pos : posCurve.getPoint(u), k); camLook.lerp(focus ? focus.look : lookCurve.getPoint(u), k)
+    if (fl.back && !focus && camPos.distanceTo(posCurve.getPoint(u)) < 0.08 && Math.abs(pTarget - p) < 0.03) fl.back = false // landed on the tour again
     if (!drag.on) { drag.yaw *= Math.exp(-3.7 * dt); drag.pitch *= Math.exp(-3.7 * dt) }
     const helmet = THREE.MathUtils.clamp(1 - p * 1.6, 0, 1)
     fwd.copy(camLook).sub(camPos).normalize(); side.crossVectors(fwd, up).normalize()
@@ -389,6 +458,38 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     const stop = Math.round(p)
     if (stop !== shown) { shown = stop; opts.onStop(stop) }
     finishFrame(t, dt, still)
+  }
+  const flDir = new THREE.Vector3(), flWant = new THREE.Vector3()
+  /** One frame of float mode: keys, the stick and the wheel steer a drifting camera, kept inside the hall. */
+  function stepFloat(t: number, dt: number, still: number) {
+    const down = (k: string) => keys.has(k)
+    const fwdIn = (down('w') || down('ArrowUp') ? 1 : 0) - (down('s') || down('ArrowDown') ? 1 : 0) + pad.y
+    const strIn = (down('d') || down('ArrowRight') ? 1 : 0) - (down('a') || down('ArrowLeft') ? 1 : 0) + pad.x
+    const liftIn = (down('e') || down(' ') ? 1 : 0) - (down('q') || down('c') ? 1 : 0) + pad.v
+    dirOf(fl.yaw, fl.pitch, flDir)
+    wanted(flDir, THREE.MathUtils.clamp(fwdIn, -1, 1), THREE.MathUtils.clamp(strIn, -1, 1), THREE.MathUtils.clamp(liftIn, -1, 1), down('Shift'), flWant)
+    // a wheel notch is a push along the view that fades out, the way a pushed-off object keeps drifting
+    flWant.addScaledVector(flDir, fl.impulse * (down('Shift') ? BOOST : 1)); fl.impulse *= Math.exp(-2.5 * dt)
+    fl.vel.lerp(flWant, 1 - Math.exp(-(flWant.lengthSq() > 0.001 ? 4.5 : 2.6) * dt)) // gets going quickly, coasts to a stop
+    if (reduced) fl.vel.copy(flWant)
+    fl.pos.addScaledVector(fl.vel, dt)
+    constrain(fl.pos, fl.vel, hall(), dt)
+    camera.position.copy(fl.pos)
+    // the slow drift of weightlessness, and a bank into sideways moves
+    camera.position.y += Math.sin(t * 0.9) * 0.012 * still
+    camera.lookAt(camera.position.clone().add(flDir))
+    const side2 = new THREE.Vector3().crossVectors(flDir, up).normalize()
+    fl.roll = THREE.MathUtils.damp(fl.roll, THREE.MathUtils.clamp(-fl.vel.dot(side2) * 0.012, -0.05, 0.05), 3, dt)
+    camera.rotateZ(fl.roll * still)
+    fl.fov = THREE.MathUtils.damp(fl.fov, FOV, 4, dt); setFov(fl.fov)
+    // the helmet's HUD stays on the glass if you went exploring from the first stop
+    const helmet = THREE.MathUtils.clamp(1 - p * 1.6, 0, 1)
+    visor.shown = helmet
+    if (opts.visor) { opts.visor.style.opacity = String(helmet * visor.rim); opts.visor.style.transform = `scale(${1 + (1 - helmet) * 0.25 + (1 - visor.rim) * 0.12})` }
+    // facing the sun at the forward window the eye stops down, as it does on the tour
+    const facing = THREE.MathUtils.clamp(-flDir.z, 0, 1), near = THREE.MathUtils.clamp(1 - (fl.pos.z + LEN) / 9, 0, 1)
+    fl.exposure = THREE.MathUtils.damp(fl.exposure, 1.1 - 0.55 * near * facing, 3, dt)
+    renderer.toneMappingExposure = fl.exposure
   }
   function setFov(f: number) { if (Math.abs(camera.fov - f) > 0.01) { camera.fov = f; camera.updateProjectionMatrix() } }
   /** Moves the camera through the arrival and drives its glare, mist and visor. */
@@ -503,8 +604,10 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   return {
     update(d) { data = d; place(); loadScreens() },
     goTo,
+    setFloat,
+    move(strafe, forward, lift = 0) { pad.x = strafe; pad.y = forward; pad.v = lift },
     skipIntro,
-    replayIntro() { unfocus(); skipAsked = false; setIntro('fly', clock.elapsedTime) },
+    replayIntro() { leaveFloat(); unfocus(); skipAsked = false; setIntro('fly', clock.elapsedTime) },
     lowerVisor() { if (!arriving() && pTarget < 0.5) lowerVisor(clock.elapsedTime, true) },
     dispose() {
       disposed = true
@@ -515,6 +618,8 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
       window.removeEventListener('pointerup', onUp)
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('keydown', onKey)
+      window.removeEventListener('keyup', onKeyUp)
+      window.removeEventListener('blur', onBlur)
       window.removeEventListener('resize', onResize)
       for (const s of [scene, flare.pass.scene]) s.traverse((o) => {
         const m = o as THREE.Mesh

@@ -1,3 +1,4 @@
+import { SoundToggle } from '../audio/SoundToggle'
 import { Bell, Box, Plus, RotateCcw, Square } from 'lucide-react'
 import { Fragment, useId, useRef } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
@@ -149,6 +150,7 @@ export function TopBar({ data, install }: { data: ShellData | null; install: (()
             <Bell size={20} strokeWidth={1.9} aria-hidden="true" />
             {open > 0 && <b aria-hidden="true">{open}</b>}
           </Link>
+          <SoundToggle className="tb-icon snd" compact />
           <Overflow crewId={who.id} crewName={who.name} install={install} onDemo={startDemo} />
         </>
       )}

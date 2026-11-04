@@ -19,8 +19,8 @@ export default defineConfig({
         short_name: 'AstroDocX',
         description:
           'Offline-first astronaut health co-pilot: detect, explain, act, log, sync later. Prototype, not a medical device.',
-        theme_color: '#0C0A1E',
-        background_color: '#0C0A1E',
+        theme_color: '#02050a',
+        background_color: '#02050a',
         display: 'standalone',
         start_url: '/app/',
         scope: '/app/',

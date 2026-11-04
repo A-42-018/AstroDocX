@@ -7,12 +7,12 @@ import { statusColor, statusLabel } from './panels'
 import { evaCrewId } from './eva'
 import { createCabin, STOP_COUNT, type CabinScene, type IntroPhase } from './scene'
 import { useCabinData } from './useCabinData'
+import { FloatHint, FloatPad } from './FloatPad'
 import { VisorHud } from './VisorHud'
 import { CabinLoader, loaderShownMs } from './CabinLoader'
 import { useTour } from '../tour/store'
 import * as sfx from '../audio/sfx'
 import { SoundToggle } from '../audio/SoundToggle'
-import { MusicToggle } from '../audio/MusicToggle'
 import { disposeMusic } from '../audio/music'
 import { introduce, startChatter, stopChatter } from '../audio/voice'
 
@@ -100,6 +100,9 @@ export default function CabinPage() {
   const [loader, setLoader] = useState<'show' | 'fade' | 'gone'>('show')
   const [stop, setStop] = useState(0)
   const [picked, setPicked] = useState<string | null>(null)
+  /** Float mode: drifting freely through the hall instead of following the tour. */
+  const [floating, setFloating] = useState(false)
+  const touch = typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches
   const dataRef = useRef(data)
   useEffect(() => { dataRef.current = data })
   const lastStop = useRef(-1)
@@ -134,7 +137,13 @@ export default function CabinPage() {
           else if (ph === 'booting') sfx.hudBoot()
           else if (ph === 'raised' && visorWas.current !== 'raised') sfx.visorOpen()
           visorWas.current = ph
-        }, onReady: () => setState('ready'), onProgress: setProgress,
+        },
+        onFloat: (on) => {
+          setFloating(on)
+          // exploring on your own pauses a running guided tour (and VITA with it)
+          if (on && useTour.getState().phase === 'running') useTour.getState().set({ paused: true })
+        },
+        onReady: () => setState('ready'), onProgress: setProgress,
       })
     } catch (err) {
       console.warn('cabin: no WebGL context', err)
@@ -195,7 +204,9 @@ export default function CabinPage() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
-      if (picked) { setPicked(null); scene.current?.goTo(stop) } else leave()
+      if (picked) { setPicked(null); scene.current?.goTo(stop) }
+      else if (floating) scene.current?.setFloat(false)
+      else leave()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -205,7 +216,7 @@ export default function CabinPage() {
   const who = picked ? data?.crew.find((c) => c.id === picked) : undefined
 
   return (
-    <div className={intro === 'off' ? 'cabin' : 'cabin is-arriving'}>
+    <div className={`${intro === 'off' ? 'cabin' : 'cabin is-arriving'}${floating ? ' is-floating' : ''}`}>
       <canvas ref={canvas} className="cabin-gl" role="img" aria-label="3D crew module. Scroll, use the arrow keys or the stop list to move through the tour." />
 
       <div ref={mist} className="cabin-mist" aria-hidden="true" />
@@ -223,8 +234,11 @@ export default function CabinPage() {
       <header className="cabin-top">
         <button type="button" className="cabin-back" onClick={leave}>← Console</button>
         <div className="cabin-brand">AstroDocX <span>· 3D Cabin</span></div>
-        <MusicToggle className="cabin-sound" />
-        <SoundToggle className="cabin-sound" />
+        <SoundToggle className="cabin-sound" music />
+        <button type="button" className="cabin-explore" aria-pressed={floating} aria-keyshortcuts="F" disabled={state !== 'ready' || intro !== 'off'}
+          onClick={() => scene.current?.setFloat(!floating)} title={floating ? 'Fly back to the tour (F or Esc)' : 'Drift freely through the module (F)'}>
+          {floating ? '↩ Back to tour' : '✥ Explore'}
+        </button>
         <button type="button" className="cabin-replay" onClick={() => scene.current?.replayIntro()}>↺ Replay arrival</button>
       </header>
 
@@ -235,6 +249,9 @@ export default function CabinPage() {
           </button>
         ))}
       </nav>
+
+      {floating && <FloatHint touch={touch} />}
+      {floating && touch && <FloatPad onMove={(x, y, v) => scene.current?.move(x, y, v)} />}
 
       <section className="cabin-caption cabin-panel" aria-live="polite">
         <div className="cap-step">{String(stop + 1).padStart(2, '0')} / {String(STOP_COUNT).padStart(2, '0')}</div>

@@ -3,6 +3,10 @@
 .vita-dock > * { pointer-events: auto; }
 .vita-dock.in-cabin { bottom: 40px; right: 10px; }
 
+.vita-dock { transition: opacity var(--dur-2); }
+/* the 3D cabin's loading screen has the screen to itself */
+body:has(.cabin-loader:not(.is-leaving)) .vita-dock { opacity: 0; pointer-events: none; }
+
 .vita-fab {
   position: relative; display: grid; place-items: center; padding: 0; border: 0; background: transparent; cursor: var(--cur-pointer);
   border-radius: 50%; filter: drop-shadow(0 6px 18px rgba(0, 0, 0, .6));
@@ -66,6 +70,7 @@
 }
 .vita-tour:hover { background: var(--cy-soft); }
 .vita-foot form { display: flex; align-items: center; gap: 4px; }
+.vita-mute { margin: 0; font: 400 12px/1.45 var(--ui); color: var(--t3); }
 .vita-foot input { flex: 1; min-width: 0; height: 34px; padding: 0 11px; font: 400 13.5px var(--ui); color: var(--t1); background: rgba(0, 0, 0, .35); border: 1px solid var(--edge-hi); border-radius: 8px; }
 .vita-foot input::placeholder { color: var(--t3); }
 .vita-foot form button:disabled { opacity: .4; cursor: default; }
@@ -75,6 +80,7 @@
 @media (max-width: 767px) {
   .vita-dock { bottom: 80px; right: 8px; }
   .vita-dock.in-cabin { bottom: 14px; }
+  body:has(.float-pad) .vita-dock.in-cabin { bottom: 190px; } /* clear of the float-mode stick */
   .vita-panel { max-height: calc(100dvh - 210px); }
 }
 @media (prefers-reduced-motion: reduce) { .vita-panel { animation: none; } .vita-dots i { animation: none; opacity: .7; } }

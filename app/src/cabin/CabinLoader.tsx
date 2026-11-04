@@ -1,12 +1,6 @@
 import '../styles/pages/cabin-loader.css'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 
-/** The art behind the loader: a 16:9 frame, full bleed (phones crop to the astronaut and rover). */
-export const LOADER_ART = `${import.meta.env.BASE_URL}textures/cabin-loading.webp`
-
-/** Warm the poster with the cabin chunk, so the loader never opens on a blank frame. */
-export function preloadLoaderArt() { const i = new Image(); i.src = LOADER_ART }
-
 /** What the loader says it is doing, by how far the load has got. */
 const STEPS = [
   { at: 0, text: 'Fetching cabin systems' },
@@ -26,7 +20,7 @@ const FACTS = [
 
 /**
  * The fallback (the chunk) and the page (the models) each mount their own loader. They share one clock so the
- * art's drift and the bar carry on across the swap instead of starting over.
+ * sky's twinkle and the bar carry on across the swap instead of starting over.
  */
 const shared = { epoch: 0, shown: 0, gone: 0 }
 function epoch() {
@@ -87,21 +81,22 @@ export function CabinLoader({ progress, leaving = false, reduced = false, onBack
   }, [reduced])
 
   // negative delay: the animations pick up where the previous loader left them
-  const style = { '--cl-t': `${lag.toFixed(2)}s`, '--cl-art': `url("${LOADER_ART}")` } as CSSProperties
+  const style = { '--cl-t': `${lag.toFixed(2)}s` } as CSSProperties
 
   return (
     <div className={`cabin-loader${fresh ? ' is-fresh' : ''}${leaving ? ' is-leaving' : ''}${reduced ? ' is-still' : ''}`} style={style} role="status" aria-live="polite" aria-busy={!leaving}>
-      <div className="cl-art" aria-hidden="true" />
-      <div className="cl-dust" aria-hidden="true"><i /><i /><i /></div>
-      <div className="cl-scan" aria-hidden="true" />
+      <div className="cl-sky" aria-hidden="true" />
+      <div className="cl-stars" aria-hidden="true"><i /><i /></div>
+      <div className="cl-earth" aria-hidden="true" />
       <div className="cl-frame" aria-hidden="true">
         <span className="cl-corner tl" /><span className="cl-corner tr" /><span className="cl-corner bl" /><span className="cl-corner br" />
-        <span className="cl-tag">SOL 0412 · JEZERO RIM · CREW HAB LINK</span>
+        <span className="cl-tag">ASTRODOCX · CREW MODULE LINK</span>
       </div>
 
       <div className="cl-copy">
-        <div className="cl-brand">AstroDocX <span>· 3D Cabin</span></div>
-        <h1 className="cl-title">Docking with the<br />crew module</h1>
+        <p className="cl-ph" aria-hidden="true">3D Cabin</p>
+        <h1 className="cl-brand"><b>&lt;</b>astrodoc<em>X</em><b>/&gt;</b></h1>
+        <p className="cl-title">Docking with the crew module</p>
 
         <div className="cl-status">
           <span className="cl-step">{STEPS[step].text}<b className="cl-dots"><i>.</i><i>.</i><i>.</i></b></span>

@@ -240,20 +240,25 @@
 .footer-links a { font-size:.7rem;letter-spacing:.16em;text-transform:uppercase; }
 
 /* ── soundtrack toggle (sound.js): a round speaker emoji top right; while it plays the emoji becomes a moving wave ── */
-.sound-toggle { position:fixed;z-index:90;top:calc(var(--nav-h,64px) + 10px);right:var(--pad-x,24px);width:42px;height:42px;padding:0;border-radius:50%;cursor:var(--cur-pointer);
-  display:flex;align-items:center;justify-content:center;color:var(--holo,#22D3EE);
-  background:rgba(6,16,30,.6);border:1px solid rgba(34,211,238,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  transition:border-color .2s,background .2s,box-shadow .2s,transform .2s; }
-.sound-toggle:hover, .sound-toggle:focus-visible { border-color:var(--holo,#22D3EE);background:rgba(34,211,238,.14);box-shadow:0 0 18px var(--holo-glow,rgba(34,211,238,.35));transform:scale(1.06); }
-.sound-toggle:focus-visible { outline:2px solid #fff;outline-offset:3px; }
-.sound-emoji { font-size:1.15rem;line-height:1; }
-.sound-bars { display:none;align-items:center;gap:2.5px;height:18px; }
+/* the page's one sound control, in the same pill as the briefing page's "Sound off / Sound on" */
+.sound-toggle { position:fixed;z-index:90;top:calc(var(--nav-h,64px) + 10px);right:var(--pad-x,24px);height:38px;padding:0 14px;gap:8px;cursor:var(--cur-pointer);
+  display:flex;align-items:center;justify-content:center;color:#9ff4ff;font:600 11px 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;
+  background:rgba(5,14,22,.78);border:1px solid rgba(70,225,245,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  clip-path:polygon(0 8px,8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%);
+  transition:background .2s,color .2s; }
+.sound-toggle:hover, .sound-toggle:focus-visible { background:rgba(54,226,245,.14);color:#fff; }
+.sound-toggle:focus-visible { outline:2px solid #9ff4ff;outline-offset:3px; }
+.sound-ico { width:16px;height:16px;flex:none; }
+.sound-lbl::before { content:'Sound off'; }
+.sound-toggle.is-on .sound-lbl::before { content:'Sound on'; }
+.sound-bars { display:none;align-items:center;gap:2.5px;height:16px; }
 .sound-bars i { display:block;width:2.5px;height:4px;border-radius:2px;background:currentColor;animation:soundBar 1s ease-in-out infinite; }
 .sound-bars i:nth-child(2) { animation-delay:-.2s; } .sound-bars i:nth-child(3) { animation-delay:-.45s; } .sound-bars i:nth-child(4) { animation-delay:-.7s; } .sound-bars i:nth-child(5) { animation-delay:-.9s; }
-.sound-toggle.is-on { border-color:var(--holo,#22D3EE);box-shadow:0 0 16px var(--holo-glow,rgba(34,211,238,.35)); }
-.sound-toggle.is-on .sound-emoji { display:none; }
+.sound-toggle.is-on { color:#36e2f5; }
+.sound-toggle.is-on .sound-ico { display:none; }
 .sound-toggle.is-on .sound-bars { display:flex; }
-@keyframes soundBar { 0%,100% { height:4px; } 50% { height:18px; } }
-@media (max-width:900px) { .sound-toggle { z-index:101;top:calc((var(--nav-h,64px) - 40px) / 2);right:calc(var(--pad-x,24px) + 152px);width:40px;height:40px; } .uni-skip { right:var(--pad-x,24px); } }   /* phones: in the nav bar, left of Launch Console */
+
+@keyframes soundBar { 0%,100% { height:4px; } 50% { height:16px; } }
+@media (max-width:900px) { .sound-toggle { z-index:101;top:calc((var(--nav-h,64px) - 38px) / 2);right:calc(var(--pad-x,24px) + 152px);padding:0 11px; } .sound-lbl { display:none; } .uni-skip { right:var(--pad-x,24px); } }   /* phones: in the nav bar, left of Launch Console, icon only */
 @media (prefers-reduced-motion:reduce) { .sound-bars i { animation:none; } .sound-bars i:nth-child(odd) { height:14px; } .sound-bars i:nth-child(even) { height:8px; } }
 html.touring .sound-toggle { display:none; }

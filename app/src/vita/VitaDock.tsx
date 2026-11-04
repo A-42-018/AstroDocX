@@ -1,8 +1,8 @@
 import '../styles/pages/vita.css'
-import { Mic, Route, SendHorizontal, Square, Volume2, VolumeX, X } from 'lucide-react'
+import { Mic, Route, SendHorizontal, Square, X } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useVitaVoice, vitaPrime, vitaSay, vitaStop } from '../audio/voice'
+import { useVitaVoice, vitaSay, vitaStop } from '../audio/voice'
 import { useSound } from '../audio/sfx'
 import { useTour } from '../tour/store'
 import { VitaAvatar } from './VitaAvatar'
@@ -111,12 +111,6 @@ export function VitaDock() {
     rec.current = r
     try { r.start() } catch { rec.current = null; setListening(false) }
   }
-  const toggleSound = () => {
-    const wasOn = sound.on
-    sound.toggle()
-    if (wasOn) vitaStop(); else vitaPrime()
-  }
-
   return (
     <aside className={`vita-dock${inCabin ? ' in-cabin' : ''}${open ? ' is-open' : ''}`} aria-label="VITA, mission guide">
       {open && (
@@ -128,9 +122,6 @@ export function VitaDock() {
             </div>
             <div className="vita-head-ctl">
               {speaking && <button type="button" onClick={vitaStop} aria-label="Stop talking"><Square size={14} aria-hidden="true" /></button>}
-              <button type="button" onClick={toggleSound} aria-pressed={sound.on} aria-label={sound.on ? 'Mute VITA’s voice' : 'Let VITA talk out loud'} title={sound.on ? 'Voice on' : 'Voice off'}>
-                {sound.on ? <Volume2 size={15} aria-hidden="true" /> : <VolumeX size={15} aria-hidden="true" />}
-              </button>
               <button type="button" onClick={toggle} aria-label="Close VITA"><X size={16} aria-hidden="true" /></button>
             </div>
           </header>
@@ -144,6 +135,7 @@ export function VitaDock() {
             )}
           </div>
           <div className="vita-foot">
+            {!sound.on && <p className="vita-mute">Sound is off, so I’ll answer in text. Use the speaker button at the top of the screen to hear me.</p>}
             <button type="button" className="vita-tour" onClick={() => startGuide(go, 'full')}><Route size={15} aria-hidden="true" /> Take the full tour</button>
             <form onSubmit={submit} autoComplete="off">
               <input ref={input} value={text} onChange={(e) => setText(e.target.value)} placeholder="Ask VITA anything…" aria-label="Your question" maxLength={500} />
