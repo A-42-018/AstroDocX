@@ -3,7 +3,7 @@
 **Astronaut + Doctor + X** — an offline-first health co-pilot for astronauts on long-duration missions.
 
 > NASA Space Apps Challenge 2026 · Challenge: *Create Health Monitoring Software for Astronauts on Space Missions*
-> Team AstroDocX · Dhaka, Bangladesh
+> Team AstroDocX · Mymensingh, Bangladesh
 
 ### ▶ [Take the 1-click tour (2 min)](https://astrodocx.vercel.app/?tour=full)
 No time to click around? This link plays the whole project by itself: VITA's mission briefing on the homepage, the Crew Console's main screens with a live CO₂ fault demo, and the 3D cabin out to the astronaut on EVA. Pause, skip or exit any time from the bar at the bottom.
