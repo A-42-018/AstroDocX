@@ -137,7 +137,7 @@
 .ca-skip { pointer-events: auto; font: 600 13px var(--ui); color: var(--cy-hi); background: var(--panel); border: 1px solid var(--edge-hi); padding: var(--sp-2) 14px; cursor: var(--cur-pointer); letter-spacing: .04em; }
 .cabin-sound { pointer-events: auto; margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font: 500 12px var(--ui); color: var(--t2); background: transparent; border: 1px solid var(--edge); padding: 6px 12px; cursor: var(--cur-pointer); letter-spacing: .04em; }
 .cabin-sound[aria-pressed="false"] { color: var(--t3); }
-.cabin-sound + .cabin-replay { margin-left: 0; }
+.cabin-sound + .cabin-replay, .cabin-sound + .cabin-sound { margin-left: 0; }
 .cabin-sound:hover { background: var(--cy-soft); }
 .cabin-sound:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
 .ca-skip:hover, .cabin-replay:hover { background: var(--cy-soft); }

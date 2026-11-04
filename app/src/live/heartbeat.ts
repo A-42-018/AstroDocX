@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react'
+import { monitorBeep } from '../audio/sfx'
 
 /** Heartbeats from the live ECG, so anything else on screen (the Health Twin's heart and pulse) beats in step with the trace. */
 const bus = new EventTarget()
-export const emitBeat = () => { bus.dispatchEvent(new Event('beat')) }
+export const emitBeat = () => { monitorBeep(); bus.dispatchEvent(new Event('beat')) }
 
 /**
  * Calls `onBeat` on every ECG beat. When the ECG is not drawing (scrolled away on a phone), it keeps the
