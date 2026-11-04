@@ -1,12 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "cd app && npm ci && cd ../api && npm ci",
+  "installCommand": "cd app && npm ci",
   "buildCommand": "cd app && npm run build && rm -rf ../landing/app && cp -r dist ../landing/app",
   "outputDirectory": "landing",
   "cleanUrls": false,
   "functions": {
-    "api/ask.js": { "maxDuration": 20, "includeFiles": "knowledge/chunks.json" }
+    "api/ask.py": { "maxDuration": 20, "includeFiles": "knowledge/chunks.json" }
   },
   "rewrites": [
     { "source": "/app/:path*", "destination": "/app/index.html" }
