@@ -12,6 +12,9 @@ import { CabinLoader, loaderShownMs } from './CabinLoader'
 import { useTour } from '../tour/store'
 import * as sfx from '../audio/sfx'
 import { SoundToggle } from '../audio/SoundToggle'
+import { MusicToggle } from '../audio/MusicToggle'
+import { disposeMusic } from '../audio/music'
+import { introduce, startChatter, stopChatter } from '../audio/voice'
 
 /** The arrival's phases and the visor, heard as well as seen. */
 const INTRO_SOUND: Partial<Record<IntroPhase, () => void>> = { fly: sfx.flyRumble, lock: sfx.glare, clear: sfx.pressurise }
@@ -70,6 +73,8 @@ export default function CabinPage() {
   const [loader, setLoader] = useState<'show' | 'fade' | 'gone'>('show')
   const [stop, setStop] = useState(0)
   const [picked, setPicked] = useState<string | null>(null)
+  const dataRef = useRef(data)
+  useEffect(() => { dataRef.current = data })
   const lastStop = useRef(-1)
   const visorWas = useRef<string>('raised')
   const leave = () => (location.key === 'default' ? navigate('/board') : navigate(-1))
@@ -93,7 +98,10 @@ export default function CabinPage() {
           sfx.humOutside(i === STOP_COUNT - 1 ? 1 : 0)
           setStop(i)
         },
-        onPick: (id) => { if (id) sfx.select(); setPicked(id) },
+        onPick: (id) => {
+          if (id) { sfx.select(); const c = dataRef.current?.crew.find((x) => x.id === id); if (c) introduce(c.role) }
+          setPicked(id)
+        },
         onVisor: (ph) => {
           if (ph === 'dropping') sfx.visorSeal()
           else if (ph === 'booting') sfx.hudBoot()
@@ -135,7 +143,8 @@ export default function CabinPage() {
   useEffect(() => {
     if (!lifted) return
     sfx.cabinHum(true)
-    return () => sfx.cabinHum(false)
+    startChatter()
+    return () => { sfx.cabinHum(false); stopChatter(); disposeMusic() }
   }, [lifted])
   useEffect(() => {
     if (loader !== 'fade') return
@@ -180,6 +189,7 @@ export default function CabinPage() {
       <header className="cabin-top">
         <button type="button" className="cabin-back" onClick={leave}>← Console</button>
         <div className="cabin-brand">AstroDocX <span>· 3D Cabin</span></div>
+        <MusicToggle className="cabin-sound" />
         <SoundToggle className="cabin-sound" />
         <button type="button" className="cabin-replay" onClick={() => scene.current?.replayIntro()}>↺ Replay arrival</button>
       </header>

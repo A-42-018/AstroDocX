@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useRef } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { alertChime, navTick } from './audio/sfx'
+import { alertChime, cabinHum, navTick, uiClick, uiHover } from './audio/sfx'
+import { announce, startChatter, stopChatter } from './audio/voice'
 import BoardPage from './board/BoardPage'
 import { CabinPage } from './cabin/lazy'
 import { CabinLoader } from './cabin/CabinLoader'
@@ -67,13 +68,33 @@ function useShellSounds(shell: ShellData | null, quiet: boolean) {
     page.current = pathname
     if (!quiet) navTick()
   }, [pathname, quiet])
+  // the console's own ambience: a low hum, console chirps and radio calls with Ground; the cabin has its own
+  useEffect(() => {
+    if (quiet) return
+    cabinHum(true); startChatter('console')
+    return () => { cabinHum(false); stopChatter() }
+  }, [quiet])
+  // a soft tick under the pointer and a click on every control
+  useEffect(() => {
+    if (quiet) return
+    const hit = (e: Event) => (e.target as Element | null)?.closest('button, a, [role="tab"], summary, select, input[type="checkbox"], input[type="radio"]')
+    const over = (e: PointerEvent) => { if (e.pointerType === 'mouse' && hit(e)) uiHover() }
+    const down = (e: PointerEvent) => { const t = hit(e); if (t && !t.matches('a')) uiClick() }
+    document.addEventListener('pointerover', over); document.addEventListener('pointerdown', down)
+    return () => { document.removeEventListener('pointerover', over); document.removeEventListener('pointerdown', down) }
+  }, [quiet])
   const total = shell ? shell.crew.reduce((n, c) => n + c.alerts, 0) : null
   const act = !!shell?.crew.some((c) => c.status === 'act')
   const was = useRef<number | null>(null)
   useEffect(() => {
     if (total === null) return
-    if (was.current !== null && total > was.current && !quiet) alertChime(act)
+    if (was.current !== null && total > was.current && !quiet) {
+      alertChime(act)
+      const who = shell?.crew.filter((c) => c.alerts > 0).sort((a, b) => (b.status === 'act' ? 1 : 0) - (a.status === 'act' ? 1 : 0))[0]
+      window.setTimeout(() => announce(who ? `${act ? 'Warning' : 'Attention'}. New alert for the ${who.name}${who.worstHazard ? `. ${who.worstHazard}` : ''}.` : 'Attention. New alert.'), 900)
+    }
     was.current = total
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [total, act, quiet])
 }
 
@@ -88,7 +109,7 @@ export default function App() {
   const { pathname, search } = useLocation()
   // A single screen without the frame, for the 3D cabin's wall screens.
   const embed = embedFromUrl(search)
-  useShellSounds(shell, !!embed)
+  useShellSounds(shell, !!embed || pathname.startsWith('/cabin'))
   if (embed) return (
     <ShellDataContext.Provider value={shell}>
       <ErrorBoundary key={pathname} onReset={() => seedDemo().then(() => undefined)}><Embed {...embed} /></ErrorBoundary>
