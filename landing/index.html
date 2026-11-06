@@ -40,6 +40,7 @@
 <a class="skip-link" href="#q">Skip to the question box</a>
 <canvas id="bg" aria-hidden="true"></canvas>
 <div class="scrim" aria-hidden="true"></div>
+<div class="cz-art" id="czArt" aria-hidden="true"></div>
 
 <div class="frame">
   <header class="topbar">
@@ -47,10 +48,19 @@
       <span class="logo" aria-hidden="true">+</span>
       <span class="brand-text"><b>AstroDocX</b><small>Mission briefing</small></span>
     </a>
-    <div class="tb-mid mono" aria-hidden="true"><span>NASA Space Apps <b>2026</b></span><span>Challenge &middot; <b>astronaut health monitoring</b></span></div>
+    <div class="rg" id="rg" role="group" aria-label="NASA's five hazards of spaceflight. Open a fact.">
+      <span class="mono rg-lbl" aria-hidden="true">Hazards</span>
+      <button type="button" data-hz="radiation" aria-label="Radiation: open the NASA fact" title="Radiation">R</button>
+      <button type="button" data-hz="isolation" aria-label="Isolation: open the NASA fact" title="Isolation">I</button>
+      <button type="button" data-hz="distance" aria-label="Distance: open the NASA fact" title="Distance">D</button>
+      <button type="button" data-hz="gravity" aria-label="Gravity: open the NASA fact" title="Gravity">G</button>
+      <button type="button" data-hz="environment" aria-label="Environment: open the NASA fact" title="Environment">E</button>
+    </div>
+    <div class="tb-mid mono" aria-hidden="true"><span>NASA Space Apps Challenge &middot; <b>2026</b></span></div>
     <nav class="tb-right" aria-label="Site">
       <a class="hbtn ghost" href="/story.html">Watch the story</a>
-      <a class="hbtn" href="/?tour=full" data-tour-start aria-label="Start the 1-click tour, about 2 minutes">1-click tour</a>
+      <a class="hbtn ghost" href="/?tour=full" data-tour-start aria-label="Start the guided tour, about 2 minutes">2-minute tour</a>
+      <a class="hbtn" href="/app/">Crew Console</a>
       <button type="button" class="hbtn ghost" id="sound" aria-pressed="false" aria-label="Sound">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path class="wave" d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
         <span class="lbl" id="soundLbl">Sound off</span>
@@ -59,8 +69,8 @@
   </header>
 
   <main class="stage" id="main">
-    <h1 class="sr-only">AstroDocX: a health co-pilot for astronauts. Mission briefing with VITA, the guide.</h1>
     <section class="guide" aria-label="VITA, the mission guide">
+      <h1 class="guide-headline">Health support for deep-space missions.</h1>
       <canvas id="bot" width="680" height="680" tabindex="0" role="img" aria-label="VITA, the AstroDocX mission guide: a particle drone with a visor. Press Enter for a hint."></canvas>
       <div class="meta">
         <div class="id" id="vitaId"><span class="lamp" aria-hidden="true"></span><b>VITA</b><span class="mono" id="vitaState">Mission guide</span></div>
@@ -95,7 +105,7 @@
     <a class="hp door" data-door="console" href="/app/">
       <span class="br br-tl" aria-hidden="true"></span><span class="br br-br" aria-hidden="true"></span>
       <canvas width="192" height="88" aria-hidden="true"></canvas>
-      <div class="ph"><span class="ph-dot" aria-hidden="true"></span><span class="ph-title">Door 1</span><span class="ph-meta">Crew console</span></div>
+      <div class="ph"><span class="ph-dot" aria-hidden="true"></span><span class="ph-title">Door 1</span><span class="ph-meta">Crew console · start here</span></div>
       <h3>Run the mission</h3><p>Live vitals, personal baselines, and alerts that turn into actions.</p>
       <div class="go">Enter console <span aria-hidden="true">&rsaquo;</span></div>
     </a>
@@ -121,6 +131,9 @@
     <span class="right"><b>Not affiliated with or endorsed by NASA</b> &middot; Prototype, not a medical device &middot; <a href="https://www.spaceappschallenge.org/" target="_blank" rel="noopener">Space Apps 2026</a> &middot; <a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener">GitHub</a></span>
   </footer>
 </div>
+
+<div class="cz-spots" id="czSpots" role="group" aria-label="Five hazards of spaceflight"></div>
+<canvas id="czReveal" aria-hidden="true" hidden></canvas>
 
 <div class="lib-ov" id="lib" role="dialog" aria-modal="true" aria-label="NASA library" hidden>
   <div class="lib-mount" id="libMount"></div>
