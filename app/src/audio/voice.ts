@@ -206,7 +206,7 @@ export function vitaSay(text: string): Promise<void> {
     synth!.resume() // clears a pause left by an earlier line
     for (const p of parts) {
       const u = new SpeechSynthesisUtterance(p.trim())
-      u.pitch = 1.08; u.rate = 1.02; u.volume = 1; u.lang = 'en-US'
+      u.pitch = 1.0; u.rate = 0.94; u.volume = 1; u.lang = 'en-US'
       if (vitaVoice) { u.voice = vitaVoice; u.lang = vitaVoice.lang }
       u.onend = () => { if (--left <= 0) end() }
       u.onerror = end // cut off, or not allowed yet
