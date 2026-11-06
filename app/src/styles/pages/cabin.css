@@ -217,3 +217,16 @@
   .cabin-sound-group .cabin-sound:first-child span { display: none; }
   .cabin-explore { margin-left: 0; }
 }
+
+/* VITA's subtitle: what the robot crew doctor is saying, centred low, above the tour caption's line */
+.cabin-vita-sub {
+  position: absolute; left: 50%; bottom: 128px; z-index: 7; translate: -50% 0; width: min(640px, calc(100% - 40px)); margin: 0;
+  display: flex; gap: 10px; align-items: baseline; padding: 10px 16px; pointer-events: none;
+  font: 500 15px/1.45 var(--ui); color: var(--t1); text-shadow: 0 1px 2px rgba(0, 0, 0, .8);
+  background: rgba(4, 14, 22, 0.72); border: 1px solid var(--edge-hi); border-radius: 10px; backdrop-filter: blur(6px);
+  box-shadow: 0 0 26px -10px var(--cy-glow); animation: vita-sub-in .25s var(--ease);
+}
+.cabin-vita-sub b { flex: none; font: 700 11px var(--mono); letter-spacing: .16em; color: var(--cy-hi); }
+@keyframes vita-sub-in { from { opacity: 0; translate: -50% 6px; } }
+@media (max-width: 767px) { .cabin-vita-sub { bottom: 190px; font-size: 13.5px; } }
+@media (prefers-reduced-motion: reduce) { .cabin-vita-sub { animation: none; } }

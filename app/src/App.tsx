@@ -22,6 +22,7 @@ import { VitaDock } from './vita/VitaDock'
 // The board is the landing screen and loads eagerly; every other screen (Trends carries the chart
 // library) is its own chunk. The service worker precaches all chunks, so they still work offline;
 // lazyPage reloads once if a chunk is gone after a redeploy.
+const DoctorPage = lazyPage(() => import('./doctor/DoctorPage'))
 const AlertsPage = lazyPage(() => import('./alerts/AlertsPage'))
 const TrendsPage = lazyPage(() => import('./trends/TrendsPage'))
 const CheckInPage = lazyPage(() => import('./checkin/CheckInPage'))
@@ -140,6 +141,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/board" replace />} />
           <Route path="/board" element={<BoardPage />} />
+          <Route path="/doctor" element={<DoctorPage />} />
           <Route path="/alerts" element={<AlertsPage />} />
           <Route path="/trends" element={<TrendsPage />} />
           <Route path="/checkin" element={<CheckInPage />} />

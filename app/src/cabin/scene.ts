@@ -18,7 +18,7 @@ import { wallMap, wallProbe } from './wall'
 
 /*
  * The 3D cabin: the hall (hall.ts, lighting.ts) with its working consoles (consoles.ts), four wall screens running the real console (screens.ts), the crew
- * floating beside them (crew.ts, placed with the camera's stops in shots.ts), TARS robots walking the floor (robots.ts), and a scroll-driven camera touring ten stops from a helmet view at the
+ * floating beside them (crew.ts, placed with the camera's stops in shots.ts), the robots VITA and MEDI walking the floor (robots.ts), and a scroll-driven camera touring ten stops from a helmet view at the
  * door, past a look back from the window, out to a crew member on EVA beside the station (eva.ts).
  */
 
@@ -37,6 +37,8 @@ export interface CabinOptions {
   onIntro: (phase: IntroPhase) => void
   onStop: (i: number) => void
   onPick: (crewId: string | null) => void
+  /** VITA, the robot crew doctor, was clicked: the camera comes to her and she turns to listen. */
+  onPickVita?: () => void
   /** The visor going up, sliding down, and the HUD booting, for sound. */
   onVisor?: (phase: 'raised' | 'dropping' | 'booting' | 'down') => void
   onReady: () => void
@@ -57,6 +59,8 @@ export interface CabinScene {
   replayIntro: () => void
   /** Play the helmet going on at the first stop: the visor slides down, then the HUD boots. */
   lowerVisor: () => void
+  /** VITA is speaking (her face pulses, she stops and faces the camera), or has stopped (she walks on a moment later). */
+  vitaTalk: (on: boolean) => void
   dispose: () => void
 }
 
@@ -234,6 +238,8 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const N = STOP_COUNT, reduced = opts.reducedMotion
   let p = 0, pTarget = 0, snapTimer = 0, shown = -1
   let focus: { pos: THREE.Vector3; look: THREE.Vector3; id: string } | null = null
+  /** VITA talking, and until when she keeps facing the camera after a click or her last word. */
+  let vitaTalking = false, vitaHold = 0
   const camPos = posCurve.getPoint(0), camLook = lookCurve.getPoint(0)
   const drag = { on: false, moved: 0, x: 0, y: 0, yaw: 0, pitch: 0 }
   /* float mode: a free camera kept inside the hall (float.ts). The tour's own position (p) is parked while it runs. */
@@ -363,8 +369,20 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const pick = (e: PointerEvent) => {
     const r = canvas.getBoundingClientRect()
     ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera)
-    const hit = ray.intersectObjects([...panels.map((x) => x.face), ...crew.holders()], true)[0]
+    const vitaBody = robots.vita.object()
+    const hit = ray.intersectObjects([...panels.map((x) => x.face), ...crew.holders(), ...(vitaBody ? [vitaBody] : [])], true)[0]
     if (!hit) return
+    if (hit.object.userData.vita) {
+      const at = robots.vita.position()
+      if (!at) return
+      leaveFloat()
+      // come to her: 3 m off, at her face height, looking at the display
+      const toCam = camera.position.clone().sub(at).setY(0).normalize()
+      focus = { pos: at.clone().addScaledVector(toCam, 3).setY(at.y + 1.25), look: at.clone().setY(at.y + 1.0), id: '' }
+      robots.vita.attend(focus.pos); vitaHold = clock.elapsedTime + 5
+      opts.onPickVita?.()
+      return
+    }
     const panel = hit.object.userData.panel as number | undefined
     if (panel !== undefined) { goTo([2, 3, 5, 6][panel]); return }
     const id = hit.object.userData.crew as string | undefined, a = id ? crew.find(id) : undefined
@@ -538,7 +556,9 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   }
   function finishFrame(t: number, dt: number, still: number) {
     const live = new Map<string, CabinCrew>((data?.crew ?? []).map((c) => [c.id, c]))
-    crew.animate(live, data?.focusId, focus?.id ?? data?.focusId, t, dt, still, reduced, camera, alarm, crewKey)
+    crew.animate(live, data?.focusId, focus?.id || data?.focusId, t, dt, still, reduced, camera, alarm, crewKey)
+    // VITA faces the camera while she talks, and for a moment after a click before her first word
+    if (vitaTalking || t < vitaHold) robots.vita.attend(camera.position); else robots.vita.release()
     if (data && t - lastDraw > 0.05) { // panels and tags at about 20 fps
       lastDraw = t
       camera.updateMatrixWorld(); frustum.setFromProjectionMatrix(viewProj.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse))
@@ -549,7 +569,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     }
     if (p > 5 || arriving()) eva.load()
     // the station shows from the forward window on, and all through the arrival
-    decor?.update(t, still); consoles.update(t, still); robots.update(dt, still); space.update(t, still); beam.show(!arriving() || intro === 'clear'); beam.update(t, still); post.update(t, still); stepVisor(t); eva.update(still, arriving() && intro !== 'clear' ? N - 1 : p); flare.update(reduced)
+    decor?.update(t, still); consoles.update(t, still); robots.update(dt, still, t); space.update(t, still); beam.show(!arriving() || intro === 'clear'); beam.update(t, still); post.update(t, still); stepVisor(t); eva.update(still, arriving() && intro !== 'clear' ? N - 1 : p); flare.update(reduced)
     if (frameNo++ % 6 === 0) renderer.shadowMap.needsUpdate = true
     composer.render(dt)
     screens.render(camera, crew.holders().filter((h) => h.visible).map((h) => h.getWorldPosition(new THREE.Vector3())), dt)
@@ -609,6 +629,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     skipIntro,
     replayIntro() { leaveFloat(); unfocus(); skipAsked = false; setIntro('fly', clock.elapsedTime) },
     lowerVisor() { if (!arriving() && pTarget < 0.5) lowerVisor(clock.elapsedTime, true) },
+    vitaTalk(on) { vitaTalking = on; robots.vita.talk(on); if (!on) vitaHold = Math.max(vitaHold, clock.elapsedTime + 1.2) },
     dispose() {
       disposed = true
       manager.onProgress = prevProgress

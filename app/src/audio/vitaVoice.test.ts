@@ -35,8 +35,17 @@ it('speakable reads names and units the way a person would', () => {
 it('speaks in VITA’s voice: Samantha, natural pitch, a sentence at a time', async () => {
   void v.vitaSay('First sentence. Second sentence!')
   expect(spoken.map((u) => u.text)).toEqual(['First sentence.', 'Second sentence!'])
-  expect(spoken[0].pitch).toBeCloseTo(1.08)
+  expect(spoken[0].pitch).toBeCloseTo(1.0)
   expect((spoken[0].voice as { name: string }).name).toBe('Samantha')
+})
+
+it('does not break a sentence at a decimal point', () => {
+  void v.vitaSay('Sleep was 4.70 h. Reaction 411 ms.')
+  expect(spoken.map((u) => u.text)).toEqual(['Sleep was 4.70 hours.', 'Reaction 411 milliseconds.'])
+})
+
+it('reads the crew doctor’s numbers out', () => {
+  expect(v.speakable('HRV 34 ms is 2.6σ below baseline (sd 5). Started at D28 01:00 MET.')).toBe('H R V 34 milliseconds is 2.6 sigma below baseline (standard deviation 5). Started at mission day 28, 01 00.')
 })
 
 it('resolves only once the last sentence has been said', async () => {
