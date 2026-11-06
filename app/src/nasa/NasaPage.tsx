@@ -8,6 +8,8 @@ import { FIVE_HAZARDS_URL, HAZARD_BASIS, RESOURCES, STANDARDS } from '../engine/
 import { HazardIcon } from '../shell/icons'
 import { HudPanel, PanelHeader } from '../ui/HudPanel'
 import { KpiCell, KpiGrid } from '../ui/Readout'
+import { VALUE_COUNT } from './i4'
+import { RealCrewData } from './RealCrewData'
 
 const ext = { target: '_blank', rel: 'noopener noreferrer' } as const
 const NewTab = () => <span className="sr-only"> (opens in a new tab)</span>
@@ -40,6 +42,7 @@ export default function NasaPage() {
           <KpiCell label="NASA studies & reports" value={ALL_EVIDENCE.length} />
           <KpiCell label="NASA-STD-3001 limits" value={limits} />
           <KpiCell label="NASA services" value={RESOURCES.length} />
+          <KpiCell label="Real crew lab values" value={VALUE_COUNT} />
         </KpiGrid>
       </HudPanel>
 
@@ -89,6 +92,8 @@ export default function NasaPage() {
           </HudPanel>
         ))}
       </section>
+
+      <RealCrewData />
 
       <HudPanel className="ns-res" title="NASA open data and services used">
         <ul className="ns-res-list">
