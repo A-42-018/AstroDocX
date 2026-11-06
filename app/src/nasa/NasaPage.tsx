@@ -9,6 +9,7 @@ import { HazardIcon } from '../shell/icons'
 import { HudPanel, PanelHeader } from '../ui/HudPanel'
 import { KpiCell, KpiGrid } from '../ui/Readout'
 import { VALUE_COUNT } from './i4'
+import { I4Datasets } from './I4Datasets'
 import { RealCrewData } from './RealCrewData'
 
 const ext = { target: '_blank', rel: 'noopener noreferrer' } as const
@@ -94,6 +95,8 @@ export default function NasaPage() {
       </section>
 
       <RealCrewData />
+
+      <I4Datasets />
 
       <HudPanel className="ns-res" title="NASA open data and services used">
         <ul className="ns-res-list">

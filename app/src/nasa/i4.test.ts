@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CREW, EXCLUDED, MARKERS, TIMEPOINTS, VALUE_COUNT, changeAt, inRange, landingSentence, landingSummary, preflightBaseline, preflightSpan } from './i4'
+import { I4_STUDIES, USED_TABLES, CREW, EXCLUDED, MARKERS, TIMEPOINTS, VALUE_COUNT, changeAt, inRange, landingSentence, landingSummary, preflightBaseline, preflightSpan } from './i4'
 
 const marker = (id: string) => MARKERS.find((m) => m.id === id)!
 
@@ -47,5 +47,12 @@ describe('Inspiration4 lab data (OSD-569, OSD-575)', () => {
     expect(landingSentence(marker('lymph'))).toMatch(/fell 20–34 % .* 3 of 4 crew\. All of those values still sit inside/)
     expect(landingSentence(marker('crp'))).not.toMatch(/reference range/)
     expect(landingSentence(marker('crp'))).toMatch(/^One day after landing, C-reactive protein rose 24–96 %/)
+  })
+
+  it('lists all ten Inspiration4 records and the three tables used as data', () => {
+    expect(I4_STUDIES.map((s) => s.osd)).toEqual(['OSD-569', 'OSD-570', 'OSD-571', 'OSD-572', 'OSD-573', 'OSD-574', 'OSD-575', 'OSD-630', 'OSD-656', 'OSD-687'])
+    expect(USED_TABLES).toHaveLength(3)
+    expect(new Set(USED_TABLES.map((t) => t.osd))).toEqual(new Set(['OSD-569', 'OSD-575']))
+    expect(USED_TABLES.reduce((n, t) => n + t.values, 0)).toBe(VALUE_COUNT)
   })
 })

@@ -143,3 +143,29 @@ export function landingSentence(m: Marker): string {
       : ` ${s.moversInRange} of those ${n} values still sit inside the lab’s reference range.`
   return `One day after landing, ${name} ${dir} ${span} against their own pre-flight baseline in ${n} of 4 crew.${range}`
 }
+
+/** The ten public SpaceX Inspiration4 records in NASA OSDR (all released 14 May 2024). Titles are NASA's own. */
+export interface I4Study { osd: string; title: string; what: string }
+export const I4_STUDIES: readonly I4Study[] = [
+  { osd: 'OSD-569', title: 'Whole Blood Measurements from the SpaceX Inspiration4 Mission (RNA-seq, epitranscriptome, WGS, clonal hematopoiesis, CBC)', what: 'Complete blood count and whole-blood sequencing' },
+  { osd: 'OSD-570', title: 'SpaceX Inspiration4 PBMC Profiling: snRNA-seq, snATAC-seq, and T-cell and B-cell repertoire profiling', what: 'Immune-cell gene expression and receptor repertoires' },
+  { osd: 'OSD-571', title: 'SpaceX Inspiration4 Plasma Profiling: Proteomics, EVPs, Metabolomics, cfDNA Sequencing and cfRNA Sequencing', what: 'Plasma proteins, metabolites, cell-free DNA and RNA' },
+  { osd: 'OSD-572', title: 'SpaceX Inspiration4 Oral, Nasal, and Skin Metagenomic and Metatranscriptomic Microbial Swabs', what: 'Crew oral, nasal and skin microbiome' },
+  { osd: 'OSD-573', title: 'SpaceX Inspiration4 Dragon Capsule Metagenomic and Metatranscriptomic Microbial Swabs', what: 'Microbes on the Dragon capsule surfaces (environment, not crew health)' },
+  { osd: 'OSD-574', title: 'SpaceX Inspiration4 Deltoid Skin and Microbiome Data: Spatial Transcriptomics (NanoString GeoMx), Metageomics, and Metatranscriptomics', what: 'Skin biopsy gene expression and skin microbiome' },
+  { osd: 'OSD-575', title: 'SpaceX Inspiration4 Blood Serum Metabolic Panel and Immune/Cardiac Cytokine Arrays (Comprehensive Metabolic Panel and Multiplex)', what: 'Blood chemistry, immune and cardiovascular markers' },
+  { osd: 'OSD-630', title: 'SpaceX Inspiration4 Stool Metagenome Profiling', what: 'Gut microbiome' },
+  { osd: 'OSD-656', title: 'SpaceX Inspiration4 Urine Inflammation Panel (Multiplex, NULISAseq)', what: 'Inflammatory proteins in urine' },
+  { osd: 'OSD-687', title: 'SpaceX Inspiration4 T-Cell Histone Modification Profiling (H3K4me1, H3K4me3, H3K27ac)', what: 'T-cell epigenetics (one crew member; raw files restricted)' },
+]
+
+export interface UsedTable { osd: string; file: string; markers: string[]; values: number }
+
+/** The source tables the panel actually draws from, with the markers taken from each. */
+export const USED_TABLES: readonly UsedTable[] = [...new Set(MARKERS.map((m) => m.source))].map((file) => {
+  const ms = MARKERS.filter((m) => m.source === file)
+  return {
+    osd: ms[0].osd, file, markers: ms.map((m) => m.label),
+    values: ms.reduce((n, m) => n + CREW.reduce((k, c) => k + TIMEPOINTS.filter((t) => m.values[c][t.id] !== null).length, 0), 0),
+  }
+})

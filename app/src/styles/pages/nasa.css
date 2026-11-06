@@ -63,6 +63,18 @@
   .i4-src a { color: var(--cy-hi); text-decoration: underline; text-decoration-color: rgba(54, 226, 245, 0.4); text-underline-offset: 3px; }
   .i4-src code { font-family: var(--mono); font-size: 11px; }
 
+  /* NASA datasets used (src/nasa/I4Datasets.tsx) */
+  .i4d { display: grid; gap: 10px; padding: 14px 16px 16px; }
+  .i4d > .ph { margin-bottom: 0; }
+  .i4d-list li { grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; }
+  .i4d-list li > :not(.i4d-tag) { grid-column: 2; }
+  .i4d-list code { font-family: var(--mono); font-size: 11px; }
+  .i4d-list .i4d-tag {
+    grid-row: span 3; align-self: start; padding: 3px 6px; font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--t3); border: 1px solid var(--edge); white-space: nowrap;
+  }
+  .i4d-list .i4d-tag.on { color: var(--ok); border-color: rgba(61, 220, 151, 0.5); }
+
   .ns-res { padding: 14px 16px 16px; }
   .ns-res-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px 24px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
   .ns-res-list li { display: grid; gap: 3px; }
