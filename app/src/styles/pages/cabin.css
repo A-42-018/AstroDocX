@@ -190,8 +190,9 @@
 @media (prefers-reduced-motion: reduce) { .cabin-visor.booting :is(.vz, .vz-reticle, .vz-bar, .vz-motto, .prompt) { animation: none; } .prompt span, .vz-reticle .spin, .vz-heart.beat { animation: none; } .vz-gauge .needle { transition: none; } }
 
 /* the real console on the wall screens (cabin/screens.ts): above the canvas, below the HUD, never takes input */
-.cabin-screens { position: absolute !important; inset: 0; z-index: 1; pointer-events: none; }
-.cabin-screens iframe { display: block; border: 0; background: #03080e; pointer-events: none; opacity: 0; }
+.cabin-screens { position: absolute !important; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+/* each screen's iframe and chip are warped onto the wall by a matrix3d from the scene's camera (cabin/screens.ts): they all start at the top left */
+.cabin-screens iframe { position: absolute; left: 0; top: 0; transform-origin: 0 0; display: block; border: 0; background: #03080e; pointer-events: none; opacity: 0; visibility: hidden; }
 
 /* float mode (cabin/FloatPad.tsx): the tour's caption makes way for the controls */
 .cabin.is-floating .cabin-caption, .cabin.is-floating .cabin-visor .prompt { opacity: 0; pointer-events: none; }
@@ -230,3 +231,33 @@
 @keyframes vita-sub-in { from { opacity: 0; translate: -50% 6px; } }
 @media (max-width: 767px) { .cabin-vita-sub { bottom: 190px; font-size: 13.5px; } }
 @media (prefers-reduced-motion: reduce) { .cabin-vita-sub { animation: none; } }
+
+/* using a wall screen (scene.ts useScreen): a slim bar over the top to step back, the page's name, and a way out to the full console */
+.cabin-gl.can-use { cursor: var(--cur-pointer); }
+.cabin-use { position: absolute; top: var(--sp-4); left: 50%; translate: -50% 0; z-index: 7; display: flex; align-items: center; gap: var(--sp-4); padding: 6px 8px 6px 6px; animation: cl-in .3s var(--ease); }
+.cabin-use button { all: unset; box-sizing: border-box; cursor: var(--cur-pointer); display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; font: 600 13px var(--ui); letter-spacing: .04em; color: var(--cy-hi); border: 1px solid var(--edge-hi); background: rgba(0, 0, 0, .3); }
+.cabin-use button:hover { background: var(--cy-soft); }
+.cabin-use button:focus-visible, .cap-use:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
+.cabin-use kbd, .cap-use kbd { padding: 0 5px; font: 600 10.5px/17px var(--mono); border: 1px solid var(--edge-hi); border-radius: 4px; color: var(--t2); }
+.cu-title { min-width: 120px; text-align: center; font: 700 14px var(--ui); letter-spacing: .1em; text-transform: uppercase; color: var(--t1); }
+.cap-use { all: unset; box-sizing: border-box; cursor: var(--cur-pointer); display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; min-height: 40px; padding: 0 14px; font: 600 13px var(--ui); color: var(--cy-hi); border: 1px solid var(--edge-hi); background: var(--cy-soft); }
+.cap-use:hover { background: rgba(80, 220, 255, .22); }
+.cabin-top .cabin-explore:disabled { opacity: .45; }
+.cabin-caption[hidden], .cabin-stops[hidden] { display: none; }
+@media (max-width: 640px) {
+  .cabin-use { width: calc(100% - 16px); top: 6px; justify-content: space-between; gap: 6px; box-sizing: border-box; }
+  .cabin-use button { padding: 0 10px; font-size: 12px; white-space: nowrap; }
+  .cu-title { min-width: 0; font-size: 12px; letter-spacing: .06em; }
+  .cabin-use kbd, .cu-long { display: none; }
+  /* the tour's caption keeps clear of the credits, which take more lines on a phone */
+  .cabin-caption { bottom: 128px; }
+  .cabin-credits { font-size: 9px; line-height: 1.3; left: var(--sp-3); right: var(--sp-3); }
+}
+/* the "Tap to use" chip under a wall screen (cabin/screens.ts), on the CSS3D layer: sized for the 1600 px-wide screen it hangs under */
+.screen-chip { all: unset; position: absolute; left: 0; top: 0; transform-origin: 0 0; visibility: hidden; opacity: 0; box-sizing: border-box; cursor: pointer; pointer-events: auto; display: block; width: 520px; height: 118px; padding: 26px 0; text-align: center; font: 700 56px/1 system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #bff3ff; background: rgba(4, 18, 28, .82); border: 5px solid rgba(80, 220, 255, .75); border-radius: 22px; box-shadow: 0 0 60px rgba(54, 226, 245, .45); }
+.screen-chip:hover { background: rgba(20, 70, 90, .9); }
+
+/* using a screen: the header keeps only the way back to the console, so the bar has the room */
+.cabin.is-using .cabin-brand, .cabin.is-using .cabin-sound, .cabin.is-using .cabin-explore, .cabin.is-using .cabin-replay { visibility: hidden; }
+
+.cabin.is-using .cabin-credits { display: none; }

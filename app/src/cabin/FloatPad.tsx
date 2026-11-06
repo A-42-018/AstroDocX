@@ -7,8 +7,8 @@ export function FloatHint({ touch }: { touch: boolean }) {
     <section className="cabin-float cabin-panel" aria-label="Float mode controls" role="status">
       <div className="cap-step">FLOAT MODE</div>
       {touch
-        ? <p>Drag to look around. Use the stick to fly and the arrows to rise or sink. Tap <b>Back to tour</b> when you are done.</p>
-        : <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> fly · drag to look · scroll to push forward · <kbd>Space</kbd> <kbd>Q</kbd> up and down · <kbd>Shift</kbd> faster · <kbd>F</kbd> or <kbd>Esc</kbd> back to the tour</p>}
+        ? <p>Drag to look around, pinch to fly forward or back, double-tap to glide there. Use the stick and arrows to fly. Tap a screen to use it, or <b>Back to tour</b> when you are done.</p>
+        : <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> fly · drag to look · scroll to push forward · double-click to glide · click a screen to use it · <kbd>Space</kbd> <kbd>Q</kbd> up and down · <kbd>Shift</kbd> faster · <kbd>F</kbd> or <kbd>Esc</kbd> back to the tour</p>}
     </section>
   )
 }
