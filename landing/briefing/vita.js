@@ -13,7 +13,7 @@
 
 const CY = '#36e2f5', CYHI = '#9ff4ff', OK = '#3ddc97', OR = '#ff8a3d'
 
-export function createScene({ bg, bot, doors = [], reduced = false }) {
+export function createScene({ bg, bot, doors = [], reduced = false, under = null }) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
   const g = bg.getContext('2d'), b = bot.getContext('2d')
   const dc = doors.map((c) => c.getContext('2d'))
@@ -51,6 +51,7 @@ export function createScene({ bg, bot, doors = [], reduced = false }) {
     }
     g.globalAlpha = 0.55; g.strokeStyle = CY; g.lineWidth = 1.2 * dpr
     g.beginPath(); g.arc(cx, cy, R * 1.01, Math.PI * 1.15, Math.PI * 1.85); g.stroke(); g.globalAlpha = 1
+    if (under) under(g, t, W, H, dpr)   // the cosmos blobs sit on the horizon, in the same loop
   }
 
   /* ── VITA ── */

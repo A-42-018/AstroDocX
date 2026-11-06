@@ -34,7 +34,7 @@ test('every evidence item, hazard and console route is present', () => {
   const routes = [...rd('app/src/App.tsx').matchAll(/<Route path="(\/[a-z]+)"/g)].map((m) => m[1])
   const known = committed.find((c) => c.id === 'adx-screens').routes
   for (const r of routes) assert.ok(known.includes(r) || !rd('app/src/shell/nav.ts').includes(`'${r}'`), r)
-  assert.equal(known.length, 8)
+  assert.equal(known.length, 9) // the nine console screens, the Crew Doctor included
 })
 test('hand-written general topics are all covered and cite nasa.gov / NTRS / OSDR only', () => {
   const gen = committed.filter((c) => c.id.startsWith('gen-'))

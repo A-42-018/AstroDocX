@@ -38,7 +38,7 @@ export function offlineAnswer(question, data) {
 }
 
 let faqPromise
-function loadFaq() {
+export function loadFaq() {
   return (faqPromise ??= import('./faq.json', { with: { type: 'json' } }).then((m) => m.default)
     .catch(() => fetch(new URL('./faq.json', import.meta.url)).then((r) => r.json())))
 }

@@ -1,4 +1,4 @@
-import { ArrowRight, CircleCheck } from 'lucide-react'
+import { ArrowRight, CircleCheck, Stethoscope } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { METRICS } from '../data/types'
 import { setStepDone } from '../engine/pipeline'
@@ -17,6 +17,7 @@ export function NextAction({ snap }: { snap: Snapshot }) {
         <p className="next-note">Every hazard is within this person’s own baseline. A daily check-in keeps the baseline honest.</p>
         <div className="next-foot">
           <Link to="/checkin" className={buttonClass('ghost', 'sm')}>Daily check-in <ArrowRight size={15} aria-hidden="true" /></Link>
+          <Link to={`/doctor?crew=${snap.crewId}`} className={buttonClass('ghost', 'sm')}><Stethoscope size={15} aria-hidden="true" /> Ask VITA</Link>
         </div>
       </HudPanel>
     )
@@ -48,6 +49,7 @@ export function NextAction({ snap }: { snap: Snapshot }) {
       {index < 0 && alert.steps.length > 0 && <p className="next-note">All steps ticked. Press Done on the alert to log it.</p>}
       <div className="next-foot">
         <span className="next-count">{done} / {alert.steps.length} done</span>
+        <Link to={`/doctor?crew=${snap.crewId}`} className={buttonClass('ghost', 'sm')}><Stethoscope size={15} aria-hidden="true" /> Ask VITA</Link>
         <Link to="/alerts" className={buttonClass('primary', 'sm')}>Open action card <ArrowRight size={15} aria-hidden="true" /></Link>
       </div>
     </HudPanel>

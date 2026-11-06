@@ -14,7 +14,9 @@ import { useTour } from '../tour/store'
 import * as sfx from '../audio/sfx'
 import { SoundToggle } from '../audio/SoundToggle'
 import { disposeMusic } from '../audio/music'
-import { introduce, startChatter, stopChatter } from '../audio/voice'
+import { introduce, setCrewStatus, startChatter, stopChatter, useVitaVoice, vitaCanSpeak, vitaSay } from '../audio/voice'
+import { actAlert, cabinBrief, cabinHello, crewNote } from '../doctor/brief'
+import { useDoctorBrief, useDoctorReport } from '../doctor/useDoctorReport'
 
 /** The arrival's phases and the visor, heard as well as seen. */
 const INTRO_SOUND: Partial<Record<IntroPhase, () => void>> = { fly: sfx.flyRumble, lock: sfx.glare, clear: sfx.pressurise }
@@ -78,6 +80,11 @@ function webglAvailable() {
   try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') ?? c.getContext('webgl')) } catch { return false }
 }
 
+/** VITA greets you in the cabin once per visit (the tab's session). */
+const HELLO_KEY = 'adx-vita-cabin-hello'
+const hasGreeted = () => { try { return sessionStorage.getItem(HELLO_KEY) === '1' } catch { return false } }
+const markGreeted = () => { try { sessionStorage.setItem(HELLO_KEY, '1') } catch { /* private mode: she may greet again */ } }
+
 /**
  * 3D mode: a walk-through of the crew module with the console's live data on in-cabin panels. Full screen,
  * outside the console frame; the scene (three.js) loads with this chunk only. Without WebGL it says so and
@@ -105,6 +112,15 @@ export default function CabinPage() {
   const touch = typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches
   const dataRef = useRef(data)
   useEffect(() => { dataRef.current = data })
+  // VITA, the crew doctor, is the robot on the floor: she speaks the crew exam (doctor/analyze.ts) in the cabin
+  const report = useDoctorReport('all')
+  const reportRef = useRef(report)
+  useEffect(() => { reportRef.current = report })
+  const vitaSpeaking = useVitaVoice((s) => s.speaking)
+  const vitaLine = useVitaVoice((s) => s.line)
+  /** What she says when she cannot be heard (Sound off, or no click yet): shown as the subtitle for a while instead. */
+  const [caption, setCaption] = useState('')
+  const captionTimer = useRef(0)
   const lastStop = useRef(-1)
   const visorWas = useRef<string>('raised')
   const leave = () => (location.key === 'default' ? navigate('/board') : navigate(-1))
@@ -129,9 +145,15 @@ export default function CabinPage() {
           setStop(i)
         },
         onPick: (id) => {
-          if (id) { sfx.select(); const c = dataRef.current?.crew.find((x) => x.id === id); if (c) introduce(c.role) }
+          if (id) {
+            sfx.select()
+            const c = dataRef.current?.crew.find((x) => x.id === id)
+            // the crew member says hello, then VITA adds her medical note on them
+            if (c) introduce(c.role, () => { const r = reportRef.current; if (r && useTour.getState().phase !== 'running') sayVita(crewNote(r, id)) })
+          }
           setPicked(id)
         },
+        onPickVita: () => { sfx.select(); sayVita(vitaBrief()) },
         onVisor: (ph) => {
           if (ph === 'dropping') sfx.visorSeal()
           else if (ph === 'booting') sfx.hudBoot()
@@ -157,6 +179,30 @@ export default function CabinPage() {
   }, [reduced])
 
   useEffect(() => { if (data) scene.current?.update(data) }, [data, state])
+  // her robot pulses its face and stops to face you whenever VITA speaks: the brief, the dock's answers, the tour
+  useEffect(() => { scene.current?.vitaTalk(vitaSpeaking) }, [vitaSpeaking, state])
+  useEffect(() => () => window.clearTimeout(captionTimer.current), [])
+  // what she answers when the commander asks her over the radio
+  useEffect(() => { setCrewStatus(() => reportRef.current?.headline ?? 'All crew are within their baselines, Commander.') }, [])
+  // once per visit, after the arrival: who she is and the one line that matters (only if she can be heard)
+  const settled = state === 'ready' && loader === 'gone' && intro === 'off'
+  useEffect(() => {
+    if (!settled || !report || hasGreeted()) return
+    const hello = window.setTimeout(() => {
+      if (useTour.getState().phase === 'running' || useVitaVoice.getState().speaking || !vitaCanSpeak()) return
+      markGreeted(); void vitaSay(cabinHello(report))
+    }, reduced ? 600 : 2600)
+    return () => window.clearTimeout(hello)
+  }, [settled, report, reduced])
+  // a finding reaching ACT while you are here: she says so once
+  const acts = useRef<Set<string> | null>(null)
+  useEffect(() => {
+    if (!report) return
+    const now = new Set(report.findings.filter((f) => f.status === 'act').map((f) => f.id))
+    const fresh = acts.current ? [...now].filter((id) => !acts.current!.has(id)) : []
+    acts.current = now
+    if (fresh.length && settled && useTour.getState().phase !== 'running') sayVita(actAlert(report, fresh[0]))
+  }, [report, settled])
 
   // Lift the loading screen once the scene is ready (and has been up long enough not to flash), and start the
   // arrival under it on the first visit. Opened straight onto /cabin, the console's launch screen is still up:
@@ -214,6 +260,23 @@ export default function CabinPage() {
 
   const caps = stops(data)
   const who = picked ? data?.crew.find((c) => c.id === picked) : undefined
+  const subtitle = vitaSpeaking && vitaLine ? vitaLine : caption
+
+  /** VITA speaks; when she cannot be heard, her words show as the subtitle instead. */
+  function sayVita(text: string) {
+    if (!text) return
+    window.clearTimeout(captionTimer.current)
+    if (vitaCanSpeak()) { setCaption(''); void vitaSay(text); return }
+    setCaption(text.replace(/<[^>]*>/g, ''))
+    captionTimer.current = window.setTimeout(() => setCaption(''), Math.min(16_000, 3500 + text.length * 55))
+  }
+  /** Her brief: the live wording from the Crew Doctor screen if it is about the same report, else the offline one. */
+  function vitaBrief() {
+    const r = reportRef.current
+    if (!r) return 'I am VITA, the crew doctor. I am still reading the crew data.'
+    const live = useDoctorBrief.getState()
+    return live.text && live.headline === r.headline ? `${live.text.replace(/<[^>]*>/g, '')} The full consultation is on the Crew Doctor screen.` : cabinBrief(r)
+  }
 
   return (
     <div className={`${intro === 'off' ? 'cabin' : 'cabin is-arriving'}${floating ? ' is-floating' : ''}`}>
@@ -259,6 +322,10 @@ export default function CabinPage() {
         <p>{caps[stop]?.text}</p>
       </section>
 
+      {subtitle && (
+        <p className="cabin-vita-sub" aria-live={vitaSpeaking ? 'off' : 'polite'}><b>VITA</b><span>{subtitle}</span></p>
+      )}
+
       {who && (
         <section className="cabin-card cabin-panel" aria-label={`${who.name} vitals`}>
           <button type="button" className="close" aria-label="Close" onClick={() => { setPicked(null); scene.current?.goTo(stop) }}>×</button>
@@ -275,7 +342,7 @@ export default function CabinPage() {
       )}
 
       <footer className="cabin-credits">
-        Module: “<a href="https://sketchfab.com/3d-models/space-ship-interior-08f117102f2f4e48ab583b7ae22db1c1" target="_blank" rel="noopener noreferrer">Space Ship Interior</a>” by Ryley Burnett · Astronaut: “<a href="https://sketchfab.com/3d-models/e2c4b146e58141e4b87917456a9970b1" target="_blank" rel="noopener noreferrer">Animated Floating Astronaut</a>” by LasquetiSpice · Station: “<a href="https://sketchfab.com/3d-models/813f5b296e584c26bf386ca39de6c3d4" target="_blank" rel="noopener noreferrer">ISS</a>” by uperesito · Consoles: “<a href="https://sketchfab.com/3d-models/sci-fi-computer-desk-console-28c67457f2ef4973a0bbc8b667bb183f" target="_blank" rel="noopener noreferrer">Sci-Fi Computer Desk Console</a>” and “<a href="https://sketchfab.com/3d-models/large-wall-mounted-computer-console-298b7d9b68064618a3819d1a8fae4baf" target="_blank" rel="noopener noreferrer">Large Wall-Mounted Computer Console</a>” by Inditrion Dradnon, “<a href="https://sketchfab.com/3d-models/sci-fi-supercomputer-9464e880c35e4fd29c0cdb6fefe5ebba" target="_blank" rel="noopener noreferrer">Sci-fi Supercomputer</a>” by Jungle Jim · Robots: “<a href="https://sketchfab.com/3d-models/tars-interstellar-improved-4648e3edb8cd4b35af57868da5fcb62c" target="_blank" rel="noopener noreferrer">TARS Interstellar (Improved)</a>” by THAD · all CC BY 4.0 · Surfaces: <a href="https://ambientcg.com" target="_blank" rel="noopener noreferrer">ambientCG</a>, CC0 · Earth: <a href="https://visibleearth.nasa.gov" target="_blank" rel="noopener noreferrer">NASA Visible Earth</a> and “<a href="https://sketchfab.com/3d-models/earth-63d902b12fd14868b4dc2f19dc21d7c2" target="_blank" rel="noopener noreferrer">Earth</a>” by kongle, CC BY-SA 4.0
+        Module: “<a href="https://sketchfab.com/3d-models/space-ship-interior-08f117102f2f4e48ab583b7ae22db1c1" target="_blank" rel="noopener noreferrer">Space Ship Interior</a>” by Ryley Burnett · Astronaut: “<a href="https://sketchfab.com/3d-models/e2c4b146e58141e4b87917456a9970b1" target="_blank" rel="noopener noreferrer">Animated Floating Astronaut</a>” by LasquetiSpice · Station: “<a href="https://sketchfab.com/3d-models/813f5b296e584c26bf386ca39de6c3d4" target="_blank" rel="noopener noreferrer">ISS</a>” by uperesito · Consoles: “<a href="https://sketchfab.com/3d-models/sci-fi-computer-desk-console-28c67457f2ef4973a0bbc8b667bb183f" target="_blank" rel="noopener noreferrer">Sci-Fi Computer Desk Console</a>” and “<a href="https://sketchfab.com/3d-models/large-wall-mounted-computer-console-298b7d9b68064618a3819d1a8fae4baf" target="_blank" rel="noopener noreferrer">Large Wall-Mounted Computer Console</a>” by Inditrion Dradnon, “<a href="https://sketchfab.com/3d-models/sci-fi-supercomputer-9464e880c35e4fd29c0cdb6fefe5ebba" target="_blank" rel="noopener noreferrer">Sci-fi Supercomputer</a>” by Jungle Jim · Robots (VITA and MEDI): “<a href="https://sketchfab.com/3d-models/tars-interstellar-improved-4648e3edb8cd4b35af57868da5fcb62c" target="_blank" rel="noopener noreferrer">TARS Interstellar (Improved)</a>” by THAD · all CC BY 4.0 · Surfaces: <a href="https://ambientcg.com" target="_blank" rel="noopener noreferrer">ambientCG</a>, CC0 · Earth: <a href="https://visibleearth.nasa.gov" target="_blank" rel="noopener noreferrer">NASA Visible Earth</a> and “<a href="https://sketchfab.com/3d-models/earth-63d902b12fd14868b4dc2f19dc21d7c2" target="_blank" rel="noopener noreferrer">Earth</a>” by kongle, CC BY-SA 4.0
       </footer>
 
       {state !== 'unsupported' && loader !== 'gone' && (

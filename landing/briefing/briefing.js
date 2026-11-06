@@ -11,6 +11,7 @@
                chapter 1 of the 1-click tour
 ============================================================ */
 import { createScene } from './vita.js'
+import { createCosmos } from './cosmos.js'
 import { sound } from './sound.js'
 import { voice } from './voice.js'
 
@@ -26,15 +27,25 @@ const skipBtn = $('#skip'), phase = $('#phase'), steps = [...$('#steps').childre
 const vitaId = $('#vitaId'), vitaState = $('#vitaState')
 const doors = [...document.querySelectorAll('.door')]
 
-const scene = createScene({ bg: $('#bg'), bot: $('#bot'), doors: doors.map((d) => $('canvas', d)), reduced: REDUCED })
+/* the blobs, line art and hazard facts: facts come from the same faq.json VITA answers from */
+let faqData = null
+function getFact(id) {
+  faqData ??= import(new URL('../vita/ask.js', import.meta.url).href).then((m) => m.loadFaq()).catch(() => null)
+  return faqData.then((d) => d?.faq?.find((e) => e.id === id) ?? null)
+}
+const cosmos = createCosmos({
+  artLayer: $('#czArt'), spotLayer: $('#czSpots'), revealCanvas: $('#czReveal'), dock: $('#rg'), frame: $('.frame'),
+  reduced: REDUCED, sound, getFact, onAsk: (q) => ask(q),
+})
+const scene = createScene({ bg: $('#bg'), bot: $('#bot'), doors: doors.map((d) => $('canvas', d)), reduced: REDUCED, under: cosmos.drawBlobs })
 
 /* ───────────────────────── copy ───────────────────────── */
 const INTRO = [
-  { text: "Hi, I'm <em>VITA</em>, the mission guide for AstroDocX. Give me 30 seconds and I'll show you why we built this." },
-  { text: 'Beyond the Moon, a message to Earth takes minutes each way. NASA groups the dangers into five hazards: <em>radiation, isolation, distance, gravity and hostile environments</em>. The crew has to catch health changes themselves.',
+  { text: "Hi, I'm <em>VITA</em>, AstroDocX's mission guide. In 30 seconds, I'll show you how we help crews monitor health beyond Earth." },
+  { text: 'Far from Earth, crews may need to spot health changes before Ground can respond. NASA groups the risks into five hazards: <em>radiation, isolation, distance, gravity and environment</em>.',
     citations: [{ label: 'NASA · 5 hazards', url: 'https://www.nasa.gov/hrp/hazards/' }] },
-  { text: "AstroDocX learns each astronaut's own normal, spots drift early, and turns every alert into a clear action: <em>detect, explain, act, log, sync later</em>. Every limit is cited from NASA-STD-3001.", door: 'console' },
-  { text: "Three doors, pick one. Or ask me anything about astronaut health. I answer from NASA's own research and I'll show you where it came from." },
+  { text: "AstroDocX learns each astronaut's baseline, explains changes and turns alerts into clear actions. Its limits link back to NASA sources.", door: 'console' },
+  { text: "Start with the Crew Console, explore the station, or ask me about astronaut health. I'll show you the sources behind my answers." },
 ]
 const RETURN_LINE = { text: "Welcome back. Pick a door, or ask me anything about astronaut health. I'll show you where each answer comes from." }
 const CHIPS = ['How do you catch a CO₂ fault?', 'What does radiation do to astronauts?', 'Show me bone loss in space', 'Take me to the EVA', 'Give me the full tour']
@@ -409,6 +420,7 @@ function libFallback(collection) {
 }
 
 async function openLibrary(collection, query = null, { push = true } = {}) {
+  cosmos.close({ instant: true })
   if (ov.hidden) lastFocus = document.activeElement
   ov.hidden = false; frame.inert = true; document.body.classList.add('lib-open')
   if (push && !/^#library/.test(location.hash)) history_push('#library' + (collection ? '/' + collection : ''))
@@ -484,7 +496,7 @@ addEventListener('pagehide', saveHandoff)
 window.ADX_BRIEFING = {
   /** Play the briefing as the tour's first chapter. Resolves true when VITA has finished. */
   async runTour() {
-    closeLibrary(); paused = false
+    cosmos.close({ instant: true }); closeLibrary(); paused = false
     if (!(await runIntro())) return false
     const tok = token
     light('console')

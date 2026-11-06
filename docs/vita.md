@@ -16,6 +16,7 @@ landing/vita/ask.js ── POST /api/ask ──▶ api/ask.py ── claude-haik
 | `landing/vita/ask.js` | Browser client (ES module, no build). `ask(question, { history, page })` |
 | `landing/vita/faq.json` | 40 offline answers with patterns, citations and actions (hand-written) |
 | `api/ask.py`, `api/_vita.py` | Vercel Python function (`handler(BaseHTTPRequestHandler)`) and its logic (validation, limits, prompt) |
+| `api/doctor.py`, `api/_doctor.py` | The crew doctor's live layer (below); reuses `_vita.py`'s client, parsing and limits |
 | `api/requirements.txt` | Only dependency: `anthropic` (pinned) |
 | `knowledge/chunks.json`, `knowledge/knowledge.md` | The source chunks (generated). `general.json` is the hand-written part |
 | `tools/vita/build-knowledge.mjs` | Generator |
@@ -33,6 +34,30 @@ const { text, citations, actions, source } = await ask('Why does CO2 matter?', {
 ```
 
 `ask` never throws. `history` is `[{ role: 'user' | 'assistant', text }]` (the last 6 are sent). Action targets: `console` = a console route such as `/alerts` (optionally `?query`); `library` = `bone-muscle | radiation | sleep-isolation | twins-study | life-support | spacewalks`; `cabin` = empty or `eva`; `tour` = empty. Both the server and the client drop any action or citation that does not fit.
+
+## VITA as the crew doctor (`/doctor`, `/api/doctor`)
+
+In the console VITA is also the crew doctor. The **Crew Doctor** screen (`app/src/doctor/`) examines the whole crew, or one member (`/doctor?crew=pilot`), with rules over what the engine already computed:
+
+| Rule | Where |
+|---|---|
+| One finding per open alert, with the engine's own explanation and the NASA source behind the metric | `analyze.ts` `findingsOf` |
+| The same CO₂, temperature, noise or dose alert on two or more crew is **one cabin-wide finding** with whole-crew steps | `SHARED` metrics |
+| Sleep or reaction trouble on two or more crew adds a **schedule change** | fatigue cluster |
+| Crew in **triage order** (status, then readiness); an **EVA screen** per person (no ACT alert, no open sleep / heart / air / dose alert, readiness ≥ 70, dose under 90 % of the career limit) | `evaFor` |
+| Steps from the alerts' action cards, de-duplicated, grouped **now / today / next link window**; ACT findings add "brief the flight surgeon"; a log waiting ≥ 24 h adds "send at the next window" | `adviceOf` |
+| Metrics drifting the wrong way (smoothed z ≥ 1.2) with no alert yet go on a **watchlist** | `watchlistOf` |
+
+`brief.ts` words the report in three styles (Brief, Clinical, SBAR Ground handoff); `answer.ts` answers follow-up questions offline (who first, EVA, one crew member, sleep, radiation, air, exercise, handoff) and declines personal medical questions. "Add to ground log" writes the handoff as a `note`, so it reaches the ground with the next sync.
+
+**Live layer.** `live.ts` posts the report (words only, no raw readings) to `POST /api/doctor` (`api/doctor.py`, `api/_doctor.py`, same key, gateway, model and limits as `/api/ask`). The model may only re-word the report or answer from it. The server rejects (502, so the console answers offline) any reply that names a crew member who is not in the report or quotes a number with a unit (σ, mSv, mmHg, ms, h, min, bpm, %) that the report does not contain, and drops citations not in `knowledge/chunks.json`. After a 503/404 (no key, or the Vite dev server) the console stops asking for the rest of the visit. The findings, advice and fitness lists on the screen always come from the rules.
+
+```
+request:  { report: { scope, met, overall, headline, crew[], findings[], advice[], watchlist[], mission }, style?: 'brief'|'clinical'|'handoff', question?, history? }
+response: { text, citations: [{ label, url }], source: 'live' }
+```
+
+Tests: `app/src/doctor/*.test.ts(x)` (the exam on the demo mission and a seeded CO₂ scrubber fault, styles, answers, the page) and `tools/vita/test/test_doctor_endpoint.py` (validation, invented numbers and crew rejected, request shape).
 
 ## Environment variables (Vercel)
 

@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useVitaVoice, vitaSay, vitaStop } from '../audio/voice'
 import { useSound } from '../audio/sfx'
 import { useTour } from '../tour/store'
+import { SR, type Recognition } from './speech'
 import { VitaAvatar } from './VitaAvatar'
 import { runAction, sendQuestion, startGuide, useVita, type Msg } from './store'
 
@@ -15,11 +16,6 @@ function Rich({ text }: { text: string }) {
 
 const GREETING = 'Hi, I’m VITA, your mission guide. Ask me anything about astronaut health or this project. Or I can give you the full tour.'
 const CHIPS = ['Why does CO₂ matter?', 'What does radiation do to astronauts?', 'How does AstroDocX spot trouble early?']
-
-type Recognition = { lang: string; interimResults: boolean; maxAlternatives: number; start(): void; stop(): void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }> }) => void) | null; onend: (() => void) | null; onerror: (() => void) | null }
-const SR: (new () => Recognition) | undefined = typeof window === 'undefined' ? undefined
-  : (window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition }).SpeechRecognition
-    ?? (window as unknown as { webkitSpeechRecognition?: new () => Recognition }).webkitSpeechRecognition
 
 function Bubble({ m, onAction }: { m: Msg; onAction: (a: NonNullable<Msg['actions']>[number]) => void }) {
   const bot = m.role === 'assistant'
@@ -75,7 +71,8 @@ export function VitaDock() {
     }
   }, [open])
 
-  if (phase === 'gate' || phase === 'end') return null
+  // the Crew Doctor page is VITA herself, full size: no second VITA in the corner
+  if (phase === 'gate' || phase === 'end' || pathname.startsWith('/doctor')) return null
 
   const toggle = () => {
     if (open) { vitaStop(); set({ open: false }); return }

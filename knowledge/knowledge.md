@@ -1,6 +1,6 @@
 ## [adx-overview] AstroDocX overview (README)
 URL: https://github.com/A-42-018/AstroDocX
-Astronaut + Doctor + X — an offline-first health co-pilot for astronauts on long-duration missions. Built by Team AstroDocX in Dhaka, Bangladesh for the NASA Space Apps Challenge 2026 challenge "Create Health Monitoring Software for Astronauts on Space Missions". The loop is Detect, Explain, Act, Log, Sync later. AstroDocX is a prototype and not a medical device. It runs on synthetic demo data (a 4-crew 30-day demo mission). It is an independent Space Apps project using NASA open data and is not affiliated with or endorsed by NASA. No AI runs inside the product itself: every number, alert and explanation comes from tested, deterministic code. Only the CO2 and radiation dose limits are NASA-STD-3001 cited; other thresholds are illustrative and labelled so.
+Astronaut + Doctor + X — an offline-first health co-pilot for astronauts on long-duration missions. Built by Team AstroDocX in Dhaka, Bangladesh for the NASA Space Apps Challenge 2026 challenge "Create Health Monitoring Software for Astronauts on Space Missions". The loop is Detect, Explain, Act, Log, Sync later. AstroDocX is a prototype and not a medical device. It runs on synthetic demo data (a 4-crew 30-day demo mission). It is an independent Space Apps project using NASA open data and is not affiliated with or endorsed by NASA. Every number, alert, finding and step comes from tested, deterministic code; VITA's live answers only re-word cited sources or the console's own crew exam. Only the CO2 and radiation dose limits are NASA-STD-3001 cited; other thresholds are illustrative and labelled so.
 
 ## [adx-personal-baselines] AstroDocX: Personal baselines
 URL: https://github.com/A-42-018/AstroDocX
@@ -21,6 +21,10 @@ Action cards: Checkable countermeasure steps with progress and Done; open → es
 ## [adx-status-board] AstroDocX: Status Board
 URL: https://astrodocx.vercel.app/app/board
 Status Board: Five RIDGE tiles, crew readiness score, crew overview, next action, live vitals strip (ECG-style waves, heart pulse)
+
+## [adx-crew-doctor-vita] AstroDocX: Crew Doctor (VITA)
+URL: https://astrodocx.vercel.app/app/doctor
+Crew Doctor (VITA): VITA reads every crew member's alerts, baselines, readiness, dose and the ground link together: one cabin-wide finding when the same CO₂ or dose alert hits two or more crew, fatigue clusters, triage order and an EVA screen per person, with steps grouped now / today / next link window. Brief, clinical or SBAR ground-handoff wording, read aloud, added to the ground log; an optional live layer (Claude, /api/doctor) only re-words that exam, and the server rejects any number or crew member the exam does not contain. In the 3D cabin the VITA robot speaks the same brief
 
 ## [adx-health-twin-console] AstroDocX: Health Twin (console)
 URL: https://astrodocx.vercel.app/app/board
@@ -60,7 +64,7 @@ Not built yet (Roadmap): wearable sensor integration, a real Supabase ground bac
 
 ## [adx-screens] AstroDocX Crew Console screens
 URL: https://astrodocx.vercel.app/app/
-The Crew Console at /app/ has 8 screens: Status Board (/board), Alerts (/alerts), Trends (/trends), Check-in (/checkin), Simulator (/simulator), Ground Sync (/sync), Ground View (/ground), NASA Data (/nasa). It is an offline-first installable PWA.
+The Crew Console at /app/ has 9 screens: Status Board (/board), Crew Doctor (/doctor), Alerts (/alerts), Trends (/trends), Check-in (/checkin), Simulator (/simulator), Ground Sync (/sync), Ground View (/ground), NASA Data (/nasa). It is an offline-first installable PWA.
 
 ## [adx-cabin] AstroDocX 3D cabin
 URL: https://astrodocx.vercel.app/app/cabin

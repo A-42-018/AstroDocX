@@ -31,7 +31,7 @@
         "your name",
         "are you (a )?(bot|ai|human|real)"
       ],
-      "text": "I'm VITA, the guide here. I answer questions about astronaut health, NASA research and the AstroDocX project, using only sources I can cite. I'm a helper, not a doctor. Try asking about bone loss, radiation, CO₂, or how AstroDocX spots trouble early.",
+      "text": "I'm VITA, the guide here. I answer questions about astronaut health, NASA research and the AstroDocX project, using only sources I can cite. In the console I'm also the crew doctor: I read the crew's data and suggest next steps, but I never diagnose. Try asking about bone loss, radiation, CO₂, or how AstroDocX spots trouble early.",
       "citations": [
         {
           "label": "AstroDocX README",
@@ -770,7 +770,7 @@
         "crew console",
         "menu"
       ],
-      "text": "The Crew Console has eight screens: Status Board, Alerts, Trends, Check-in, Simulator, Ground Sync, Ground View and NASA Data. It's an installable offline-first app with a 4-crew, 30-day demo mission preloaded.",
+      "text": "The Crew Console has nine screens: Status Board, Crew Doctor, Alerts, Trends, Check-in, Simulator, Ground Sync, Ground View and NASA Data. It's an installable offline-first app with a 4-crew, 30-day demo mission preloaded.",
       "citations": [
         {
           "label": "AstroDocX Crew Console",
@@ -818,6 +818,39 @@
           "target": "/board"
         }
       ]
+    },
+    {
+      "id": "crew-doctor",
+      "patterns": [
+        "crew doctor",
+        "ai doctor",
+        "\\bdoctor\\b",
+        "analy[sz]e (the |all )?(crew|astronauts?)",
+        "(crew|team) (health )?(summary|report|status|exam)",
+        "who needs (attention|help)",
+        "fit for (eva|a spacewalk)",
+        "flight surgeon (report|handoff)"
+      ],
+      "text": "In the console I'm also the crew doctor. On the Crew Doctor screen I read every crew member's alerts, baselines, readiness, dose and the ground link together: who needs attention first, problems shared by the whole cabin, who is cleared for EVA, and the steps for now, today and the next link window. I advise; the flight surgeon decides.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Open the Crew Doctor",
+          "kind": "console",
+          "target": "/doctor"
+        },
+        {
+          "label": "Open the Status Board",
+          "kind": "console",
+          "target": "/board"
+        }
+      ],
+      "weight": 1
     },
     {
       "id": "trends",
@@ -1108,7 +1141,7 @@
         "my data",
         "is (it|this) real"
       ],
-      "text": "AstroDocX is a prototype and not a medical device. It runs on synthetic demo data, and every number, alert and explanation comes from tested deterministic code, not from AI. Only the CO₂ and radiation limits are NASA-cited; other thresholds are illustrative and labelled.",
+      "text": "AstroDocX is a prototype and not a medical device. It runs on synthetic demo data, and every number, alert and explanation comes from tested deterministic code; my live answers only put it into words. Only the CO₂ and radiation limits are NASA-cited; other thresholds are illustrative and labelled.",
       "citations": [
         {
           "label": "AstroDocX README",
