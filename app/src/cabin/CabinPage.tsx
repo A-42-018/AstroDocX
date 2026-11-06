@@ -64,6 +64,9 @@ function spokenStops(d: CabinData | null) {
   ]
 }
 
+/** The tour stop that shows each wall screen, to the screen's index (scene.ts). */
+const SCREEN_OF_STOP: Record<number, number> = { 2: 0, 3: 1, 5: 2, 6: 3 }
+
 /** Named stops for /cabin?shot=… */
 const SHOTS: Record<string, number> = { helmet: 0, crew: 1, board: 2, vitals: 3, alerts: 5, trends: 6, window: 7, eva: 9, outside: 9 }
 
@@ -109,6 +112,9 @@ export default function CabinPage() {
   const [picked, setPicked] = useState<string | null>(null)
   /** Float mode: drifting freely through the hall instead of following the tour. */
   const [floating, setFloating] = useState(false)
+  /** A wall screen stepped up to: which, and the console page it is showing (the frame reports it). */
+  const [screen, setScreen] = useState<{ i: number; path: string; label: string } | null>(null)
+  const screenWas = useRef<string | null>(null)
   const touch = typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches
   const dataRef = useRef(data)
   useEffect(() => { dataRef.current = data })
@@ -164,6 +170,18 @@ export default function CabinPage() {
           setFloating(on)
           // exploring on your own pauses a running guided tour (and VITA with it)
           if (on && useTour.getState().phase === 'running') useTour.getState().set({ paused: true })
+        },
+        onScreen: (i) => {
+          if (i === null) { setScreen(null); screenWas.current = null; return }
+          sfx.select()
+          setScreen((cur) => cur?.i === i ? cur : { i, path: '', label: '' })
+          // using a screen pauses a running guided tour (and VITA with it), as exploring does
+          if (useTour.getState().phase === 'running') useTour.getState().set({ paused: true })
+        },
+        onScreenPage: (i, path, label) => {
+          if (screenWas.current !== null && screenWas.current !== path) sfx.navTick()
+          screenWas.current = path
+          setScreen((cur) => cur && cur.i === i ? { ...cur, path, label } : cur)
         },
         onReady: () => setState('ready'), onProgress: setProgress,
       })
@@ -250,6 +268,7 @@ export default function CabinPage() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
+      if (screen) { scene.current?.leaveScreen(); return }
       if (picked) { setPicked(null); scene.current?.goTo(stop) }
       else if (floating) scene.current?.setFloat(false)
       else leave()
@@ -259,6 +278,9 @@ export default function CabinPage() {
   })
 
   const caps = stops(data)
+  const stepIn = SCREEN_OF_STOP[stop]
+  /** The console page that matches what a screen shows, for "Open in console" (Live Vitals is a cabin-only page: the board has the vitals). */
+  const consolePath = screen?.path && screen.path !== '/vitals' ? screen.path : '/board'
   const who = picked ? data?.crew.find((c) => c.id === picked) : undefined
   const subtitle = vitaSpeaking && vitaLine ? vitaLine : caption
 
@@ -279,8 +301,8 @@ export default function CabinPage() {
   }
 
   return (
-    <div className={`${intro === 'off' ? 'cabin' : 'cabin is-arriving'}${floating ? ' is-floating' : ''}`}>
-      <canvas ref={canvas} className="cabin-gl" role="img" aria-label="3D crew module. Scroll, use the arrow keys or the stop list to move through the tour." />
+    <div className={`${intro === 'off' ? 'cabin' : 'cabin is-arriving'}${floating ? ' is-floating' : ''}${screen ? ' is-using' : ''}`}>
+      <canvas ref={canvas} className="cabin-gl" role="img" aria-label="3D crew module. Scroll, use the arrow keys or the stop list to move through the tour. Press Enter at a wall screen to use it." />
 
       <div ref={mist} className="cabin-mist" aria-hidden="true" />
       <div ref={visor} className="cabin-visor" aria-hidden="true">
@@ -298,14 +320,22 @@ export default function CabinPage() {
         <button type="button" className="cabin-back" onClick={leave}>← Console</button>
         <div className="cabin-brand">AstroDocX <span>· 3D Cabin</span></div>
         <SoundToggle className="cabin-sound" music />
-        <button type="button" className="cabin-explore" aria-pressed={floating} aria-keyshortcuts="F" disabled={state !== 'ready' || intro !== 'off'}
+        <button type="button" className="cabin-explore" aria-pressed={floating} aria-keyshortcuts="F" disabled={state !== 'ready' || intro !== 'off' || !!screen}
           onClick={() => scene.current?.setFloat(!floating)} title={floating ? 'Fly back to the tour (F or Esc)' : 'Drift freely through the module (F)'}>
           {floating ? '↩ Back to tour' : '✥ Explore'}
         </button>
         <button type="button" className="cabin-replay" onClick={() => scene.current?.replayIntro()}>↺ Replay arrival</button>
       </header>
 
-      <nav className="cabin-stops" aria-label="Tour stops">
+      {screen && (
+        <div className="cabin-use cabin-panel" role="group" aria-label="Using a wall screen">
+          <button type="button" className="cu-back" onClick={() => scene.current?.leaveScreen()} aria-keyshortcuts="Escape">← <span className="cu-long">Step </span>back <kbd>Esc</kbd></button>
+          <span className="cu-title" aria-live="polite">{screen.label || 'Screen'}</span>
+          <button type="button" className="cu-open" onClick={() => navigate(consolePath)}><span className="cu-long">Open in </span>console ↗</button>
+        </div>
+      )}
+
+      <nav className="cabin-stops" aria-label="Tour stops" hidden={!!screen}>
         {caps.map((c, i) => (
           <button key={i} type="button" aria-current={i === stop ? 'step' : undefined} onClick={() => scene.current?.goTo(i)}>
             <span>{c.title}</span><i aria-hidden="true" />
@@ -313,20 +343,23 @@ export default function CabinPage() {
         ))}
       </nav>
 
-      {floating && <FloatHint touch={touch} />}
-      {floating && touch && <FloatPad onMove={(x, y, v) => scene.current?.move(x, y, v)} />}
+      {floating && !screen && <FloatHint touch={touch} />}
+      {floating && !screen && touch && <FloatPad onMove={(x, y, v) => scene.current?.move(x, y, v)} />}
 
-      <section className="cabin-caption cabin-panel" aria-live="polite">
+      <section className="cabin-caption cabin-panel" aria-live="polite" hidden={!!screen}>
         <div className="cap-step">{String(stop + 1).padStart(2, '0')} / {String(STOP_COUNT).padStart(2, '0')}</div>
         <h1>{caps[stop]?.title}</h1>
         <p>{caps[stop]?.text}</p>
+        {stepIn !== undefined && !floating && state === 'ready' && intro === 'off' && (
+          <button type="button" className="cap-use" onClick={() => scene.current?.stepUp(stepIn)} aria-keyshortcuts="Enter">Use this screen ▸ <kbd>Enter</kbd></button>
+        )}
       </section>
 
       {subtitle && (
         <p className="cabin-vita-sub" aria-live={vitaSpeaking ? 'off' : 'polite'}><b>VITA</b><span>{subtitle}</span></p>
       )}
 
-      {who && (
+      {who && !screen && (
         <section className="cabin-card cabin-panel" aria-label={`${who.name} vitals`}>
           <button type="button" className="close" aria-label="Close" onClick={() => { setPicked(null); scene.current?.goTo(stop) }}>×</button>
           <div className="cc-role">{who.role}</div>
