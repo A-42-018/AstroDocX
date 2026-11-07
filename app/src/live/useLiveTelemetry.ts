@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useWatch } from '../watch/store'
 import { DEFAULT_TARGETS, hashSeed, liveValues, stillValues, watchTargets, type LiveTargets, type LiveValues } from './telemetry'
 import { useHidden, useReducedMotion } from './usePaused'
 
@@ -10,14 +11,20 @@ export interface LiveTelemetry {
   seed: number
   /** True when animation should stop: reduced motion or a background tab. */
   paused: boolean
+  /** Where each live number comes from: the simulated signal, or a connected watch that is sending it right now. */
+  source: { hr: 'sim' | 'watch'; spo2: 'sim' | 'watch' }
 }
 
 /**
  * Simulated live telemetry for one crew member. It follows the latest real readings and never writes to
  * the database or raises alerts: the engine stays the single source of truth.
+ * While a Bluetooth watch is connected and sending, its heart rate (and SpO₂, if it sends one) replace the
+ * simulated number and drive the heart trace. They are shown, never stored.
  */
 export function useLiveTelemetry(crewId: string): LiveTelemetry {
-  const [targets, setTargets] = useState<LiveTargets>(DEFAULT_TARGETS)
+  const [engine, setTargets] = useState<LiveTargets>(DEFAULT_TARGETS)
+  const watchHr = useWatch((s) => s.hr)
+  const watchSpo2 = useWatch((s) => s.spo2)
   const [tick, setTick] = useState(0)
   const reduced = useReducedMotion()
   const hidden = useHidden()
@@ -35,8 +42,16 @@ export function useLiveTelemetry(crewId: string): LiveTelemetry {
     return () => clearInterval(id)
   }, [paused])
 
-  // The wall clock drives the wobble; `tick` re-evaluates it once a second.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const values = useMemo(() => (reduced ? stillValues(targets) : liveValues(targets, Date.now() / 1000, seed)), [targets, seed, reduced, tick])
-  return { targets, values, seed, paused }
+  const targets = useMemo<LiveTargets>(
+    () => ({ ...engine, ...(watchHr !== null && { hr: watchHr }), ...(watchSpo2 !== null && { spo2: watchSpo2 }) }),
+    [engine, watchHr, watchSpo2],
+  )
+  // The wall clock drives the wobble; `tick` re-evaluates it once a second. A watch reading is shown exactly, with no wobble.
+  const values = useMemo<LiveValues>(() => {
+    const v = reduced ? stillValues(targets) : liveValues(targets, Date.now() / 1000, seed)
+    return { ...v, ...(watchHr !== null && { hr: watchHr }), ...(watchSpo2 !== null && { spo2: watchSpo2 }) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targets, seed, reduced, tick, watchHr, watchSpo2])
+  const source = { hr: watchHr !== null ? 'watch' : 'sim', spo2: watchSpo2 !== null ? 'watch' : 'sim' } as const
+  return { targets, values, seed, paused, source }
 }

@@ -3,6 +3,7 @@ import { liveQuery } from 'dexie'
 import { useEffect, useRef, useState } from 'react'
 import { db } from '../data/db'
 import { NORMAL } from '../data/synthetic'
+import { WatchControl } from '../watch/WatchControl'
 import { PanelHeader } from '../ui/HudPanel'
 import { LiveNumber } from './LiveNumber'
 import { LiveWave } from './LiveWave'
@@ -26,6 +27,7 @@ function useBaselines(crewId: string): Baselines {
 }
 
 const SIM_TITLE = 'Simulated signal, built around the latest real reading'
+const WATCH_TITLE = 'Read from the connected Bluetooth watch. Shown only: not saved and not used for alerts'
 const base = (v: number | null, unit: string) => (v === null ? null : unit === '%' ? v.toFixed(1) : String(Math.round(v)))
 
 /**
@@ -33,8 +35,8 @@ const base = (v: number | null, unit: string) => (v === null ? null : unit === '
  * the ECG and the delta against this person's baseline, then SpO₂ and breathing tiles with their traces.
  * Simulated around the latest real reading, and labelled SIM.
  */
-export function LiveVitals({ crewId, telemetry }: { crewId: string; telemetry: LiveTelemetry }) {
-  const { targets, values, seed } = telemetry
+export function LiveVitals({ crewId, telemetry, showWatch = true }: { crewId: string; telemetry: LiveTelemetry; showWatch?: boolean }) {
+  const { targets, values, seed, source } = telemetry
   const b = useBaselines(crewId)
   const heart = useRef<HTMLSpanElement>(null)
   const beat = () => {
@@ -49,17 +51,18 @@ export function LiveVitals({ crewId, telemetry }: { crewId: string; telemetry: L
   const latest = useRef(values)
   useEffect(() => { latest.current = values })
   useEffect(() => {
-    const say = () => setSummary(`Heart rate ${Math.round(latest.current.hr)} beats per minute, oxygen ${latest.current.spo2.toFixed(0)} percent, breathing ${Math.round(latest.current.resp)} per minute. Simulated live telemetry.`)
+    const say = () => setSummary(`Heart rate ${Math.round(latest.current.hr)} beats per minute, oxygen ${latest.current.spo2.toFixed(0)} percent, breathing ${Math.round(latest.current.resp)} per minute. ${source.hr === 'watch' ? 'Heart rate is from the connected watch.' : 'Simulated live telemetry.'}`)
     say()
     const id = setInterval(say, 30_000)
     return () => clearInterval(id)
-  }, [crewId])
+  }, [crewId, source.hr])
 
   return (
     <section className="vitals" aria-label="Live vitals">
       <p className="sr-only" role="status" aria-live="polite">{summary}</p>
       <article className="hp vt vt-hr">
-        <PanelHeader title="Heart rate" meta={<span title={SIM_TITLE}>Sim{b.hr !== null && ` · base ${base(b.hr, 'bpm')}`}</span>} />
+        <PanelHeader title="Heart rate" meta={<span title={source.hr === 'watch' ? WATCH_TITLE : SIM_TITLE}>{source.hr === 'watch' ? 'Watch' : 'Sim'}{b.hr !== null && ` · base ${base(b.hr, 'bpm')}`}</span>} />
+        {showWatch && <WatchControl />}
         <div className="vt-hr-row">
           <b className="vt-big"><LiveNumber value={values.hr} /></b>
           <span className="vt-side">
@@ -72,7 +75,7 @@ export function LiveVitals({ crewId, telemetry }: { crewId: string; telemetry: L
       </article>
       <div className="vt-duo">
         <article className="hp vt vt-mini">
-          <PanelHeader title="SpO₂" meta={<span title={SIM_TITLE}>Sim</span>} />
+          <PanelHeader title="SpO₂" meta={<span title={source.spo2 === 'watch' ? WATCH_TITLE : SIM_TITLE}>{source.spo2 === 'watch' ? 'Watch' : 'Sim'}</span>} />
           <p className="vt-read"><b className="vt-big"><LiveNumber value={values.spo2} decimals={1} /></b><span className="vt-unit">%</span></p>
           {b.spo2 !== null && <p className="vt-base">Base {base(b.spo2, '%')}</p>}
           <LiveWave kind="pleth" rate={targets.hr} variability={0.02} seed={seed + 1} height={28} />
