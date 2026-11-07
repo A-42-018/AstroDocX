@@ -21,7 +21,7 @@ function Vitals({ snap }: { snap: Snapshot }) {
   return (
     <div className="em-vitals">
       <h1 className="em-title">Live Vitals <span>· {who?.name ?? 'Crew member'}</span></h1>
-      <LiveVitals crewId={snap.crewId} telemetry={telemetry} />
+      <LiveVitals crewId={snap.crewId} telemetry={telemetry} showWatch={false} />
       <NextAction snap={snap} />
     </div>
   )
