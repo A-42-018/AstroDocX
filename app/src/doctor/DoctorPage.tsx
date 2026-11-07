@@ -11,9 +11,9 @@ import { met } from '../engine/actions'
 import { useShellContext } from '../shell/useShellData'
 import { Button, HudPanel, NasaRef, StateView, StatusTag } from '../ui'
 import { SR, type Recognition } from '../vita/speech'
-import { VitaAvatar } from '../vita/VitaAvatar'
 import { names, type DoctorReport, type Priority } from './analyze'
 import { narrate, narrativeText, STYLES, whoOf, type Paragraph, type Style } from './brief'
+import { DoctorFigure } from './DoctorFigure'
 import { consult, type ChatLine, type Consult } from './live'
 import { Pedestal } from './Pedestal'
 import { useDoctorBrief, useDoctorReport } from './useDoctorReport'
@@ -197,7 +197,7 @@ export default function DoctorPage() {
               <p className="dr-src">{busy ? '' : shown.source === 'live' ? 'Worded live by VITA from the console’s exam' : 'From the console’s exam, on this device'}</p>
             </div>
             <div className="dr-figure">
-              <VitaAvatar talking={speaking || busy} size={270} />
+              <DoctorFigure talking={speaking} thinking={busy && !speaking} listening={listening || !!text.trim()} size={270} />
               <Pedestal talking={speaking || busy} width={440} height={180} />
             </div>
           </div>
@@ -293,6 +293,7 @@ export default function DoctorPage() {
         </HudPanel>
       </div>
       <p className="dr-note">VITA is decision support for a concept prototype, not a medical device. She reads the console’s own alerts and baselines; the flight surgeon makes every medical call.</p>
+      <p className="dr-note">3D doctor: “<a href="https://github.com/microsoft/Microsoft-Rocketbox" target="_blank" rel="noopener noreferrer">Medical_Female_02</a>” and her motion-capture clips from the Microsoft Rocketbox avatar library, MIT licence. Her lips follow the words VITA says; they are not a recording.</p>
     </div>
   )
 }

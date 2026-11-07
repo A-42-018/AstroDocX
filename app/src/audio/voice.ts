@@ -233,12 +233,41 @@ export function vitaSay(text: string): Promise<void> {
       const u = new SpeechSynthesisUtterance(p.trim())
       u.pitch = 1.0; u.rate = 0.94; u.volume = 1; u.lang = 'en-US'
       if (vitaVoice) { u.voice = vitaVoice; u.lang = vitaVoice.lang }
-      u.onstart = () => { if (vitaEnd === end) useVitaVoice.setState({ line: shown(i) }) }
+      u.onstart = () => { if (vitaEnd === end) { useVitaVoice.setState({ line: shown(i) }); const ws = scriptOf(u.text, u.rate); lineListeners.forEach((f) => f(ws)) } }
+      u.onboundary = (e) => { if (e.name === 'word' && vitaEnd === end) { const w = wordAt(u.text, e.charIndex, u.rate); wordListeners.forEach((f) => f(w)) } }
       u.onend = () => { if (--left <= 0) end() }
       u.onerror = end // cut off, or not allowed yet
       synth!.speak(u)
     })
   })
+}
+
+/** A word VITA is starting to say: the word as spoken, how much it deserves a nod (0 to 1: a plain word, a comma, a long
+    word, the end of a sentence), about how long it lasts at her speaking rate, where it starts in its sentence and the
+    pause she takes after it (a comma, a full stop). */
+export interface VitaWord { word: string; power: number; ms: number; at: number; gap: number }
+/**
+ * Word timing for the 3D doctor's lips and body language. `onVitaLine` runs as each sentence of VITA's line begins, with
+ * its words and their estimated timing: the doctor keeps time from that on her own, so every voice gets lip sync.
+ * `onVitaWord` runs as each word begins, for engines that report word boundaries: it puts her back on the real word.
+ * Both return the unsubscribe.
+ */
+const wordListeners = new Set<(w: VitaWord) => void>()
+const lineListeners = new Set<(words: VitaWord[]) => void>()
+export function onVitaWord(f: (w: VitaWord) => void) { wordListeners.add(f); return () => { wordListeners.delete(f) } }
+export function onVitaLine(f: (words: VitaWord[]) => void) { lineListeners.add(f); return () => { lineListeners.delete(f) } }
+/** The word that starts at `at` in `text`, with its weight and length. */
+export function wordAt(text: string, at: number, rate = 0.94): VitaWord {
+  const word = /^\S+/.exec(text.slice(at))?.[0] ?? ''
+  const letters = word.replace(/[^\p{L}\p{N}]/gu, '').length
+  const item = /^\d+[.)]$/.test(word)   // "1." in a list is not the end of a sentence
+  const power = item ? 0.25 : /[.!?;:]$/.test(word) ? 1 : letters >= 8 ? 0.85 : /,$/.test(word) || letters >= 6 ? 0.55 : 0.25
+  const gap = item ? 120 : /[.!?]$/.test(word) ? 380 : /[;:]$/.test(word) ? 260 : /,$/.test(word) ? 150 : 0
+  return { word, power, ms: Math.round(Math.min(800, Math.max(140, (letters * 68) / rate))), at, gap: Math.round(gap / rate) }
+}
+/** Every word of a sentence with its timing, in order. */
+export function scriptOf(text: string, rate = 0.94): VitaWord[] {
+  return [...text.matchAll(/\S+/g)].map((m) => wordAt(text, m.index ?? 0, rate))
 }
 
 /** Cut VITA off mid-line (a no-op when she is quiet). The promise of the line she was saying resolves. */
