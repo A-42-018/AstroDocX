@@ -72,7 +72,9 @@ export function decodeUnits(payload: Uint8Array): Sample[] {
     if (len === 0) { i += 2; continue }
     if (i + 2 + len > payload.length) break
     const kind = UNIT_KIND[type]
-    if (kind) out.push({ kind, value: leUint(payload.subarray(i + 2, i + 2 + len)) })
+    // Unit 17 is SpO2 with a timestamp: `[percent][unix seconds, 4 bytes LE]` (DataManager.java case 17). Synthetic until seen live.
+    if (type === 17 && len === 5) out.push({ kind: 'spo2', value: payload[i + 2] })
+    else if (kind) out.push({ kind, value: leUint(payload.subarray(i + 2, i + 2 + len)) })
     i += 2 + len
   }
   return out

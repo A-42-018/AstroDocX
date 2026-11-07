@@ -102,6 +102,17 @@ describe('decodeUnits', () => {
   })
 })
 
+describe('decodeUnits, SpO2 with timestamp', () => {
+  it('decodes a live SpO2 event captured from the real watch (SpO2 screen open, 2026-11-07 11:21:03 UTC)', () => {
+    const bytes = [0x6f, 0xe0, 0x71, 0x07, 0x00, 0x11, 0x05, 0x62, 0x9f, 0x09, 0xef, 0x6a, 0x8f]
+    const [frame] = new FrameReassembler().push(bytes)
+    expect(decodeFrame(frame)).toEqual({ kind: 'event', samples: [{ kind: 'spo2', value: 98 }] })
+  })
+  it('reads the percentage of a type-17 unit (synthetic frame)', () => {
+    expect(decodeUnits(Uint8Array.from([17, 5, 98, 0xf3, 0xfd, 0xee, 0x6a]))).toEqual([{ kind: 'spo2', value: 98 }])
+  })
+})
+
 describe('helpers', () => {
   it('leUint reads little endian', () => {
     expect(leUint([0xf3, 0xfd, 0xee, 0x6a])).toBe(1794047475)
