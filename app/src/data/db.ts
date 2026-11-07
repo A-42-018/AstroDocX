@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable, type Table } from 'dexie'
-import type { ActionLogEntry, Alert, Baseline, CheckIn, CrewMember, MetricId, Reading, Timestamp } from './types'
+import type { ActionLogEntry, Alert, Baseline, CheckIn, CrewMember, FaceScan, MetricId, Reading, Timestamp } from './types'
 
 export class ConsoleDB extends Dexie {
   crew!: EntityTable<CrewMember, 'id'>
@@ -8,6 +8,7 @@ export class ConsoleDB extends Dexie {
   alerts!: EntityTable<Alert, 'id'>
   actionLog!: EntityTable<ActionLogEntry, 'id'>
   checkIns!: EntityTable<CheckIn, 'id'>
+  scans!: EntityTable<FaceScan, 'id'>
 
   constructor(name = 'astrodocx-console') {
     super(name)
@@ -19,6 +20,8 @@ export class ConsoleDB extends Dexie {
       actionLog: '++id, crewId, ts, sync, alertId',
       checkIns: '++id, crewId, ts',
     })
+    // experimental webcam face scans; a new store only, nothing existing changes
+    this.version(2).stores({ scans: '++id, crewId, ts' })
   }
 }
 

@@ -1,0 +1,116 @@
+/* Face scan (experimental webcam vitals): the camera stage with its face guide, live pulse line, readouts, history. */
+@layer pages {
+  .sc { display: grid; gap: 14px; grid-template-columns: 320px minmax(0, 1fr); align-items: start; }
+  .sc-side { display: grid; gap: 14px; min-width: 0; }
+  .sc-eb { margin: 0; font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--t3); }
+  .sc-h1 { margin: 6px 0 4px; font-family: var(--disp); font-size: 28px; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
+  .sc-intro { margin: 0 0 10px; font-size: 13px; line-height: 1.5; color: var(--t3); }
+  .sc-facts { margin: 0 0 14px; padding-left: 18px; font-size: 12.5px; line-height: 1.55; color: var(--t2); }
+  .sc-facts li { margin-bottom: 4px; }
+  .sc-empty { margin: 0; font-size: 13px; color: var(--t3); }
+
+  .sc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .sc-list li, .sc-cols { display: grid; grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr)); gap: 8px; align-items: baseline; font-size: 13px; color: var(--t2); }
+  .sc-list li { padding: 6px 0; border-bottom: 1px solid var(--edge); }
+  .sc-list b { font-family: var(--disp); font-size: 16px; color: var(--t1); }
+  .sc-when { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--t3); }
+  .sc-cols { margin: 8px 0 0; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--t3); }
+
+  .sc-bay { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 16px; padding: 18px 24px 22px; min-width: 0; }
+  .sc-bay > .ph { margin-bottom: 0; }
+  .sc-main { display: grid; gap: 22px; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); align-items: start; }
+
+  /* The camera stage: 4:3, mirrored like a mirror, with the guide drawn on top */
+  .sc-stage { position: relative; aspect-ratio: 4 / 3; width: 100%; overflow: hidden; background: #03090f; border: 1px solid var(--edge-hi); }
+  .sc-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); opacity: 0; transition: opacity var(--dur-3) var(--ease); }
+  .sc-stage.on .sc-video { opacity: 1; }
+  .sc-stage.on.ok { box-shadow: 0 0 22px -6px var(--ok); border-color: color-mix(in srgb, var(--ok) 70%, transparent); }
+  .sc-stage.on.bad { border-color: color-mix(in srgb, var(--watch) 70%, transparent); }
+  /* The scanning overlay (ScanOverlay.tsx): amber while searching, green once the face is locked */
+  .sc-guide { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; color: var(--watch); transition: color var(--dur-3) var(--ease); }
+  .sc-guide.ok { color: var(--ok); }
+  .sc-dim { fill: rgba(2, 5, 10, 0.5); }
+  .sc-corner { fill: none; stroke: var(--cy); stroke-width: 2; stroke-linecap: square; filter: drop-shadow(0 0 3px var(--cy-glow)); }
+  .sc-oval { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-dasharray: 7 5; animation: sc-march 1.6s linear infinite; filter: drop-shadow(0 0 4px currentColor); }
+  .sc-guide.bad .sc-oval { animation: sc-march 1.6s linear infinite, sc-search 1.8s ease-in-out infinite; }
+  .sc-guide.ok .sc-oval { stroke-dasharray: none; stroke-width: 1.8; animation: none; }
+
+  .sc-orbit { transform-box: view-box; transform-origin: 200px 150px; }
+  .sc-ring { fill: none; stroke: currentColor; stroke-width: 1.2; opacity: 0.7; transform-box: view-box; transform-origin: 200px 150px; }
+  .sc-ring.a { stroke-dasharray: 38 22 6 22; animation: sc-spin 9s linear infinite; }
+  .sc-ring.b { stroke-dasharray: 4 14; opacity: 0.45; animation: sc-spin 14s linear infinite reverse; }
+  .sc-guide.ok .sc-ring.a { animation-duration: 5s; }
+
+  /* Everything that needs a locked face stays hidden until there is one */
+  .sc-lock, .sc-eyes { opacity: 0; transition: opacity var(--dur-3) var(--ease); }
+  .sc-guide.ok .sc-lock, .sc-guide.ok .sc-eyes { opacity: 1; }
+  .sc-meshfill { color: var(--cy); opacity: 0.32; }
+  .sc-cross { fill: none; stroke: var(--cy); stroke-width: 0.8; stroke-dasharray: 2 4; opacity: 0.55; }
+  .sc-beam { color: var(--cy); animation: sc-sweep 2.4s ease-in-out infinite alternate; }
+  .sc-edge { fill: var(--cy-hi); filter: drop-shadow(0 0 5px var(--cy)); }
+
+  .sc-eye-ring { fill: rgba(54, 226, 245, 0.06); stroke: var(--cy); stroke-width: 1.4; filter: drop-shadow(0 0 3px var(--cy-glow)); }
+  .sc-eye-arc { fill: none; stroke: var(--cy-hi); stroke-width: 2; stroke-dasharray: 16 59; stroke-linecap: round; transform-box: fill-box; transform-origin: center; animation: sc-spin 1.8s linear infinite; }
+  .sc-eye-tick { fill: none; stroke: var(--cy); stroke-width: 1.2; opacity: 0.8; }
+  .sc-eye-dot { fill: var(--cy-hi); animation: sc-blink 1.4s ease-in-out infinite; }
+  .sc-eye-sweep { stroke: var(--cy-hi); stroke-width: 1.4; stroke-dasharray: 6 4; filter: drop-shadow(0 0 4px var(--cy)); opacity: 0; transform-box: view-box; animation: sc-eyeline 3.2s ease-in-out infinite; }
+
+  .sc-patch rect { fill: rgba(255, 197, 61, 0.08); stroke: currentColor; stroke-width: 1.2; stroke-dasharray: 3 3; }
+  .sc-patch path { fill: none; stroke: currentColor; stroke-width: 2; }
+  .sc-guide.ok .sc-patch rect { fill: color-mix(in srgb, var(--ok) 14%, transparent); stroke-dasharray: none; }
+  .sc-patch.beat rect, .sc-patch.beat path { animation: sc-beat var(--beat, 0.85s) ease-out infinite; transform-box: fill-box; transform-origin: center; }
+  .sc-patch.beat path { animation-name: sc-beat-edge; }
+
+  .sc-tag { position: absolute; left: 10px; top: 10px; display: flex; align-items: center; gap: 7px; margin: 0; padding: 4px 9px 4px 8px; font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; background: rgba(2, 5, 10, 0.72); border: 1px solid currentColor; pointer-events: none; }
+  .sc-tag i { width: 7px; height: 7px; background: currentColor; box-shadow: 0 0 8px currentColor; animation: sc-blink 1s ease-in-out infinite; }
+  .sc-tag.ok { color: var(--ok); } .sc-tag.bad { color: var(--watch); }
+
+  @keyframes sc-march { to { stroke-dashoffset: -24; } }
+  @keyframes sc-search { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+  @keyframes sc-spin { to { transform: rotate(360deg); } }
+  @keyframes sc-sweep { from { transform: translateY(0); } to { transform: translateY(252px); } }
+  @keyframes sc-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+  @keyframes sc-eyeline { 0%, 55% { opacity: 0; transform: translateY(-26px); } 65% { opacity: 1; } 90% { opacity: 1; transform: translateY(26px); } 100% { opacity: 0; transform: translateY(26px); } }
+  @keyframes sc-beat { 0% { fill: color-mix(in srgb, currentColor 55%, transparent); stroke-width: 2.4; } 100% { fill: color-mix(in srgb, currentColor 14%, transparent); stroke-width: 1.2; } }
+  @keyframes sc-beat-edge { 0% { stroke-width: 3.4; filter: drop-shadow(0 0 5px currentColor); } 100% { stroke-width: 2; filter: none; } }
+
+  .sc-idle { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 10px; padding: 24px; text-align: center; color: var(--t3); }
+  .sc-idle svg { color: var(--cy); filter: drop-shadow(0 0 8px var(--cy-glow)); }
+  .sc-idle p { margin: 0; max-width: 34ch; font-size: 14px; line-height: 1.5; color: var(--t2); }
+  .sc-prog { position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: rgba(2, 5, 10, 0.7); }
+  .sc-prog i { display: block; height: 100%; background: var(--cy); box-shadow: 0 0 10px var(--cy-glow); transition: width 0.4s linear; }
+
+  .sc-panel { display: grid; gap: 14px; min-width: 0; }
+  .sc-hint { margin: 0; min-height: 2.9em; font-size: 15px; line-height: 1.45; color: var(--t2); }
+  .sc-hint.ok { color: var(--ok); }
+  .sc-hint.bad { color: var(--watch); }
+
+  .sc-trace { width: 100%; height: 72px; background: rgba(54, 226, 245, 0.04); border: 1px solid var(--edge); }
+  .sc-zero { stroke: var(--t4); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .sc-line { fill: none; stroke: var(--cy); stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; filter: drop-shadow(0 0 3px var(--cy-glow)); }
+  .sc-wait { fill: var(--t3); font-family: var(--mono); font-size: 7px; letter-spacing: 0.12em; text-transform: uppercase; }
+
+  .sc-panel .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  .sc-warn, .sc-saved { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; font-size: 13px; line-height: 1.45; }
+  .sc-warn { color: var(--watch); }
+  .sc-saved { color: var(--t2); }
+  .sc-ok { display: grid; place-content: center; width: 22px; height: 22px; border: 1px solid var(--ok); color: var(--ok); }
+  .sc-acts { display: flex; flex-wrap: wrap; gap: 10px; }
+
+  @media (max-width: 1279px) {
+    .sc-main { grid-template-columns: minmax(0, 1fr); }
+    .sc-stage { max-width: 560px; justify-self: center; }
+  }
+  @media (max-width: 1023px) {
+    .sc { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 767px) {
+    .sc-bay { padding: 14px 14px 18px; }
+    .sc-h1 { font-size: 24px; }
+    .sc-panel .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sc-prog i, .sc-video, .sc-guide { transition: none; }
+  }
+}
