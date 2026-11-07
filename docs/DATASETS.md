@@ -82,6 +82,7 @@ Every OSDR and NTRS id and title was checked against the public APIs (Oct 2026);
 | Sci-Fi Computer Desk Console; Large Wall-Mounted Computer Console | Inditrion Dradnon, Sketchfab | CC BY 4.0 | 3D cabin consoles |
 | Sci-fi Supercomputer | Jungle Jim, Sketchfab | CC BY 4.0 | 3D cabin |
 | TARS Interstellar (Improved) | THAD, Sketchfab | CC BY 4.0 | VITA and MEDI robots |
+| Medical_Female_02 and six motion clips (idle, listen, three talking gestures, think) | Microsoft Rocketbox Avatar Library, github.com/microsoft/Microsoft-Rocketbox | MIT, © 2020 Microsoft (notice in `app/public/models/doctor.LICENSE.txt`) | VITA's 3D crew doctor on the Doctor screen (`app/public/models/doctor.glb`, 2.9 MB: 9k triangles, 80 bones, 28 of the 175 face shapes, textures at 1024² WebP; baked by `tools/bake-doctor.mjs`; credited on that screen) |
 | Earth | NASA Visible Earth, and "Earth" by kongle, Sketchfab | CC BY-SA 4.0 | Cabin window |
 | MetalPlates006, PaintedMetal004 | ambientCG | CC0 | Cabin surfaces |
 | Space Grotesk, Inter, JetBrains Mono | Self-hosted variable fonts | Open font licences (OFL) | Whole site |

@@ -47,6 +47,14 @@
   .dr-holo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(230px, 330px); grid-template-areas: 'fig bubble'; align-items: center; gap: 8px 18px; min-height: 0; }
   .dr-figure { grid-area: fig; position: relative; display: grid; justify-items: center; align-self: end; }
   .dr-figure .vita-avatar { position: relative; z-index: 1; margin-bottom: -104px; filter: drop-shadow(0 0 22px rgba(54, 226, 245, 0.55)); }
+  /* the 3D doctor, thighs to head: she rises out of the pedestal's beam, her lower edge fading into it and her hands
+     softening at the sides when she gestures wide (the canvas sits low over the pedestal, whose disc is 80% down it) */
+  .dr-figure .dr-doctor {
+    position: relative; z-index: 1; display: block; width: 360px; height: 420px; margin-bottom: -150px; filter: drop-shadow(0 0 18px rgba(54, 226, 245, 0.35));
+    --fade: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent), linear-gradient(to bottom, #000 74%, transparent 97%);
+    -webkit-mask-image: var(--fade); -webkit-mask-composite: source-in;
+    mask-image: var(--fade); mask-composite: intersect;
+  }
   .dr-figure::after {
     /* holographic scan lines over the figure */
     content: ''; position: absolute; inset: 0 15% 30%; z-index: 2; pointer-events: none; opacity: .35; mix-blend-mode: screen;
@@ -168,6 +176,7 @@
     .dr-crew ul { display: flex; overflow-x: auto; gap: 6px; padding-bottom: 4px; scroll-snap-type: x proximity; }
     .dr-crew li { flex: none; width: 200px; scroll-snap-align: start; }
     .dr-figure .vita-avatar { width: 160px !important; height: 160px !important; margin-bottom: -70px; }
+    .dr-figure .dr-doctor { width: 250px; height: 292px; margin-bottom: -104px; }
     .dr-holo { grid-template-areas: 'fig' 'bubble'; }
     .dr-bubble { max-height: 260px; }
     .dr-pedestal { width: 300px !important; }
