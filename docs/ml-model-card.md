@@ -43,7 +43,8 @@
 - **Local Storage**: IndexedDB (Dexie v3) in table `wearables` (`[kind+ts]`, `kind`, `ts`).
 - **Privacy & Data Sovereignity**:
   - **100% On-Device**: Zero raw telemetry or model weights are transmitted to cloud servers. All inference, feature engineering, and training take place in the user's browser.
-  - **Opt-In Storage**: Persistence is disabled by default; users explicitly enable local storage via a toggle in `WatchControl.tsx`.
+  - **Opt-In Storage**: Persistence is disabled by default; users explicitly enable local storage with the "Save watch data on this device" toggle in the Watch data panel on the Trends page (`app/src/watch/WatchDataPanel.tsx`). The live heart-rate card only shows the watch's status.
+  - **One Wearer**: Turning saving on links the watch to the selected crew member. Insights pair watch data only with that person's check-ins and face scans, and other crew members see whose insights they are instead of the insights.
   - **Data Governance**: Users have instantaneous access to CSV/JSON telemetry export, coverage summaries, and single-click total data wipe (`deleteWearableData()`).
 
 ---
@@ -71,7 +72,7 @@ Wearable models require sufficient historical telemetry before emitting inferenc
 3. **Readiness Warm-Up**: Requires **7 good-quality days** of baseline besides the scored day.
 4. **Scan Agreement Warm-Up**: Requires at least **3 paired observations** within $\pm 60$ seconds, using the wearer's own scans.
 
-During warm-up, the user interface displays explicit progress banners (e.g., *"Establishing personal baseline: X of 14 days completed"*).
+During warm-up, the user interface displays explicit progress banners (e.g., *"Establishing personal baseline: X of 15 good-quality days recorded"*).
 
 ---
 
