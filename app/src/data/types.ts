@@ -140,3 +140,19 @@ export interface FaceScan {
   /** Seconds of continuous clean video behind the numbers. */
   seconds: number
 }
+
+export type WearableKind = 'hr' | 'spo2' | 'stress' | 'sleep'
+
+/**
+ * Opt-in stored readings from a connected consumer wearable (Haylou Solar 5). Kept in its own store,
+ * completely separate from `Reading`: consumer wearable data runs in shadow mode for on-device ML insights
+ * and never enters clinical baselines or triggers alerts.
+ */
+export interface WearableSample {
+  id?: number
+  kind: WearableKind
+  value: number
+  ts: Timestamp
+  source: 'haylou-solar5'
+  live: boolean
+}

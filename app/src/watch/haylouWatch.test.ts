@@ -68,11 +68,11 @@ describe('HaylouWatch', () => {
     expect(hr()).toEqual([query])
     await vi.advanceTimersByTimeAsync(POLL_MS * 3)
     expect(hr()).toEqual([query, query, query, query])
-    // Everything written is a type-0x70 read request: the HR query or a 0xBE history query for stress (unit 5), nothing else.
+    // Everything written is a type-0x70 read request: the HR query or a 0xBE history query for the units (3, 4, 5, 6), nothing else.
     for (const w of r.chars[WRITE_CHAR].writes) {
       expect(w[2]).toBe(0x70)
       expect([0x62, 0xbe]).toContain(w[1])
-      if (w[1] === 0xbe) expect(w[6]).toBe(5)
+      if (w[1] === 0xbe) expect([3, 4, 5, 6]).toContain(w[6])
     }
     expect(r.chars[REPLY_CHAR].writeValueWithoutResponse).not.toHaveBeenCalled()
     expect(r.chars[EVENT_CHAR].writeValueWithoutResponse).not.toHaveBeenCalled()
@@ -133,7 +133,7 @@ describe('HaylouWatch', () => {
 const REAL_STRESS = [0x6f, 0xbe, 0x80, 0x35, 0x00, 0x00, 0xbd, 0x94, 0xbc, 0xd7, 0x06, 0x0a, 0x00, 0x01, 0x01, 0x0a, 0x00, 0x01, 0x02, 0x0a, 0x00, 0x01, 0x03, 0x0a, 0x00, 0x01, 0x04, 0x0a, 0x00, 0x01, 0x04, 0x0a, 0x00, 0x01, 0x05, 0x0a, 0x00, 0x01, 0x06, 0x0a, 0x00, 0x01, 0x07, 0x0a, 0x00, 0x01, 0x08, 0x0a, 0x00, 0x01, 0x08, 0x0a, 0x00, 0x01, 0x96, 0x04, 0x0a, 0x22, 0x8f]
 const ZEROS = [0x6f, 0xbe, 0x80, 0x0c, 0x00, 0x00, 0xbd, 0x94, 0xbc, 0xd7, 0x06, 0x0a, 0x00, 0x01, 0x01, 0x0a, 0x00, 0x8f]
 const countReply = (n: number) => [0x6f, 0xbe, 0x80, 0x04, 0x00, 0x05, 0x02, n, 0x00, 0x8f]
-const stressWrites = (r: ReturnType<typeof rig>) => r.chars[WRITE_CHAR].writes.filter((w) => w[1] === 0xbe)
+const stressWrites = (r: ReturnType<typeof rig>) => r.chars[WRITE_CHAR].writes.filter((w) => w[1] === 0xbe && w[6] === 5)
 const emit = (r: ReturnType<typeof rig>, b: number[]) => r.chars[REPLY_CHAR].emit(dv(...b))
 
 describe('stored stress history', () => {
@@ -197,6 +197,16 @@ describe('stored stress history', () => {
     emit(r, REAL_STRESS)
     await vi.advanceTimersByTimeAsync(10_000)
     expect(onStored).not.toHaveBeenCalled()
+  })
+
+  it('calls onHistoryPoints for decoded history points across units', async () => {
+    const r = rig()
+    const onHistory = vi.fn()
+    r.handlers.onHistoryPoints = onHistory
+    await r.watch.connect()
+    emit(r, countReply(1))
+    emit(r, REAL_STRESS)
+    expect(onHistory).toHaveBeenCalledWith('stress', [{ t: Date.UTC(2026, 10, 7, 11, 32, 35) / 1000, value: 34 }])
   })
 })
 

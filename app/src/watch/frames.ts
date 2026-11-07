@@ -156,6 +156,20 @@ export function decodeHistoryPoints(payload: Uint8Array): HistoryPoint[] {
   return pts
 }
 
+/** Stored heart rate readings (key 7). Value is bpm. */
+export function decodeHrHistory(payload: Uint8Array): { t: number; hr: number }[] {
+  return decodeHistoryPoints(payload)
+    .filter((p) => (p.keys[HISTORY_KEY.hr] ?? 0) > 0)
+    .map((p) => ({ t: p.t, hr: p.keys[HISTORY_KEY.hr] }))
+}
+
+/** Stored SpO2 readings (key 11). Value is percent. */
+export function decodeSpo2History(payload: Uint8Array): { t: number; spo2: number }[] {
+  return decodeHistoryPoints(payload)
+    .filter((p) => (p.keys[HISTORY_KEY.spo2] ?? 0) > 0)
+    .map((p) => ({ t: p.t, spo2: p.keys[HISTORY_KEY.spo2] }))
+}
+
 /** Stored stress readings (key 10). The app ignores a stress of 0 (no measurement). */
 export function decodeStressHistory(payload: Uint8Array): { t: number; stress: number }[] {
   return decodeHistoryPoints(payload)

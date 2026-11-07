@@ -12,9 +12,9 @@ const alert = (over: Partial<Alert> = {}): Alert => ({
 beforeEach(() => resetDb(d))
 
 describe('ConsoleDB', () => {
-  it('opens with all seven stores', async () => {
+  it('opens with all eight stores', async () => {
     await d.open()
-    expect(d.tables.map((t) => t.name).sort()).toEqual(['actionLog', 'alerts', 'baselines', 'checkIns', 'crew', 'readings', 'scans'])
+    expect(d.tables.map((t) => t.name).sort()).toEqual(['actionLog', 'alerts', 'baselines', 'checkIns', 'crew', 'readings', 'scans', 'wearables'])
   })
 
   it('round-trips typed readings and queries by crew, metric and time range', async () => {
