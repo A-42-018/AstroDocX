@@ -12,7 +12,7 @@ import { LAZY_PAGES, pageRoutes } from './shell/pages'
 import { ErrorBoundary } from './shell/ErrorBoundary'
 import { useInstallPrompt } from './shell/install'
 import { BottomTabs, StatusBar, TopBar } from './shell/Chrome'
-import { labelFor } from './shell/nav'
+import { routeFor } from './shell/nav'
 import { ShellDataContext, useShellData, type ShellData } from './shell/useShellData'
 import { useSplashHandoff } from './shell/splash'
 import { StateView } from './ui/StateView'
@@ -45,7 +45,7 @@ function useRouteAnnounce(main: React.RefObject<HTMLElement | null>) {
   const { pathname } = useLocation()
   const first = useRef(true)
   useEffect(() => {
-    const label = pathname.startsWith('/cabin') ? '3D Cabin' : labelFor(pathname)
+    const label = pathname.startsWith('/cabin') ? '3D Cabin' : routeFor(pathname)?.label
     document.title = label ? `${label} · AstroDocX Crew Console` : 'AstroDocX Crew Console'
     if (first.current) { first.current = false; return }
     main.current?.focus()

@@ -57,3 +57,13 @@ it('shows an alert the engine raised and links to it', async () => {
   expect((await screen.findByLabelText('Check-in saved')).textContent).toContain('Reaction time 900 ms')
   expect(screen.getByRole('link', { name: 'Open Alerts' }).getAttribute('href')).toBe('/alerts')
 })
+
+it('offers the face scan only when the page can open it', () => {
+  const { unmount } = mount()
+  expect(screen.queryByRole('button', { name: /Face scan/ })).toBeNull()
+  unmount()
+  const onScan = vi.fn()
+  mount({ onScan })
+  fireEvent.click(screen.getByRole('button', { name: /Face scan/ }))
+  expect(onScan).toHaveBeenCalledOnce()
+})
