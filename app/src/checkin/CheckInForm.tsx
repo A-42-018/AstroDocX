@@ -135,6 +135,7 @@ export function CheckInForm({ crew, crewId, now, onSubmit, baselineMs, reactionT
           <p className="ci-eb">Crew {String(index + 1).padStart(2, '0')} · {who?.role}</p>
           <h1 className="ci-h1">Daily check-in · {who?.name}</h1>
           <p className="ci-intro">Two minutes. Your answers join your own baseline, so the console can spot drift in how you feel and react before it becomes a problem.</p>
+          <p className="ci-intro"><Link to="/checkin/scan">Experimental: measure heart rate with your camera</Link></p>
         </HudPanel>
         <Procedure step={result ? STEPS.length : step} a={answers} now={now} baselineMs={baselineMs} />
       </div>

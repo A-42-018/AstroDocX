@@ -32,7 +32,7 @@ export function visemesOf(word: string): Viseme[] {
 
 /** How open each shape is at full voice: closures and vowels read clearly, the rest a little softer. */
 export const WEIGHT: Record<Viseme, number> = {
-  sil: 0, PP: 1, FF: 0.8, TH: 0.7, DD: 0.65, kk: 0.6, CH: 0.75, SS: 0.65, nn: 0.6, RR: 0.65, aa: 0.85, E: 0.75, I: 0.7, O: 0.8, U: 0.75,
+  sil: 0, PP: 1, FF: 0.8, TH: 0.7, DD: 0.65, kk: 0.6, CH: 0.75, SS: 0.65, nn: 0.6, RR: 0.65, aa: 0.7, E: 0.72, I: 0.7, O: 0.8, U: 0.75,
 }
 
 const BABBLE_V: Viseme[] = ['aa', 'E', 'I', 'O', 'aa', 'E']
@@ -48,7 +48,7 @@ export function babble(rand = Math.random): { shapes: Viseme[]; ms: number } {
 /** How long each shape holds, relative to the others: vowels carry the word, a lip closure is a flick. */
 const HOLD: Record<Viseme, number> = { sil: 1, PP: 0.55, FF: 0.8, TH: 0.7, DD: 0.65, kk: 0.75, CH: 0.9, SS: 0.9, nn: 0.7, RR: 0.8, aa: 1.7, E: 1.5, I: 1.4, O: 1.7, U: 1.5 }
 /** How far the jaw drops with each shape (the open vowels drop it, the lip closures do not). */
-export const JAW: Record<Viseme, number> = { sil: 0, PP: 0, FF: 0.04, TH: 0.12, DD: 0.14, kk: 0.2, CH: 0.14, SS: 0.08, nn: 0.12, RR: 0.15, aa: 0.9, E: 0.45, I: 0.3, O: 0.65, U: 0.3 }
+export const JAW: Record<Viseme, number> = { sil: 0, PP: 0, FF: 0.04, TH: 0.12, DD: 0.14, kk: 0.2, CH: 0.14, SS: 0.08, nn: 0.12, RR: 0.15, aa: 0.75, E: 0.4, I: 0.28, O: 0.55, U: 0.3 }
 /** Shapes the lips snap into fast (closures, teeth on lip, tongue): they are brief, so the mouth must reach them in time. */
 export const SNAP = new Set<Viseme>(['PP', 'FF', 'TH', 'DD', 'kk', 'CH', 'SS', 'nn', 'RR'])
 /** The picture leads the sound by this much: the eye reads a mouth that lands late as a dub. */

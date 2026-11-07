@@ -1,6 +1,6 @@
 /*
  * VITA's face on the Crew Doctor screen: a rigged 3D doctor on the holo pedestal (Microsoft Rocketbox "Medical_Female_02",
- * baked by tools/bake-doctor.mjs). Her body moves with motion-capture clips: breathing while idle, an attentive pose while
+ * baked by tools/bake-doctor.mjs). Her body moves with motion-capture clips: a thoughtful standing pose while idle, an attentive pose while
  * you ask, talking gestures while she speaks (a different one each time, from a random point) and a thoughtful pose while
  * she works. On top of the clips, in code: her head and eyes follow the pointer, she blinks, smiles a little, raises her
  * brows and nods on stressed words, and her lips form visemes from the words she says (lips.ts). Her body language is
@@ -50,6 +50,12 @@ const FRAME = { lo: 0.8, hi: 1.84 }
 const REVEAL_MS = 1500
 const SCAN_EVERY = 6200, SCAN_MS = 1300
 const TALKS = ['talk1', 'talk2', 'talk3']
+/** Her standing pose while nobody is talking to her: the thoughtful clip (hand to her chin, other arm across her), which the
+    thinking state reuses and sets apart with her gaze, brows and glow. */
+const POSE = 'think'
+/** The clip is 9.4 s: hands down, then the pose from about 2.4 s to 6 s, then hands down again. She holds the pose by playing that
+    stretch slowly forwards and back, so it breathes and sways without ever lowering her hand. */
+const POSE_FROM = 2.4, POSE_TO = 6
 const clamp = (v: number, a = -1, b = 1) => Math.max(a, Math.min(b, v))
 const rand = (a: number, b: number) => a + Math.random() * (b - a)
 
@@ -57,21 +63,46 @@ interface Holo { base: { value: number }; reveal: { value: number }; scan: { val
 
 /** The hologram look on top of the model's own PBR material: a clip line while she materialises, a scan band, a cyan rim. */
 function holo(mat: THREE.MeshStandardMaterial, u: Holo) {
+  const face = mat.name === 'head'
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, { uBase: u.base, uH: { value: HEIGHT - FRAME.lo }, uReveal: u.reveal, uScan: u.scan, uGlow: u.glow, uTint: { value: CYAN } })
     sh.vertexShader = sh.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying float vY;')
-      .replace('#include <project_vertex>', '#include <project_vertex>\nvY = (modelMatrix * vec4(transformed, 1.0)).y;')
+      .replace('#include <common>', `#include <common>\nvarying float vY;${face ? '\nattribute float aMouth;\nvarying float vMouth;' : ''}`)
+      .replace('#include <project_vertex>', `#include <project_vertex>\nvY = (modelMatrix * vec4(transformed, 1.0)).y;${face ? '\nvMouth = aMouth;' : ''}`)
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying float vY;\nuniform float uBase, uH, uReveal, uScan, uGlow;\nuniform vec3 uTint;')
+      .replace('#include <common>', `#include <common>\nvarying float vY;${face ? '\nvarying float vMouth;' : ''}\nuniform float uBase, uH, uReveal, uScan, uGlow;\nuniform vec3 uTint;`)
       .replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\nfloat hh = (vY - uBase) / uH;\nif (hh > uReveal) discard;')
+      // the mouth's inside is a near-black texture that the cyan lights turn blue: make it a dull warm red instead
+      .replace('#include <map_fragment>', !face ? '#include <map_fragment>' : `#include <map_fragment>
+        float lum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+        float inMouth = (1.0 - smoothstep(0.05, 0.16, lum)) * vMouth;
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.23, 0.045, 0.05), inMouth * 0.95);`)
       .replace('#include <opaque_fragment>', `#include <opaque_fragment>
+        // towards the bottom of the frame she dissolves into the beam: her whites go cyan and dim instead of a milky grey veil
+        float low = smoothstep(0.34, 0.0, hh);
+        gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb * 0.35 + uTint * 0.22, low * 0.85);
         float front = smoothstep(0.05, 0.0, uReveal - hh) * step(uReveal, 0.999);
         float band = smoothstep(0.025, 0.0, abs(hh - uScan));
         float rim = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.6);
-        gl_FragColor.rgb += uTint * (front * 1.7 + band * 0.4 + rim * (0.16 + uGlow * 0.22));`)
+        gl_FragColor.rgb += uTint * (front * 1.7 + (band * 0.4 + rim * (0.16 + uGlow * 0.22)) * (1.0 - ${face ? 'inMouth' : '0.0'}));`)
   }
-  mat.customProgramCacheKey = () => 'vita-holo-rig'
+  mat.customProgramCacheKey = () => (face ? 'vita-holo-face' : 'vita-holo-rig')
+}
+
+/** The mouth's inside is a near-black texture region that the cyan lights turn blue. Mark the vertices that open with a wide
+    "aa" (the lips, the cavity, the tongue), so the shader can give just those a warm dark red and leave hair and brows alone. */
+function markMouth(geo: THREE.BufferGeometry, names: Record<string, number>) {
+  const pos = geo.attributes.position, morphs = geo.morphAttributes.position
+  const out = new Float32Array(pos.count)
+  if (morphs) for (const n of ['viseme_aa', 'jawOpen']) {
+    const m = morphs[names[n]]
+    if (!m) continue
+    for (let i = 0; i < pos.count; i++) {
+      const d = Math.hypot(m.getX(i), m.getY(i), m.getZ(i))   // glTF morph targets are deltas
+      out[i] = Math.max(out[i], THREE.MathUtils.smoothstep(d, 0.002, 0.006))
+    }
+  }
+  geo.setAttribute('aMouth', new THREE.BufferAttribute(out, 1))
 }
 
 /** A spring: `x` chases `to` with stiffness `k` and damping `c`; a kick is a push to `v`. */
@@ -112,8 +143,10 @@ export function createDoctorFigure(canvas: HTMLCanvasElement, { url, reduced = f
   let talking = false, thinking = false, listening = false
   let mixer: THREE.AnimationMixer | null = null
   const actions = new Map<string, THREE.AnimationAction>()
-  let current: THREE.AnimationAction | null = null, lastTalk = ''
-  let infl: number[] = [], shape: Record<string, number> = {}
+  let current: THREE.AnimationAction | null = null, lastTalk = '', poseDir = 1
+  // the model's body is several meshes (head, eyes, teeth, hair, ...); each has its own morph weights, same shape names
+  const infls: number[][] = []
+  let shape: Record<string, number> = {}
   const bone: Record<'spine1' | 'spine2' | 'neck' | 'head' | 'eyeL' | 'eyeR', THREE.Object3D | undefined> = { spine1: undefined, spine2: undefined, neck: undefined, head: undefined, eyeL: undefined, eyeR: undefined }
   let model: THREE.Object3D | null = null, hips: THREE.Object3D | undefined
   const hp = new THREE.Vector3(), drift = new THREE.Vector2(NaN, NaN)
@@ -122,9 +155,10 @@ export function createDoctorFigure(canvas: HTMLCanvasElement, { url, reduced = f
   // body language: springs for the nod (head pitch), the tilt (head roll), the lean (spine pitch) and the glance (gaze), a
   // warmth that fades after a greeting or a smile, an energy that quickens her gestures and a calm talker's slow sweep
   const nod: Spring = { x: 0, v: 0 }, lean: Spring = { x: 0, v: 0 }, tilt: Spring = { x: 0, v: 0 }
-  const gaze = { x: 0, y: 0 }, gazeT = { x: 0, y: 0 }, glanceUntil = { t: 0 }
-  let tiltT = 0, energy = 0, warmth = 0, speech = 0, nextSaccade = 0, askFrom = -1e9, browDownT = 0
-  let glow = 0, brow = 0, blinkAt = 0, blinkFrom = -1e9
+  const gaze = { x: 0, y: 0 }, gazeT = { x: 0, y: 0 }, gazeB = { x: 0, y: 0 }, sacc = { x: 0, y: 0 }, glanceUntil = { t: 0 }
+  const headX: Spring = { x: 0, v: 0 }, headY: Spring = { x: 0, v: 0 }   // where the head looks (the eyes lead it)
+  let nextAck = 0, tiltT = 0, energy = 0, warmth = 0, speech = 0, nextSaccade = 0, askFrom = -1e9, browDownT = 0
+  let sweet = 1, glow = 0, brow = 0, blinkAt = 0, blinkFrom = -1e9
   // the lips: the word being said, when it started, how long it lasts and how much it weighs; our own clock over the
   // sentence's script (re-synced when the engine reports a real word) and, with no script at all, a babble rhythm
   let shapes: Viseme[] = [], wordFrom = 0, wordMs = 0, wordPower = 0.25, nextBabble = 0, mouth = 0.85
@@ -153,7 +187,7 @@ export function createDoctorFigure(canvas: HTMLCanvasElement, { url, reduced = f
   function play(name: string, fade: number, at = 0) {
     const next = actions.get(name)
     if (!next || next === current) return
-    next.reset(); next.time = at; next.setEffectiveWeight(1); next.play()
+    next.reset(); next.time = at; next.timeScale = 1; next.setEffectiveWeight(1); next.play()
     if (current) current.crossFadeTo(next, fade, false); else next.fadeIn(fade)
     current = next
   }
@@ -166,9 +200,9 @@ export function createDoctorFigure(canvas: HTMLCanvasElement, { url, reduced = f
       lastTalk = name
       const d = actions.get(name)?.getClip().duration ?? 0
       play(name, 0.5, Math.random() * Math.max(0, d - 10))
-    } else if (thinking) play('think', 0.45)
+    } else if (thinking) play(POSE, 0.45, POSE_FROM)
     else if (listening) play('listen', 0.6, Math.random() * 6)
-    else play('idle', 0.8)
+    else play(POSE, 0.8, POSE_FROM)
   }
 
   const pq = new THREE.Quaternion(), qa = new THREE.Quaternion(), qw = new THREE.Quaternion(), eul = new THREE.Euler()
@@ -181,7 +215,7 @@ export function createDoctorFigure(canvas: HTMLCanvasElement, { url, reduced = f
     qa.copy(pq).invert().multiply(qw).multiply(pq)
     b.quaternion.premultiply(qa)
   }
-  const setShape = (name: string, v: number) => { const i = shape[name]; if (i !== undefined) infl[i] = v }
+  const setShape = (name: string, v: number) => { const i = shape[name]; if (i !== undefined) for (const a of infls) a[i] = v }
 
   /** A word starts: her lips spell it, and her body gives it the weight it deserves. */
   function begin(w: VitaWord, t: number) {
@@ -189,27 +223,34 @@ export function createDoctorFigure(canvas: HTMLCanvasElement, { url, reduced = f
     if (reduced) return
     const p = w.power, end = /[.!?]$/.test(w.word)
     energy = Math.min(1, energy + p * 0.45)
-    if (p >= 0.85) { nod.v += 0.5 + p * 0.5; brow = Math.min(1, brow + 0.7); lean.v += 0.5 }
-    else if (p >= 0.55) { nod.v += 0.22; lean.v += 0.18 }
-    if (/\?$/.test(w.word)) { askFrom = t; brow = 1; tiltT = (Math.random() < 0.5 ? -1 : 1) * 0.14 }   // a question: brows up, head cocked
+    if (p >= 0.85) { nod.v += 0.3 + p * 0.3; brow = Math.min(1, brow + 0.7); lean.v += 0.3 }
+    else if (p >= 0.55) { nod.v += 0.12; lean.v += 0.1 }
+    if (/\?$/.test(w.word)) { askFrom = t; brow = 1; tiltT = (Math.random() < 0.5 ? -1 : 1) * 0.11 }   // a question: brows up, head cocked
     else if (end) { tiltT = 0; lean.v -= 0.25; if (t - blinkFrom > 500) blinkAt = t + 160 }              // a sentence lands: settle, blink
     else if (p >= 0.85 && Math.abs(tiltT) < 0.02) tiltT = (Math.random() < 0.5 ? -1 : 1) * 0.07        // an idea: a slight tilt
   }
   /** The start of a sentence: a glance away to collect her thought, then back to the room. */
   function glance(t: number) {
     if (reduced || Math.random() < 0.3) return
-    gazeT.x = (Math.random() < 0.5 ? -1 : 1) * rand(0.25, 0.5); gazeT.y = -rand(0.05, 0.25)
-    glanceUntil.t = t + rand(500, 900)
+    gazeB.x = (Math.random() < 0.5 ? -1 : 1) * rand(0.25, 0.5); gazeB.y = -rand(0.05, 0.25)
+    glanceUntil.t = t + rand(700, 1200)
   }
 
   function draw(t: number) {
     const dt = clamp((t - last) / 1000, 0, 0.05)
     last = t
+    // when she is idle (not talking, thinking or listening) she settles into a sweet standing look: a soft smile, brows a little
+    // raised, head tilted and chin slightly down. It eases in and out as she changes between things.
+    sweet += ((talking || thinking || listening ? 0 : 1) - sweet) * (1 - Math.exp(-dt / 0.9))
     if (!reduced) {
       look.x += (lookT.x - look.x) * 0.05; look.y += (lookT.y - look.y) * 0.05
       u.reveal.value = clamp((t - start) / REVEAL_MS, 0, 1.2)
       const phase = (t - start - REVEAL_MS) % SCAN_EVERY
       u.scan.value = t - start > REVEAL_MS && phase < SCAN_MS ? (phase / SCAN_MS) * 1.15 : -1
+    }
+    if (mixer && !reduced && current && current === actions.get(POSE)) {   // hold the standing pose: forwards, then back
+      if (current.time >= POSE_TO) poseDir = -1; else if (current.time <= POSE_FROM) poseDir = 1
+      current.timeScale = poseDir * 0.5
     }
     mixer?.update(reduced ? 0 : dt)
     // some talking clips shift her weight 15 cm to a side: follow her hips back over the pedestal's centre, slowly
@@ -230,23 +271,27 @@ export function createDoctorFigure(canvas: HTMLCanvasElement, { url, reduced = f
       speech += ((talking ? 1 : 0) - speech) * (1 - Math.exp(-dt / 0.5))
       energy *= Math.exp(-dt / 1.3)
       warmth *= Math.exp(-dt / 1.6)
-      if (mixer) mixer.timeScale = talking ? 0.9 + energy * 0.22 : 1
+      if (mixer) mixer.timeScale = talking ? 0.68 + energy * 0.12 : 1
       look.x += (lookT.x - look.x) * 0.05; look.y += (lookT.y - look.y) * 0.05
-      spring(nod, 0, 70, 9, dt); spring(lean, listening && !talking ? 0.07 : 0, 38, 7, dt)
-      spring(tilt, thinking && !talking ? 0.1 : listening && !talking ? -0.07 : tiltT, 16, 5, dt)
-      if (!talking && Math.abs(tiltT) > 0.01) tiltT *= Math.exp(-dt / 0.8)
-      // gaze: a glance, a look up and aside while thinking, a tiny saccade now and then, otherwise the pointer
+      if (listening && !talking && t >= nextAck) { nod.v += 0.32; nextAck = t + rand(2600, 5000) }   // an "mm-hm" now and then
+      spring(nod, 0, 42, 8, dt); spring(lean, listening && !talking ? 0.1 : 0, 38, 7, dt)
+      spring(tilt, thinking && !talking ? 0.1 : listening && !talking ? -0.1 : tiltT + sweet * 0.07, 10, 4, dt)
+      if (Math.abs(tiltT) > 0.01) tiltT *= Math.exp(-dt / (talking ? 1.5 : 0.8))   // a head tilt is a moment, not a posture
+      // gaze: a glance, a look up and aside while thinking, a tiny saccade now and then, otherwise the pointer. The eyes jump
+      // there fast; the head follows a little behind on a soft spring, and ignores the saccades
       if (t > glanceUntil.t) {
-        if (thinking && !talking) { gazeT.x = 0.34; gazeT.y = -0.2 }
-        else { gazeT.x = 0; gazeT.y = 0 }
-        if (t >= nextSaccade) { nextSaccade = t + rand(900, 2600); gazeT.x += rand(-0.05, 0.05); gazeT.y += rand(-0.03, 0.03) }
-      }
+        if (thinking && !talking) { gazeB.x = 0.34; gazeB.y = -0.2 }
+        else { gazeB.x = 0; gazeB.y = 0 }
+        if (t >= nextSaccade) { nextSaccade = t + rand(900, 2600); sacc.x = rand(-0.05, 0.05); sacc.y = rand(-0.03, 0.03) }
+      } else { sacc.x = 0; sacc.y = 0 }
+      gazeT.x = gazeB.x + sacc.x; gazeT.y = gazeB.y + sacc.y
       gaze.x += (gazeT.x - gaze.x) * (1 - Math.exp(-dt / 0.07)); gaze.y += (gazeT.y - gaze.y) * (1 - Math.exp(-dt / 0.07))
-      const k = 1 - speech * 0.5, sweep = Math.sin(secs * 0.5) * 0.13 * speech + Math.sin(secs * 1.3) * 0.02 * speech
+      spring(headX, gazeB.x, 26, 9.5, dt); spring(headY, gazeB.y, 26, 9.5, dt)
+      const k = 1 - speech * 0.5, sweep = Math.sin(secs * 0.32) * 0.11 * speech + Math.sin(secs * 0.9) * 0.015 * speech
       turn(bone.spine1, lean.x * 0.45, sweep * 0.25, tilt.x * 0.2)
       turn(bone.spine2, lean.x * 0.55, sweep * 0.25)
-      turn(bone.neck, look.y * 0.08 * k + gaze.y * 0.2, look.x * 0.16 * k + sweep * 0.3 + gaze.x * 0.18, tilt.x * 0.35)
-      turn(bone.head, look.y * 0.12 * k + nod.x * 1.6 + gaze.y * 0.3, look.x * 0.24 * k + sweep * 0.5 + gaze.x * 0.3, tilt.x * 0.65)
+      turn(bone.neck, look.y * 0.08 * k + headY.x * 0.2, look.x * 0.16 * k + sweep * 0.3 + headX.x * 0.18, tilt.x * 0.35)
+      turn(bone.head, look.y * 0.12 * k + nod.x * 1.6 + headY.x * 0.3 + sweet * 0.035, look.x * 0.24 * k + sweep * 0.5 + headX.x * 0.3, tilt.x * 0.65)
       for (const [b, q] of eyeRest) b.quaternion.copy(q)
       turn(bone.eyeL, look.y * 0.12 * k + gaze.y, look.x * 0.22 * k + gaze.x * 0.8 + sweep * 0.4)
       turn(bone.eyeR, look.y * 0.12 * k + gaze.y, look.x * 0.22 * k + gaze.x * 0.8 + sweep * 0.4)
@@ -265,15 +310,15 @@ export function createDoctorFigure(canvas: HTMLCanvasElement, { url, reduced = f
     }
     const now: Viseme = talking ? shapeAt(shapes, wordMs, t - wordFrom + LEAD_MS) : 'sil'
     const edt = dt || 0.016
-    mouth += ((0.78 + wordPower * 0.32) - mouth) * (1 - Math.exp(-edt / 0.08))   // a stressed word opens wider
+    mouth += ((0.72 + wordPower * 0.2) - mouth) * (1 - Math.exp(-edt / 0.08))   // a stressed word opens wider
     let jaw = 0
     VISEMES.forEach((v, i) => {
-      const to = v === now ? WEIGHT[v] * mouth : 0
-      lips[i] += (to - lips[i]) * (1 - Math.exp(-edt * (to > lips[i] ? (SNAP.has(v) ? 40 : 26) : 19)))
+      const to = v === now ? WEIGHT[v] * (v === 'PP' || v === 'FF' ? 1 : mouth) : 0   // a closure is a closure, however stressed the word
+      lips[i] += (to - lips[i]) * (1 - Math.exp(-edt * (to > lips[i] ? (SNAP.has(v) ? 32 : 19) : 14)))
       setShape(`viseme_${v}`, lips[i])
       jaw += lips[i] * JAW[v]
     })
-    setShape('jawOpen', Math.min(0.5, jaw * 0.38))   // the jaw drops on the open vowels, so it reads at a distance
+    setShape('jawOpen', Math.min(0.36, jaw * 0.36))   // the jaw drops on the open vowels (kept modest: wide open shows too much tongue)
 
     // blinks, a small smile, brows
     if (t >= blinkAt) { blinkFrom = t; blinkAt = t + 2200 + Math.random() * 4200 }
@@ -282,10 +327,12 @@ export function createDoctorFigure(canvas: HTMLCanvasElement, { url, reduced = f
     setShape('eyeBlinkLeft', blink); setShape('eyeBlinkRight', blink)
     brow *= Math.exp(-edt / (t - askFrom < 700 ? 0.9 : 0.35))   // a question keeps her brows up a little longer
     setShape('browOuterUpLeft', brow * 0.5); setShape('browOuterUpRight', brow * 0.5)
-    setShape('browInnerUp', thinking ? 0.45 : listening && !talking ? 0.2 : brow * 0.3)
+    setShape('browInnerUp', thinking ? 0.45 : listening && !talking ? 0.2 : brow * 0.3 + sweet * 0.14)
     browDownT += ((thinking && !talking ? 0.18 : 0) - browDownT) * (1 - Math.exp(-edt / 0.4))
     setShape('browDownLeft', browDownT); setShape('browDownRight', browDownT * 0.6)   // a furrow, a little uneven, while she works
-    const smile = Math.min(0.55, (thinking ? 0.05 : talking ? 0.14 : 0.22) + warmth * 0.3)
+    // a smile pulls the corners out; on a rounded or pressed shape (O, U, P, B, M) it would pinch the lips, so it gives way
+    const pinch = Math.min(1, (lips[VISEMES.indexOf('O')] + lips[VISEMES.indexOf('U')] + lips[VISEMES.indexOf('PP')] * 0.6) * 0.9)
+    const smile = Math.min(0.55, (thinking ? 0.05 : talking ? 0.14 : 0.22) + sweet * 0.12 + warmth * 0.3) * (1 - pinch)
     setShape('mouthSmileLeft', smile); setShape('mouthSmileRight', smile)
     setShape('eyeSquintLeft', smile * 0.4); setShape('eyeSquintRight', smile * 0.4)
 
@@ -318,7 +365,8 @@ export function createDoctorFigure(canvas: HTMLCanvasElement, { url, reduced = f
       if (!m.isMesh) return
       m.frustumCulled = false                    // the clips move her beyond the bind-pose bounds
       disposables.push(m.geometry)
-      if (m.morphTargetDictionary && m.morphTargetInfluences) { shape = m.morphTargetDictionary; infl = m.morphTargetInfluences }
+      if (m.morphTargetDictionary && (m.material as THREE.Material).name === 'head') markMouth(m.geometry, m.morphTargetDictionary)
+      if (m.morphTargetDictionary && m.morphTargetInfluences) { shape = m.morphTargetDictionary; infls.push(m.morphTargetInfluences) }
       for (const mat of (Array.isArray(m.material) ? m.material : [m.material]) as THREE.MeshStandardMaterial[]) {
         mat.envMapIntensity = 0.9
         holo(mat, u)
@@ -330,7 +378,8 @@ export function createDoctorFigure(canvas: HTMLCanvasElement, { url, reduced = f
     rig.add(model)
     mixer = new THREE.AnimationMixer(model)
     for (const clip of gltf.animations) actions.set(clip.name, mixer.clipAction(clip))
-    const idle = actions.get('idle')
+    const idle = actions.get(POSE) ?? actions.get('idle')
+    if (idle) idle.time = POSE_FROM
     idle?.play(); current = idle ?? null
     mixer.update(0)
     start = last = performance.now()
