@@ -114,6 +114,7 @@ export interface NasaResource { name: string; what: string; url: string }
 export const RESOURCES: NasaResource[] = [
   { name: 'NASA Human Research Program: the five hazards', what: 'The RIDGE framework the Status Board and readiness score are organised by.', url: FIVE_HAZARDS_URL },
   { name: 'NASA Open Science Data Repository (OSDR)', what: 'Spaceflight and analogue studies cited as evidence for heart, muscle and radiation alerts.', url: 'https://osdr.nasa.gov/bio/' },
+  { name: 'NASA OSDR: SpaceX Inspiration4 studies', what: 'Ten public studies of the four-person civilian crew (OSD-569 to 575, 630, 656, 687). The blood counts, metabolic panel and cardiovascular markers in OSD-569 and OSD-575 are drawn on the NASA Data screen; the omics, microbiome and urine studies are cited, not used as data.', url: 'https://osdr.nasa.gov/bio/repo/data/studies/OSD-575' },
   { name: 'NASA Technical Reports Server (NTRS)', what: 'Human Research Program evidence reports on heart rhythm, sleep loss, behavioural health and CO₂.', url: 'https://ntrs.nasa.gov/' },
   { name: 'NASA Office of the Chief Health & Medical Officer', what: 'Publishes NASA-STD-3001 and the technical briefs behind the CO₂ and radiation limits.', url: 'https://www.nasa.gov/ochmo/' },
   { name: 'NASA Human Research Roadmap', what: 'Where each Human Research Program risk and its evidence are tracked.', url: 'https://humanresearchroadmap.nasa.gov/' },

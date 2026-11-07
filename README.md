@@ -40,12 +40,12 @@ AstroDocX learns each astronaut's **personal baseline**, spots drift early, and 
 | Mission Simulator | Mission clock, fast-forward, 4 injectable scenarios (solar event, CO₂ fault, insomnia, deconditioning); watch the engine react |
 | Ground Sync | Delay-tolerant outbox: link windows, 12-minute delay, blackout, auto-sync, CSV log export |
 | Ground View | Flight-surgeon view rebuilt only from synced entries (shows what Earth knows, and when); each crew card shows the 3D body in its status colour |
-| NASA Data | The NASA basis of the console in one screen: for each of NASA's five hazards, what AstroDocX monitors, the NASA-STD-3001 limit it checks and the NASA studies cited; every alert and Status Board tile carries a NASA source tag |
+| NASA Data | The NASA basis of the console in one screen: for each of NASA's five hazards, what AstroDocX monitors, the NASA-STD-3001 limit it checks and the NASA studies cited; every alert and Status Board tile carries a NASA source tag. Also a **Real crew data** panel: measured blood counts, metabolic and inflammation markers from the four SpaceX Inspiration4 crew (NASA OSDR OSD-569 and OSD-575), each person charted against their own pre-flight baseline and the lab reference range |
 | Platform | Offline-first installable PWA, IndexedDB on the device, 4-crew 30-day demo mission preloaded |
 
 **Not built yet (Roadmap):** wearable sensor integration, a real Supabase ground backend with proper policies, vision/SANS self-tests, blood pressure, bone density, a multi-device ground station.
 
-> **Status:** the landing page and the **Crew Console** (`app/`) are built and run the full loop on synthetic data. AstroDocX is a prototype, **not a medical device**; all thresholds not cited in the code are illustrative.
+> **Status:** the landing page and the **Crew Console** (`app/`) are built and run the full loop on synthetic data. AstroDocX is a prototype, **not a medical device**; all thresholds not cited in the code are illustrative. The only measured astronaut data in the app is the Inspiration4 lab panel on the NASA Data screen; live vitals, cabin readings and the demo mission are synthetic.
 
 ## Screenshots
 **Landing page:** one scroll-driven journey made of the same 24,000 particles: stardust, a planet, an astronaut saluting the flag on the Moon, Orion, a relay satellite and Earth, which then becomes the Health Twin and finally the AstroDocX wordmark.
