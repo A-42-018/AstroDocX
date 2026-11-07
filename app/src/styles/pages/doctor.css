@@ -51,7 +51,7 @@
      softening at the sides when she gestures wide (the canvas sits low over the pedestal, whose disc is 80% down it) */
   .dr-figure .dr-doctor {
     position: relative; z-index: 1; display: block; width: 360px; height: 420px; margin-bottom: -150px; filter: drop-shadow(0 0 18px rgba(54, 226, 245, 0.35));
-    --fade: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent), linear-gradient(to bottom, #000 74%, transparent 97%);
+    --fade: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent), linear-gradient(to bottom, #000 50%, rgba(0, 0, 0, 0.55) 64%, rgba(0, 0, 0, 0.18) 74%, transparent 84%);
     -webkit-mask-image: var(--fade); -webkit-mask-composite: source-in;
     mask-image: var(--fade); mask-composite: intersect;
   }
