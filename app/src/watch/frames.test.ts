@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { FrameReassembler, NEWEST_HR_QUERY, decodeFrame, decodeUnits, leUint, plausible } from './frames'
+import {
+  FrameReassembler, HISTORY_UNIT, NEWEST_HR_QUERY, decodeFrame, decodeHistoryPoints, decodeSleepPoints, decodeStressHistory,
+  decodeUnits, historyCountQuery, historyReadQuery, leUint, plausible, summarizeSleep,
+} from './frames'
 
 /** Frames captured from a real Haylou Solar 5 (see research_notes/haylou-solar5-ble-protocol.md). */
 const hex = (s: string) => Uint8Array.from(s.trim().split(/\s+/).map((h) => parseInt(h, 16)))
@@ -130,5 +133,61 @@ describe('helpers', () => {
 
   it('the one query we send is the read-only newest heart rate frame', () => {
     expect([...NEWEST_HR_QUERY]).toEqual([0x6f, 0x62, 0x70, 0x01, 0x00, 0x01, 0x8f])
+  })
+})
+
+describe('stored stress history, real frame from the watch (2026-11-07)', () => {
+  const REAL = hex('6f be 80 35 00 00 bd 94 bc d7 06 0a 00 01 01 0a 00 01 02 0a 00 01 03 0a 00 01 04 0a 00 01 04 0a 00 01 05 0a 00 01 06 0a 00 01 07 0a 00 01 08 0a 00 01 08 0a 00 01 96 04 0a 22 8f')
+  it('keeps the one real stress value (34 at 11:32:35 UTC) and drops the zero placeholders', () => {
+    const [f] = new FrameReassembler().push(REAL)
+    expect(decodeHistoryPoints(f.payload)).toHaveLength(12)
+    expect(decodeStressHistory(f.payload)).toEqual([{ t: Date.UTC(2026, 10, 7, 11, 32, 35) / 1000, stress: 34 }])
+  })
+})
+
+describe('stored stress and sleep history (synthetic frames, not yet captured from a real watch)', () => {
+  const enc = (n: number) => { const o: number[] = []; do { let b = n & 0x7f; n = Math.floor(n / 128); if (n) b |= 0x80; o.push(b) } while (n); return o }
+  const pairs = (...kv: [number, number][]) => Uint8Array.from(kv.flatMap(([k, v]) => [...enc(k), ...enc(v)]))
+
+  it('builds the read-only count and read queries', () => {
+    const c = historyCountQuery(HISTORY_UNIT.sleep, 0x01020304, 0x05060708)
+    expect([...c]).toEqual([0x6f, 0xbe, 0x70, 0x0b, 0, 0, 3, 8, 4, 3, 2, 1, 8, 7, 6, 5, 0x8f])
+    const r = historyReadQuery(HISTORY_UNIT.stress, 1, 2)
+    expect([...r]).toEqual([0x6f, 0xbe, 0x70, 0x0b, 0, 5, 5, 8, 1, 0, 0, 0, 2, 0, 0, 0, 0x8f])
+  })
+
+  it('decodes stress points with absolute and delta times', () => {
+    const p = pairs([0, 1_794_000_000], [10, 42], [1, 300], [10, 0], [1, 600], [10, 55])
+    expect(decodeStressHistory(p)).toEqual([{ t: 1_794_000_000, stress: 42 }, { t: 1_794_000_600, stress: 55 }])
+  })
+
+  it('measures deltas from the last absolute time, not from the previous point', () => {
+    const pts = decodeHistoryPoints(pairs([0, 1000], [10, 5], [1, 100], [10, 6], [2, 60], [10, 7]))
+    expect(pts.map((x) => x.t)).toEqual([1000, 1100, 940])
+  })
+
+  it('sums a night: time goes to the earlier point state, Enter opens and Exit closes', () => {
+    const T = 1_794_000_000
+    const pts = decodeSleepPoints(pairs(
+      [0, T], [13, 16],          // enter
+      [1, 600], [13, 1],         // light from T+600 (deltas count from the key-0 anchor)
+      [1, 4200], [13, 0],        // deep from T+4200
+      [1, 6000], [13, 5],        // REM from T+6000
+      [1, 6900], [13, 2],        // awake from T+6900
+      [1, 7200], [13, 1],        // light from T+7200
+      [1, 10200], [13, 17],      // exit at T+10200
+    ))
+    const [s] = summarizeSleep(pts)
+    expect(s).toMatchObject({ start: T, end: T + 10200, light: 3000 + 3600, deep: 1800, rem: 900, awake: 600 + 300 })
+    expect(s.asleep).toBe(s.deep + s.light + s.rem)
+    expect(s.nap).toBe(false)
+  })
+
+  it('files a short session as a nap and ignores points outside a session', () => {
+    const T = 1_794_000_000
+    const pts = decodeSleepPoints(pairs([0, T - 100], [13, 1], [1, 100], [13, 16], [1, 1300], [13, 1], [1, 2500], [13, 17]))
+    const out = summarizeSleep(pts)
+    expect(out).toHaveLength(1)
+    expect(out[0].nap).toBe(true)
   })
 })

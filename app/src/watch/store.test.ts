@@ -16,6 +16,18 @@ beforeEach(() => vi.useFakeTimers())
 afterEach(() => vi.useRealTimers())
 
 describe('watch store', () => {
+  it('keeps the stored stress as a past reading: not live, no expiry, cleared on disconnect', async () => {
+    const r = rig()
+    await r.store.getState().connect()
+    r.h().onStoredStress!({ value: 34, at: 1_794_000_000 })
+    expect(r.store.getState().storedStress).toEqual({ value: 34, at: 1_794_000_000 })
+    expect(r.store.getState().stress).toBeNull()
+    r.advance(10 * 60_000)
+    expect(r.store.getState().storedStress).not.toBeNull()
+    r.store.getState().disconnect()
+    expect(r.store.getState().storedStress).toBeNull()
+  })
+
   it('starts unsupported where there is no Web Bluetooth, and connect does nothing', async () => {
     const r = rig(false)
     expect(r.store.getState().status).toBe('unsupported')

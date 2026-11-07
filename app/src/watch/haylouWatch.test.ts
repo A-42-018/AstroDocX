@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { DATA_SERVICE, EVENT_CHAR, HaylouWatch, POLL_MS, REPLY_CHAR, WRITE_CHAR, WatchError, explain, type BtApi, type BtCharacteristic, type BtDevice, type WatchHandlers } from './haylouWatch'
+import { COUNT_WAIT_MS, DATA_SERVICE, EVENT_CHAR, FIRST_FRAME_WAIT_MS, HaylouWatch, POLL_MS, QUIET_MS, REPLY_CHAR, WRITE_CHAR, WatchError, explain, type BtApi, type BtCharacteristic, type BtDevice, type WatchHandlers } from './haylouWatch'
 
 type Listener = (e: { target: { value?: DataView | null } }) => void
 const dv = (...b: number[]) => new DataView(Uint8Array.from(b).buffer)
@@ -37,7 +37,7 @@ function rig(opts: { requestError?: Error } = {}) {
   }
   const requestDevice = vi.fn(async (_o: Parameters<BtApi['requestDevice']>[0]) => { if (opts.requestError) throw opts.requestError; return device })
   const api: BtApi = { requestDevice }
-  const handlers = { onSample: vi.fn(), onNewest: vi.fn(), onDisconnect: vi.fn() } satisfies WatchHandlers
+  const handlers: WatchHandlers = { onSample: vi.fn(), onNewest: vi.fn(), onDisconnect: vi.fn() }
   return { chars, asked, server, requestDevice, api, handlers, watch: new HaylouWatch(handlers, api) }
 }
 
@@ -60,13 +60,20 @@ describe('HaylouWatch', () => {
     expect(r.chars[WRITE_CHAR].started).toBe(false)
   })
 
-  it('writes only the read-only newest-heart-rate query to 8001: once now, then every 10 s', async () => {
+  it('writes only read queries to 8001: newest heart rate once now and every 10 s, plus the stress history count and read', async () => {
     const r = rig()
     await r.watch.connect()
     const query = [0x6f, 0x62, 0x70, 0x01, 0x00, 0x01, 0x8f]
-    expect(r.chars[WRITE_CHAR].writes).toEqual([query])
+    const hr = () => r.chars[WRITE_CHAR].writes.filter((w) => w[1] === 0x62)
+    expect(hr()).toEqual([query])
     await vi.advanceTimersByTimeAsync(POLL_MS * 3)
-    expect(r.chars[WRITE_CHAR].writes).toEqual([query, query, query, query])
+    expect(hr()).toEqual([query, query, query, query])
+    // Everything written is a type-0x70 read request: the HR query or a 0xBE history query for stress (unit 5), nothing else.
+    for (const w of r.chars[WRITE_CHAR].writes) {
+      expect(w[2]).toBe(0x70)
+      expect([0x62, 0xbe]).toContain(w[1])
+      if (w[1] === 0xbe) expect(w[6]).toBe(5)
+    }
     expect(r.chars[REPLY_CHAR].writeValueWithoutResponse).not.toHaveBeenCalled()
     expect(r.chars[EVENT_CHAR].writeValueWithoutResponse).not.toHaveBeenCalled()
   })
@@ -120,6 +127,76 @@ describe('HaylouWatch', () => {
   it('refuses without Web Bluetooth', async () => {
     const w = new HaylouWatch({ onSample() {}, onNewest() {}, onDisconnect() {} }, undefined)
     await expect(w.connect()).rejects.toMatchObject({ code: 'unsupported' })
+  })
+})
+
+const REAL_STRESS = [0x6f, 0xbe, 0x80, 0x35, 0x00, 0x00, 0xbd, 0x94, 0xbc, 0xd7, 0x06, 0x0a, 0x00, 0x01, 0x01, 0x0a, 0x00, 0x01, 0x02, 0x0a, 0x00, 0x01, 0x03, 0x0a, 0x00, 0x01, 0x04, 0x0a, 0x00, 0x01, 0x04, 0x0a, 0x00, 0x01, 0x05, 0x0a, 0x00, 0x01, 0x06, 0x0a, 0x00, 0x01, 0x07, 0x0a, 0x00, 0x01, 0x08, 0x0a, 0x00, 0x01, 0x08, 0x0a, 0x00, 0x01, 0x96, 0x04, 0x0a, 0x22, 0x8f]
+const ZEROS = [0x6f, 0xbe, 0x80, 0x0c, 0x00, 0x00, 0xbd, 0x94, 0xbc, 0xd7, 0x06, 0x0a, 0x00, 0x01, 0x01, 0x0a, 0x00, 0x8f]
+const countReply = (n: number) => [0x6f, 0xbe, 0x80, 0x04, 0x00, 0x05, 0x02, n, 0x00, 0x8f]
+const stressWrites = (r: ReturnType<typeof rig>) => r.chars[WRITE_CHAR].writes.filter((w) => w[1] === 0xbe)
+const emit = (r: ReturnType<typeof rig>, b: number[]) => r.chars[REPLY_CHAR].emit(dv(...b))
+
+describe('stored stress history', () => {
+  it('sends the count, then the read, and reports the newest non-zero stress once all counted frames are in', async () => {
+    const r = rig()
+    const onStored = vi.fn()
+    r.handlers.onStoredStress = onStored
+    await r.watch.connect()
+    expect(stressWrites(r)).toHaveLength(1)
+    expect(stressWrites(r)[0].slice(0, 8)).toEqual([0x6f, 0xbe, 0x70, 0x0b, 0x00, 0x00, 0x05, 0x08])   // count, unit 5
+    emit(r, countReply(2))
+    await vi.advanceTimersByTimeAsync(0)
+    expect(stressWrites(r)).toHaveLength(2)
+    expect(stressWrites(r)[1].slice(0, 8)).toEqual([0x6f, 0xbe, 0x70, 0x0b, 0x00, 0x05, 0x05, 0x08])   // read, unit 5
+    emit(r, ZEROS)
+    expect(onStored).not.toHaveBeenCalled()
+    emit(r, REAL_STRESS)
+    expect(onStored).toHaveBeenCalledTimes(1)
+    expect(onStored).toHaveBeenCalledWith({ value: 34, at: Date.UTC(2026, 10, 7, 11, 32, 35) / 1000 })
+  })
+
+  it('stops waiting after a quiet gap when fewer frames come than counted', async () => {
+    const r = rig()
+    const onStored = vi.fn()
+    r.handlers.onStoredStress = onStored
+    await r.watch.connect()
+    emit(r, countReply(5))
+    emit(r, REAL_STRESS)
+    expect(onStored).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(QUIET_MS + 10)
+    expect(onStored).toHaveBeenCalledWith(expect.objectContaining({ value: 34 }))
+  })
+
+  it('reads anyway when the count reply never comes, and stays silent when nothing is stored', async () => {
+    const r = rig()
+    const onStored = vi.fn()
+    r.handlers.onStoredStress = onStored
+    await r.watch.connect()
+    await vi.advanceTimersByTimeAsync(COUNT_WAIT_MS + 10)
+    expect(stressWrites(r)).toHaveLength(2)
+    emit(r, [0x6f, 0xbe, 0x80, 0x00, 0x00, 0x8f])   // the watch's empty "nothing stored" frame
+    await vi.advanceTimersByTimeAsync(FIRST_FRAME_WAIT_MS + 10)
+    expect(onStored).not.toHaveBeenCalled()
+  })
+
+  it('does not read when the count is zero', async () => {
+    const r = rig()
+    await r.watch.connect()
+    emit(r, countReply(0))
+    await vi.advanceTimersByTimeAsync(10)
+    expect(stressWrites(r)).toHaveLength(1)
+  })
+
+  it('cancels the history wait on disconnect', async () => {
+    const r = rig()
+    const onStored = vi.fn()
+    r.handlers.onStoredStress = onStored
+    await r.watch.connect()
+    emit(r, countReply(1))
+    r.watch.disconnect()
+    emit(r, REAL_STRESS)
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(onStored).not.toHaveBeenCalled()
   })
 })
 
