@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
 import { InsightsSection } from './InsightsSection'
 
 const warmupProps = {
@@ -14,9 +14,12 @@ const warmupProps = {
     status: 'warmup' as const,
     warmupRemainingHours: 24,
     points: [],
+    outsideCount: 0,
     residualSd: 0,
   },
   readiness: {
+    status: 'ready' as const,
+    warmupRemainingDays: 0,
     score: 82,
     level: 'good' as const,
     version: 1 as const,
@@ -41,6 +44,8 @@ const warmupProps = {
   },
 }
 
+afterEach(cleanup)
+
 describe('InsightsSection (Phase 3)', () => {
   it('displays the shadow mode label prominently and shows warm-up notices', () => {
     render(<InsightsSection {...warmupProps} />)
@@ -53,7 +58,7 @@ describe('InsightsSection (Phase 3)', () => {
 
     // Warm-up messages for anomaly, forecast, and agreement
     expect(screen.getByText(/Establishing personal baseline: 4 of 14/)).toBeDefined()
-    expect(screen.getByText(/Learning daily circadian rhythm: 24 of 48/)).toBeDefined()
+    expect(screen.getByText(/Learning daily circadian rhythm: 48 of\s+72/)).toBeDefined()
     expect(screen.getByText(/Need at least 3 paired face scans/)).toBeDefined()
 
     // Readiness score is displayed
@@ -91,5 +96,28 @@ describe('InsightsSection (Phase 3)', () => {
     expect(screen.getByText('NOMINAL')).toBeDefined()
     expect(screen.getByText('+1.2 bpm')).toBeDefined()
     expect(screen.getByText(/High agreement/)).toBeDefined()
+  })
+
+  it('shows a readiness warm-up instead of a score when there is not enough data', () => {
+    const props = {
+      ...warmupProps,
+      readiness: {
+        status: 'warmup' as const, warmupRemainingDays: 5, score: null, level: null, version: 1 as const, factors: [],
+        summary: 'Learning your baseline: 2 of 7 good-quality days recorded.',
+      },
+    }
+    render(<InsightsSection {...props} />)
+    expect(screen.getByText(/Learning your baseline: 2 of 7/)).toBeDefined()
+    expect(screen.queryByText('82')).toBeNull()
+    expect(screen.queryByText(/v1 Transparent Baseline/)).toBeNull()
+  })
+
+  it('labels the band with sigma and its 1.96 sigma half-width, and counts unusual hours', () => {
+    const points = Array.from({ length: 24 }, (_, i) => ({
+      ts: i * 3600_000, hour: i, forecast: 70, lower: 62.2, upper: 77.8, actual: i === 5 ? 95 : 70, outside: i === 5,
+    }))
+    render(<InsightsSection {...warmupProps} forecast={{ status: 'ready', warmupRemainingHours: 0, points, outsideCount: 1, residualSd: 4 }} />)
+    expect(screen.getByText(/σ = 4 bpm, ±7.8 bpm/)).toBeDefined()
+    expect(screen.getByText(/1 hour in the last 24 h/)).toBeDefined()
   })
 })

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { liveQuery } from 'dexie'
 import { db } from '../data/db'
-import type { WearableSample } from '../data/types'
 import { Button } from '../ui/Button'
 import {
   deleteWearableData,
@@ -9,10 +8,13 @@ import {
   downloadWearablesJson,
   exportWearablesCsv,
   exportWearablesJson,
-  getCoverageSummary,
-  type DailyCoverage,
+  loadAllWearables,
+  loadWearableSummary,
+  type WearableSummary,
 } from './history'
 import { useWatch } from './store'
+
+const SUMMARY_DEBOUNCE_MS = 2000
 
 /**
  * Connect or disconnect a Bluetooth watch (Haylou Solar 5). Chrome and Edge only; elsewhere it says so and the
@@ -32,23 +34,30 @@ export function WatchControl() {
   const connect = useWatch((s) => s.connect)
   const disconnect = useWatch((s) => s.disconnect)
 
-  const [samples, setSamples] = useState<WearableSample[]>([])
+  const [summary, setSummary] = useState<WearableSummary | null>(null)
 
+  // Watch only the row count; the coverage summary reloads after writes settle, from index keys only
   useEffect(() => {
-    const sub = liveQuery(() => db.wearables.toArray()).subscribe({
-      next: (rows) => setSamples(rows),
-      error: () => setSamples([]),
+    let timer: ReturnType<typeof setTimeout> | null = null
+    let cancelled = false
+    let first = true
+    const sub = liveQuery(() => db.wearables.count()).subscribe({
+      next: () => {
+        if (timer) clearTimeout(timer)
+        timer = setTimeout(() => {
+          void loadWearableSummary(db).then((s) => { if (!cancelled) setSummary(s) }, () => { if (!cancelled) setSummary(null) })
+        }, first ? 0 : SUMMARY_DEBOUNCE_MS)
+        first = false
+      },
+      error: () => setSummary(null),
     })
-    return () => sub.unsubscribe()
+    return () => { cancelled = true; if (timer) clearTimeout(timer); sub.unsubscribe() }
   }, [])
 
   if (status === 'unsupported') {
     return <p className="wc wc-off">Watch link needs Chrome or Edge. Showing the simulated signal.</p>
   }
 
-  const coverage: DailyCoverage[] = getCoverageSummary(samples)
-  const totalDays = coverage.length
-  const totalHours = coverage.reduce((acc, c) => acc + c.hoursWithData, 0)
   const busy = status === 'picking' || status === 'connecting'
 
   return (
@@ -86,17 +95,17 @@ export function WatchControl() {
           <span>Save watch data on this device</span>
         </label>
 
-        {samples.length > 0 && (
+        {summary !== null && summary.total > 0 && (
           <div className="wc-saved-summary">
             <p className="wc-hint">
-              Saved {samples.length} readings across {totalDays} day{totalDays === 1 ? '' : 's'} ({totalHours} active hours).
+              Saved {summary.total} readings; last {summary.windowDays} days: {summary.days} day{summary.days === 1 ? '' : 's'} with data ({summary.hours} active hours).
             </p>
             <div className="wc-actions">
               <Button
                 variant="ghost"
                 size="sm"
                 className="wc-btn"
-                onClick={() => downloadWearablesCsv(exportWearablesCsv(samples))}
+                onClick={() => void loadAllWearables().then((rows) => downloadWearablesCsv(exportWearablesCsv(rows)))}
               >
                 Export CSV
               </Button>
@@ -104,7 +113,7 @@ export function WatchControl() {
                 variant="ghost"
                 size="sm"
                 className="wc-btn"
-                onClick={() => downloadWearablesJson(exportWearablesJson(samples))}
+                onClick={() => void loadAllWearables().then((rows) => downloadWearablesJson(exportWearablesJson(rows)))}
               >
                 Export JSON
               </Button>

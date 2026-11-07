@@ -63,67 +63,65 @@ const FEATURE_KEYS: FeatureKey[] = [
   'wakeups',
 ]
 
+/** Most recent prior good days used as the baseline for scoring a day (a rolling window, so slow drift is followed). */
+export const BASELINE_MAX_DAYS = 60
+
+function featureStats(days: DailyFeatures[]): Record<FeatureKey, FeatureStats> {
+  const stats = {} as Record<FeatureKey, FeatureStats>
+  for (const k of FEATURE_KEYS) {
+    const rawVals: number[] = []
+    for (const d of days) {
+      const v = d[k]
+      if (v !== null && !Number.isNaN(v)) rawVals.push(v)
+    }
+    const med = computeMedian(rawVals)
+    stats[k] = { median: med, mad: computeMad(rawVals, med), values: rawVals }
+  }
+  return stats
+}
+
+/** Robust z-score row (median/MAD of the baseline), missing values imputed with the baseline median. */
+function robustRow(d: DailyFeatures, stats: Record<FeatureKey, FeatureStats>): number[] {
+  return FEATURE_KEYS.map((k) => {
+    const val = d[k]
+    const s = stats[k]
+    const actualVal = val !== null && !Number.isNaN(val) ? val : s.median
+    return (actualVal - s.median) / s.mad
+  })
+}
+
 /**
- * Detect personal anomalies across daily feature vectors.
- * Combines per-feature robust z-scores (median & MAD) with an Isolation Forest.
- * Requires 14 good-quality days before taking the model out of warm-up.
+ * Detect personal anomalies across daily feature vectors, walking forward like the live model does: each day is
+ * scored only against the good days before it (at most BASELINE_MAX_DAYS), with per-feature robust z-scores
+ * (median & MAD) and an Isolation Forest fitted on those prior days. A day is scored once it has at least
+ * WARMUP_GOOD_DAYS good days before it, so later data never leaks into an earlier day's verdict.
  */
 export function detectAnomalies(
   dailyList: DailyFeatures[],
   seed = 42
 ): AnomalyReport {
-  // Only high-quality days (>= 50% coverage) count toward the baseline
-  const goodDays = dailyList.filter((d) => !d.lowQuality)
+  // Only high-quality days (>= 50% coverage) count toward the baseline or get scored
+  const goodDays = [...dailyList].filter((d) => !d.lowQuality).sort((a, b) => a.dayStartMs - b.dayStartMs)
 
-  if (goodDays.length < WARMUP_GOOD_DAYS) {
+  if (goodDays.length <= WARMUP_GOOD_DAYS) {
     return {
       status: 'warmup',
-      warmupRemainingDays: WARMUP_GOOD_DAYS - goodDays.length,
+      warmupRemainingDays: WARMUP_GOOD_DAYS + 1 - goodDays.length,
       totalGoodDays: goodDays.length,
       days: [],
     }
   }
 
-  // 1. Gather distributions across good days
-  const stats: Record<FeatureKey, FeatureStats> = {} as Record<FeatureKey, FeatureStats>
-  for (const k of FEATURE_KEYS) {
-    const rawVals: number[] = []
-    for (const d of goodDays) {
-      const v = d[k]
-      if (v !== null && !Number.isNaN(v)) {
-        rawVals.push(v)
-      }
-    }
-    const med = computeMedian(rawVals)
-    const mad = computeMad(rawVals, med)
-    stats[k] = { median: med, mad, values: rawVals }
-  }
-
-  // 2. Prepare feature matrix for Isolation Forest
-  const X: number[][] = []
-  for (const d of goodDays) {
-    const row: number[] = []
-    for (const k of FEATURE_KEYS) {
-      const val = d[k]
-      const s = stats[k]
-      const actualVal = val !== null && !Number.isNaN(val) ? val : s.median
-      // Standardize with robust z-score so all dimensions are comparable in the tree splits
-      row.push((actualVal - s.median) / s.mad)
-    }
-    X.push(row)
-  }
-
-  // 3. Train Isolation Forest
-  const forest = new IsolationForest(100, seed)
-  forest.fit(X)
-  const forestScores = forest.scores(X)
-
-  // 4. Build results and human-readable factor explanations
   const results: DayAnomalyResult[] = []
 
-  for (let i = 0; i < goodDays.length; i++) {
+  for (let i = WARMUP_GOOD_DAYS; i < goodDays.length; i++) {
     const d = goodDays[i]
-    const isoScore = forestScores[i]
+    const baseline = goodDays.slice(Math.max(0, i - BASELINE_MAX_DAYS), i)
+    const stats = featureStats(baseline)
+
+    const forest = new IsolationForest(100, seed)
+    forest.fit(baseline.map((b) => robustRow(b, stats)))
+    const isoScore = forest.score(robustRow(d, stats), Math.min(256, baseline.length))
     const robustZ: Record<string, number> = {}
     const factors: string[] = []
 
@@ -167,10 +165,11 @@ export function detectAnomalies(
       }
     }
 
-    // A day is flagged if the multi-feature Isolation Forest score is high (>= 0.60)
-    // or if an extreme single feature anomaly (|z| >= 2.5) occurs
-    const hasExtremeZ = Object.values(robustZ).some((z) => Math.abs(z) >= 2.5)
-    const isAnomaly = isoScore >= 0.60 || (hasExtremeZ && isoScore >= 0.52)
+    // A day is flagged if the multi-feature Isolation Forest score is high (>= 0.60), if one feature is extreme
+    // (|z| >= 2.5) and the forest agrees a little (>= 0.52), or if two or more features are extreme. The last rule
+    // matters out-of-sample: when the baseline barely varies the forest has nothing to split and scores every day ~0.5.
+    const extremeCount = Object.values(robustZ).filter((z) => Math.abs(z) >= 2.5).length
+    const isAnomaly = isoScore >= 0.60 || (extremeCount > 0 && isoScore >= 0.52) || extremeCount >= 2
 
     results.push({
       date: d.date,

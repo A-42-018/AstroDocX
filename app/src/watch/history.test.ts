@@ -9,6 +9,7 @@ import {
   exportWearablesJson,
   getCoverageSummary,
   getLastWearableTimestamp,
+  loadWearableSummary,
   getWatchSaveOptIn,
   setWatchSaveOptIn,
   upsertWearables,
@@ -69,7 +70,29 @@ describe('watch history & storage (Phase 0)', () => {
     expect(await getLastWearableTimestamp('stress', testDb)).toBeNull()
   })
 
-  it('computes coverage summary: distinct active hours per UTC day', () => {
+  it('ignores live rows when asked for the stored-history cursor', async () => {
+    await upsertWearables([
+      { kind: 'hr', value: 70, ts: 1_000_000, source: 'haylou-solar5', live: false },
+      { kind: 'hr', value: 72, ts: 5_000_000, source: 'haylou-solar5', live: true },
+    ], testDb)
+    expect(await getLastWearableTimestamp('hr', testDb)).toBe(5_000_000)
+    expect(await getLastWearableTimestamp('hr', testDb, { storedOnly: true })).toBe(1_000_000)
+    await upsertWearables([{ kind: 'spo2', value: 97, ts: 9_000_000, source: 'haylou-solar5', live: true }], testDb)
+    expect(await getLastWearableTimestamp('spo2', testDb, { storedOnly: true })).toBeNull()
+  })
+
+  it('summarises saved rows from the ts index over a bounded window', async () => {
+    const now = Date.UTC(2026, 10, 7, 12)
+    await upsertWearables([
+      { kind: 'hr', value: 70, ts: now - 2 * 3600_000, source: 'haylou-solar5', live: false },
+      { kind: 'hr', value: 71, ts: now - 1 * 3600_000, source: 'haylou-solar5', live: false },
+      { kind: 'hr', value: 72, ts: now - 40 * 86400_000, source: 'haylou-solar5', live: false }, // outside 30 days
+    ], testDb)
+    const s = await loadWearableSummary(testDb, 30, now, 0)
+    expect(s).toEqual({ total: 3, days: 1, hours: 2, windowDays: 30 })
+  })
+
+  it('computes coverage summary: distinct active hours per day (offset 0)', () => {
     // 2026-11-07 10:00, 10:30, 11:15, 12:00 -> 3 distinct hours (10, 11, 12)
     const day = Date.UTC(2026, 10, 7)
     const samples: WearableSample[] = [
@@ -79,12 +102,20 @@ describe('watch history & storage (Phase 0)', () => {
       { id: 4, kind: 'stress', value: 35, ts: day + 12 * 3600_000, source: 'haylou-solar5', live: false },
     ]
 
-    const summary = getCoverageSummary(samples)
+    const summary = getCoverageSummary(samples, 0)
     expect(summary).toHaveLength(1)
     expect(summary[0].date).toBe('2026-11-07')
     expect(summary[0].hoursWithData).toBe(3)
     expect(summary[0].totalSamples).toBe(4)
     expect(summary[0].coveragePct).toBeCloseTo(3 / 24, 2)
+  })
+
+  it('buckets coverage by the local day for a non-zero offset', () => {
+    // 20:00 UTC on Nov 6 is 02:00 on Nov 7 at UTC+6
+    const ts = Date.UTC(2026, 10, 6, 20)
+    const s: WearableSample = { kind: 'hr', value: 70, ts, source: 'haylou-solar5', live: false }
+    expect(getCoverageSummary([s], 0)[0].date).toBe('2026-11-06')
+    expect(getCoverageSummary([s], 360)[0].date).toBe('2026-11-07')
   })
 
   it('exports samples to CSV and JSON', () => {

@@ -1,5 +1,7 @@
+import Dexie from 'dexie'
 import { ConsoleDB, db } from '../data/db'
 import type { Timestamp, WearableKind, WearableSample } from '../data/types'
+import { browserTzOffsetMin, localDay, localHour } from '../ml/localTime'
 import { csvField } from '../sync/exportLog'
 
 export const OPT_IN_STORAGE_KEY = 'astrodocx_watch_save_optin'
@@ -80,13 +82,20 @@ export async function upsertWearables(
   })
 }
 
-/** Get the latest saved timestamp for a given wearable kind, in epoch milliseconds (or null if none). */
+/**
+ * Latest saved timestamp for a wearable kind, in epoch milliseconds (or null if none). Walks the `[kind+ts]` index
+ * from the newest row. With `storedOnly`, live rows are skipped: they carry the host clock at the moment they streamed,
+ * so they must never move the history backfill cursor past stored readings the watch has not sent yet.
+ */
 export async function getLastWearableTimestamp(
   kind: WearableKind,
-  d: ConsoleDB = db
+  d: ConsoleDB = db,
+  opts: { storedOnly?: boolean } = {}
 ): Promise<Timestamp | null> {
-  const rows = await d.wearables.where('kind').equals(kind).sortBy('ts')
-  return rows.length > 0 ? rows[rows.length - 1].ts : null
+  let q = d.wearables.where('[kind+ts]').between([kind, Dexie.minKey], [kind, Dexie.maxKey], true, true).reverse()
+  if (opts.storedOnly) q = q.filter((r) => !r.live)
+  const row = await q.first()
+  return row ? row.ts : null
 }
 
 /** Load all wearable samples sorted chronologically. */
@@ -108,25 +117,25 @@ export interface DailyCoverage {
 }
 
 /**
- * Compute coverage summary: distinct hours with data per UTC day.
+ * Compute coverage summary: distinct local hours with data per local day.
+ * `tzOffsetMin` is minutes east of UTC; it defaults to the browser's offset.
  */
-export function getCoverageSummary(samples: WearableSample[]): DailyCoverage[] {
+export function getCoverageSummary(samples: WearableSample[], tzOffsetMin = browserTzOffsetMin()): DailyCoverage[] {
+  return coverageFromTimestamps(samples.map((s) => s.ts), tzOffsetMin)
+}
+
+/** Coverage from bare timestamps (epoch ms), e.g. the `ts` index keys, without loading whole rows. */
+export function coverageFromTimestamps(timestamps: number[], tzOffsetMin = browserTzOffsetMin()): DailyCoverage[] {
   const days = new Map<string, { dayStartMs: number; hours: Set<number>; count: number }>()
 
-  for (const s of samples) {
-    const d = new Date(s.ts)
-    const yyyy = d.getUTCFullYear()
-    const mm = String(d.getUTCMonth() + 1).padStart(2, '0')
-    const dd = String(d.getUTCDate()).padStart(2, '0')
-    const dateKey = `${yyyy}-${mm}-${dd}`
-    const dayStartMs = Date.UTC(yyyy, d.getUTCMonth(), d.getUTCDate())
-
+  for (const ts of timestamps) {
+    const { date: dateKey, dayStartMs } = localDay(ts, tzOffsetMin)
     let entry = days.get(dateKey)
     if (!entry) {
       entry = { dayStartMs, hours: new Set<number>(), count: 0 }
       days.set(dateKey, entry)
     }
-    entry.hours.add(d.getUTCHours())
+    entry.hours.add(localHour(ts, tzOffsetMin))
     entry.count++
   }
 
@@ -143,6 +152,31 @@ export function getCoverageSummary(samples: WearableSample[]): DailyCoverage[] {
   }
 
   return result.sort((a, b) => a.dayStartMs - b.dayStartMs)
+}
+
+export interface WearableSummary {
+  /** All saved rows on this device. */
+  total: number
+  /** Days with data, and distinct hours with data, within the summary window. */
+  days: number
+  hours: number
+  windowDays: number
+}
+
+/**
+ * Small summary for the watch control: a row count plus coverage over the last `windowDays`, read from the `ts`
+ * index keys only, so it never loads the whole table.
+ */
+export async function loadWearableSummary(
+  d: ConsoleDB = db,
+  windowDays = 30,
+  nowMs = Date.now(),
+  tzOffsetMin = browserTzOffsetMin()
+): Promise<WearableSummary> {
+  const from = nowMs - windowDays * 86400_000
+  const [total, keys] = await Promise.all([d.wearables.count(), d.wearables.where('ts').aboveOrEqual(from).keys()])
+  const coverage = coverageFromTimestamps(keys as number[], tzOffsetMin)
+  return { total, days: coverage.length, hours: coverage.reduce((a, c) => a + c.hoursWithData, 0), windowDays }
 }
 
 const CSV_HEADER = ['id', 'kind', 'value', 'timestamp_ms', 'iso_time', 'source', 'live']

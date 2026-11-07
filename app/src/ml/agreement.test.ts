@@ -42,4 +42,19 @@ describe('scan agreement (Bland-Altman)', () => {
     expect(report.upperLoa).toBeGreaterThan(report.bias!)
     expect(report.interpretation).toContain('High agreement')
   })
+
+  it('pairs each scan with the nearest watch reading inside ±60 s and ignores ones outside it', () => {
+    const t0 = 5_000_000
+    const scans: FaceScan[] = [0, 1, 2].map((k) => ({ id: k, crewId: 'c1', ts: t0 + k * 600_000, hr: 70, hrv: null, resp: null, quality: 0.9, seconds: 28 }))
+    const watch: WearableSample[] = []
+    for (const s of scans) {
+      watch.push({ kind: 'hr', value: 99, ts: s.ts - 59_000, source: 'haylou-solar5', live: true })   // in window, farther
+      watch.push({ kind: 'hr', value: 72, ts: s.ts + 5_000, source: 'haylou-solar5', live: true })    // nearest
+      watch.push({ kind: 'hr', value: 50, ts: s.ts + 61_000, source: 'haylou-solar5', live: true })   // outside
+    }
+    watch.reverse() // input order must not matter
+    const report = evaluateScanAgreement(scans, watch)
+    expect(report.pairCount).toBe(3)
+    expect(report.pairs.map((p) => p.watchHr)).toEqual([72, 72, 72])
+  })
 })

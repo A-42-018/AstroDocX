@@ -1,9 +1,16 @@
 import type { WearableSample } from '../data/types'
 import { SLEEP_STATE, summarizeSleep, type SleepPoint } from '../watch/frames'
+import { browserTzOffsetMin, localDay, localHour, localHourStart, sleepDay } from './localTime'
+
+/** Options shared by the feature extractors. */
+export interface FeatureOptions {
+  /** Wearer's offset in minutes east of UTC; days, hours and the night window use local time. Default: the browser's. */
+  tzOffsetMin?: number
+}
 
 export interface HourlyFeatures {
-  ts: number // epoch ms at start of UTC hour
-  hour: number // 0-23
+  ts: number // epoch ms at the start of the local hour
+  hour: number // local hour of day, 0-23
   hrMean: number | null
   hrCount: number
   spo2Mean: number | null
@@ -20,7 +27,7 @@ export interface DailyFeatures {
   hrSd: number | null
   hrMin: number | null
   hrMax: number | null
-  restingHr: number | null // 10th percentile of night-time HR (00:00 - 06:00 UTC)
+  restingHr: number | null // 10th percentile of night-time HR (00:00 - 06:00 local)
   spo2Mean: number | null
   spo2Min: number | null
   spo2Below94Count: number
@@ -51,11 +58,12 @@ function stdDev(nums: number[], avg: number): number | null {
 /**
  * Group raw wearable samples into hourly feature vectors.
  */
-export function extractHourlyFeatures(samples: WearableSample[]): HourlyFeatures[] {
+export function extractHourlyFeatures(samples: WearableSample[], opts: FeatureOptions = {}): HourlyFeatures[] {
+  const tz = opts.tzOffsetMin ?? browserTzOffsetMin()
   const hoursMap = new Map<number, { hr: number[]; spo2: number[]; stress: number[] }>()
 
   for (const s of samples) {
-    const hourStartMs = Math.floor(s.ts / 3600_000) * 3600_000
+    const hourStartMs = localHourStart(s.ts, tz)
     let bucket = hoursMap.get(hourStartMs)
     if (!bucket) {
       bucket = { hr: [], spo2: [], stress: [] }
@@ -74,7 +82,7 @@ export function extractHourlyFeatures(samples: WearableSample[]): HourlyFeatures
     const hrM = mean(b.hr)
     const spo2M = mean(b.spo2)
     const stressM = mean(b.stress)
-    const hour = new Date(ts).getUTCHours()
+    const hour = localHour(ts, tz)
 
     result.push({
       ts,
@@ -91,10 +99,12 @@ export function extractHourlyFeatures(samples: WearableSample[]): HourlyFeatures
 
 /**
  * Extract daily feature vectors from raw wearable rows.
- * Computes coverage, HR distribution, resting HR (10th percentile of 00:00-06:00 UTC),
+ * Computes coverage, HR distribution, resting HR (10th percentile of 00:00-06:00 local time),
  * SpO2 stats, stress stats, and sleep metrics. Days with <50% coverage are flagged lowQuality.
+ * Sleep points go to the local day the wearer wakes up on, so a night is never split at midnight.
  */
-export function extractDailyFeatures(samples: WearableSample[]): DailyFeatures[] {
+export function extractDailyFeatures(samples: WearableSample[], opts: FeatureOptions = {}): DailyFeatures[] {
+  const tz = opts.tzOffsetMin ?? browserTzOffsetMin()
   interface DayBucket {
     dayStartMs: number
     date: string
@@ -108,30 +118,18 @@ export function extractDailyFeatures(samples: WearableSample[]): DailyFeatures[]
 
   const daysMap = new Map<string, DayBucket>()
 
-  for (const s of samples) {
-    const d = new Date(s.ts)
-    const yyyy = d.getUTCFullYear()
-    const mm = String(d.getUTCMonth() + 1).padStart(2, '0')
-    const dd = String(d.getUTCDate()).padStart(2, '0')
-    const dateKey = `${yyyy}-${mm}-${dd}`
-    const dayStartMs = Date.UTC(yyyy, d.getUTCMonth(), d.getUTCDate())
-
-    let bucket = daysMap.get(dateKey)
+  const bucketFor = ({ date, dayStartMs }: { date: string; dayStartMs: number }): DayBucket => {
+    let bucket = daysMap.get(date)
     if (!bucket) {
-      bucket = {
-        dayStartMs,
-        date: dateKey,
-        hours: new Set<number>(),
-        hr: [],
-        nightHr: [],
-        spo2: [],
-        stress: [],
-        sleepPoints: [],
-      }
-      daysMap.set(dateKey, bucket)
+      bucket = { dayStartMs, date, hours: new Set<number>(), hr: [], nightHr: [], spo2: [], stress: [], sleepPoints: [] }
+      daysMap.set(date, bucket)
     }
+    return bucket
+  }
 
-    const hour = d.getUTCHours()
+  for (const s of samples) {
+    const hour = localHour(s.ts, tz)
+    const bucket = bucketFor(localDay(s.ts, tz))
     bucket.hours.add(hour)
 
     if (s.kind === 'hr' && s.value > 0) {
@@ -144,7 +142,7 @@ export function extractDailyFeatures(samples: WearableSample[]): DailyFeatures[]
     } else if (s.kind === 'stress' && s.value >= 0) {
       bucket.stress.push(s.value)
     } else if (s.kind === 'sleep') {
-      bucket.sleepPoints.push({ t: Math.floor(s.ts / 1000), state: s.value })
+      bucketFor(sleepDay(s.ts, tz)).sleepPoints.push({ t: Math.floor(s.ts / 1000), state: s.value })
     }
   }
 
@@ -204,6 +202,7 @@ export function extractDailyFeatures(samples: WearableSample[]): DailyFeatures[]
     let wakeups: number | null = null
 
     if (b.sleepPoints.length > 0) {
+      b.sleepPoints.sort((x, y) => x.t - y.t)
       const sessions = summarizeSleep(b.sleepPoints)
       if (sessions.length > 0) {
         const totalAsleepSec = sessions.reduce((acc, s) => acc + s.asleep, 0)

@@ -33,7 +33,7 @@ describe('anomaly detection', () => {
     expect(mad).toBeGreaterThan(0)
   })
 
-  it('stays in warm-up until 14 good-quality days exist', () => {
+  it('stays in warm-up until a day has 14 good-quality days before it', () => {
     const days: DailyFeatures[] = []
     const start = Date.UTC(2026, 0, 1)
     for (let i = 0; i < 10; i++) {
@@ -42,8 +42,12 @@ describe('anomaly detection', () => {
 
     const report: AnomalyReport = detectAnomalies(days)
     expect(report.status).toBe('warmup')
-    expect(report.warmupRemainingDays).toBe(4)
+    expect(report.warmupRemainingDays).toBe(5) // 14 baseline days + the first scored day
     expect(report.days).toHaveLength(0)
+
+    const fourteen = detectAnomalies([...days, ...[10, 11, 12, 13].map((i) => mockDay(`2026-01-${i + 1}`, start + i * 86400_000))])
+    expect(fourteen.status).toBe('warmup')
+    expect(fourteen.warmupRemainingDays).toBe(1)
   })
 
   it('detects an injected anomaly day with elevated resting HR and low SpO2 after warm-up', () => {
@@ -63,11 +67,21 @@ describe('anomaly detection', () => {
 
     const report = detectAnomalies(days)
     expect(report.status).toBe('ready')
-    expect(report.days).toHaveLength(20)
+    // walk-forward: only days with 14 good days before them are scored
+    expect(report.days.map((d) => d.date)).toEqual(['2026-01-15', '2026-01-16', '2026-01-17', '2026-01-18', '2026-01-19', '2026-01-20'])
 
-    const anomalousDay = report.days[14]
+    const anomalousDay = report.days.find((d) => d.date === '2026-01-15')!
     expect(anomalousDay.isAnomaly).toBe(true)
     expect(anomalousDay.contributingFactors.some((f) => f.includes('Resting HR'))).toBe(true)
     expect(anomalousDay.contributingFactors.some((f) => f.includes('SpO₂'))).toBe(true)
+  })
+
+  it('never lets a later day change an earlier verdict', () => {
+    const start = Date.UTC(2026, 0, 1)
+    const days = Array.from({ length: 20 }, (_, i) => mockDay(`2026-01-${String(i + 1).padStart(2, '0')}`, start + i * 86400_000, { restingHr: 57 + (i % 3) }))
+    const before = detectAnomalies(days.slice(0, 16)).days
+    // a wild later day must not move the scores of days already scored
+    const after = detectAnomalies([...days.slice(0, 16), mockDay('2026-01-17', start + 16 * 86400_000, { restingHr: 95, sleepHours: 2 })]).days
+    expect(after.slice(0, before.length)).toEqual(before)
   })
 })

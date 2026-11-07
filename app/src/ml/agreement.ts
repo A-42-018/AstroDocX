@@ -22,6 +22,18 @@ export interface AgreementReport {
 
 const MAX_PAIR_TIME_DIFF_MS = 60_000
 
+/** First index in `sorted` (ascending by ts) whose ts is >= `ts`. */
+function lowerBound(sorted: WearableSample[], ts: number): number {
+  let lo = 0
+  let hi = sorted.length
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1
+    if (sorted[mid].ts < ts) lo = mid + 1
+    else hi = mid
+  }
+  return lo
+}
+
 /**
  * Perform Bland-Altman agreement analysis between experimental webcam face scans (rPPG)
  * and Haylou watch heart rate readings taken within +-60 seconds of each other.
@@ -39,13 +51,14 @@ export function evaluateScanAgreement(
   for (const s of scans) {
     if (s.hr < 30 || s.hr > 220 || s.quality < 0.4) continue
 
-    // Find nearest watch HR sample within 60 seconds
+    // Nearest watch HR sample within 60 seconds: binary search to the window start, then walk the window only
     let bestMatch: WearableSample | null = null
     let bestDist = Infinity
-
-    for (const w of watchHrSamples) {
+    for (let i = lowerBound(watchHrSamples, s.ts - MAX_PAIR_TIME_DIFF_MS); i < watchHrSamples.length; i++) {
+      const w = watchHrSamples[i]
+      if (w.ts > s.ts + MAX_PAIR_TIME_DIFF_MS) break
       const dist = Math.abs(w.ts - s.ts)
-      if (dist <= MAX_PAIR_TIME_DIFF_MS && dist < bestDist) {
+      if (dist < bestDist) {
         bestDist = dist
         bestMatch = w
       }

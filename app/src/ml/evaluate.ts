@@ -152,15 +152,20 @@ export function generateSyntheticWearerData(
 
 /**
  * Run evaluation of on-device ML models against ground-truth synthetic wearer telemetry.
- * Computes precision, recall, and false alarms per week for the anomaly model,
- * and MAE for the 24-hour Holt-Winters forecast.
+ * Computes precision, recall, and false alarms per week for the anomaly model, and MAE for the 24-hour
+ * Holt-Winters forecast. Both are out-of-sample: the anomaly model scores each day against only the days before it
+ * (walk-forward, as it runs live), and the forecast is checked on 24 hours it was not fitted on.
+ * The synthetic data is generated in UTC, so features are extracted with offset 0.
  */
 export function runWearableMlEvaluation(seed = 42): EvaluationSummary {
   const { samples, anomalyDayIndices, totalDays } = generateSyntheticWearerData(60, seed)
 
   // 1. Evaluate Anomaly Model
-  const dailyFeatures = extractDailyFeatures(samples)
+  const dailyFeatures = extractDailyFeatures(samples, { tzOffsetMin: 0 })
   const anomalyReport = detectAnomalies(dailyFeatures, seed)
+  const resultByDate = new Map(anomalyReport.days.map((r) => [r.date, r]))
+  const startMs = samples.reduce((m, x) => Math.min(m, x.ts), Infinity)
+  const dateOfDay = (d: number) => new Date(startMs + d * 86400_000).toISOString().slice(0, 10)
 
   let tp = 0
   let fp = 0
@@ -171,7 +176,7 @@ export function runWearableMlEvaluation(seed = 42): EvaluationSummary {
 
   for (let d = 14; d < totalDays; d++) {
     const isGroundTruthAnomaly = anomalyDayIndices.has(d)
-    const dayResult = anomalyReport.days[d]
+    const dayResult = resultByDate.get(dateOfDay(d))
     const modelFlagged = dayResult ? dayResult.isAnomaly : false
 
     postWarmupDays++
@@ -188,21 +193,17 @@ export function runWearableMlEvaluation(seed = 42): EvaluationSummary {
   const falseAlarmsPerWeek = normalPostWarmupDays > 0 ? (fp / normalPostWarmupDays) * 7 : 0
 
   // 2. Evaluate 24-Hour Forecast Model
-  // Use first 30 normal days of hourly data for training, and evaluate on held-out next 24 hours
-  const allHourly = extractHourlyFeatures(samples)
+  // Fit on the first 30 normal days of hourly data and check the band on the held-out next 24 hours
+  const allHourly = extractHourlyFeatures(samples, { tzOffsetMin: 0 })
   const splitHour = 30 * 24 // 720 hours
   const trainHourly = allHourly.slice(0, splitHour)
-  const testHourly = allHourly.slice(splitHour, splitHour + 24)
-
-  const forecastResult = forecastHeartRateBand(trainHourly)
+  const forecastResult = forecastHeartRateBand(allHourly.slice(0, splitHour + 24), { tzOffsetMin: 0 })
 
   let absErrorSum = 0
   let count = 0
-  for (let i = 0; i < testHourly.length && i < forecastResult.points.length; i++) {
-    const pred = forecastResult.points[i].forecast
-    const actual = testHourly[i].hrMean
-    if (actual !== null) {
-      absErrorSum += Math.abs(pred - actual)
+  for (const p of forecastResult.points) {
+    if (p.actual !== null) {
+      absErrorSum += Math.abs(p.forecast - p.actual)
       count++
     }
   }

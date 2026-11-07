@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import type { CheckIn } from '../data/types'
 import type { DailyFeatures } from './features'
-import { computeReadiness, solveLinearSystem } from './readiness'
+import { READINESS_WARMUP_GOOD_DAYS, computeReadiness, pickReadinessDay, solveLinearSystem } from './readiness'
+
+const DAY = 86400_000
+const dateOf = (ms: number) => new Date(ms).toISOString().slice(0, 10)
 
 function mockDay(over: Partial<DailyFeatures> = {}): DailyFeatures {
+  const dayStartMs = over.dayStartMs ?? Date.UTC(2026, 10, 7)
   return {
-    date: '2026-11-07',
-    dayStartMs: Date.UTC(2026, 10, 7),
+    date: dateOf(dayStartMs),
+    dayStartMs,
     coverageHours: 22,
     coveragePct: 22 / 24,
     lowQuality: false,
@@ -25,7 +29,36 @@ function mockDay(over: Partial<DailyFeatures> = {}): DailyFeatures {
   }
 }
 
+/** A week of normal good days before 2026-11-07. */
+const week = () => Array.from({ length: READINESS_WARMUP_GOOD_DAYS }, (_, i) => mockDay({ dayStartMs: Date.UTC(2026, 10, 7) - (i + 1) * DAY }))
+
 describe('readiness model', () => {
+  it('stays in warm-up with no score when there is no day to score or too little history', () => {
+    const none = computeReadiness(null, week(), [], { tzOffsetMin: 0 })
+    expect(none.status).toBe('warmup')
+    expect(none.score).toBeNull()
+    expect(none.factors).toHaveLength(0)
+
+    const short = computeReadiness(mockDay(), week().slice(0, 3), [], { tzOffsetMin: 0 })
+    expect(short.status).toBe('warmup')
+    expect(short.warmupRemainingDays).toBe(READINESS_WARMUP_GOOD_DAYS - 3)
+    expect(short.score).toBeNull()
+
+    // the scored day does not count toward its own baseline
+    const selfOnly = computeReadiness(mockDay(), [...week().slice(0, 6), mockDay()], [], { tzOffsetMin: 0 })
+    expect(selfOnly.status).toBe('warmup')
+  })
+
+  it('picks the most recent scoreable day, never a future or stale one', () => {
+    const now = Date.UTC(2026, 10, 7, 9)
+    const yesterday = mockDay({ dayStartMs: Date.UTC(2026, 10, 6) })
+    const todayEmpty = mockDay({ dayStartMs: Date.UTC(2026, 10, 7), restingHr: null, sleepHours: null })
+    const tomorrow = mockDay({ dayStartMs: Date.UTC(2026, 10, 8) }) // tonight's sleep bucket
+    expect(pickReadinessDay([yesterday, todayEmpty, tomorrow], now, 0)?.date).toBe('2026-11-06')
+    expect(pickReadinessDay([mockDay({ dayStartMs: Date.UTC(2026, 10, 1) })], now, 0)).toBeNull()
+    expect(pickReadinessDay([], now, 0)).toBeNull()
+  })
+
   it('solves linear systems correctly', () => {
     // 2x + y = 5
     // x + 3y = 5 -> x = 2, y = 1
@@ -38,9 +71,9 @@ describe('readiness model', () => {
 
   it('computes transparent Version 1 readiness score', () => {
     const today = mockDay()
-    const history = [mockDay(), mockDay(), mockDay()]
-    const result = computeReadiness(today, history)
+    const result = computeReadiness(today, week(), [], { tzOffsetMin: 0 })
 
+    expect(result.status).toBe('ready')
     expect(result.version).toBe(1)
     expect(result.score).toBeGreaterThan(85)
     expect(result.level).toBe('optimal')
@@ -55,8 +88,7 @@ describe('readiness model', () => {
       stressMean: 55,
       spo2Below94Count: 2,
     })
-    const history = [mockDay(), mockDay(), mockDay()]
-    const result = computeReadiness(today, history)
+    const result = computeReadiness(today, week(), [], { tzOffsetMin: 0 })
 
     expect(result.score).toBeLessThan(60)
     expect(['reduced', 'low']).toContain(result.level)
@@ -68,7 +100,7 @@ describe('readiness model', () => {
     const start = Date.UTC(2026, 0, 1)
 
     for (let i = 0; i < 25; i++) {
-      const ts = start + i * 86400_000
+      const ts = start + i * DAY
       const d = mockDay({ dayStartMs: ts, restingHr: 58 + (i % 5), sleepHours: 7 + (i % 3) })
       history.push(d)
       checkIns.push({
@@ -80,11 +112,24 @@ describe('readiness model', () => {
       })
     }
 
-    const today = mockDay({ dayStartMs: start + 25 * 86400_000 })
-    const result = computeReadiness(today, history, checkIns)
+    const today = mockDay({ dayStartMs: start + 25 * DAY })
+    const result = computeReadiness(today, history, checkIns, { tzOffsetMin: 0 })
 
+    // each check-in pairs with the day before it, so the first one (no previous day) is left out
     expect(result.version).toBe(2)
     expect(result.learnedWeights).toBeDefined()
-    expect(result.summary).toContain('calibrated against 25 check-in reports')
+    expect(result.summary).toContain('calibrated against 24 check-ins')
+  })
+
+  it('pairs a check-in with the previous day, not the same day', () => {
+    const start = Date.UTC(2026, 0, 1)
+    const history = Array.from({ length: 25 }, (_, i) => mockDay({ dayStartMs: start + i * DAY }))
+    // only same-day features exist for these check-ins: day i-1 is low quality, so nothing pairs
+    const sparse = history.map((d, i) => (i % 2 === 0 ? d : { ...d, lowQuality: true }))
+    const checkIns: CheckIn[] = sparse
+      .filter((d) => !d.lowQuality)
+      .map((d) => ({ crewId: 'cmdr', ts: d.dayStartMs + 12 * 3600_000, mood: 4, sleepQuality: 4, symptoms: [] }))
+    const result = computeReadiness(mockDay({ dayStartMs: start + 30 * DAY }), sparse, checkIns, { tzOffsetMin: 0 })
+    expect(result.version).toBe(1)
   })
 })

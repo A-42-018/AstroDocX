@@ -19,10 +19,10 @@ describe('ml/evaluate', () => {
   it('runs on-device ML evaluation and achieves high precision, recall, and low false alarms', () => {
     const evalResult = runWearableMlEvaluation(42)
 
-    // Verification targets:
+    // Verification targets (walk-forward, out-of-sample):
     // Precision >= 0.80, Recall >= 0.85, False alarms / week <= 1.0
     // Forecast MAE <= 3.5 bpm
-    expect(evalResult.anomaly.totalPostWarmupDays).toBe(46) // 60 - 14 warm-up days
+    expect(evalResult.anomaly.totalPostWarmupDays).toBe(46) // 60 - 14 baseline days
     expect(evalResult.anomaly.truePositives).toBe(8)
     expect(evalResult.anomaly.falsePositives).toBe(1)
     expect(evalResult.anomaly.falseNegatives).toBe(1)
@@ -35,6 +35,17 @@ describe('ml/evaluate', () => {
     expect(evalResult.forecast.testHours).toBe(24)
     expect(evalResult.forecast.mae).toBeLessThan(3.0)
     expect(evalResult.forecast.mae).toBeCloseTo(2.66, 1)
+  })
+
+  it('holds the targets on a second seed', () => {
+    const r = runWearableMlEvaluation(12345)
+    expect(r.anomaly.truePositives).toBe(9)
+    expect(r.anomaly.falsePositives).toBe(2)
+    expect(r.anomaly.falseNegatives).toBe(0)
+    expect(r.anomaly.precision).toBeCloseTo(0.818, 2)
+    expect(r.anomaly.recall).toBe(1)
+    expect(r.anomaly.falseAlarmsPerWeek).toBeLessThanOrEqual(1.0)
+    expect(r.forecast.mae).toBeCloseTo(2.7, 1)
   })
 
   it('is deterministic across identical seeds', () => {

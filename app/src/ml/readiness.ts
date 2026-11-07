@@ -1,5 +1,11 @@
 import type { CheckIn } from '../data/types'
 import type { DailyFeatures } from './features'
+import { browserTzOffsetMin, localDay } from './localTime'
+
+/** Good-quality days of history (besides the scored day) needed before a readiness score is shown. */
+export const READINESS_WARMUP_GOOD_DAYS = 7
+/** Check-ins paired with the previous day's features needed before the personal (v2) model takes over. */
+export const READINESS_V2_MIN_PAIRS = 20
 
 export interface ReadinessFactor {
   id: 'restingHr' | 'sleep' | 'spo2' | 'stress'
@@ -12,8 +18,12 @@ export interface ReadinessFactor {
 }
 
 export interface ReadinessResult {
-  score: number // 0-100
-  level: 'optimal' | 'good' | 'reduced' | 'low'
+  /** 'warmup' until there is a scoreable day and enough good history; no score is shown then. */
+  status: 'warmup' | 'ready'
+  /** Good days of history still needed (0 when ready). */
+  warmupRemainingDays: number
+  score: number | null // 0-100, null in warm-up
+  level: 'optimal' | 'good' | 'reduced' | 'low' | null
   version: 1 | 2
   factors: ReadinessFactor[]
   learnedWeights?: Record<string, number>
@@ -61,16 +71,37 @@ export function solveLinearSystem(A: number[][], b: number[]): number[] {
 }
 
 /**
- * Compute personal daily readiness score.
+ * Compute personal daily readiness score for `today` (null when there is no scoreable day).
  * Version 1: Transparent clinical weighting (sleep 35%, resting HR 25%, SpO2 20%, stress 20%).
- * Version 2: Trained on device via ridge regression once >= 20 check-ins are recorded.
+ * Version 2: Trained on device via ridge regression once >= 20 check-ins can be paired with the previous day's
+ * features, so the model learns what a day's data says about the next check-in (no same-day leakage).
+ * `checkIns` must be the wearer's own.
  */
 export function computeReadiness(
-  today: DailyFeatures,
+  today: DailyFeatures | null,
   history: DailyFeatures[],
-  checkIns: CheckIn[] = []
+  checkIns: CheckIn[] = [],
+  opts: { tzOffsetMin?: number } = {}
 ): ReadinessResult {
-  const goodHistory = history.filter((d) => !d.lowQuality)
+  const tz = opts.tzOffsetMin ?? browserTzOffsetMin()
+  // The baseline is the wearer's other good days; the scored day never sets its own baseline
+  const goodHistory = history.filter((d) => !d.lowQuality && d.date !== today?.date)
+  const scoreable = today !== null && (today.restingHr !== null || today.sleepHours !== null)
+
+  if (today === null || !scoreable || goodHistory.length < READINESS_WARMUP_GOOD_DAYS) {
+    const remaining = Math.max(0, READINESS_WARMUP_GOOD_DAYS - goodHistory.length)
+    return {
+      status: 'warmup',
+      warmupRemainingDays: remaining,
+      score: null,
+      level: null,
+      version: 1,
+      factors: [],
+      summary: !scoreable
+        ? 'No recent day with resting heart rate or sleep data to score yet.'
+        : `Learning your baseline: ${goodHistory.length} of ${READINESS_WARMUP_GOOD_DAYS} good-quality days recorded.`,
+    }
+  }
 
   // Medians for baseline comparison
   const medianRestingHr = medianOf(goodHistory.map((d) => d.restingHr).filter((x): x is number => x !== null)) ?? 65
@@ -78,12 +109,12 @@ export function computeReadiness(
   const medianStress = medianOf(goodHistory.map((d) => d.stressMean).filter((x): x is number => x !== null)) ?? 30
   const medianSpo2 = medianOf(goodHistory.map((d) => d.spo2Mean).filter((x): x is number => x !== null)) ?? 98
 
-  // Check if Version 2 (>= 20 check-ins) is eligible
+  // Version 2: pair each check-in with the features of the local day before it
+  const byDate = new Map(history.filter((d) => !d.lowQuality).map((d) => [d.date, d]))
   const pairedData: { x: number[]; y: number }[] = []
   for (const c of checkIns) {
-    // Find daily features preceding or on the day of this check-in
-    const cDayStart = Math.floor(c.ts / 86400_000) * 86400_000
-    const matched = goodHistory.find((d) => Math.abs(d.dayStartMs - cDayStart) < 86400_000)
+    const prevDate = localDay(localDay(c.ts, tz).dayStartMs - 1, tz).date
+    const matched = byDate.get(prevDate)
     if (matched && matched.restingHr !== null && matched.sleepHours !== null && matched.stressMean !== null && matched.spo2Mean !== null) {
       const y = ((c.mood + c.sleepQuality) / 10) * 100 // composite self-report 20-100
       pairedData.push({
@@ -99,7 +130,7 @@ export function computeReadiness(
     }
   }
 
-  if (pairedData.length >= 20) {
+  if (pairedData.length >= READINESS_V2_MIN_PAIRS) {
     // Train Ridge Regression: (X^T X + lambda * I) w = X^T y
     const d = 5
     const lambda = 1.0
@@ -147,12 +178,14 @@ export function computeReadiness(
     }
 
     return {
+      status: 'ready',
+      warmupRemainingDays: 0,
       score: finalScore,
       level: scoreLevel(finalScore),
       version: 2,
       factors: buildVersion1Factors(today, medianRestingHr, medianSleep, medianStress),
       learnedWeights,
-      summary: `Personalized readiness score (${finalScore}/100) calibrated against ${pairedData.length} check-in reports.`,
+      summary: `Personalized readiness score (${finalScore}/100) calibrated against ${pairedData.length} check-ins, each paired with the day before it.`,
     }
   }
 
@@ -164,6 +197,8 @@ export function computeReadiness(
   )
 
   return {
+    status: 'ready',
+    warmupRemainingDays: 0,
     score: totalScore,
     level: scoreLevel(totalScore),
     version: 1,
@@ -247,7 +282,9 @@ function buildVersion1Factors(
       explanation:
         today.spo2Below94Count > 0
           ? `${today.spo2Below94Count} dips below 94% recorded`
-          : 'Overnight oxygen saturation stable',
+          : today.spo2Mean !== null
+            ? 'Overnight oxygen saturation stable'
+            : 'No SpO₂ readings; default applied',
     },
     {
       id: 'stress',
@@ -262,6 +299,23 @@ function buildVersion1Factors(
           : 'Autonomic nervous system in recovery state',
     },
   ]
+}
+
+/**
+ * The day readiness should score: the most recent local day up to `nowMs` (never a future wake-up bucket) that has
+ * resting HR or sleep data, and is no more than a day old. Null when there is none, so the card stays in warm-up
+ * instead of scoring defaults.
+ */
+export function pickReadinessDay(daily: DailyFeatures[], nowMs: number, tzOffsetMin = browserTzOffsetMin()): DailyFeatures | null {
+  const todayKey = localDay(nowMs, tzOffsetMin).date
+  const yesterdayKey = localDay(localDay(nowMs, tzOffsetMin).dayStartMs - 1, tzOffsetMin).date
+  for (let i = daily.length - 1; i >= 0; i--) {
+    const d = daily[i]
+    if (d.date > todayKey) continue
+    if (d.date < yesterdayKey) return null
+    if (d.restingHr !== null || d.sleepHours !== null) return d
+  }
+  return null
 }
 
 function scoreLevel(score: number): 'optimal' | 'good' | 'reduced' | 'low' {

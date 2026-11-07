@@ -188,6 +188,40 @@ describe('watch store', () => {
     }
   })
 
+  it('keeps the HR backfill cursor on stored rows when a live HR row was saved first', async () => {
+    vi.useRealTimers()
+    try {
+      const testDb = new ConsoleDB('test-store-cursor')
+      await resetDb(testDb)
+      const clock = NOW
+      let handlers!: WatchHandlers
+      const link = { connect: vi.fn(async (picked?: () => void) => { picked?.(); return 'HAYLOU Solar 5' }), disconnect: vi.fn() }
+      const store = createWatchStore({
+        makeLink: (h) => { handlers = h; return link },
+        now: () => clock,
+        supported: () => true,
+        db: testDb,
+      })
+      store.getState().setSaveOptIn(true)
+      await store.getState().connect()
+
+      // first connect: nothing stored yet, a live HR streams in before the HR history unit runs
+      handlers.onSample({ kind: 'hr', value: 72 })
+      await new Promise((r) => setTimeout(r, 20))
+      expect(await testDb.wearables.count()).toBe(1)
+      // the history reader must still fall back to its default window, not start at the live row
+      expect(await handlers.getHistoryStart!('hr')).toBeNull()
+
+      // once stored history exists, the cursor is the newest stored point, not the newer live row
+      const t = Math.floor(NOW / 1000) - 3600
+      handlers.onHistoryPoints!('hr', [{ t, value: 66 }])
+      await new Promise((r) => setTimeout(r, 20))
+      expect(await handlers.getHistoryStart!('hr')).toBe(t)
+    } finally {
+      vi.useFakeTimers()
+    }
+  })
+
   it('does not save data when opt-in is disabled', async () => {
     vi.useRealTimers()
     try {

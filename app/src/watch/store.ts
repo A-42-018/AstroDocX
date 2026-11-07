@@ -110,7 +110,8 @@ export function createWatchStore(deps: Deps = { makeLink: (h) => new HaylouWatch
             }
           },
           getHistoryStart: async (kind: WearableKind) => {
-            const lastMs = await getLastWearableTimestamp(kind, deps.db ?? db)
+            // stored rows only: a live row is stamped with the host clock and would skip unread history
+            const lastMs = await getLastWearableTimestamp(kind, deps.db ?? db, { storedOnly: true })
             return lastMs ? Math.floor(lastMs / 1000) : null
           },
           onDisconnect: () => {

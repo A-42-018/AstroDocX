@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Area, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { AgreementReport } from '../ml/agreement'
-import type { AnomalyReport } from '../ml/anomaly'
-import type { ForecastResult } from '../ml/forecast'
-import type { ReadinessResult } from '../ml/readiness'
+import { WARMUP_GOOD_DAYS, type AnomalyReport } from '../ml/anomaly'
+import { FORECAST_WARMUP_HOURS, type ForecastResult } from '../ml/forecast'
+import { READINESS_WARMUP_GOOD_DAYS, type ReadinessResult } from '../ml/readiness'
 import { HudPanel } from '../ui/HudPanel'
 
 interface Props {
@@ -50,31 +50,46 @@ export function InsightsSection({ anomaly, forecast, readiness, agreement }: Pro
         <HudPanel className="ins-card ins-readiness" title="Daily Readiness Score">
           <div className="ins-card-inner">
             <span className="ins-card-badge">Shadow mode</span>
-            <div className="ins-score-banner">
-              <div className="ins-score-num">{readiness.score}</div>
-              <div className="ins-score-meta">
-                <span className={`ins-level-tag lvl-${readiness.level}`}>{readiness.level}</span>
-                <span className="ins-version-tag">
-                  {readiness.version === 2 ? 'v2 Personal Ridge Model' : 'v1 Transparent Baseline'}
-                </span>
-              </div>
-            </div>
-            <p className="ins-summary-text">{readiness.summary}</p>
-
-            <div className="ins-factors-list">
-              {readiness.factors.map((f) => (
-                <div key={f.id} className="ins-factor-row">
-                  <span className="ins-factor-label">{f.label}</span>
-                  <span className="ins-factor-val">{f.value}</span>
-                  <span className="ins-factor-sub">{f.explanation}</span>
+            {readiness.status === 'warmup' || readiness.score === null ? (
+              <div className="ins-warmup-box" role="status">
+                <span className="ins-warmup-icon" aria-hidden="true">⏱</span>
+                <div>
+                  <strong>Model Warm-Up in Progress</strong>
+                  <p>
+                    {readiness.summary} A score shows once there are {READINESS_WARMUP_GOOD_DAYS} good-quality days and a
+                    recent day with resting heart rate or sleep.
+                  </p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <>
+                <div className="ins-score-banner">
+                  <div className="ins-score-num">{readiness.score}</div>
+                  <div className="ins-score-meta">
+                    <span className={`ins-level-tag lvl-${readiness.level}`}>{readiness.level}</span>
+                    <span className="ins-version-tag">
+                      {readiness.version === 2 ? 'v2 Personal Ridge Model' : 'v1 Transparent Baseline'}
+                    </span>
+                  </div>
+                </div>
+                <p className="ins-summary-text">{readiness.summary}</p>
+
+                <div className="ins-factors-list">
+                  {readiness.factors.map((f) => (
+                    <div key={f.id} className="ins-factor-row">
+                      <span className="ins-factor-label">{f.label}</span>
+                      <span className="ins-factor-val">{f.value}</span>
+                      <span className="ins-factor-sub">{f.explanation}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </HudPanel>
 
         {/* Card 2: Expected Heart-Rate Band */}
-        <HudPanel className="ins-card ins-forecast" title="Expected Heart-Rate Band (Next 24h)">
+        <HudPanel className="ins-card ins-forecast" title="Expected Heart-Rate Band (Last 24h)">
           <div className="ins-card-inner">
             <span className="ins-card-badge">Shadow mode</span>
             {forecast.status === 'warmup' ? (
@@ -83,16 +98,21 @@ export function InsightsSection({ anomaly, forecast, readiness, agreement }: Pro
                 <div>
                   <strong>Model Warm-Up in Progress</strong>
                   <p>
-                    Learning daily circadian rhythm: {48 - forecast.warmupRemainingHours} of 48 hours recorded.
-                    Expected band will display once 48 hours of hourly HR history are complete.
+                    Learning daily circadian rhythm: {FORECAST_WARMUP_HOURS - forecast.warmupRemainingHours} of{' '}
+                    {FORECAST_WARMUP_HOURS} hours recorded. The band shows once there are 48 hours to learn from plus the
+                    24 hours it is checked against.
                   </p>
                 </div>
               </div>
             ) : (
               <>
                 <p className="ins-card-desc">
-                  Holt-Winters 24h diurnal model with residual spread (±1.96σ = {forecast.residualSd} bpm). Readings
-                  outside the band count as unusual for this time of day.
+                  Holt-Winters 24h diurnal model fitted on the hours before this window, band ±1.96σ (σ ={' '}
+                  {forecast.residualSd} bpm, ±{Math.round(1.96 * forecast.residualSd * 10) / 10} bpm). Readings outside
+                  the band count as unusual for this time of day:{' '}
+                  {forecast.outsideCount === 0
+                    ? 'none in the last 24 h.'
+                    : `${forecast.outsideCount} hour${forecast.outsideCount === 1 ? '' : 's'} in the last 24 h.`}
                 </p>
                 <div className="ins-forecast-chart">
                   <ResponsiveContainer width="100%" height={180}>
@@ -130,8 +150,8 @@ export function InsightsSection({ anomaly, forecast, readiness, agreement }: Pro
                 <div>
                   <strong>Model Warm-Up in Progress</strong>
                   <p>
-                    Establishing personal baseline: {anomaly.totalGoodDays} of 14 good-quality days recorded.
-                    Anomaly strip will unlock once warm-up is complete.
+                    Establishing personal baseline: {anomaly.totalGoodDays} of {WARMUP_GOOD_DAYS} good-quality days recorded.
+                    Each later day is scored against the days before it.
                   </p>
                 </div>
               </div>
