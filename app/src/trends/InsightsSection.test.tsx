@@ -57,7 +57,7 @@ describe('InsightsSection (Phase 3)', () => {
     expect(screen.getByRole('note').textContent).toMatch(/Shadow mode · Consumer wearable · Not a diagnosis/i)
 
     // Warm-up messages for anomaly, forecast, and agreement
-    expect(screen.getByText(/Establishing personal baseline: 4 of 14/)).toBeDefined()
+    expect(screen.getByText(/Establishing personal baseline: 4 of 14 good-quality/)).toBeDefined()
     expect(screen.getByText(/Learning daily circadian rhythm: 48 of\s+72/)).toBeDefined()
     expect(screen.getByText(/Need at least 3 paired face scans/)).toBeDefined()
 

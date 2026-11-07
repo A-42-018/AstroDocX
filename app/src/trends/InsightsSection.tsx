@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Area, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { AgreementReport } from '../ml/agreement'
-import { WARMUP_GOOD_DAYS, type AnomalyReport } from '../ml/anomaly'
+import type { AnomalyReport } from '../ml/anomaly'
 import { FORECAST_WARMUP_HOURS, type ForecastResult } from '../ml/forecast'
 import { READINESS_WARMUP_GOOD_DAYS, type ReadinessResult } from '../ml/readiness'
 import { HudPanel } from '../ui/HudPanel'
@@ -150,7 +150,7 @@ export function InsightsSection({ anomaly, forecast, readiness, agreement }: Pro
                 <div>
                   <strong>Model Warm-Up in Progress</strong>
                   <p>
-                    Establishing personal baseline: {anomaly.totalGoodDays} of {WARMUP_GOOD_DAYS} good-quality days recorded.
+                    Establishing personal baseline: {anomaly.totalGoodDays} of {anomaly.totalGoodDays + anomaly.warmupRemainingDays} good-quality days recorded.
                     Each later day is scored against the days before it.
                   </p>
                 </div>

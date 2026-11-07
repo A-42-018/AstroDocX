@@ -3,7 +3,7 @@ import { db, type ConsoleDB } from '../data/db'
 import type { WearableKind } from '../data/types'
 import type { NewestHr, SampleKind } from './frames'
 import { HaylouWatch, watchSupported, type WatchHandlers } from './haylouWatch'
-import { getLastWearableTimestamp, getWatchSaveOptIn, setWatchSaveOptIn, upsertWearables } from './history'
+import { getLastWearableTimestamp, getWatchSaveOptIn, getWatchWearer, setWatchSaveOptIn, setWatchWearer, upsertWearables } from './history'
 
 export type WatchStatus = 'unsupported' | 'idle' | 'picking' | 'connecting' | 'connected'
 
@@ -27,7 +27,12 @@ export interface WatchState {
   newest: NewestHr | null
   /** Whether opt-in saving of watch data to the local database is enabled. */
   saveOptIn: boolean
-  setSaveOptIn: (optIn: boolean) => void
+  /** Crew member the saved watch data belongs to (null: not linked yet). */
+  wearerId: string | null
+  /** Turn saving on or off; turning it on links the watch to `crewId` when one is given. */
+  setSaveOptIn: (optIn: boolean, crewId?: string) => void
+  /** Link the saved watch data to a crew member. */
+  setWearer: (crewId: string) => void
   connect: () => Promise<void>
   disconnect: () => void
 }
@@ -78,10 +83,17 @@ export function createWatchStore(deps: Deps = { makeLink: (h) => new HaylouWatch
       status: deps.supported() ? 'idle' : 'unsupported',
       name: '', note: '', ...EMPTY,
       saveOptIn: getWatchSaveOptIn(),
+      wearerId: getWatchWearer(),
 
-      setSaveOptIn(optIn: boolean) {
+      setSaveOptIn(optIn: boolean, crewId?: string) {
         setWatchSaveOptIn(optIn)
         set({ saveOptIn: optIn })
+        if (optIn && crewId) get().setWearer(crewId)
+      },
+
+      setWearer(crewId: string) {
+        setWatchWearer(crewId)
+        set({ wearerId: crewId })
       },
 
       async connect() {

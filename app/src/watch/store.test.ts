@@ -247,4 +247,14 @@ describe('watch store', () => {
       vi.useFakeTimers()
     }
   })
+
+  it('links the watch to a crew member when saving is turned on, and not when it is turned off', () => {
+    const store = createWatchStore({ makeLink: () => ({ connect: async () => 'w', disconnect() {} }), now: () => NOW, supported: () => true })
+    store.getState().setSaveOptIn(false, 'pilot')
+    expect(store.getState().wearerId).toBeNull()
+    store.getState().setSaveOptIn(true, 'pilot')
+    expect(store.getState().wearerId).toBe('pilot')
+    store.getState().setWearer('cmdr')
+    expect(store.getState().wearerId).toBe('cmdr')
+  })
 })

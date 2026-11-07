@@ -65,14 +65,4 @@ describe('WatchControl', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Disconnect watch' }))
     expect(disconnect).toHaveBeenCalledTimes(1)
   })
-
-  it('toggles opt-in saving of watch data', () => {
-    const setSaveOptIn = vi.fn()
-    set({ status: 'idle', saveOptIn: false, setSaveOptIn })
-    render(<WatchControl />)
-    const checkbox = screen.getByLabelText(/Save watch data on this device/) as HTMLInputElement
-    expect(checkbox.checked).toBe(false)
-    fireEvent.click(checkbox)
-    expect(setSaveOptIn).toHaveBeenCalledWith(true)
-  })
 })

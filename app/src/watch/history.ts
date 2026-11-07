@@ -26,6 +26,32 @@ export function setWatchSaveOptIn(optIn: boolean): void {
   }
 }
 
+export const WEARER_STORAGE_KEY = 'astrodocx_watch_wearer'
+
+/**
+ * The crew member who wears the watch: saved watch data belongs to them, so the Trends insights only pair it with
+ * their own check-ins and scans. Null when saving was never linked to anyone (data saved before the link existed).
+ */
+export function getWatchWearer(): string | null {
+  try {
+    if (typeof localStorage === 'undefined') return null
+    return localStorage.getItem(WEARER_STORAGE_KEY) || null
+  } catch {
+    return null
+  }
+}
+
+/** Link (or, with null, unlink) the watch to a crew member. */
+export function setWatchWearer(crewId: string | null): void {
+  try {
+    if (typeof localStorage === 'undefined') return
+    if (crewId) localStorage.setItem(WEARER_STORAGE_KEY, crewId)
+    else localStorage.removeItem(WEARER_STORAGE_KEY)
+  } catch {
+    /* ignore storage errors */
+  }
+}
+
 /**
  * Upsert wearable samples deduplicated by [kind+ts].
  * If a sample already exists at the same [kind, ts], update its value and live flag if different.

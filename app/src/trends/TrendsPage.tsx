@@ -9,6 +9,8 @@ import { loadCrewMetric, loadTrendData, type TrendData } from './data'
 import { RANGES, alertsForMetric, buildSeries, crewMedian, CHART_METRICS, type RangeId } from './series'
 import { TrendsView } from './TrendsView'
 import { useWearableInsights } from './useWearableInsights'
+import { useWatch } from '../watch/store'
+import { WatchDataPanel } from '../watch/WatchDataPanel'
 
 export default function TrendsPage() {
   const snap = useSnapshot()
@@ -26,8 +28,9 @@ export default function TrendsPage() {
     return () => sub.unsubscribe()
   }, [crewId])
 
-  // Shadow-mode wearable insights; check-ins and scans are the selected crew member's own
-  const insights = useWearableInsights(crewId)
+  // Shadow-mode wearable insights: they belong to the crew member the watch is linked to
+  const wearerId = useWatch((s) => s.wearerId)
+  const insights = useWearableInsights(crewId, wearerId)
 
   const ms = RANGES.find((r) => r.id === range)!.ms
   useEffect(() => {
@@ -62,6 +65,8 @@ export default function TrendsPage() {
       crew={snap.crew} crewId={snap.crewId} range={range} series={series} onRange={setRange}
       focus={focus} onFocus={setFocus} compare={compare} onCompare={setCompare} median={compare ? median : undefined} alertStatus={alertStatus}
       insights={insights}
+      watchData={<WatchDataPanel crewId={snap.crewId} />}
+      insightsWearer={wearerId !== null && wearerId !== snap.crewId ? snap.crew.find((c) => c.id === wearerId)?.name ?? wearerId : undefined}
     />
   )
 }

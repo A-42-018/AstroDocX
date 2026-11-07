@@ -214,4 +214,14 @@
   .ins-kpi-label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; color: var(--t3); }
   .ins-kpi-val { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--t1); margin-top: 2px; }
   .ins-agreement-note { margin: 0; font-size: 12px; line-height: 1.4; color: var(--t2); }
+
+  /* ---- Watch data (opt-in saving, export, delete); kept off the live heart-rate card ---- */
+  .wc-data { grid-column: 1 / -1; margin: 0; }
+  .wc-data-tools { width: 100%; display: flex; flex-direction: column; gap: 6px; margin-top: 4px; font-family: var(--mono); font-size: 11px; }
+  .wc-optin { display: flex; align-items: center; gap: 6px; color: var(--t2); cursor: var(--cur-pointer); }
+  .wc-saved-summary { display: flex; flex-direction: column; gap: 4px; }
+  .wc-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+  .wc-link { padding: 0; border: 0; background: none; font: inherit; color: var(--cy); text-decoration: underline; cursor: var(--cur-pointer); }
+  .wc-btn-danger { color: var(--act); border-color: rgba(255, 75, 75, 0.3); }
+  .wc-btn-danger:hover { background: rgba(255, 75, 75, 0.1); }
 }

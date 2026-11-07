@@ -54,31 +54,49 @@ function completedKey(days: DailyFeatures[]): string {
 /**
  * Wearable insights for the Trends page. Watches only a cheap signal (row count) and reloads a bounded window of
  * wearable rows after writes settle, at most every 30 s, instead of re-reading the whole table and refitting every
- * model on each live sample. Check-ins and scans are the given crew member's own.
+ * model on each live sample. It also reloads just after local midnight, so "today" and the completed days roll over
+ * even when nothing new is saved.
+ *
+ * Saved watch data belongs to `wearerId`, the crew member the watch is linked to. While another crew member is
+ * selected it loads nothing (the page says whose data it is). With no wearer linked (data saved before the link
+ * existed) it shows the watch data alone, never paired with anyone's check-ins or scans.
  */
-export function useWearableInsights(crewId: string | undefined): InsightsData | undefined {
-  const [insights, setInsights] = useState<InsightsData | undefined>(undefined)
+export function useWearableInsights(crewId: string | undefined, wearerId: string | null): InsightsData | undefined {
+  const [loaded, setLoaded] = useState<{ owner: string; insights: InsightsData } | undefined>(undefined)
   const cache = useRef<AnomalyCache | undefined>(undefined)
+  const otherWearer = wearerId !== null && wearerId !== crewId
+  // whose check-ins and scans go with the watch data: the wearer's, or nobody's while no wearer is linked
+  const labelsFor = wearerId
+  const owner = `${crewId}|${wearerId}`
 
   useEffect(() => {
-    if (!crewId) return
+    if (!crewId || otherWearer) return
     let cancelled = false
     let timer: ReturnType<typeof setTimeout> | null = null
+    let midnight: ReturnType<typeof setTimeout> | null = null
     let lastLoad = 0
 
     const load = async () => {
       const nowMs = Date.now()
       lastLoad = nowMs
       const from = nowMs - INSIGHTS_WINDOW_DAYS * DAY
+      const tz = browserTzOffsetMin()
+      armMidnight(nowMs, tz)
       const [wearables, scans, checkIns] = await Promise.all([
         db.wearables.where('ts').aboveOrEqual(from).toArray(),
-        db.scans.where('crewId').equals(crewId).toArray(),
-        db.checkIns.where('crewId').equals(crewId).toArray(),
+        labelsFor ? db.scans.where('crewId').equals(labelsFor).toArray() : Promise.resolve([]),
+        labelsFor ? db.checkIns.where('crewId').equals(labelsFor).toArray() : Promise.resolve([]),
       ])
       if (cancelled) return
-      const out = computeInsights(wearables, scans, checkIns, nowMs, browserTzOffsetMin(), cache.current)
+      const out = computeInsights(wearables, scans, checkIns, nowMs, tz, cache.current)
       cache.current = out.cache
-      setInsights(out.insights)
+      setLoaded({ owner, insights: out.insights })
+    }
+    // one reload just after the next local midnight, re-armed by every load
+    const armMidnight = (nowMs: number, tz: number) => {
+      if (midnight) clearTimeout(midnight)
+      const next = localDay(nowMs, tz).dayStartMs + DAY + 1000
+      midnight = setTimeout(() => { midnight = null; void load().catch(() => { /* keep the last insights */ }) }, next - nowMs)
     }
     const schedule = () => {
       if (timer) clearTimeout(timer)
@@ -94,9 +112,11 @@ export function useWearableInsights(crewId: string | undefined): InsightsData | 
     return () => {
       cancelled = true
       if (timer) clearTimeout(timer)
+      if (midnight) clearTimeout(midnight)
       sub.unsubscribe()
     }
-  }, [crewId])
+  }, [crewId, otherWearer, labelsFor, owner])
 
-  return insights
+  // never show insights computed for another selection
+  return !otherWearer && loaded?.owner === owner ? loaded.insights : undefined
 }
