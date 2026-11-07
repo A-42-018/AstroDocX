@@ -6,6 +6,8 @@
   .ci-eb.cy { color: var(--cy); } .ci-eb.ok { color: var(--ok); }
   .ci-h1 { margin: 6px 0 4px; font-family: var(--disp); font-size: 30px; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
   .ci-intro { margin: 0; font-size: 13px; line-height: 1.5; color: var(--t3); }
+  .ci-scanbtn { margin-top: 12px; display: inline-flex; align-items: center; gap: 8px; }
+  .ci-beta { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--or); }
 
   /* Procedure: diamonds on a rail; done = green, current = cyan glow */
   .ci-proc { position: relative; list-style: none; margin: 4px 0 14px; padding: 0 0 0 4px; }

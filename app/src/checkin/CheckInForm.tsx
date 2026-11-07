@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, BatteryCharging, BatteryFull, BatteryLow, BatteryMedium, BatteryWarning, Check, Frown, Annoyed, Info, Laugh, Meh, Smile, type LucideIcon } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BatteryCharging, BatteryFull, BatteryLow, BatteryMedium, BatteryWarning, Check, Frown, Annoyed, Info, Laugh, Meh, ScanFace, Smile, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { confirmChime } from '../audio/sfx'
 import { announce } from '../audio/voice'
@@ -82,11 +82,13 @@ interface Props {
   onSubmit: (input: CheckInInput) => Promise<CheckInResult>
   /** The person's own reaction-time baseline (ms), shown next to the test result. */
   baselineMs?: number | null
+  /** Opens the face scan (the check-in page shows it first). Omit to hide the buttons. */
+  onScan?: () => void
   /** Test seam to stub the reaction pad. */
   reactionTest?: typeof ReactionTest
 }
 
-export function CheckInForm({ crew, crewId, now, onSubmit, baselineMs, reactionTest: Reaction = ReactionTest }: Props) {
+export function CheckInForm({ crew, crewId, now, onSubmit, baselineMs, onScan, reactionTest: Reaction = ReactionTest }: Props) {
   const [step, setStep] = useState(0)
   const [mood, setMood] = useState<number | null>(null)
   const [sleepQuality, setSleepQuality] = useState<number | null>(null)
@@ -135,7 +137,7 @@ export function CheckInForm({ crew, crewId, now, onSubmit, baselineMs, reactionT
           <p className="ci-eb">Crew {String(index + 1).padStart(2, '0')} · {who?.role}</p>
           <h1 className="ci-h1">Daily check-in · {who?.name}</h1>
           <p className="ci-intro">Two minutes. Your answers join your own baseline, so the console can spot drift in how you feel and react before it becomes a problem.</p>
-          <p className="ci-intro"><Link to="/checkin/scan">Experimental: measure heart rate with your camera</Link></p>
+          {onScan && <button type="button" className={buttonClass('ghost', 'sm', 'ci-scanbtn')} onClick={onScan}><ScanFace size={16} aria-hidden="true" /> Face scan <span className="ci-beta">Experimental</span></button>}
         </HudPanel>
         <Procedure step={result ? STEPS.length : step} a={answers} now={now} baselineMs={baselineMs} />
       </div>
@@ -170,6 +172,7 @@ export function CheckInForm({ crew, crewId, now, onSubmit, baselineMs, reactionT
             </ul>
             <div className="ci-acts">
               <Link to="/board" className={buttonClass('primary')}>View the board</Link>
+              {onScan && <button type="button" className={buttonClass('ghost')} onClick={onScan}><ScanFace size={16} aria-hidden="true" /> Face scan</button>}
               {result.raised.length > 0 && <Link to="/alerts" className={buttonClass('ghost')}>Open Alerts</Link>}
               <button type="button" className={buttonClass('ghost')} onClick={() => setResult(null)}>Add another check-in</button>
             </div>

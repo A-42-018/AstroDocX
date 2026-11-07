@@ -14,7 +14,7 @@ import { linkAt, type LinkInfo } from '../sync/link'
 import { useSync } from '../sync/store'
 import { CrewSwitcher } from './CrewSwitcher'
 import { duration, greetingFor, linkSummary } from './format'
-import { MORE_ICON, ROUTES, labelFor } from './nav'
+import { MORE_ICON, ROUTES, routeFor } from './nav'
 import { Overflow } from './Overflow'
 import { useFit } from './useFit'
 import { usePopover } from './usePopover'
@@ -116,7 +116,7 @@ export function TopBar({ data, install }: { data: ShellData | null; install: (()
         <span className="brand-text"><b>AstroDocX</b><small>Crew Console</small></span>
       </div>
       <div className="greet">
-        <small>{labelFor(pathname) ?? 'Crew Console'}</small>
+        <small>{routeFor(pathname)?.label ?? 'Crew Console'}</small>
         <p>{data && who ? <>{greetingFor(data.now)}, <b>{who.name}</b></> : 'Starting up…'}</p>
       </div>
       <TopTabs alerts={open} />

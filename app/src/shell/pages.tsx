@@ -11,14 +11,13 @@ export const DoctorPage = lazyPage(() => import('../doctor/DoctorPage'))
 export const AlertsPage = lazyPage(() => import('../alerts/AlertsPage'))
 export const TrendsPage = lazyPage(() => import('../trends/TrendsPage'))
 export const CheckInPage = lazyPage(() => import('../checkin/CheckInPage'))
-export const FaceScanPage = lazyPage(() => import('../scan/FaceScanPage'))
 export const SimulatorPage = lazyPage(() => import('../sim/SimulatorPage'))
 export const SyncPage = lazyPage(() => import('../sync/SyncPage'))
 export const GroundPage = lazyPage(() => import('../ground/GroundPage'))
 export const NasaPage = lazyPage(() => import('../nasa/NasaPage'))
 
 /** Every screen but the board, for warming their chunks. */
-export const LAZY_PAGES = [AlertsPage, TrendsPage, CheckInPage, FaceScanPage, SimulatorPage, SyncPage, GroundPage, NasaPage]
+export const LAZY_PAGES = [AlertsPage, TrendsPage, CheckInPage, SimulatorPage, SyncPage, GroundPage, NasaPage]
 
 /** The console's routes, as an array of elements (React Router flattens it inside <Routes>); `fallback` is where an unknown path goes. */
 export function pageRoutes(fallback = '/board') {
@@ -28,7 +27,7 @@ export function pageRoutes(fallback = '/board') {
     <Route key="alerts" path="/alerts" element={<AlertsPage />} />,
     <Route key="trends" path="/trends" element={<TrendsPage />} />,
     <Route key="checkin" path="/checkin" element={<CheckInPage />} />,
-    <Route key="scan" path="/checkin/scan" element={<FaceScanPage />} />,
+    <Route key="scan" path="/checkin/scan" element={<Navigate to="/checkin" replace />} />,
     <Route key="simulator" path="/simulator" element={<SimulatorPage />} />,
     <Route key="sync" path="/sync" element={<SyncPage />} />,
     <Route key="ground" path="/ground" element={<GroundPage />} />,

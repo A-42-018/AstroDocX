@@ -1,5 +1,5 @@
 import '../styles/pages/scan.css'
-import { Camera, CameraOff, Check, TriangleAlert } from 'lucide-react'
+import { ArrowRight, Camera, CameraOff, Check, TriangleAlert } from 'lucide-react'
 import { useEffect, useId, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSnapshot } from '../board/hooks'
@@ -51,7 +51,8 @@ function Reading({ a, wearable }: { a: ScanAnalysis | null; wearable: number | n
 
 const PHASE_META: Record<string, string> = { aiming: 'Aim your face', measuring: 'Measuring', done: 'Done' }
 
-export default function FaceScanPage() {
+/** The scan. Inside the check-in it is the first step: `onContinue` moves on to the questions (skipping is fine). On its own it links back to the check-in. */
+export default function FaceScanPage({ onContinue }: { onContinue?: () => void } = {}) {
   const snap = useSnapshot()
   const boot = useBoard((s) => s.boot)
   if (boot.state === 'error') return <StateView kind="error" title="Could not open the local database"><p>{boot.error}</p></StateView>
@@ -61,10 +62,10 @@ export default function FaceScanPage() {
   }
   if (snap === null) return <StateView kind="empty" label="No crew data yet." />
   // key: a fresh scan for each crew member
-  return <ScanView key={snap.crewId} crew={snap.crew} crewId={snap.crewId} now={snap.now} />
+  return <ScanView key={snap.crewId} crew={snap.crew} crewId={snap.crewId} now={snap.now} onContinue={onContinue} />
 }
 
-function ScanView({ crew, crewId, now }: { crew: CrewMember[]; crewId: string; now: number }) {
+function ScanView({ crew, crewId, now, onContinue }: { crew: CrewMember[]; crewId: string; now: number; onContinue?: () => void }) {
   const { videoRef, camera, error, notice, view, start, stop } = useFaceScan()
   const [history, setHistory] = useState<FaceScan[]>([])
   const [wearable, setWearable] = useState<number | null>(null)
@@ -110,7 +111,7 @@ function ScanView({ crew, crewId, now }: { crew: CrewMember[]; crewId: string; n
     <div className="sc">
       <div className="sc-side">
         <HudPanel title="Face scan" meta="Experimental" className="sc-who">
-          <p className="sc-eb">Crew {String(index + 1).padStart(2, '0')} · {who?.role}</p>
+          <p className="sc-eb">{onContinue ? 'Check-in · step 1 · optional' : `Crew ${String(index + 1).padStart(2, '0')} · ${who?.role}`}</p>
           <h1 className="sc-h1">Face scan · {who?.name}</h1>
           <p className="sc-intro">Your camera sees the faint colour change of your skin with each heartbeat. {SCAN_SECONDS} seconds gives a heart rate, a rough HRV and your breathing rate.</p>
           <ul className="sc-facts">
@@ -118,7 +119,7 @@ function ScanView({ crew, crewId, now }: { crew: CrewMember[]; crewId: string; n
             <li>A camera is not a medical sensor. Treat the numbers as a rough guide.</li>
             <li>Scans are logged for Ground, but never raise alerts or change your baselines.</li>
           </ul>
-          <Link to="/checkin" className={buttonClass('ghost', 'sm')}>Back to check-in</Link>
+          {!onContinue && <Link to="/checkin" className={buttonClass('ghost', 'sm')}>Back to check-in</Link>}
         </HudPanel>
         <HudPanel title="Recent scans" meta={history.length ? `${history.length} saved` : 'None yet'} className="sc-hist">
           {history.length === 0 ? <p className="sc-empty">Saved scans appear here.</p> : (
@@ -177,6 +178,11 @@ function ScanView({ crew, crewId, now }: { crew: CrewMember[]; crewId: string; n
               {on && <button type="button" className={buttonClass('ghost')} onClick={stop}>Stop camera</button>}
               {done && !blocked && !saved && <button type="button" className={buttonClass('primary', 'lg')} onClick={() => void save()} disabled={busy}>Save to log</button>}
               {done && <button type="button" className={buttonClass('ghost')} onClick={begin}>Scan again</button>}
+              {onContinue && (
+                <button type="button" className={buttonClass(saved || (!on && !done) ? 'primary' : 'ghost', saved ? 'lg' : 'md', 'sc-next')} onClick={() => { stop(); onContinue() }}>
+                  {saved ? 'Continue to check-in' : done ? 'Skip saving, continue' : on ? 'Stop and continue' : 'Skip scan'}<ArrowRight size={16} aria-hidden="true" />
+                </button>
+              )}
             </div>
           </div>
         </div>

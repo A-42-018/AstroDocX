@@ -33,8 +33,3 @@ export const OVERFLOW_ICON = EllipsisVertical
 /** The route a path belongs to (nested paths included). */
 export const routeFor = (pathname: string) => ROUTES.find((r) => pathname.startsWith(r.path))
 
-/** Pages that live under a tab but have their own name in the title and the top bar. */
-const SUBPAGES: readonly { path: string; label: string }[] = [{ path: '/checkin/scan', label: 'Face Scan' }]
-
-/** The name of the page at a path: a sub-page's own name, else its tab's full label. */
-export const labelFor = (pathname: string) => SUBPAGES.find((p) => pathname.startsWith(p.path))?.label ?? routeFor(pathname)?.label

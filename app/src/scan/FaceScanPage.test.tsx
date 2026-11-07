@@ -22,7 +22,7 @@ const analysis = (over: Partial<ScanAnalysis> = {}): ScanAnalysis => ({
 })
 const view = (over: Partial<SessionView> = {}): SessionView => ({ ...ScanSession.initial(), ...over })
 
-const open = () => render(<MemoryRouter><FaceScanPage /></MemoryRouter>)
+const open = (onContinue?: () => void) => render(<MemoryRouter><FaceScanPage onContinue={onContinue} /></MemoryRouter>)
 
 beforeEach(async () => {
   await resetDb()
@@ -84,5 +84,28 @@ describe('FaceScanPage', () => {
     expect(screen.queryByRole('button', { name: 'Save to log' })).toBeNull()
     expect(screen.getAllByText(/too weak to trust/i).length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: 'Scan again' })).toBeTruthy()
+  })
+
+  it('on its own it links back to the check-in; inside the check-in it can be skipped or continued from', () => {
+    const { unmount } = open()
+    expect(screen.getByRole('link', { name: 'Back to check-in' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /skip scan/i })).toBeNull()
+    unmount()
+    const go = vi.fn()
+    open(go)
+    expect(screen.queryByRole('link', { name: 'Back to check-in' })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /skip scan/i }))
+    expect(go).toHaveBeenCalledOnce()
+  })
+
+  it('offers Continue to check-in once the scan is saved', async () => {
+    hook.view = view({ phase: 'done', final: analysis(), live: analysis() })
+    const go = vi.fn()
+    open(go)
+    expect(screen.getByRole('button', { name: /skip saving, continue/i })).toBeTruthy()
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Save to log' })) })
+    await waitFor(() => expect(screen.getByRole('button', { name: /continue to check-in/i })).toBeTruthy())
+    fireEvent.click(screen.getByRole('button', { name: /continue to check-in/i }))
+    expect(go).toHaveBeenCalledOnce()
   })
 })
