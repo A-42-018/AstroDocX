@@ -1,6 +1,6 @@
 ## [adx-overview] AstroDocX overview (README)
 URL: https://github.com/A-42-018/AstroDocX
-Astronaut + Doctor + X — an offline-first health co-pilot for astronauts on long-duration missions. Built by Team AstroDocX in Dhaka, Bangladesh for the NASA Space Apps Challenge 2026 challenge "Create Health Monitoring Software for Astronauts on Space Missions". The loop is Detect, Explain, Act, Log, Sync later. AstroDocX is a prototype and not a medical device. It runs on synthetic demo data (a 4-crew 30-day demo mission). It is an independent Space Apps project using NASA open data and is not affiliated with or endorsed by NASA. Every number, alert, finding and step comes from tested, deterministic code; VITA's live answers only re-word cited sources or the console's own crew exam. Only the CO2 and radiation dose limits are NASA-STD-3001 cited; other thresholds are illustrative and labelled so.
+Astronaut + Doctor + X — an offline-first health co-pilot for astronauts on long-duration missions. Built by Team AstroDocX in Dhaka, Bangladesh for the NASA Space Apps Challenge 2026 challenge "Create Health Monitoring Software for Astronauts on Space Missions". The loop is Detect, Explain, Act, Log, Sync later. AstroDocX is a prototype and not a medical device. It runs on synthetic demo data (a 6-crew 30-day demo mission). It is an independent Space Apps project using NASA open data and is not affiliated with or endorsed by NASA. Every number, alert, finding and step comes from tested, deterministic code; VITA's live answers only re-word cited sources or the console's own crew exam. Only the CO2 and radiation dose limits are NASA-STD-3001 cited; other thresholds are illustrative and labelled so.
 
 ## [adx-personal-baselines] AstroDocX: Personal baselines
 URL: https://github.com/A-42-018/AstroDocX
@@ -84,7 +84,7 @@ NASA Data: The NASA basis of the console in one screen: for each of NASA's five 
 
 ## [adx-platform] AstroDocX: Platform
 URL: https://github.com/A-42-018/AstroDocX
-Platform: Offline-first installable PWA, IndexedDB on the device, 4-crew 30-day demo mission preloaded
+Platform: Offline-first installable PWA, IndexedDB on the device, 6-crew 30-day demo mission preloaded
 
 ## [adx-roadmap] AstroDocX roadmap (README)
 URL: https://github.com/A-42-018/AstroDocX
