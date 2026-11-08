@@ -6,7 +6,9 @@
      morphs    a swell while Earth -> body and body -> wordmark
      twin      a quiet low chord and a soft heartbeat thump, in
                time with the particle heart (1 beat / s, lub-dub)
-     adx       resolves to A major and opens up
+     adx       resolves to A major and opens up; the logo-reveal stinger
+             (a quiet organ swell, two glass bells and a low thud) plays
+             as the AstroDocX wordmark resolves
      scrolling the particles move, and you hear them: a soft airy
                shimmer and tiny sparkle notes that grow with scroll
                speed, strongest in the two morphs, gone when you stop
@@ -89,6 +91,7 @@
   /* crossfade to a new chord: old voices fade over 3.5 s and stop, new ones swell in over 2.5 s */
   function setChord(id) {
     if (id === chordId) return;
+    const arrived = id === 'adx';
     chordId = id;
     const t = ctx.currentTime, g = ctx.createGain(), quiet = id === 'twin' ? 0.07 : 0.1;
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(quiet, t + 2.5);
@@ -100,8 +103,39 @@
       setTimeout(() => { old.oscs.forEach(o => { try { o.stop(); } catch (e) {} }); old.g.disconnect(); }, 3800);
     }
     voices = { g: g, oscs: oscs };
+    if (arrived && on) logoSting();   /* the wordmark resolves: the stinger */
   }
 
+  /* the logo-reveal stinger: the A-major resolution as the wordmark appears. Quiet (0.4) so it sits on the chord, with a long hall tail */
+  function logoSting() {
+    const t = ctx.currentTime, q = ctx.createGain(), qv = ctx.createGain();
+    q.gain.value = 0.4; qv.gain.value = 0.8; q.connect(comp); q.connect(qv); qv.connect(verb);
+    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1800; f.Q.value = 0.4;
+    const g = ctx.createGain(), dur = 7;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.3, t + dur * 0.25); g.gain.setValueAtTime(0.3, t + dur * 0.7); g.gain.linearRampToValueAtTime(0, t + dur);
+    f.connect(g); g.connect(q);
+    [45, 52, 57, 61, 64].forEach(m => [[1, 0.5, 'sine'], [2, 0.18, 'sine'], [3, 0.07, 'triangle']].forEach(([mul, gain, type], i) => {
+      const o = ctx.createOscillator(), og = ctx.createGain();
+      o.type = type; o.frequency.value = hz(m) * mul; o.detune.value = (i % 2 ? 4 : -3) + (Math.random() - 0.5) * 3;
+      og.gain.value = gain * (m < 44 ? 1.1 : m > 62 ? 0.7 : 0.9);
+      o.connect(og); og.connect(f); o.start(t); o.stop(t + dur + 0.05);
+    }));
+    [[1760, 1.6, 0.18], [2217, 2.1, 0.12]].forEach(([fr, at, vol]) => {
+      const car = ctx.createOscillator(), mod = ctx.createOscillator(), mg = ctx.createGain(), bg = ctx.createGain(), s0 = t + at;
+      car.frequency.value = fr; mod.frequency.value = fr * 2;
+      mg.gain.setValueAtTime(fr * 0.8, s0); mg.gain.exponentialRampToValueAtTime(0.01 * fr, s0 + 3.5);
+      mod.connect(mg); mg.connect(car.frequency);
+      bg.gain.setValueAtTime(0.0001, s0); bg.gain.exponentialRampToValueAtTime(vol, s0 + 0.004); bg.gain.exponentialRampToValueAtTime(0.0001, s0 + 3.5);
+      car.connect(bg); bg.connect(q);
+      const sd = ctx.createGain(); sd.gain.value = 0.9; bg.connect(sd); sd.connect(verb);
+      car.start(s0); mod.start(s0); car.stop(s0 + 3.6); mod.stop(s0 + 3.6);
+    });
+    const o = ctx.createOscillator(), tg = ctx.createGain();
+    o.frequency.setValueAtTime(60, t); o.frequency.exponentialRampToValueAtTime(35, t + 0.8);
+    tg.gain.setValueAtTime(0.0001, t); tg.gain.exponentialRampToValueAtTime(0.5, t + 0.008); tg.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
+    o.connect(tg); tg.connect(q); o.start(t); o.stop(t + 0.9);
+    setTimeout(() => { try { q.disconnect(); qv.disconnect(); } catch (e) {} }, 12000);
+  }
   /* a soft low thump (the heart); `amp` 1 = lub, smaller = dub */
   function thump(amp) {
     const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();

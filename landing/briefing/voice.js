@@ -13,6 +13,8 @@ const Utter = typeof window !== 'undefined' ? window.SpeechSynthesisUtterance : 
 const score = (v) =>
   (/premium|enhanced|natural|neural/i.test(v.name) ? 8 : 0) +
   (/google us english|samantha|ava|allison|serena|karen|moira|tessa|daniel|google/i.test(v.name) ? 4 : 0) +
+  /* NOVA is the lighter voice, kept apart from VITA's (Samantha) in the console: Moira, Tessa or Karen first */
+  (/moira|tessa|karen|libby|sonia|google uk english female/i.test(v.name) ? 6 : 0) +
   (v.lang === 'en-US' ? 3 : v.lang === 'en-GB' ? 2 : 0) + (v.localService ? 1 : 0)
 let chosen = null
 function pick() {
@@ -23,7 +25,7 @@ if (synth) { pick(); synth.addEventListener?.('voiceschanged', pick) }
 
 /* say it the way a person would read it out */
 const SAY = [
-  [/AstroDocX/g, 'Astro Doc X'], [/\bVITA\b/g, 'Veeta'], [/CO₂|CO2/gi, 'C O 2'], [/SpO₂/g, 'S P O 2'],
+  [/AstroDocX/g, 'Astro Doc X'], [/\bVITA\b/g, 'Veeta'], [/\bNOVA\b/g, 'Nova'], [/CO₂|CO2/gi, 'C O 2'], [/SpO₂/g, 'S P O 2'],
   [/NASA-STD-3001/g, 'NASA standard thirty oh one'], [/STD-3001/g, 'standard thirty oh one'],
   [/(\d+(?:\.\d+)?)\s*mmHg/g, '$1 millimetres of mercury'], [/(\d+(?:\.\d+)?)\s*mSv/g, '$1 millisieverts'],
   [/\bEVA\b/g, 'E V A'], [/\bISS\b/g, 'I S S'], [/\bHRP\b/g, 'H R P'], [/\s*·\s*/g, ', '], [/…/g, '.'],
@@ -55,7 +57,7 @@ export const voice = {
       for (const p of parts) {
         const u = new Utter(p.trim())
         if (chosen) { u.voice = chosen; u.lang = chosen.lang } else u.lang = 'en-US'
-        u.rate = 1.02; u.pitch = 1.08; u.volume = 1
+        u.rate = 1.0; u.pitch = 1.1; u.volume = 1   /* NOVA: a touch lighter than VITA */
         u.onend = () => { if (--left <= 0) end() }
         u.onerror = end   // interrupted, cancelled, or not allowed yet (no gesture)
         synth.speak(u)

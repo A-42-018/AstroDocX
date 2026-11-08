@@ -1,3 +1,4 @@
+import { stinger } from '../audio/music'
 import { hushChatter, vitaPause, vitaResume, vitaSay, vitaStop } from '../audio/voice'
 import { useBoard } from '../board/store'
 import { runDemo } from '../sim/demoRun'
@@ -151,6 +152,7 @@ export async function runTour(go: Go, mode: TourMode = 'quick') {
   if (!live(mine)) return
   hushChatter(false)
   tour().set({ phase: 'end', progress: 1, caption: '', focus: null })
+  stinger('success')
   void vitaSay(FINISH[mode])
 }
 
