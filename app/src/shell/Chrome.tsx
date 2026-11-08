@@ -1,5 +1,5 @@
 import { SoundToggle } from '../audio/SoundToggle'
-import { Bell, Box, Plus, RotateCcw, Square } from 'lucide-react'
+import { Bell, Box, RotateCcw, Square } from 'lucide-react'
 import { Fragment, useId, useRef } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { demoStart } from '../audio/sfx'
@@ -112,7 +112,10 @@ export function TopBar({ data, install }: { data: ShellData | null; install: (()
   return (
     <header ref={bar} className="topbar">
       <div className="brand">
-        <span className="logo" aria-hidden="true"><Plus size={20} strokeWidth={3.2} /></span>
+        {/* the mission logo is the way back to the landing page (outside the /app/ router, so a plain link) */}
+        <a href="/" className="logo" aria-label="AstroDocX home: back to the landing page" title="Back to the landing page">
+          <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width={30} height={30} draggable={false} />
+        </a>
         <span className="brand-text"><b>AstroDocX</b><small>Crew Console</small></span>
       </div>
       <div className="greet">
@@ -150,7 +153,7 @@ export function TopBar({ data, install }: { data: ShellData | null; install: (()
             <Bell size={20} strokeWidth={1.9} aria-hidden="true" />
             {open > 0 && <b aria-hidden="true">{open}</b>}
           </Link>
-          <SoundToggle className="tb-icon snd" compact />
+          <SoundToggle className="tb-icon snd" compact music />
           <Overflow crewId={who.id} crewName={who.name} install={install} onDemo={startDemo} />
         </>
       )}
