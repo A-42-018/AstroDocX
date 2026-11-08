@@ -102,7 +102,7 @@ node tools/vita/build-knowledge.mjs          # writes knowledge/chunks.json and 
 node tools/vita/build-knowledge.mjs --check  # fails if they are out of date
 ```
 
-It reads `app/src/engine/{limits,nasa,evidence}.ts`, `app/src/data/types.ts`, the README feature table and `App.tsx` routes, so the numbers (3 mmHg, 600/250 mSv, watch hours, the evidence list, the screens) follow the code. Change the engine, rerun, commit the output. The test suite fails if the committed files drift.
+It reads `app/src/engine/{limits,nasa,evidence}.ts`, `app/src/data/types.ts`, the README feature table and the routes in `app/src/shell/pages.tsx`, so the numbers (3 mmHg, 600/250 mSv, watch hours, the evidence list, the screens) follow the code. Change the engine, rerun, commit the output. The test suite fails if the committed files drift.
 
 **Hand-written part:** `knowledge/general.json` (bone and muscle, SANS, radiation, sleep, isolation, CO₂, immune/Twins). Each fact is from a nasa.gov, NTRS or OSDR page that was opened and checked (Nov 2026). Only add a fact after reading its page.
 

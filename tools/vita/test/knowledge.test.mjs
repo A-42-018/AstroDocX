@@ -31,7 +31,7 @@ test('every evidence item, hazard and console route is present', () => {
   const urls = committed.map((c) => c.url).join(' ')
   for (const id of ids) assert.ok(urls.includes(id), `evidence ${id}`)
   for (const h of 'ridge') assert.ok(committed.some((c) => c.id === 'hazard-' + h), h)
-  const routes = [...rd('app/src/App.tsx').matchAll(/<Route path="(\/[a-z]+)"/g)].map((m) => m[1])
+  const routes = [...rd('app/src/shell/pages.tsx').matchAll(/<Route key="[a-z]+" path="(\/[a-z]+)"/g)].map((m) => m[1])
   const known = committed.find((c) => c.id === 'adx-screens').routes
   for (const r of routes) assert.ok(known.includes(r) || !rd('app/src/shell/nav.ts').includes(`'${r}'`), r)
   assert.equal(known.length, 9) // the nine console screens, the Crew Doctor included

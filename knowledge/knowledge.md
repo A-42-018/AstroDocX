@@ -1,6 +1,6 @@
 ## [adx-overview] AstroDocX overview (README)
 URL: https://github.com/A-42-018/AstroDocX
-Astronaut + Doctor + X — an offline-first health co-pilot for astronauts on long-duration missions. Built by Team AstroDocX in Dhaka, Bangladesh for the NASA Space Apps Challenge 2026 challenge "Create Health Monitoring Software for Astronauts on Space Missions". The loop is Detect, Explain, Act, Log, Sync later. AstroDocX is a prototype and not a medical device. It runs on synthetic demo data (a 4-crew 30-day demo mission). It is an independent Space Apps project using NASA open data and is not affiliated with or endorsed by NASA. Every number, alert, finding and step comes from tested, deterministic code; VITA's live answers only re-word cited sources or the console's own crew exam. Only the CO2 and radiation dose limits are NASA-STD-3001 cited; other thresholds are illustrative and labelled so.
+Astronaut + Doctor + X — an offline-first health co-pilot for astronauts on long-duration missions. Built by Team AstroDocX in Dhaka, Bangladesh for the NASA Space Apps Challenge 2026 challenge "Create Health Monitoring Software for Astronauts on Space Missions". The loop is Detect, Explain, Act, Log, Sync later. AstroDocX is a prototype and not a medical device. It runs on synthetic demo data (a 6-crew 30-day demo mission). It is an independent Space Apps project using NASA open data and is not affiliated with or endorsed by NASA. Every number, alert, finding and step comes from tested, deterministic code; VITA's live answers only re-word cited sources or the console's own crew exam. Only the CO2 and radiation dose limits are NASA-STD-3001 cited; other thresholds are illustrative and labelled so.
 
 ## [adx-personal-baselines] AstroDocX: Personal baselines
 URL: https://github.com/A-42-018/AstroDocX
@@ -36,7 +36,35 @@ Trends: 11 charts with the personal baseline band, alert markers, 24 h / 7 d / 3
 
 ## [adx-daily-check-in] AstroDocX: Daily Check-in
 URL: https://astrodocx.vercel.app/app/checkin
-Daily Check-in: Mood, sleep quality, hours slept, 8 symptom chips and a 5-tap reaction test (PVT-style); symptoms and sleep quality raise alerts
+Daily Check-in: Opens on an optional face scan (below), then mood, sleep quality, hours slept, 8 symptom chips and a 5-tap reaction test (PVT-style); symptoms and sleep quality raise alerts
+
+## [adx-face-scan-experimental] AstroDocX: Face scan (experimental)
+URL: https://github.com/A-42-018/AstroDocX
+Face scan (experimental): A 30-second webcam scan estimates heart rate, breathing and a rough HRV from the tiny colour change of facial skin (remote photoplethysmography, POS method), each with a quality score. The video never leaves the device and only the numbers are kept. A webcam is not a medical sensor: scans are context, never a diagnosis
+
+## [adx-watch-experimental] AstroDocX: Watch (experimental)
+URL: https://github.com/A-42-018/AstroDocX
+Watch (experimental): Connect a Haylou Solar 5 smartwatch over Web Bluetooth (Chrome or Edge) for live heart rate and SpO₂, plus its stored stress and sleep history. Nothing is saved unless you switch on *Save watch data on this device*; saved data is linked to one crew member, exportable as CSV or JSON and erasable in one click
+
+## [adx-on-device-insights-shadow-mode] AstroDocX: On-device insights (shadow mode)
+URL: https://github.com/A-42-018/AstroDocX
+On-device insights (shadow mode): From saved watch data, in the Trends screen: a personal anomaly detector (Isolation Forest plus robust z-scores, scored walk-forward), a 24-hour heart-rate forecast band (Holt-Winters), a transparent readiness score and a watch-vs-face-scan agreement check. All of it runs in the browser and is never wired into the alert engine, so a wrist artefact cannot raise a medical alert. See the model card
+
+## [adx-3d-cabin] AstroDocX: 3D Cabin
+URL: https://github.com/A-42-018/AstroDocX
+3D Cabin: A walk through a lived-in ISS-style module at /app/cabin, from the helmet view out to the astronaut on EVA, driven by the console's live data: a crew of six with name tags, the robots VITA and MEDI patrolling the hall, wall screens that run real console pages, a helmet-visor HUD tied to the health monitor, NASA Visible Earth in the window, touch and float-mode controls
+
+## [adx-guided-tour] AstroDocX: Guided tour
+URL: https://github.com/A-42-018/AstroDocX
+Guided tour: One link (/?tour=full) plays the homepage briefing, the console's main screens with a live CO₂ fault, and the cabin out to the EVA; VITA narrates every stop, captions match the voice, and you can pause, skip or exit at any time
+
+## [adx-sound] AstroDocX: Sound
+URL: https://github.com/A-42-018/AstroDocX
+Sound: Everything is synthesised in the browser, no audio files: glass-bell interface sounds, Quindar radio tones, generated score beds per screen that duck under speech, and a distinct speaking voice for each crew role, VITA, MEDI and NOVA. One Sound switch per page (remembered in the browser, shared with the homepage); the score is a separate opt-in
+
+## [adx-nasa-library] AstroDocX: NASA Library
+URL: https://github.com/A-42-018/AstroDocX
+NASA Library: A curated, searchable library of NASA images, video and audio on astronaut health (six collections: bone and muscle, radiation, sleep and isolation, the Twins Study, life support, spacewalks), pulled live from NASA's Image and Video Library with credit and links
 
 ## [adx-mission-simulator] AstroDocX: Mission Simulator
 URL: https://astrodocx.vercel.app/app/simulator
@@ -52,15 +80,15 @@ Ground View: Flight-surgeon view rebuilt only from synced entries (shows what Ea
 
 ## [adx-nasa-data] AstroDocX: NASA Data
 URL: https://astrodocx.vercel.app/app/nasa
-NASA Data: The NASA basis of the console in one screen: for each of NASA's five hazards, what AstroDocX monitors, the NASA-STD-3001 limit it checks and the NASA studies cited; every alert and Status Board tile carries a NASA source tag
+NASA Data: The NASA basis of the console in one screen: for each of NASA's five hazards, what AstroDocX monitors, the NASA-STD-3001 limit it checks and the NASA studies cited; every alert and Status Board tile carries a NASA source tag. Also a Real crew data panel: measured blood counts, metabolic and inflammation markers from the four SpaceX Inspiration4 crew (NASA OSDR OSD-569 and OSD-575), each person charted against their own pre-flight baseline and the lab reference range
 
 ## [adx-platform] AstroDocX: Platform
 URL: https://github.com/A-42-018/AstroDocX
-Platform: Offline-first installable PWA, IndexedDB on the device, 4-crew 30-day demo mission preloaded
+Platform: Offline-first installable PWA, IndexedDB on the device, 6-crew 30-day demo mission preloaded
 
 ## [adx-roadmap] AstroDocX roadmap (README)
 URL: https://github.com/A-42-018/AstroDocX
-Not built yet (Roadmap): wearable sensor integration, a real Supabase ground backend with proper policies, vision/SANS self-tests, blood pressure, bone density, a multi-device ground station.
+Not built yet (Roadmap): support for more wearables than the one watch, wearable data feeding the alert engine (today it stays in shadow mode), a real Supabase ground backend with proper policies, vision/SANS self-tests, blood pressure, bone density, a multi-device ground station.
 
 ## [adx-screens] AstroDocX Crew Console screens
 URL: https://astrodocx.vercel.app/app/
@@ -140,7 +168,7 @@ NASA NTRS 20160012725, "Relationship Between Carbon Dioxide Levels and Reported 
 
 ## [nasa-resources] NASA resources AstroDocX draws on
 URL: https://osdr.nasa.gov/bio/
-NASA Human Research Program: the five hazards: The RIDGE framework the Status Board and readiness score are organised by. (https://www.nasa.gov/hrp/hazards/) NASA Open Science Data Repository (OSDR): Spaceflight and analogue studies cited as evidence for heart, muscle and radiation alerts. (https://osdr.nasa.gov/bio/) NASA Technical Reports Server (NTRS): Human Research Program evidence reports on heart rhythm, sleep loss, behavioural health and CO₂. (https://ntrs.nasa.gov/) NASA Office of the Chief Health & Medical Officer: Publishes NASA-STD-3001 and the technical briefs behind the CO₂ and radiation limits. (https://www.nasa.gov/ochmo/) NASA Human Research Roadmap: Where each Human Research Program risk and its evidence are tracked. (https://humanresearchroadmap.nasa.gov/) NASA Visible Earth: Earth imagery seen from the 3D cabin window. (https://visibleearth.nasa.gov/) NASA 3D Resources: The Z2 spacesuit, Orion and TDRS models on the landing page. (https://science.nasa.gov/3d-resources/)
+NASA Human Research Program: the five hazards: The RIDGE framework the Status Board and readiness score are organised by. (https://www.nasa.gov/hrp/hazards/) NASA Open Science Data Repository (OSDR): Spaceflight and analogue studies cited as evidence for heart, muscle and radiation alerts. (https://osdr.nasa.gov/bio/) NASA OSDR: SpaceX Inspiration4 studies: Ten public studies of the four-person civilian crew (OSD-569 to 575, 630, 656, 687). The blood counts, metabolic panel and cardiovascular markers in OSD-569 and OSD-575 are drawn on the NASA Data screen; the omics, microbiome and urine studies are cited, not used as data. (https://osdr.nasa.gov/bio/repo/data/studies/OSD-575) NASA Technical Reports Server (NTRS): Human Research Program evidence reports on heart rhythm, sleep loss, behavioural health and CO₂. (https://ntrs.nasa.gov/) NASA Office of the Chief Health & Medical Officer: Publishes NASA-STD-3001 and the technical briefs behind the CO₂ and radiation limits. (https://www.nasa.gov/ochmo/) NASA Human Research Roadmap: Where each Human Research Program risk and its evidence are tracked. (https://humanresearchroadmap.nasa.gov/) NASA Visible Earth: Earth imagery seen from the 3D cabin window. (https://visibleearth.nasa.gov/) NASA 3D Resources: The Z2 spacesuit, Orion and TDRS models on the landing page. (https://science.nasa.gov/3d-resources/)
 
 ## [res-nasa-gov-hrp-hazards] NASA Human Research Program: the five hazards
 URL: https://www.nasa.gov/hrp/hazards/
@@ -149,6 +177,10 @@ NASA Human Research Program: the five hazards: The RIDGE framework the Status Bo
 ## [res-osdr-nasa-gov-bio] NASA Open Science Data Repository (OSDR)
 URL: https://osdr.nasa.gov/bio/
 NASA Open Science Data Repository (OSDR): Spaceflight and analogue studies cited as evidence for heart, muscle and radiation alerts.
+
+## [res-osdr-nasa-gov-bio-repo-data-studies-OSD-575] NASA OSDR: SpaceX Inspiration4 studies
+URL: https://osdr.nasa.gov/bio/repo/data/studies/OSD-575
+NASA OSDR: SpaceX Inspiration4 studies: Ten public studies of the four-person civilian crew (OSD-569 to 575, 630, 656, 687). The blood counts, metabolic panel and cardiovascular markers in OSD-569 and OSD-575 are drawn on the NASA Data screen; the omics, microbiome and urine studies are cited, not used as data.
 
 ## [res-ntrs-nasa-gov] NASA Technical Reports Server (NTRS)
 URL: https://ntrs.nasa.gov/

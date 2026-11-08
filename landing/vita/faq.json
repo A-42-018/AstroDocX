@@ -770,7 +770,7 @@
         "crew console",
         "menu"
       ],
-      "text": "The Crew Console has nine screens: Status Board, Crew Doctor, Alerts, Trends, Check-in, Simulator, Ground Sync, Ground View and NASA Data. It's an installable offline-first app with a 4-crew, 30-day demo mission preloaded.",
+      "text": "The Crew Console has nine screens: Status Board, Crew Doctor, Alerts, Trends, Check-in, Simulator, Ground Sync, Ground View and NASA Data. It's an installable offline-first app with a 6-crew, 30-day demo mission preloaded.",
       "citations": [
         {
           "label": "AstroDocX Crew Console",
@@ -1249,7 +1249,7 @@
         "works offline",
         "without internet"
       ],
-      "text": "The Crew Console is an installable offline-first app that keeps its data on the device in IndexedDB, with a 4-crew, 30-day demo mission preloaded. Optional ground upload uses Supabase, off by default.",
+      "text": "The Crew Console is an installable offline-first app that keeps its data on the device in IndexedDB, with a 6-crew, 30-day demo mission preloaded. Optional ground upload uses Supabase, off by default.",
       "citations": [
         {
           "label": "AstroDocX README",

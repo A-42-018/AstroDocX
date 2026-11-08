@@ -37,8 +37,14 @@
 .cc-grid b { font: 600 20px var(--mono); }
 .cc-status { margin-top: 12px; font: 600 12px var(--ui); padding: 6px 10px; border: 1px solid currentColor; display: inline-block; }
 
-.cabin-credits { position: absolute; right: var(--sp-4); bottom: var(--sp-2); z-index: 5; font: 400 11px var(--ui); color: var(--t3); }
+/* asset credits: one small button, the full list opens above it so it never runs under the tour caption */
+.cabin-credits { position: absolute; right: var(--sp-4); bottom: 6px; z-index: 7; font: 400 11px var(--ui); color: var(--t3); }
 .cabin-credits a { color: var(--cy); }
+.cabin-credits-btn { all: unset; cursor: var(--cur-pointer); padding: 2px 6px; font: 500 11px var(--ui); letter-spacing: .06em; color: var(--t3); text-decoration: underline dotted; text-underline-offset: 3px; }
+.cabin-credits-btn:hover, .cabin-credits-btn[aria-expanded="true"] { color: var(--cy-hi); }
+.cabin-credits-btn:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
+.cabin-credits-list { position: absolute; right: 0; bottom: 26px; width: min(560px, calc(100vw - 32px)); margin: 0; padding: var(--sp-3) var(--sp-4); font: 400 11.5px/1.55 var(--ui); color: var(--t2); }
+.cabin-credits-list[hidden] { display: none; }
 
 /* helmet visor (cabin/VisorHud.tsx): scene.ts fades and grows it as the tour leaves the first stop */
 .cabin-visor { position: absolute; inset: 0; pointer-events: none; z-index: 4; will-change: opacity, transform; }
@@ -168,7 +174,7 @@
 
 /* phones: smaller caption, HUD corners closer in, stop labels hidden */
 @media (max-width: 767px) {
-  .cabin-caption { left: var(--sp-3); bottom: 64px; width: calc(100% - 64px); padding: var(--sp-3) var(--sp-4); } /* clear of the three-line credits */
+  .cabin-caption { left: var(--sp-3); bottom: 32px; width: calc(100% - 64px); padding: var(--sp-3) var(--sp-4); } /* clear of the Credits button */
   .cabin-caption h1 { font-size: 17px; }
   .cabin-caption p { font-size: 12.5px; }
   .cabin-stops { right: 12px; gap: 12px; }
@@ -185,7 +191,8 @@
   .vz-ecg { width: 96px; }
   .vz.ladder, .vz-bar, .vz-motto, .prompt { display: none; } /* the caption already says to scroll */
   .vz-reticle { width: 150px; height: 150px; margin: -75px 0 0 -75px; }
-  .cabin-credits { left: var(--sp-3); right: var(--sp-3); font-size: 10px; line-height: 1.35; }
+  .cabin-credits { right: var(--sp-3); }
+  .cabin-credits-list { font-size: 10.5px; width: calc(100vw - 24px); }
 }
 @media (prefers-reduced-motion: reduce) { .cabin-visor.booting :is(.vz, .vz-reticle, .vz-bar, .vz-motto, .prompt) { animation: none; } .prompt span, .vz-reticle .spin, .vz-heart.beat { animation: none; } .vz-gauge .needle { transition: none; } }
 
@@ -249,9 +256,6 @@
   .cabin-use button { padding: 0 10px; font-size: 12px; white-space: nowrap; }
   .cu-title { min-width: 0; font-size: 12px; letter-spacing: .06em; }
   .cabin-use kbd, .cu-long { display: none; }
-  /* the tour's caption keeps clear of the credits, which take more lines on a phone */
-  .cabin-caption { bottom: 128px; }
-  .cabin-credits { font-size: 9px; line-height: 1.3; left: var(--sp-3); right: var(--sp-3); }
 }
 /* the "Tap to use" chip under a wall screen (cabin/screens.ts), on the CSS3D layer: sized for the 1600 px-wide screen it hangs under */
 .screen-chip { all: unset; position: absolute; left: 0; top: 0; transform-origin: 0 0; visibility: hidden; opacity: 0; box-sizing: border-box; cursor: pointer; pointer-events: auto; display: block; width: 520px; height: 118px; padding: 26px 0; text-align: center; font: 700 56px/1 system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #bff3ff; background: rgba(4, 18, 28, .82); border: 5px solid rgba(80, 220, 255, .75); border-radius: 22px; box-shadow: 0 0 60px rgba(54, 226, 245, .45); }
