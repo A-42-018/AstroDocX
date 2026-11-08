@@ -63,12 +63,13 @@ export async function build() {
   const { types, limits, evidence, nasa } = await loadEngine()
   const readme = rd('README.md')
   const app = rd('app/src/App.tsx')
+  const pages = rd('app/src/shell/pages.tsx')
   const nav = rd('app/src/shell/nav.ts')
   const chunks = []
   const add = (c) => chunks.push(c)
 
-  /* ---- console routes (App.tsx is the truth; nav.ts supplies labels) ---- */
-  const routes = [...app.matchAll(/<Route path="(\/[a-z]+)"/g)].map((m) => m[1])
+  /* ---- console routes (shell/pages.tsx is the truth; nav.ts supplies labels) ---- */
+  const routes = [...pages.matchAll(/<Route key="[a-z]+" path="(\/[a-z]+)"/g)].map((m) => m[1])
   const label = (p) => nav.match(new RegExp(`path: '${p}', label: '([^']+)'`))?.[1]
   const screens = routes.map((p) => ({ path: p, label: label(p) })).filter((s) => s.label)
   if (screens.length < 8) throw new Error(`expected 8 console screens, found ${screens.length}`)
