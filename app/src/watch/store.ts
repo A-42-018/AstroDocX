@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { linkAcquired, sensorLost } from '../audio/sfx'
 import { db, type ConsoleDB } from '../data/db'
 import type { WearableKind } from '../data/types'
 import type { NewestHr, SampleKind } from './frames'
@@ -130,6 +131,7 @@ export function createWatchStore(deps: Deps = { makeLink: (h) => new HaylouWatch
             if (link !== mine) return
             link = null; stopSweep()
             set({ status: 'idle', name: '', note: 'The watch disconnected.', ...EMPTY })
+            sensorLost()
           },
         })
         link = mine
@@ -137,6 +139,7 @@ export function createWatchStore(deps: Deps = { makeLink: (h) => new HaylouWatch
           const name = await mine.connect(() => { if (link === mine) set({ status: 'connecting' }) })
           if (link !== mine) return
           set({ status: 'connected', name })
+          linkAcquired()
           startSweep()
         } catch (e) {
           if (link !== mine) return

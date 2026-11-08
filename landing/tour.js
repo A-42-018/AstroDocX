@@ -3,7 +3,7 @@
  * and the scroll story (story.html, body[data-page=story]).
  *
  * 1-click tour (for judges): any [data-tour-start] button, or opening / with ?tour=full. A control bar shows the
- * chapter, a caption and progress (Pause · Skip · Exit). On the homepage, chapter 1 is the briefing room: VITA plays
+ * chapter, a caption and progress (Pause · Skip · Exit). On the homepage, chapter 1 is the briefing room: NOVA plays
  * her 4-step intro (window.ADX_BRIEFING, briefing/briefing.js). On the story page it scrolls the particle journey.
  * Either way it then opens the Crew Console with ?tour=1, which carries on through the console and the 3D cabin
  * (app/src/tour). About two minutes in all. A scroll or tap pauses it; Space pauses, Esc exits.
@@ -19,7 +19,7 @@
   'use strict';
   var q = new URLSearchParams(location.search);
   var mode = q.get('tour');                    // '1' video, 'full' 1-click from a link
-  /* Which tour: 'quick' (about two minutes) or 'full' (the whole project, VITA narrating every screen). /?tour=full&mode=full
+  /* Which tour: 'quick' (about two minutes) or 'full' (the whole project, NOVA narrating every screen). /?tour=full&mode=full
      starts the full one from a link; the chat's "give me the full tour" and the dock in the console ask for it too. */
   var guide = q.get('mode') === 'full' ? 'full' : 'quick';
   function consoleUrl() { return '/app/?tour=1' + (guide === 'full' ? '&mode=full' : ''); }
@@ -87,7 +87,7 @@
   /* ── the 1-click bar ── */
   var bar = null, capEl = null, progEl = null, pauseBtn = null, lastCap = '';
   var CAPTIONS = {
-    briefing: 'Mission briefing: VITA, our guide, explains why a crew far from Earth has to be its own clinic.',
+    briefing: 'Mission briefing: NOVA, our guide, explains why a crew far from Earth has to be its own clinic.',
     intro: 'The story: on missions months from home, the crew has to be its own clinic.',
     twin: 'Health Twin: one scan across six body systems gives one readiness score and a clear action card.',
     adx: 'AstroDocX: detect, explain, act, log, sync later. Next stop: the real Crew Console.'
@@ -266,7 +266,7 @@
   }
 
   /* The 1-click tour: from a button (a click, so the browser also allows the soundtrack) or ?tour=full. */
-  /* Chapter 1 on the homepage: VITA's briefing, then on to the console. */
+  /* Chapter 1 on the homepage: NOVA's briefing, then on to the console. */
   function runBriefing() {
     stopped = false;
     var tick = setInterval(function () { if (stopped) clearInterval(tick); else showProgress(); }, 200);

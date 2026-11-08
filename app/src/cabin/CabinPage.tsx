@@ -19,7 +19,12 @@ import { actAlert, cabinBrief, cabinHello, crewNote } from '../doctor/brief'
 import { useDoctorBrief, useDoctorReport } from '../doctor/useDoctorReport'
 
 /** The arrival's phases and the visor, heard as well as seen. */
-const INTRO_SOUND: Partial<Record<IntroPhase, () => void>> = { fly: sfx.flyRumble, lock: sfx.glare, clear: sfx.pressurise }
+// the arrival: the flight in with a puff of thrusters, the glare as it locks, then the dock clanks shut and the cabin pressurises
+const INTRO_SOUND: Partial<Record<IntroPhase, () => void>> = {
+  fly: () => { sfx.flyRumble(); window.setTimeout(sfx.thrusterPuff, 2200) },
+  lock: sfx.glare,
+  clear: () => { sfx.dockingClank(); sfx.pressurise() },
+}
 
 /** Caption for each tour stop, in scene order; names come from the live data. */
 function stops(d: CabinData | null) {
@@ -129,7 +134,18 @@ export default function CabinPage() {
   const captionTimer = useRef(0)
   const lastStop = useRef(-1)
   const visorWas = useRef<string>('raised')
-  const leave = () => (location.key === 'default' ? navigate('/board') : navigate(-1))
+  /**
+   * Back to where the crew came from, in one press. `location.key === 'default'` is only true for the very first entry, so
+   * an entry that was replaced (the tour, a redirect) used to send "back" to an earlier page, or nowhere. React Router
+   * keeps the entry's place in `history.state.idx`: at 0 there is nothing in the app to go back to, so go to the board. If
+   * going back lands on another cabin entry (or does not leave at all), the board is the answer after a beat.
+   */
+  const leave = () => {
+    const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0
+    if (idx <= 0) { navigate('/board', { replace: true }); return }
+    navigate(-1)
+    window.setTimeout(() => { if (document.querySelector('.cabin-back')) navigate('/board', { replace: true }) }, 400)
+  }
 
   useEffect(() => {
     if (!canvas.current || state === 'unsupported') return
@@ -145,8 +161,11 @@ export default function CabinPage() {
         },
         onStop: (i) => {
           // the first stop shown is the start, not a move
-          if (lastStop.current >= 0 && i !== lastStop.current) sfx.whoosh()
+          const prevStop = lastStop.current
+          if (prevStop >= 0 && i !== prevStop) sfx.whoosh()
           lastStop.current = i
+          // the last stop is outside the station: through the airlock, and a few boot steps on the hull
+          if (prevStop >= 0 && (i === STOP_COUNT - 1) !== (prevStop === STOP_COUNT - 1)) { sfx.airlock(); if (i === STOP_COUNT - 1) window.setTimeout(sfx.evaSteps, 3000) }
           sfx.humOutside(i === STOP_COUNT - 1 ? 1 : 0)
           setStop(i)
         },
@@ -173,7 +192,7 @@ export default function CabinPage() {
         },
         onScreen: (i) => {
           if (i === null) { setScreen(null); screenWas.current = null; return }
-          sfx.select()
+          sfx.select(); sfx.hologramOn()
           setScreen((cur) => cur?.i === i ? cur : { i, path: '', label: '' })
           // using a screen pauses a running guided tour (and VITA with it), as exploring does
           if (useTour.getState().phase === 'running') useTour.getState().set({ paused: true })

@@ -1,6 +1,6 @@
 /* ============================================================
    ASTRODOCX — Mission Briefing (homepage) behaviour
-     intro     a scripted 4-step briefing by VITA, once per visit
+     intro     a scripted 4-step briefing by NOVA, once per visit
                (sessionStorage), with Skip; fully offline
      chat      questions go to the shared ask module
                (landing/vita/ask.js); if it is missing or fails, a
@@ -41,7 +41,7 @@ const scene = createScene({ bg: $('#bg'), bot: $('#bot'), doors: doors.map((d) =
 
 /* ───────────────────────── copy ───────────────────────── */
 const INTRO = [
-  { text: "Hi, I'm <em>VITA</em>, AstroDocX's mission guide. In 30 seconds, I'll show you how we help crews monitor health beyond Earth." },
+  { text: "Hi, I'm <em>NOVA</em>, AstroDocX's mission guide. In 30 seconds, I'll show you how we help crews monitor health beyond Earth." },
   { text: 'Far from Earth, crews may need to spot health changes before Ground can respond. NASA groups the risks into five hazards: <em>radiation, isolation, distance, gravity and environment</em>.',
     citations: [{ label: 'NASA · 5 hazards', url: 'https://www.nasa.gov/hrp/hazards/' }] },
   { text: "AstroDocX learns each astronaut's baseline, explains changes and turns alerts into clear actions. Its limits link back to NASA sources.", door: 'console' },
@@ -96,8 +96,8 @@ const plain = (s) => String(s ?? '').replace(/<[^>]*>/g, '')
 const httpUrl = (u) => { try { const x = new URL(u, location.href); return /^https?:$/.test(x.protocol) ? x.href : null } catch { return null } }
 
 /* ───────────────────────── state ───────────────────────── */
-let token = 0            // bumps to cancel whatever VITA is saying or waiting on
-let busy = false         // VITA is typing or thinking
+let token = 0            // bumps to cancel whatever NOVA is saying or waiting on
+let busy = false         // NOVA is typing or thinking
 let ready = false        // the intro is over: chips, door lines and questions are live
 let paused = false       // the 1-click tour is paused
 const chatLog = []   // { role: 'user' | 'assistant', text } for the ask module
@@ -116,7 +116,7 @@ const sleep = (ms, tok) => new Promise((res) => {
 let stepNow = 0
 function setStep(i) {
   stepNow = i
-  phase.textContent = i < INTRO.length ? `Briefing · ${i + 1} of ${INTRO.length}` : 'Ask VITA'
+  phase.textContent = i < INTRO.length ? `Briefing · ${i + 1} of ${INTRO.length}` : 'Ask NOVA'
   steps.forEach((n, j) => n.classList.toggle('on', j <= i))
 }
 function setBusy(v, label) {
@@ -139,7 +139,7 @@ function addBot({ source, hover } = {}) {
   const d = document.createElement('div')
   d.className = 'msg bot' + (hover ? ' hover' : '')
   if (hover) d.setAttribute('aria-hidden', 'true')   // door hints repeat what the door says; keep them out of the log
-  d.innerHTML = `<div class="who" aria-hidden="true">VITA${source === 'offline' ? ' <span class="src">· offline</span>' : ''}</div><p class="sr-only"></p><div class="body" aria-hidden="true"></div>`
+  d.innerHTML = `<div class="who" aria-hidden="true">NOVA${source === 'offline' ? ' <span class="src">· offline</span>' : ''}</div><p class="sr-only"></p><div class="body" aria-hidden="true"></div>`
   thread.appendChild(d); scrollDown()
   return d
 }
@@ -153,8 +153,8 @@ async function say(item, { instant = false, quiet = false } = {}) {
   const body = $('.body', d)
   const html = safe(item.text)
   const text = plain(html.replace(/&[a-z#0-9]+;/gi, (e) => { const t = document.createElement('textarea'); t.innerHTML = e; return t.value }))
-  $('.sr-only', d).textContent = 'VITA: ' + text
-  // VITA speaks while the line types out (only with Sound on); the line ends when she stops talking
+  $('.sr-only', d).textContent = 'NOVA: ' + text
+  // NOVA speaks while the line types out (only with Sound on); the line ends when she stops talking
   const spoken = quiet ? null : voice.speak(text)
   if (spoken) { scene.talk(true); vitaId.classList.add('busy'); vitaState.textContent = 'Speaking' }
   if (instant || REDUCED) {
@@ -178,7 +178,7 @@ async function say(item, { instant = false, quiet = false } = {}) {
   return tok === token
 }
 
-/** Wait for VITA to finish speaking; stops her if something else takes over (a question, Skip, a door). */
+/** Wait for NOVA to finish speaking; stops her if something else takes over (a question, Skip, a door). */
 async function untilQuiet(spoken, tok) {
   let done = false
   spoken.then(() => { done = true })
@@ -301,7 +301,7 @@ async function ask(q) {
   setBusy(true, 'Thinking')
   const wait = addBot()
   $('.body', wait).innerHTML = '<span class="dots"><i></i><i></i><i></i></span>'
-  $('.sr-only', wait).textContent = 'VITA is thinking…'
+  $('.sr-only', wait).textContent = 'NOVA is thinking…'
   const r = await answer(q)
   wait.remove(); setBusy(false)
   if (tok !== token) return
@@ -319,12 +319,12 @@ form.addEventListener('submit', (e) => {
   ask(q)
 })
 
-/* status bar: whether VITA is answering live or from the built-in set */
+/* status bar: whether NOVA is answering live or from the built-in set */
 const linkEl = $('#vitaLink'), linkTxt = $('#vitaLinkTxt')
 function setLink(source) {
   const off = !navigator.onLine || source === 'offline'
   linkEl.classList.toggle('off', off)
-  linkTxt.textContent = !navigator.onLine ? 'VITA offline · built-in answers' : source === 'offline' ? 'VITA online · built-in answers' : 'VITA online'
+  linkTxt.textContent = !navigator.onLine ? 'NOVA offline · built-in answers' : source === 'offline' ? 'NOVA online · built-in answers' : 'NOVA online'
 }
 addEventListener('online', () => setLink()); addEventListener('offline', () => setLink())
 setLink('live')
@@ -337,7 +337,7 @@ if (SR && mic) {
   let rec = null
   mic.addEventListener('click', () => {
     if (rec) { rec.stop(); return }
-    voice.cancel()   // don't let the mic hear VITA
+    voice.cancel()   // don't let the mic hear NOVA
     rec = new SR(); rec.lang = 'en-US'; rec.interimResults = true; rec.maxAlternatives = 1
     mic.classList.add('listening'); mic.setAttribute('aria-label', 'Stop listening')
     rec.onresult = (e) => {
@@ -350,7 +350,7 @@ if (SR && mic) {
   })
 }
 
-/* VITA herself: a nudge */
+/* NOVA herself: a nudge */
 const bot = $('#bot')
 function poke() { if (ready && !busy) say({ text: 'Still here. Ask me something, or pick a door below.' }) }
 bot.addEventListener('click', poke)
@@ -494,7 +494,7 @@ addEventListener('pagehide', saveHandoff)
 
 /* ───────────────────────── 1-click tour hooks (tour.js) ───────────────────────── */
 window.ADX_BRIEFING = {
-  /** Play the briefing as the tour's first chapter. Resolves true when VITA has finished. */
+  /** Play the briefing as the tour's first chapter. Resolves true when NOVA has finished. */
   async runTour() {
     cosmos.close({ instant: true }); closeLibrary(); paused = false
     if (!(await runIntro())) return false

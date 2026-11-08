@@ -1,6 +1,7 @@
 import { ArrowLeft, ArrowRight, BatteryCharging, BatteryFull, BatteryLow, BatteryMedium, BatteryWarning, Check, Frown, Annoyed, Info, Laugh, Meh, ScanFace, Smile, type LucideIcon } from 'lucide-react'
-import { useState } from 'react'
-import { confirmChime } from '../audio/sfx'
+import { useRef, useState } from 'react'
+import { stinger } from '../audio/music'
+import { confirmChime, notAllowed, sleepLogged } from '../audio/sfx'
 import { announce } from '../audio/voice'
 import { Link } from 'react-router-dom'
 import { alertTitle, met } from '../engine/actions'
@@ -98,6 +99,8 @@ export function CheckInForm({ crew, crewId, now, onSubmit, baselineMs, onScan, r
   const [result, setResult] = useState<CheckInResult | null>(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  // the wind-down chime plays once for each hours value typed in
+  const loggedHours = useRef<number | undefined>(undefined)
   const index = crew.findIndex((c) => c.id === crewId)
   const who = crew[index]
   const last = step === STEPS.length - 1
@@ -110,15 +113,17 @@ export function CheckInForm({ crew, crewId, now, onSubmit, baselineMs, onScan, r
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!last) return
-    if (mood === null || sleepQuality === null) return setError('Pick a mood and a sleep quality first.')
+    if (mood === null || sleepQuality === null) { notAllowed(); return setError('Pick a mood and a sleep quality first.') }
     setBusy(true)
     setError('')
     try {
       setResult(await onSubmit({ crewId, ts: now, mood, sleepQuality, sleepHours: hours.trim() === '' ? undefined : Number(hours), symptoms, reactionMs: pvt?.medianMs ?? undefined }))
       reset()
       confirmChime()
+      window.setTimeout(() => stinger('checkin'), 1000)
       window.setTimeout(() => announce('Check in saved and logged.'), 500)
     } catch (err) {
+      notAllowed()
       setError(err instanceof Error ? err.message : String(err))
     } finally {
       setBusy(false)
@@ -192,7 +197,7 @@ export function CheckInForm({ crew, crewId, now, onSubmit, baselineMs, onScan, r
                   <div className="ci-hours">
                     <label htmlFor="ci-hours">Hours slept (optional)</label>
                     <span className="ci-inp">
-                      <input id="ci-hours" type="number" inputMode="decimal" min={0} max={16} step={0.1} value={hours} onChange={(e) => setHours(e.target.value)} placeholder="—" aria-describedby="ci-hours-hint" />
+                      <input id="ci-hours" type="number" inputMode="decimal" min={0} max={16} step={0.1} value={hours} onChange={(e) => setHours(e.target.value)} onBlur={() => { if (h !== undefined && h > 0 && h !== loggedHours.current) { loggedHours.current = h; sleepLogged() } }} placeholder="—" aria-describedby="ci-hours-hint" />
                       <span className="ro-unit" aria-hidden="true">h</span>
                     </span>
                     <span id="ci-hours-hint" className="ci-hint">Blank = use wearable</span>

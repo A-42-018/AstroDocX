@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { masterAlarm } from '../audio/sfx'
 import { db } from '../data/db'
 import { seedDemo } from '../data/demo'
 import { advance, makeInjection, missionNow } from './advance'
@@ -48,7 +49,11 @@ export async function runDemo(select: (id: string) => void) {
     prune(res.to)
     useDemo.getState().set({ step: i })
     const open = await db.alerts.where('[crewId+state]').anyOf([id, 'open'], [id, 'acknowledged']).toArray()
-    if (open.some((a) => a.hazard === 'E' && a.status === 'act')) break
+    if (open.some((a) => a.hazard === 'E' && a.status === 'act')) {
+      // the critical moment: the master alarm follows the alert chime
+      window.setTimeout(masterAlarm, 1500)
+      break
+    }
   }
   if (mine === token) useDemo.getState().set({ phase: 'done' })
 }

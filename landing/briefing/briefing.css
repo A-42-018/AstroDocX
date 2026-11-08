@@ -43,9 +43,13 @@ a { color:inherit; }
 .skip-link:focus { top:12px; }
 
 #bg { position:fixed; inset:0; width:100%; height:100%; display:block; }
+/* the console's stage treatment (app/src/styles/base.css .shell::after): a faint dot grid and an edge vignette over the sky */
 .scrim { position:fixed; inset:0; pointer-events:none;
-  background:linear-gradient(90deg,rgba(5,6,8,.45) 0%,rgba(5,6,8,.08) 55%,rgba(5,6,8,.15) 100%),
+  background:radial-gradient(rgba(120,220,255,.10) 1px,transparent 1.2px) 0 0 / 22px 22px,
+             radial-gradient(120% 90% at 50% 50%,transparent 55%,rgba(0,0,0,.65)),
+             linear-gradient(90deg,rgba(5,6,8,.45) 0%,rgba(5,6,8,.08) 55%,rgba(5,6,8,.15) 100%),
              linear-gradient(180deg,rgba(5,6,8,.35) 0%,rgba(5,6,8,0) 30%,rgba(5,6,8,.2) 100%); }
+::selection { background:rgba(54,226,245,.35); color:#fff; }
 
 /* ── frame ── */
 .frame { position:relative; height:100%; height:100dvh; display:grid; grid-template-rows:58px minmax(0,1fr) auto auto; }
@@ -53,8 +57,9 @@ a { color:inherit; }
 .topbar { position:relative; z-index:2; display:flex; align-items:center; gap:12px; min-width:0; padding:0 20px; border-bottom:1px solid var(--edge);
   background:linear-gradient(180deg,rgba(5,16,24,.95),rgba(4,10,16,.85)); backdrop-filter:blur(16px) saturate(140%); -webkit-backdrop-filter:blur(16px) saturate(140%); }
 .brand { display:flex; flex:none; align-items:center; gap:9px; text-decoration:none; }
-.logo { flex:none; width:30px; height:30px; display:grid; place-content:center; color:#03141a; background:var(--cy); box-shadow:0 0 18px var(--cy-glow);
-  clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%); font:800 20px/1 var(--disp); }
+.logo { flex:none; width:32px; height:32px; display:grid; place-content:center; border-radius:50%; box-shadow:0 0 16px var(--cy-glow); transition:box-shadow .2s, transform .2s; }
+.logo img { width:100%; height:100%; display:block; }
+.brand:hover .logo { box-shadow:0 0 24px var(--cy-glow), 0 0 0 2px var(--cy); transform:scale(1.06); }
 .brand-text { display:grid; line-height:1.2; }
 .brand-text b { font:700 17px var(--disp); letter-spacing:.04em; text-transform:uppercase; }
 .brand-text small, .mono { font-family:var(--mono); font-size:11px; font-weight:500; letter-spacing:.16em; text-transform:uppercase; color:var(--t3); }

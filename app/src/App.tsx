@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useRef } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { setMusicAlert, setMusicArea, type MusicArea } from './audio/music'
 import { alertChime, cabinHum, navTick, uiClick, uiHover } from './audio/sfx'
 import { announce, startChatter, stopChatter } from './audio/voice'
 import { CabinPage } from './cabin/lazy'
@@ -50,6 +51,20 @@ function useRouteAnnounce(main: React.RefObject<HTMLElement | null>) {
     if (first.current) { first.current = false; return }
     main.current?.focus()
   }, [pathname, main])
+}
+
+/** Which score bed a screen gets (the Alerts screen plays the red one only while an Act-level alert is open: see setMusicAlert). */
+const areaFor = (pathname: string): MusicArea =>
+  pathname.startsWith('/cabin') ? 'cabin' : pathname.startsWith('/checkin') ? 'checkin' : pathname.startsWith('/trends') ? 'trends'
+    : pathname.startsWith('/alerts') ? 'alert' : pathname.startsWith('/ground') || pathname.startsWith('/sync') ? 'ground' : 'dashboard'
+
+/** The score follows the screen, and the red bed follows an open Act-level alert on the selected crew member. */
+function useMusicArea(shell: ShellData | null, embedded: boolean) {
+  const { pathname } = useLocation()
+  useEffect(() => { if (!embedded) setMusicArea(areaFor(pathname)) }, [pathname, embedded])
+  const me = shell?.crew.find((c) => c.id === shell.crewId)
+  const act = !!me && me.status === 'act' && me.alerts > 0
+  useEffect(() => { if (!embedded) setMusicAlert(act) }, [act, embedded])
 }
 
 /** A tick on moving between screens, and a chime when the crew's open alerts go up (more urgent if anyone is at Act). */
@@ -103,6 +118,7 @@ export default function App() {
   // A single screen without the frame, for the 3D cabin's wall screens.
   const embed = stickyEmbed(search)
   useShellSounds(shell, !!embed || pathname.startsWith('/cabin'))
+  useMusicArea(shell, !!embed)
   if (embed) return (
     <ShellDataContext.Provider value={shell}>
       <EmbedBridge />

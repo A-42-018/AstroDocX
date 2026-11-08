@@ -14,7 +14,7 @@ vi.mock('../board/hooks', () => ({
   useSnapshot: () => ({ crew: [{ id: 'c1', name: 'Commander', role: 'CDR' }], crewId: 'c1', now: 5000 }),
 }))
 vi.mock('../board/store', () => ({ useBoard: (sel: (s: unknown) => unknown) => sel({ boot: { state: 'ready', done: 0, total: 0 } }) }))
-vi.mock('../audio/sfx', () => ({ confirmChime: () => {} }))
+vi.mock('../audio/sfx', () => ({ confirmChime: () => {}, faceLock: () => {}, notAllowed: () => {}, scanSweep: () => {} }))
 vi.mock('../shell/install', () => ({ requestPersistentStorage: () => Promise.resolve() }))
 
 const analysis = (over: Partial<ScanAnalysis> = {}): ScanAnalysis => ({
