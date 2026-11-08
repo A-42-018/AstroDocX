@@ -117,6 +117,7 @@ export default function CabinPage() {
   const [picked, setPicked] = useState<string | null>(null)
   /** Float mode: drifting freely through the hall instead of following the tour. */
   const [floating, setFloating] = useState(false)
+  const [creditsOpen, setCreditsOpen] = useState(false)
   /** A wall screen stepped up to: which, and the console page it is showing (the frame reports it). */
   const [screen, setScreen] = useState<{ i: number; path: string; label: string } | null>(null)
   const screenWas = useRef<string | null>(null)
@@ -287,6 +288,7 @@ export default function CabinPage() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
+      if (creditsOpen) { setCreditsOpen(false); return }
       if (screen) { scene.current?.leaveScreen(); return }
       if (picked) { setPicked(null); scene.current?.goTo(stop) }
       else if (floating) scene.current?.setFloat(false)
@@ -394,7 +396,12 @@ export default function CabinPage() {
       )}
 
       <footer className="cabin-credits">
+        <button type="button" className="cabin-credits-btn" aria-expanded={creditsOpen} aria-controls="cabin-credits-list" onClick={() => setCreditsOpen((o) => !o)}>
+          Credits
+        </button>
+        <p id="cabin-credits-list" className="cabin-panel cabin-credits-list" hidden={!creditsOpen}>
         Module: “<a href="https://sketchfab.com/3d-models/space-ship-interior-08f117102f2f4e48ab583b7ae22db1c1" target="_blank" rel="noopener noreferrer">Space Ship Interior</a>” by Ryley Burnett · Astronaut: “<a href="https://sketchfab.com/3d-models/e2c4b146e58141e4b87917456a9970b1" target="_blank" rel="noopener noreferrer">Animated Floating Astronaut</a>” by LasquetiSpice · Station: “<a href="https://sketchfab.com/3d-models/813f5b296e584c26bf386ca39de6c3d4" target="_blank" rel="noopener noreferrer">ISS</a>” by uperesito · Consoles: “<a href="https://sketchfab.com/3d-models/sci-fi-computer-desk-console-28c67457f2ef4973a0bbc8b667bb183f" target="_blank" rel="noopener noreferrer">Sci-Fi Computer Desk Console</a>” and “<a href="https://sketchfab.com/3d-models/large-wall-mounted-computer-console-298b7d9b68064618a3819d1a8fae4baf" target="_blank" rel="noopener noreferrer">Large Wall-Mounted Computer Console</a>” by Inditrion Dradnon, “<a href="https://sketchfab.com/3d-models/sci-fi-supercomputer-9464e880c35e4fd29c0cdb6fefe5ebba" target="_blank" rel="noopener noreferrer">Sci-fi Supercomputer</a>” by Jungle Jim · Robots (VITA and MEDI): “<a href="https://sketchfab.com/3d-models/tars-interstellar-improved-4648e3edb8cd4b35af57868da5fcb62c" target="_blank" rel="noopener noreferrer">TARS Interstellar (Improved)</a>” by THAD · all CC BY 4.0 · Surfaces: <a href="https://ambientcg.com" target="_blank" rel="noopener noreferrer">ambientCG</a>, CC0 · Earth: <a href="https://visibleearth.nasa.gov" target="_blank" rel="noopener noreferrer">NASA Visible Earth</a> and “<a href="https://sketchfab.com/3d-models/earth-63d902b12fd14868b4dc2f19dc21d7c2" target="_blank" rel="noopener noreferrer">Earth</a>” by kongle, CC BY-SA 4.0
+        </p>
       </footer>
 
       {state !== 'unsupported' && loader !== 'gone' && (
