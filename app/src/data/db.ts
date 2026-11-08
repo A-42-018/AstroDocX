@@ -1,5 +1,8 @@
 import Dexie, { type EntityTable, type Table } from 'dexie'
-import type { ActionLogEntry, Alert, Baseline, CheckIn, CrewMember, FaceScan, MetricId, Reading, Timestamp } from './types'
+import type {
+  ActionLogEntry, Alert, Baseline, CheckIn, CrewMember, FaceScan, MetricId, Reading, Timestamp,
+  WearableKind, WearableSample,
+} from './types'
 
 export class ConsoleDB extends Dexie {
   crew!: EntityTable<CrewMember, 'id'>
@@ -9,6 +12,7 @@ export class ConsoleDB extends Dexie {
   actionLog!: EntityTable<ActionLogEntry, 'id'>
   checkIns!: EntityTable<CheckIn, 'id'>
   scans!: EntityTable<FaceScan, 'id'>
+  wearables!: EntityTable<WearableSample, 'id'>
 
   constructor(name = 'astrodocx-console') {
     super(name)
@@ -22,6 +26,8 @@ export class ConsoleDB extends Dexie {
     })
     // experimental webcam face scans; a new store only, nothing existing changes
     this.version(2).stores({ scans: '++id, crewId, ts' })
+    // opt-in consumer wearable data (Haylou Solar 5); shadow mode only, never feeds alerts
+    this.version(3).stores({ wearables: '++id, [kind+ts], kind, ts' })
   }
 }
 
@@ -33,6 +39,10 @@ export function addReading(r: Reading, d: ConsoleDB = db) {
 
 export function readingsFor(crewId: string, metric: MetricId, from: Timestamp, to: Timestamp, d: ConsoleDB = db) {
   return d.readings.where('[crewId+metric+ts]').between([crewId, metric, from], [crewId, metric, to], true, true).toArray()
+}
+
+export function wearablesFor(kind: WearableKind, from: Timestamp, to: Timestamp, d: ConsoleDB = db) {
+  return d.wearables.where('[kind+ts]').between([kind, from], [kind, to], true, true).toArray()
 }
 
 export function openAlerts(crewId: string, d: ConsoleDB = db) {

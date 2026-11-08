@@ -7,6 +7,8 @@
  */
 
 const CY = '#36e2f5', CYHI = '#9ff4ff'
+// The shell is ice-white, not cyan: the dock sits over cyan waveforms and rings, and a cyan drone on them read as one blob.
+const ICE = '#f2fbff', ICEFAR = '#a9c4d4'
 const N = 520
 const PTS: [number, number, number][] = Array.from({ length: N }, (_, i) => {
   const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), th = i * 2.39996
@@ -55,6 +57,11 @@ export function createVitaBot(canvas: HTMLCanvasElement, { reduced = false }: { 
     }
     b.shadowBlur = 0; b.restore()
 
+    // dark body disc: hides whatever cyan line runs behind the drone, so its outline stays readable
+    const rg = b.createRadialGradient(c, cy, R * 0.2, c, cy, R * 1.08)
+    rg.addColorStop(0, 'rgba(3,10,16,.96)'); rg.addColorStop(0.85, 'rgba(3,10,16,.9)'); rg.addColorStop(1, 'rgba(3,10,16,0)')
+    b.globalAlpha = 1; b.fillStyle = rg; b.beginPath(); b.arc(c, cy, R * 1.08, 0, Math.PI * 2); b.fill()
+
     // particle shell, wobbling a little more while it talks
     const cyr = Math.cos(ry), syr = Math.sin(ry), cxr = Math.cos(rx), sxr = Math.sin(rx)
     for (const [x0, y0, z0] of PTS) {
@@ -63,7 +70,7 @@ export function createVitaBot(canvas: HTMLCanvasElement, { reduced = false }: { 
       const y = y0 * cxr - z * sxr; z = y0 * sxr + z * cxr
       const wob = reduced ? 1 : 1 + 0.04 * Math.sin(t / 300 + y0 * 6) + amp * 0.05 * Math.sin(t / 60 + x0 * 9)
       const sx = c + x * R * wob, sy = cy + y * R * wob, d = (z + 1) / 2
-      b.globalAlpha = 0.14 + d * 0.8; b.fillStyle = d > 0.7 ? CYHI : col
+      b.globalAlpha = 0.14 + d * 0.8; b.fillStyle = d > 0.4 ? ICE : ICEFAR
       const s = S * (0.006 + d * 0.011)
       b.fillRect(sx - s / 2, sy - s / 2, s, s)
     }

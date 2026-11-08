@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { HAZARDS } from '../board/snapshot'
 import { met } from '../engine/actions'
 import { METRICS, type CrewMember, type MetricId, type Status } from '../data/types'
@@ -6,6 +7,18 @@ import { TrendPlot } from './TrendChart'
 import { BodyRegion, Spark } from './parts'
 import { levelOf, pickMultiples, REGION, type Level } from './levels'
 import { CHART_METRICS, RANGES, decimalsFor, seriesStats, trendSummary, type RangeId, type TrendSeries } from './series'
+import { InsightsSection } from './InsightsSection'
+import type { AgreementReport } from '../ml/agreement'
+import type { AnomalyReport } from '../ml/anomaly'
+import type { ForecastResult } from '../ml/forecast'
+import type { ReadinessResult } from '../ml/readiness'
+
+export interface InsightsData {
+  anomaly: AnomalyReport
+  forecast: ForecastResult
+  readiness: ReadinessResult
+  agreement: AgreementReport
+}
 
 interface Props {
   crew: CrewMember[]
@@ -21,6 +34,11 @@ interface Props {
   median?: { ts: number; value: number }[]
   /** Level of each metric's open alert, if it has one. */
   alertStatus?: Partial<Record<MetricId, Status>>
+  insights?: InsightsData
+  /** Set when the watch is linked to another crew member: their name, shown instead of the insights. */
+  insightsWearer?: string
+  /** Watch data tools (save toggle, export, delete), shown under the insights. */
+  watchData?: ReactNode
 }
 
 const sig = (s: number) => `${s < 0 ? '−' : '+'}${Math.abs(s).toFixed(1)}σ`
@@ -29,7 +47,7 @@ const sig = (s: number) => `${s < 0 ? '−' : '+'}${Math.abs(s).toFixed(1)}σ`
  * Trends (plan §4.3, mockup 2): the biometric channel list, the focus chart, the latest value as a ring gauge
  * with its band word, the body region it belongs to, and small multiples of the metrics that most need a look.
  */
-export function TrendsView({ crew, crewId, range, series, onRange, focus, onFocus = () => {}, compare = false, onCompare, median, alertStatus = {} }: Props) {
+export function TrendsView({ crew, crewId, range, series, onRange, focus, onFocus = () => {}, compare = false, onCompare, median, alertStatus = {}, insights, insightsWearer, watchData }: Props) {
   const who = crew.find((c) => c.id === crewId)
   const ms = RANGES.find((r) => r.id === range)!.ms
   const big = series.find((s) => s.metric === focus) ?? series[0]
@@ -134,6 +152,13 @@ export function TrendsView({ crew, crewId, range, series, onRange, focus, onFocu
           )
         })}
       </ul>
+
+      {insightsWearer !== undefined ? (
+        <section className="tr-insights" aria-label="Wearable Insights">
+          <p className="ins-desc">Watch insights belong to {insightsWearer}, who wears the watch. Select them to see the insights.</p>
+        </section>
+      ) : insights && <InsightsSection {...insights} />}
+      {watchData}
     </div>
   )
 }

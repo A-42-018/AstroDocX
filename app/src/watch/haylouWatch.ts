@@ -1,6 +1,9 @@
+import type { WearableKind } from '../data/types'
 import {
-  CMD_HISTORY, FrameReassembler, HISTORY_UNIT, NEWEST_HR_QUERY, TYPE_REPLY, decodeFrame, historyCountQuery, historyReadQuery,
-  isHistoryData, newestStress, parseHistoryCount, plausible, type Frame, type NewestHr, type Sample,
+  CMD_HISTORY, FrameReassembler, HISTORY_UNIT, NEWEST_HR_QUERY, TYPE_REPLY, decodeFrame,
+  decodeHrHistory, decodeSleepPoints, decodeSpo2History, decodeStressHistory,
+  historyCountQuery, historyReadQuery, isHistoryData, newestStress, parseHistoryCount, plausible,
+  type Frame, type NewestHr, type Sample,
 } from './frames'
 
 /** Data service of the Haylou Solar 5 and its three characteristics (see research_notes). */
@@ -78,6 +81,10 @@ export interface WatchHandlers {
   onNewest: (r: NewestHr) => void
   /** The newest non-zero stress reading the watch has stored (not live), with the watch's own timestamp in unix seconds. */
   onStoredStress?: (r: { value: number; at: number }) => void
+  /** Stored history points decoded from the watch (HR, SpO2, stress, sleep). */
+  onHistoryPoints?: (kind: WearableKind, points: { t: number; value: number }[]) => void
+  /** Optional callback to look up the last saved timestamp in unix seconds for incremental backfill. */
+  getHistoryStart?: (kind: WearableKind) => Promise<number | null> | number | null
   /** The link dropped (watch out of range, switched off, or disconnect() was called). */
   onDisconnect: () => void
 }
@@ -91,7 +98,23 @@ export class HaylouWatch {
   private notifiers: { ch: BtCharacteristic; l: (e: { target: { value?: DataView | null } }) => void }[] = []
   private timer: ReturnType<typeof setInterval> | null = null
   private closed = false
-  private history: { phase: 'count' | 'read' | 'done'; expected: number | null; frames: Uint8Array[]; timer: ReturnType<typeof setTimeout> | null } | null = null
+  private readonly historyQueue: { kind: WearableKind; unit: number }[] = [
+    { kind: 'stress', unit: HISTORY_UNIT.stress },
+    { kind: 'hr', unit: HISTORY_UNIT.hr },
+    { kind: 'spo2', unit: HISTORY_UNIT.spo2 },
+    { kind: 'sleep', unit: HISTORY_UNIT.sleep },
+  ]
+  private queueIndex = 0
+  private history: {
+    kind: WearableKind
+    unit: number
+    startS: number
+    endS: number
+    phase: 'count' | 'read' | 'done'
+    expected: number | null
+    frames: Uint8Array[]
+    timer: ReturnType<typeof setTimeout> | null
+  } | null = null
   private readonly onGone = () => this.teardown()
 
   constructor(handlers: WatchHandlers, api: BtApi | undefined = bluetoothApi()) {
@@ -153,24 +176,53 @@ export class HaylouWatch {
     try { await this.write?.writeValueWithoutResponse(frame as BufferSource) } catch { /* link gone or busy */ }
   }
 
-  /** Read-only: ask how many reply frames the stress history has, then ask for the last HISTORY_HOURS of it. */
+  /** Read-only: ask how many reply frames history has, then ask for data since last saved time. */
   private startHistory() {
-    const h = { phase: 'count' as const, expected: null as number | null, frames: [] as Uint8Array[], timer: null as ReturnType<typeof setTimeout> | null }
-    this.history = h
-    h.timer = setTimeout(() => this.startRead(), COUNT_WAIT_MS)
-    void this.send(historyCountQuery(HISTORY_UNIT.stress, this.windowStart(), this.windowEnd()))
+    this.queueIndex = 0
+    void this.runHistoryQueue()
   }
   private windowEnd() { return Math.floor(Date.now() / 1000) }
-  private windowStart() { return this.windowEnd() - HISTORY_HOURS * 3600 }
+
+  private async runHistoryQueue() {
+    if (this.closed || this.queueIndex >= this.historyQueue.length) {
+      this.history = null
+      return
+    }
+    const item = this.historyQueue[this.queueIndex]
+    const endS = this.windowEnd()
+    let startS = endS - HISTORY_HOURS * 3600
+    if (this.handlers.getHistoryStart) {
+      try {
+        const custom = await this.handlers.getHistoryStart(item.kind)
+        if (custom !== null && custom > 0) startS = custom
+      } catch {
+        /* fallback to default */
+      }
+    }
+    if (this.closed) return
+    const h = {
+      kind: item.kind,
+      unit: item.unit,
+      startS,
+      endS,
+      phase: 'count' as const,
+      expected: null as number | null,
+      frames: [] as Uint8Array[],
+      timer: null as ReturnType<typeof setTimeout> | null,
+    }
+    this.history = h
+    h.timer = setTimeout(() => this.startRead(), COUNT_WAIT_MS)
+    void this.send(historyCountQuery(item.unit, startS, endS))
+  }
 
   private startRead() {
     const h = this.history
     if (!h || h.phase === 'done') return
     if (h.timer) clearTimeout(h.timer)
-    if (h.expected === 0) return this.finishHistory()
+    if (h.expected === 0) return this.finishCurrentUnit()
     h.phase = 'read'
-    h.timer = setTimeout(() => this.finishHistory(), FIRST_FRAME_WAIT_MS)
-    void this.send(historyReadQuery(HISTORY_UNIT.stress, this.windowStart(), this.windowEnd()))
+    h.timer = setTimeout(() => this.finishCurrentUnit(), FIRST_FRAME_WAIT_MS)
+    void this.send(historyReadQuery(h.unit, h.startS, h.endS))
   }
 
   private onHistory(f: Frame) {
@@ -178,30 +230,52 @@ export class HaylouWatch {
     if (!h || h.phase === 'done') return
     if (h.phase === 'count') {
       if (isHistoryData(f.payload)) return   // a stray data frame before we asked: ignore
-      h.expected = parseHistoryCount(f.payload, HISTORY_UNIT.stress)
+      h.expected = parseHistoryCount(f.payload, h.unit)
       this.startRead()
       return
     }
-    if (f.payload.length === 0) return this.finishHistory()   // the watch's "nothing stored" frame
+    if (f.payload.length === 0) return this.finishCurrentUnit()   // the watch's "nothing stored" frame
     if (!isHistoryData(f.payload)) return
     h.frames.push(f.payload)
-    if (h.expected !== null && h.frames.length >= h.expected) return this.finishHistory()
+    if (h.expected !== null && h.frames.length >= h.expected) return this.finishCurrentUnit()
     if (h.timer) clearTimeout(h.timer)
-    h.timer = setTimeout(() => this.finishHistory(), QUIET_MS)
+    h.timer = setTimeout(() => this.finishCurrentUnit(), QUIET_MS)
   }
 
-  private finishHistory() {
+  private finishCurrentUnit() {
     const h = this.history
     if (!h || h.phase === 'done') return
     h.phase = 'done'
     if (h.timer) { clearTimeout(h.timer); h.timer = null }
-    const best = newestStress(h.frames)
-    if (best && plausible('stress', best.value)) this.handlers.onStoredStress?.(best)
+
+    if (h.kind === 'stress') {
+      const best = newestStress(h.frames)
+      if (best && plausible('stress', best.value)) this.handlers.onStoredStress?.(best)
+      const pts = h.frames.flatMap((f) => decodeStressHistory(f))
+      const valid = pts.filter((p) => plausible('stress', p.stress)).map((p) => ({ t: p.t, value: p.stress }))
+      if (valid.length > 0) this.handlers.onHistoryPoints?.('stress', valid)
+    } else if (h.kind === 'hr') {
+      const pts = h.frames.flatMap((f) => decodeHrHistory(f))
+      const valid = pts.filter((p) => plausible('hr', p.hr)).map((p) => ({ t: p.t, value: p.hr }))
+      if (valid.length > 0) this.handlers.onHistoryPoints?.('hr', valid)
+    } else if (h.kind === 'spo2') {
+      const pts = h.frames.flatMap((f) => decodeSpo2History(f))
+      const valid = pts.filter((p) => plausible('spo2', p.spo2)).map((p) => ({ t: p.t, value: p.spo2 }))
+      if (valid.length > 0) this.handlers.onHistoryPoints?.('spo2', valid)
+    } else if (h.kind === 'sleep') {
+      const pts = h.frames.flatMap((f) => decodeSleepPoints(f))
+      const valid = pts.map((p) => ({ t: p.t, value: p.state }))
+      if (valid.length > 0) this.handlers.onHistoryPoints?.('sleep', valid)
+    }
+
+    this.queueIndex++
+    void this.runHistoryQueue()
   }
 
   private teardown(notify = true) {
     if (this.history?.timer) clearTimeout(this.history.timer)
     this.history = null
+    this.queueIndex = this.historyQueue.length
     if (this.timer) { clearInterval(this.timer); this.timer = null }
     const wasOpen = !this.closed
     this.closed = true

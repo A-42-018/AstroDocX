@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import { useSnapshot } from '../board/hooks'
 import { useBoard } from '../board/store'
 import type { CrewMember, FaceScan } from '../data/types'
-import { confirmChime } from '../audio/sfx'
+import { confirmChime, faceLock, notAllowed, scanSweep } from '../audio/sfx'
 import { met } from '../engine/actions'
 import { loadTargets } from '../live/telemetry'
 import { requestPersistentStorage } from '../shell/install'
@@ -85,6 +85,9 @@ function ScanView({ crew, crewId, now, onContinue }: { crew: CrewMember[]; crewI
   // the scan is over: let go of the camera so its light goes off
   const done = view.phase === 'done'
   useEffect(() => { if (done) stop() }, [done, stop])
+  // sonar lock when the face is held steady and the measurement starts; a sweep that ends on a bell when the result is in
+  useEffect(() => { if (view.phase === 'measuring') faceLock() }, [view.phase])
+  useEffect(() => { if (done) scanSweep() }, [done])
 
   const result = view.final
   const blocked = result ? whyNot(result) : null
@@ -103,6 +106,7 @@ function ScanView({ crew, crewId, now, onContinue }: { crew: CrewMember[]; crewI
       confirmChime()
       void requestPersistentStorage()
     } catch (e) {
+      notAllowed()
       setSaveError(e instanceof Error ? e.message : String(e))
     } finally { setBusy(false) }
   }

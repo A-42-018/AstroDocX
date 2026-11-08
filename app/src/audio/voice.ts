@@ -1,25 +1,36 @@
 import { create } from 'zustand'
 import { duckMusic } from './music'
-import { audible, computerBeeps, radioClose, radioOpen, useSound } from './sfx'
+import { audible, computerBeeps, incomingCall, radioClose, radioOpen, useSound } from './sfx'
 
 /*
- * The cabin's voices, from the browser's own speech synthesis (no audio files). Crew talk over a radio: a squelch
- * click from where the speaker floats before and after each line. The two robots on the floor are VITA, the crew doctor,
- * who answers in her own voice, and MEDI, her helper, in a flat low one; consoles chirp around the room between calls. The score ducks while anyone speaks. Voices depend on what
+ * The cabin's voices, from the browser's own speech synthesis (no audio files). Crew talk over a radio: a Quindar
+ * tone (NASA's push-to-talk beep) from where the speaker floats before and after each line. The two robots on the floor are VITA, the crew doctor,
+ * who answers in her own voice, and MEDI, her helper, a TARS-style deadpan; consoles chirp around the room between calls. The score ducks while anyone speaks. Voices depend on what
  * the device has installed; with none, the beeps and clicks still play.
  */
 
 type Who = 'Ground' | 'Ship Computer' | 'Commander' | 'Pilot' | 'Flight Engineer' | 'Medical Officer' | 'Mission Specialist' | 'Payload Specialist' | 'VITA' | 'MEDI'
-interface Tone { pitch: number; rate: number; at: [number, number, number] }
-// pitch stays near 1 for the crew and not too low for the robots: extreme pitch is what makes speech mushy
+/** `prefer`: voice names to look for first (the audio-palette preview's casting); each role also gets its own voice where the device has enough. */
+interface Tone { pitch: number; rate: number; at: [number, number, number]; prefer: RegExp }
+/*
+ * The casting. MEDI is TARS-style deadpan: low, slow, flat (pitch about 0.5, rate about 0.8: the gag is the delivery, so
+ * the lines stay short and plain). VITA is warm and natural, the Ship Computer neutral and even (it should sound like
+ * infrastructure), the crew each a different base voice and pitch so the chatter reads as a crew, not one narrator.
+ */
 const TONE: Record<Who, Tone> = {
-  Ground: { pitch: 0.95, rate: 0.95, at: [0, 0.6, -3.5] }, 'Ship Computer': { pitch: 1.0, rate: 0.92, at: [0, 0, -1] },
-  Commander: { pitch: 0.85, rate: 0.92, at: [-1.5, 0.3, -3] }, Pilot: { pitch: 1.0, rate: 0.96, at: [1.5, 0.3, -3] },
-  'Flight Engineer': { pitch: 0.95, rate: 0.95, at: [-3, 0, -1] }, 'Medical Officer': { pitch: 1.1, rate: 0.93, at: [3, 0, -1] },
-  'Mission Specialist': { pitch: 1.05, rate: 0.95, at: [-2.5, 0.5, 2] }, 'Payload Specialist': { pitch: 0.9, rate: 0.95, at: [2.5, 0.5, 2] },
-  VITA: { pitch: 1.0, rate: 0.94, at: [2, -0.5, -2] }, MEDI: { pitch: 0.6, rate: 0.86, at: [-2, -0.5, -2] },
+  Ground: { pitch: 0.95, rate: 0.95, at: [0, 0.6, -3.5], prefer: /reed|alex|david|google us english/i },
+  'Ship Computer': { pitch: 1.0, rate: 0.9, at: [0, 0, -1], prefer: /kathy|samantha|google us english|zira/i },
+  Commander: { pitch: 0.85, rate: 0.92, at: [-1.5, 0.3, -3], prefer: /daniel|david|google uk english male/i },
+  Pilot: { pitch: 1.05, rate: 0.96, at: [1.5, 0.3, -3], prefer: /aaron|alex|tom|google us english/i },
+  'Flight Engineer': { pitch: 0.8, rate: 0.95, at: [-3, 0, -1], prefer: /fred|guy|bruce/i },
+  'Medical Officer': { pitch: 1.1, rate: 0.93, at: [3, 0, -1], prefer: /allison|susan|serena|ava|zira/i },
+  'Mission Specialist': { pitch: 1.2, rate: 0.97, at: [-2.5, 0.5, 2], prefer: /tessa|karen|flo|junior|libby/i },
+  'Payload Specialist': { pitch: 0.7, rate: 0.93, at: [2.5, 0.5, 2], prefer: /oliver|rishi|bruce|lee/i },
+  VITA: { pitch: 1.0, rate: 0.94, at: [2, -0.5, -2], prefer: /samantha|ava|allison|google us english/i },
+  MEDI: { pitch: 0.5, rate: 0.8, at: [-2, -0.5, -2], prefer: /ralph|fred|daniel|david|guy|google uk english male/i },
 }
-const ORDER = Object.keys(TONE) as Who[]
+// who picks first when voices are scarce: the signature characters, then the rest of the cast
+const ORDER: Who[] = ['MEDI', 'Ship Computer', 'Ground', 'Commander', 'Medical Officer', 'Flight Engineer', 'Pilot', 'Mission Specialist', 'Payload Specialist', 'VITA']
 const isBot = (w: Who) => w === 'VITA' || w === 'MEDI' || w === 'Ship Computer'
 
 const synth = typeof window !== 'undefined' ? window.speechSynthesis : undefined
@@ -27,12 +38,28 @@ const voiceFor = new Map<Who, SpeechSynthesisVoice>()
 /** Clearest first: the natural, premium and enhanced voices, then the common system ones. */
 const score = (v: SpeechSynthesisVoice) =>
   (/premium|enhanced|natural|neural/i.test(v.name) ? 8 : 0) + (/google|samantha|daniel|karen|moira|tessa|alex|oliver|serena|fiona/i.test(v.name) ? 4 : 0) + (v.lang === 'en-US' || v.lang === 'en-GB' ? 2 : 0) + (v.localService ? 1 : 0)
+/** Novelty voices some systems ship (macOS): never a good crew member. */
+const NOVELTY = /bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|albert|deranged|hysterical/i
+const vitaScore = (v: SpeechSynthesisVoice) =>
+  (/premium|enhanced|natural|neural/i.test(v.name) ? 8 : 0) + (/samantha|google us english/i.test(v.name) ? 6 : /ava|allison|serena|karen|moira|tessa|daniel|google/i.test(v.name) ? 3 : 0) +
+  (v.lang === 'en-US' ? 3 : v.lang === 'en-GB' ? 2 : 0) + (v.localService ? 1 : 0)
+let vitaVoice: SpeechSynthesisVoice | null = null
+function pickVita() { vitaVoice = (synth?.getVoices() ?? []).filter((v) => /^en/i.test(v.lang) && !NOVELTY.test(v.name)).sort((a, b) => vitaScore(b) - vitaScore(a))[0] ?? null }
 function loadVoices() {
-  const en = (synth?.getVoices() ?? []).filter((v) => v.lang.startsWith('en')).sort((a, b) => score(b) - score(a)).slice(0, 8)
+  const en = (synth?.getVoices() ?? []).filter((v) => v.lang.startsWith('en')).sort((a, b) => score(b) - score(a))
   voiceFor.clear()
-  if (en.length) ORDER.forEach((w, i) => voiceFor.set(w, en[i % en.length]))
+  if (!en.length) return
+  const plain = en.filter((v) => !NOVELTY.test(v.name)), pool = (plain.length ? plain : en).slice(0, 12)
+  // VITA's own pick is hers alone where there are voices to spare
+  const used = new Set<SpeechSynthesisVoice>()
+  if (vitaVoice) used.add(vitaVoice)
+  ORDER.forEach((w) => {
+    const preferred = en.filter((v) => TONE[w].prefer.test(v.name))
+    const v = preferred.find((x) => !used.has(x)) ?? pool.find((x) => !used.has(x)) ?? preferred[0] ?? pool[0]
+    used.add(v); voiceFor.set(w, v)
+  })
 }
-if (synth) { loadVoices(); synth.addEventListener?.('voiceschanged', loadVoices) }
+if (synth) { pickVita(); loadVoices(); synth.addEventListener?.('voiceschanged', () => { pickVita(); loadVoices() }) }
 
 /** A chatter line's text, or a function for one that is read from the live data when it is said (VITA's crew status). */
 type Line = [Who, string | (() => string)]
@@ -94,7 +121,8 @@ const CABIN: Line[][] = [
   [['Commander', 'Pilot, this is Commander. Report your heading.'], ['Pilot', 'Commander, heading is steady. Orbit is normal.'], ['Commander', 'Copy. Thank you.']],
   [['Flight Engineer', 'Medical, I am checking the air scrubbers now.'], ['Medical Officer', 'Flight, the air quality looks good from here.'], ['Flight Engineer', 'Confirmed. All green.']],
   [['Medical Officer', 'Specialist, how did you sleep?'], ['Mission Specialist', 'Better this week. Seven hours last night.'], ['Medical Officer', 'Good. Please log it in your check in.']],
-  [['MEDI', 'Cabin pressure is stable.'], ['VITA', 'Confirmed. Oxygen is normal.'], ['MEDI', 'All systems are nominal.'], ['VITA', 'Agreed. Thank you, MEDI.']],
+  [['MEDI', 'Cabin pressure is stable.'], ['VITA', 'Confirmed. Oxygen is normal.'], ['MEDI', 'All systems are nominal. Humor setting, seventy five percent.'], ['VITA', 'Agreed. Thank you, MEDI.']],
+  [['Pilot', 'MEDI, how is your humor setting?'], ['MEDI', 'Humor setting, seventy five percent.'], ['Pilot', 'Lower it to sixty, please.'], ['MEDI', 'Humor setting, sixty percent. Understood.']],
   [['Payload Specialist', 'Commander, the payload bay is secure. Experiment four is running.'], ['Commander', 'Copy, Payload. Keep me posted.']],
   [['Pilot', 'Flight, the ground link opens in forty minutes.'], ['Flight Engineer', 'Understood. I will send the sync before then.'], ['Pilot', 'Thank you.']],
   [['Commander', 'VITA, how is the crew doing?'], ['VITA', () => crewStatus()], ['Commander', 'Copy. Thank you, VITA.']],
@@ -122,7 +150,10 @@ const tick = () => {
   let i = Math.floor(Math.random() * set.length)
   if (i === last) i = (i + 1) % set.length
   last = i
-  say(set[i].map(([w, x]): [Who, string] => [w, typeof x === 'function' ? x() : x]))
+  const lines = set[i].map(([w, x]): [Who, string] => [w, typeof x === 'function' ? x() : x])
+  // a call from Ground rings in first
+  if (kind === 'console' && lines[0][0] === 'Ground') { incomingCall(); window.setTimeout(() => { if (!hushed) say(lines) }, 1300); return }
+  say(lines)
 }
 
 /** Start the background life of the ship: console beeps around the room and radio chatter every few seconds. */
@@ -159,13 +190,6 @@ export const speakable = (text: string) => SAY.reduce((s, [re, to]) => s.replace
 
 /** Is VITA saying something right now (the dock animates her while this is true). */
 export const useVitaVoice = create<{ speaking: boolean; /** The sentence she is saying (the cabin's subtitle). */ line: string }>(() => ({ speaking: false, line: '' }))
-
-const vitaScore = (v: SpeechSynthesisVoice) =>
-  (/premium|enhanced|natural|neural/i.test(v.name) ? 8 : 0) + (/samantha|google us english/i.test(v.name) ? 6 : /ava|allison|serena|karen|moira|tessa|daniel|google/i.test(v.name) ? 3 : 0) +
-  (v.lang === 'en-US' ? 3 : v.lang === 'en-GB' ? 2 : 0) + (v.localService ? 1 : 0)
-let vitaVoice: SpeechSynthesisVoice | null = null
-function pickVita() { vitaVoice = (synth?.getVoices() ?? []).filter((v) => /^en/i.test(v.lang)).sort((a, b) => vitaScore(b) - vitaScore(a))[0] ?? null }
-if (synth) { pickVita(); synth.addEventListener?.('voiceschanged', pickVita) }
 
 let vitaActive = false
 let vitaPaused = false
@@ -231,7 +255,7 @@ export function vitaSay(text: string): Promise<void> {
     synth!.resume() // clears a pause left by an earlier line
     parts.forEach((p, i) => {
       const u = new SpeechSynthesisUtterance(p.trim())
-      u.pitch = 1.0; u.rate = 0.94; u.volume = 1; u.lang = 'en-US'
+      u.pitch = TONE.VITA.pitch; u.rate = TONE.VITA.rate; u.volume = 1; u.lang = 'en-US'
       if (vitaVoice) { u.voice = vitaVoice; u.lang = vitaVoice.lang }
       u.onstart = () => { if (vitaEnd === end) { useVitaVoice.setState({ line: shown(i) }); const ws = scriptOf(u.text, u.rate); lineListeners.forEach((f) => f(ws)) } }
       u.onboundary = (e) => { if (e.name === 'word' && vitaEnd === end) { const w = wordAt(u.text, e.charIndex, u.rate); wordListeners.forEach((f) => f(w)) } }

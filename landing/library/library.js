@@ -81,7 +81,7 @@ export function mountLibrary(el, opts = {}) {
       <h2>The science behind AstroDocX</h2></div>
       <button type="button" class="hbtn ghost" data-act="close">Back to briefing</button>
     </div>
-    <div class="hp nlib-tip" role="status"><b>VITA</b><span data-r="tip"></span></div>
+    <div class="hp nlib-tip" role="status"><b>NOVA</b><span data-r="tip"></span></div>
     <div class="nlib-bar">
       <div class="seg" role="group" aria-label="Media type">${TYPES.map(([t, l]) => `<button type="button" data-t="${t}" aria-pressed="${t === mtype}">${l}</button>`).join('')}</div>
       <div class="colls" role="group" aria-label="Collections" data-r="colls"></div>

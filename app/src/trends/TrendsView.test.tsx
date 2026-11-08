@@ -41,3 +41,8 @@ it('focuses a metric from the channel list or a small multiple and shows its sta
   fireEvent.click(screen.getByRole('checkbox', { name: 'Compare with crew median' }))
   expect(onCompare).toHaveBeenCalledWith(true)
 })
+
+it('says whose watch insights they are when the watch is linked to another crew member', () => {
+  render(<TrendsView crew={crew} crewId="pilot" range="7d" series={series} onRange={() => {}} insightsWearer="Commander" />)
+  expect(screen.getByRole('region', { name: 'Wearable Insights' }).textContent).toMatch(/belong to Commander, who wears the watch/)
+})
