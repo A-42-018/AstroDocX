@@ -56,7 +56,7 @@
 .uni-scene[data-pos="top"] { width:max-content;max-width:min(96vw,1500px); }
 .uni-scene[data-pos="top"] .ch-title { font-size:clamp(1.8rem,3.9vw,4.6rem); }
 
-.uni-skip { position:absolute;z-index:4;top:calc(var(--nav-h,64px) + 14px);right:calc(var(--pad-x,24px) + 54px);padding:8px 16px;font-size:.7rem; }   /* left of the sound button */
+.uni-skip { position:absolute;z-index:4;top:calc(var(--nav-h,64px) + 14px);right:calc(var(--pad-x,24px) + 142px);padding:8px 16px;font-size:.7rem; }   /* left of the sound pill (~130px wide with its label, "Sound off" is the wider) */
 .uni-skip.is-hidden { opacity:0;pointer-events:none; }
 
 .uni-rail { position:absolute;z-index:4;left:var(--pad-x,24px);top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;list-style:none;margin:0;padding:0; }
