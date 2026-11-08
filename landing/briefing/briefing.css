@@ -43,9 +43,13 @@ a { color:inherit; }
 .skip-link:focus { top:12px; }
 
 #bg { position:fixed; inset:0; width:100%; height:100%; display:block; }
+/* the console's stage treatment (app/src/styles/base.css .shell::after): a faint dot grid and an edge vignette over the sky */
 .scrim { position:fixed; inset:0; pointer-events:none;
-  background:linear-gradient(90deg,rgba(5,6,8,.45) 0%,rgba(5,6,8,.08) 55%,rgba(5,6,8,.15) 100%),
+  background:radial-gradient(rgba(120,220,255,.10) 1px,transparent 1.2px) 0 0 / 22px 22px,
+             radial-gradient(120% 90% at 50% 50%,transparent 55%,rgba(0,0,0,.65)),
+             linear-gradient(90deg,rgba(5,6,8,.45) 0%,rgba(5,6,8,.08) 55%,rgba(5,6,8,.15) 100%),
              linear-gradient(180deg,rgba(5,6,8,.35) 0%,rgba(5,6,8,0) 30%,rgba(5,6,8,.2) 100%); }
+::selection { background:rgba(54,226,245,.35); color:#fff; }
 
 /* ── frame ── */
 .frame { position:relative; height:100%; height:100dvh; display:grid; grid-template-rows:58px minmax(0,1fr) auto auto; }
