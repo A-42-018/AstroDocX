@@ -45,7 +45,7 @@
 <div class="frame">
   <header class="topbar">
     <a class="brand" href="/" aria-label="AstroDocX, mission briefing">
-      <span class="logo" aria-hidden="true">+</span>
+      <span class="logo" aria-hidden="true"><img src="/favicon.svg" alt="" width="32" height="32" draggable="false"></span>
       <span class="brand-text"><b>AstroDocX</b><small>Mission briefing</small></span>
     </a>
     <div class="rg" id="rg" role="group" aria-label="NASA's five hazards of spaceflight. Open a fact.">
@@ -69,11 +69,11 @@
   </header>
 
   <main class="stage" id="main">
-    <section class="guide" aria-label="VITA, the mission guide">
+    <section class="guide" aria-label="NOVA, the mission guide">
       <h1 class="guide-headline">Health support for deep-space missions.</h1>
-      <canvas id="bot" width="680" height="680" tabindex="0" role="img" aria-label="VITA, the AstroDocX mission guide: a particle drone with a visor. Press Enter for a hint."></canvas>
+      <canvas id="bot" width="680" height="680" tabindex="0" role="img" aria-label="NOVA, the AstroDocX mission guide: a particle drone with a visor. Press Enter for a hint."></canvas>
       <div class="meta">
-        <div class="id" id="vitaId"><span class="lamp" aria-hidden="true"></span><b>VITA</b><span class="mono" id="vitaState">Mission guide</span></div>
+        <div class="id" id="vitaId"><span class="lamp" aria-hidden="true"></span><b>NOVA</b><span class="mono" id="vitaState">Mission guide</span></div>
         <span class="mono note">Answers from NASA sources &middot; works offline</span>
       </div>
     </section>
@@ -85,11 +85,11 @@
         <div class="steps" id="steps" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
         <button type="button" class="skip" id="skip">Skip intro</button>
       </div>
-      <div class="thread" id="thread" role="log" aria-live="polite" aria-relevant="additions" aria-label="Conversation with VITA" tabindex="0"></div>
+      <div class="thread" id="thread" role="log" aria-live="polite" aria-relevant="additions" aria-label="Conversation with NOVA" tabindex="0"></div>
       <div class="composer">
         <div class="chips" id="chips" role="group" aria-label="Suggested questions"></div>
         <form class="inrow" id="ask" autocomplete="off">
-          <label for="q" class="sr-only">Ask VITA a question</label>
+          <label for="q" class="sr-only">Ask NOVA a question</label>
           <input id="q" name="q" type="text" maxlength="500" enterkeyhint="send" placeholder="Ask about astronaut health, NASA research, or AstroDocX">
           <button type="button" class="hbtn ghost" id="mic" aria-label="Speak your question" hidden>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
@@ -126,7 +126,7 @@
   </nav>
 
   <footer class="statusbar">
-    <span class="ok" id="vitaLink"><span class="lamp" aria-hidden="true"></span><span id="vitaLinkTxt">VITA online</span></span>
+    <span class="ok" id="vitaLink"><span class="lamp" aria-hidden="true"></span><span id="vitaLinkTxt">NOVA online</span></span>
     <span class="src">Sources &middot; NASA-STD-3001 &middot; OSDR &middot; NTRS &middot; images.nasa.gov</span>
     <span class="right"><b>Not affiliated with or endorsed by NASA</b> &middot; Prototype, not a medical device &middot; <a href="https://www.spaceappschallenge.org/" target="_blank" rel="noopener">Space Apps 2026</a> &middot; <a href="https://github.com/A-42-018/AstroDocX" target="_blank" rel="noopener">GitHub</a></span>
   </footer>
@@ -139,7 +139,7 @@
   <div class="lib-mount" id="libMount"></div>
 </div>
 
-<noscript><p style="position:fixed;left:12px;bottom:40px;max-width:480px;padding:10px 12px;background:#06121a;border:1px solid #36e2f5;color:#eef8ff;font:14px/1.5 system-ui">VITA needs JavaScript to talk. The doors still work: <a href="/app/">Crew Console</a>, <a href="/app/cabin">3D Cabin</a>, <a href="/story.html">the story</a>.</p></noscript>
+<noscript><p style="position:fixed;left:12px;bottom:40px;max-width:480px;padding:10px 12px;background:#06121a;border:1px solid #36e2f5;color:#eef8ff;font:14px/1.5 system-ui">NOVA needs JavaScript to talk. The doors still work: <a href="/app/">Crew Console</a>, <a href="/app/cabin">3D Cabin</a>, <a href="/story.html">the story</a>.</p></noscript>
 
 <script src="tour.js"></script>
 <script type="module" src="briefing/briefing.js"></script>

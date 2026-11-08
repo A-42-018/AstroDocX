@@ -11,6 +11,7 @@
    resize, on talk/mood changes and when the eyes follow the pointer).
 ============================================================ */
 
+const ICE = '#f2fbff', ICEFAR = '#a9c4d4'   // NOVA's shell: ice-white so it never blends into the cyan HUD behind it
 const CY = '#36e2f5', CYHI = '#9ff4ff', OK = '#3ddc97', OR = '#ff8a3d'
 
 export function createScene({ bg, bot, doors = [], reduced = false, under = null }) {
@@ -85,6 +86,11 @@ export function createScene({ bg, bot, doors = [], reduced = false, under = null
     for (let k = 0; k < 3; k++) { const a0 = (spin / (1600 + k * 700)) * (k % 2 ? -1 : 1) + k * 2.1; b.beginPath(); b.arc(0, 0, 270 + k * 12, a0, a0 + 0.6 + amp * 0.5); b.stroke() }
     b.shadowBlur = 0; b.restore()
 
+    // dark body disc so the cyan scene behind NOVA cannot bleed through the shell
+    const rg = b.createRadialGradient(c, cy, R * 0.2, c, cy, R * 1.08)
+    rg.addColorStop(0, 'rgba(3,10,16,.95)'); rg.addColorStop(0.85, 'rgba(3,10,16,.88)'); rg.addColorStop(1, 'rgba(3,10,16,0)')
+    b.globalAlpha = 1; b.fillStyle = rg; b.beginPath(); b.arc(c, cy, R * 1.08, 0, Math.PI * 2); b.fill()
+
     // particle shell (Fibonacci sphere), wobbling a little more while it talks
     const cyr = Math.cos(ry), syr = Math.sin(ry), cxr = Math.cos(rx), sxr = Math.sin(rx)
     for (const [x0, y0, z0] of pts) {
@@ -93,7 +99,7 @@ export function createScene({ bg, bot, doors = [], reduced = false, under = null
       const y = y0 * cxr - z * sxr; z = y0 * sxr + z * cxr
       const wob = reduced ? 1 : 1 + 0.04 * Math.sin(t / 300 + y0 * 6) + amp * 0.05 * Math.sin(t / 60 + x0 * 9)
       const sx = c + x * R * wob, sy = cy + y * R * wob, d = (z + 1) / 2
-      b.globalAlpha = 0.12 + d * 0.8; b.fillStyle = d > 0.7 ? CYHI : col
+      b.globalAlpha = 0.12 + d * 0.8; b.fillStyle = d > 0.4 ? ICE : ICEFAR
       const s = 1.5 + d * 2.6; b.fillRect(sx - s / 2, sy - s / 2, s, s)
     }
 

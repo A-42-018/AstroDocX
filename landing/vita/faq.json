@@ -31,7 +31,7 @@
         "your name",
         "are you (a )?(bot|ai|human|real)"
       ],
-      "text": "I'm VITA, the guide here. I answer questions about astronaut health, NASA research and the AstroDocX project, using only sources I can cite. In the console I'm also the crew doctor: I read the crew's data and suggest next steps, but I never diagnose. Try asking about bone loss, radiation, CO₂, or how AstroDocX spots trouble early.",
+      "text": "I'm NOVA, the guide here on the homepage. I answer questions about astronaut health, NASA research and the AstroDocX project, using only sources I can cite. In the console, my colleague VITA is the crew doctor: VITA reads the crew's data and suggests next steps, but never diagnoses. Try asking about bone loss, radiation, CO₂, or how AstroDocX spots trouble early.",
       "citations": [
         {
           "label": "AstroDocX README",

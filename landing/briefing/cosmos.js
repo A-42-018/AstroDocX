@@ -195,7 +195,7 @@ export function createCosmos({ artLayer, spotLayer, revealCanvas, dock, frame, r
   card.innerHTML = `<div class="ph"><span class="ph-dot" aria-hidden="true"></span><span class="ph-title" id="czKick"></span><span class="ph-rule" aria-hidden="true"></span></div>
     <h2 id="czHead"></h2><div class="cz-body" id="czBody"></div><div class="cz-cites" id="czCites"></div>
     <div class="cz-actions">
-      <button type="button" class="hbtn" data-a="ask">Ask VITA about this</button>
+      <button type="button" class="hbtn" data-a="ask">Ask NOVA about this</button>
       <button type="button" class="hbtn ghost" data-a="prev" aria-label="Previous hazard">&lsaquo;</button>
       <button type="button" class="hbtn ghost" data-a="next" aria-label="Next hazard">&rsaquo;</button>
       <button type="button" class="hbtn ghost" data-a="close">Close</button>
