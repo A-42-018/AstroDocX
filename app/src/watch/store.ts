@@ -18,6 +18,8 @@ export interface WatchState {
   hr: number | null
   spo2: number | null
   stress: number | null
+  /** The newest stress the watch has stored (read once after connecting). A past value with the watch's timestamp, never live. */
+  storedStress: { value: number; at: number } | null
   /** The last value the poll returned, live or not, with the watch's own timestamp. */
   newest: NewestHr | null
   connect: () => Promise<void>
@@ -27,7 +29,7 @@ export interface WatchState {
 interface Link { connect(onPicked?: () => void): Promise<string>; disconnect(): void }
 interface Deps { makeLink: (h: WatchHandlers) => Link; now: () => number; supported: () => boolean }
 
-const EMPTY = { hr: null, spo2: null, stress: null, newest: null } as const
+const EMPTY = { hr: null, spo2: null, stress: null, newest: null, storedStress: null } as const
 
 /**
  * The watch as a source of live vitals. Display only, like the webcam face scan: readings are not saved to the
@@ -66,6 +68,7 @@ export function createWatchStore(deps: Deps = { makeLink: (h) => new HaylouWatch
             set({ newest: r })
             if (Math.abs(deps.now() - r.at * 1000) <= LIVE_WINDOW_MS) take('hr', r.bpm)
           },
+          onStoredStress: (r) => { if (link === mine) set({ storedStress: r }) },
           onDisconnect: () => {
             if (link !== mine) return
             link = null; stopSweep()

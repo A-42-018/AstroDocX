@@ -10,6 +10,16 @@ const set = (s: Partial<typeof base>) => useWatch.setState({ ...base, ...s })
 afterEach(() => { cleanup(); useWatch.setState(base, true) })
 
 describe('WatchControl', () => {
+  it('labels a stored stress reading as past, not live, and shows nothing without one', () => {
+    set({ status: 'connected', name: 'HAYLOU Solar 5', storedStress: { value: 34, at: 1_794_000_000 } })
+    const { unmount } = render(<WatchControl />)
+    expect(screen.getByText(/Last stored stress 34/).textContent).toMatch(/not live/)
+    unmount()
+    set({ status: 'connected', name: 'HAYLOU Solar 5', storedStress: null })
+    render(<WatchControl />)
+    expect(screen.queryByText(/Last stored stress/)).toBeNull()
+  })
+
   it('says so where Web Bluetooth does not exist, with no button', () => {
     set({ status: 'unsupported' })
     render(<WatchControl />)

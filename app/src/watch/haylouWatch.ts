@@ -1,4 +1,7 @@
-import { FrameReassembler, NEWEST_HR_QUERY, decodeFrame, plausible, type NewestHr, type Sample } from './frames'
+import {
+  CMD_HISTORY, FrameReassembler, HISTORY_UNIT, NEWEST_HR_QUERY, TYPE_REPLY, decodeFrame, historyCountQuery, historyReadQuery,
+  isHistoryData, newestStress, parseHistoryCount, plausible, type Frame, type NewestHr, type Sample,
+} from './frames'
 
 /** Data service of the Haylou Solar 5 and its three characteristics (see research_notes). */
 export const DATA_SERVICE = '00006006-0000-1000-8000-00805f9b34fb'
@@ -7,13 +10,19 @@ export const REPLY_CHAR = '00008002-0000-1000-8000-00805f9b34fb'
 export const EVENT_CHAR = '00008004-0000-1000-8000-00805f9b34fb'
 /** How often the "newest heart rate" query is repeated while connected. */
 export const POLL_MS = 10_000
+/** The stored stress history is read once after connecting, for this many hours back. */
+export const HISTORY_HOURS = 24
+/** Waiting for the count reply, then for the first data frame, then between data frames. */
+export const COUNT_WAIT_MS = 2_000
+export const FIRST_FRAME_WAIT_MS = 3_000
+export const QUIET_MS = 1_500
 
 /*
  * Just the slice of Web Bluetooth this module uses; the DOM lib does not ship these types.
  *
  * Safety: requestDevice() lists only DATA_SERVICE in optionalServices, so the browser itself refuses any access to the
  * watch's other service (the Sifli serial channel used for firmware updates). The single thing ever written is
- * NEWEST_HR_QUERY, a read query, to WRITE_CHAR. Nothing here sends a command that changes the watch.
+ * NEWEST_HR_QUERY and the stored-stress count and read queries (all read queries), to WRITE_CHAR. Nothing here sends a command that changes the watch.
  */
 export interface BtCharacteristic {
   startNotifications(): Promise<unknown>
@@ -67,6 +76,8 @@ export interface WatchHandlers {
   onSample: (s: Sample) => void
   /** The reply to a newest-heart-rate query. */
   onNewest: (r: NewestHr) => void
+  /** The newest non-zero stress reading the watch has stored (not live), with the watch's own timestamp in unix seconds. */
+  onStoredStress?: (r: { value: number; at: number }) => void
   /** The link dropped (watch out of range, switched off, or disconnect() was called). */
   onDisconnect: () => void
 }
@@ -80,6 +91,7 @@ export class HaylouWatch {
   private notifiers: { ch: BtCharacteristic; l: (e: { target: { value?: DataView | null } }) => void }[] = []
   private timer: ReturnType<typeof setInterval> | null = null
   private closed = false
+  private history: { phase: 'count' | 'read' | 'done'; expected: number | null; frames: Uint8Array[]; timer: ReturnType<typeof setTimeout> | null } | null = null
   private readonly onGone = () => this.teardown()
 
   constructor(handlers: WatchHandlers, api: BtApi | undefined = bluetoothApi()) {
@@ -103,6 +115,7 @@ export class HaylouWatch {
       await this.listen(event)
       if (this.closed) throw new WatchError('failed', 'The watch disconnected while connecting.')
       void this.query()
+      this.startHistory()
       this.timer = setInterval(() => void this.query(), POLL_MS)
       return device.name || 'HAYLOU watch'
     } catch (e) {
@@ -119,6 +132,7 @@ export class HaylouWatch {
       const dv = e.target.value
       if (!dv) return
       for (const f of frames.push(new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength))) {
+        if (f.cmd === CMD_HISTORY && f.type === TYPE_REPLY) { this.onHistory(f); continue }
         const m = decodeFrame(f)
         if (!m) continue
         if (m.kind === 'newest') { if (plausible('hr', m.reading.bpm)) this.handlers.onNewest(m.reading) }
@@ -135,7 +149,59 @@ export class HaylouWatch {
     try { await this.write?.writeValueWithoutResponse(NEWEST_HR_QUERY as BufferSource) } catch { /* link gone or busy: the next poll retries */ }
   }
 
+  private async send(frame: Uint8Array) {
+    try { await this.write?.writeValueWithoutResponse(frame as BufferSource) } catch { /* link gone or busy */ }
+  }
+
+  /** Read-only: ask how many reply frames the stress history has, then ask for the last HISTORY_HOURS of it. */
+  private startHistory() {
+    const h = { phase: 'count' as const, expected: null as number | null, frames: [] as Uint8Array[], timer: null as ReturnType<typeof setTimeout> | null }
+    this.history = h
+    h.timer = setTimeout(() => this.startRead(), COUNT_WAIT_MS)
+    void this.send(historyCountQuery(HISTORY_UNIT.stress, this.windowStart(), this.windowEnd()))
+  }
+  private windowEnd() { return Math.floor(Date.now() / 1000) }
+  private windowStart() { return this.windowEnd() - HISTORY_HOURS * 3600 }
+
+  private startRead() {
+    const h = this.history
+    if (!h || h.phase === 'done') return
+    if (h.timer) clearTimeout(h.timer)
+    if (h.expected === 0) return this.finishHistory()
+    h.phase = 'read'
+    h.timer = setTimeout(() => this.finishHistory(), FIRST_FRAME_WAIT_MS)
+    void this.send(historyReadQuery(HISTORY_UNIT.stress, this.windowStart(), this.windowEnd()))
+  }
+
+  private onHistory(f: Frame) {
+    const h = this.history
+    if (!h || h.phase === 'done') return
+    if (h.phase === 'count') {
+      if (isHistoryData(f.payload)) return   // a stray data frame before we asked: ignore
+      h.expected = parseHistoryCount(f.payload, HISTORY_UNIT.stress)
+      this.startRead()
+      return
+    }
+    if (f.payload.length === 0) return this.finishHistory()   // the watch's "nothing stored" frame
+    if (!isHistoryData(f.payload)) return
+    h.frames.push(f.payload)
+    if (h.expected !== null && h.frames.length >= h.expected) return this.finishHistory()
+    if (h.timer) clearTimeout(h.timer)
+    h.timer = setTimeout(() => this.finishHistory(), QUIET_MS)
+  }
+
+  private finishHistory() {
+    const h = this.history
+    if (!h || h.phase === 'done') return
+    h.phase = 'done'
+    if (h.timer) { clearTimeout(h.timer); h.timer = null }
+    const best = newestStress(h.frames)
+    if (best && plausible('stress', best.value)) this.handlers.onStoredStress?.(best)
+  }
+
   private teardown(notify = true) {
+    if (this.history?.timer) clearTimeout(this.history.timer)
+    this.history = null
     if (this.timer) { clearInterval(this.timer); this.timer = null }
     const wasOpen = !this.closed
     this.closed = true

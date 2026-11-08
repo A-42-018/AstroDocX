@@ -11,6 +11,7 @@ export function WatchControl() {
   const name = useWatch((s) => s.name)
   const note = useWatch((s) => s.note)
   const streaming = useWatch((s) => s.hr !== null)
+  const stored = useWatch((s) => s.storedStress)
   const connect = useWatch((s) => s.connect)
   const disconnect = useWatch((s) => s.disconnect)
 
@@ -25,6 +26,11 @@ export function WatchControl() {
           <span className="wc-name">{name}</span>
           <span className="wc-hint">{streaming ? 'streaming heart rate' : 'open the heart rate screen on the watch to stream'}</span>
         </p>
+        {stored && (
+          <p className="wc-hint">
+            Last stored stress {stored.value}, from {new Date(stored.at * 1000).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}. A past reading, not live.
+          </p>
+        )}
         <Button variant="ghost" size="sm" className="wc-btn" onClick={disconnect}>Disconnect watch</Button>
       </div>
     )
