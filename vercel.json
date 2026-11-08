@@ -5,6 +5,10 @@
   "buildCommand": "cd app && npm run build && rm -rf ../landing/app && cp -r dist ../landing/app",
   "outputDirectory": "landing",
   "cleanUrls": false,
+  "functions": {
+    "api/ask.py": { "maxDuration": 20, "includeFiles": "knowledge/chunks.json" },
+    "api/doctor.py": { "maxDuration": 20, "includeFiles": "knowledge/chunks.json" }
+  },
   "rewrites": [
     { "source": "/app/:path*", "destination": "/app/index.html" }
   ],

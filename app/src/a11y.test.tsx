@@ -30,7 +30,7 @@ it('gives every route exactly one h1 and keeps names on the icon-only shell cont
   render(<MemoryRouter initialEntries={['/board']}><App /></MemoryRouter>)
   expect(await screen.findByRole('button', { name: 'More options' }, { timeout: 15_000 })).toBeTruthy()
   expect(await screen.findByRole('link', { name: /^No open alerts for |^\d+ open alerts? for / }, { timeout: 15_000 })).toBeTruthy()
-  for (const name of ['Status Board', 'Alerts', 'Trends', 'Check-in', 'Simulator', 'Ground Sync', 'Ground View']) {
+  for (const name of ['Status Board', 'Crew Doctor', 'Alerts', 'Trends', 'Check-in', 'Simulator', 'Ground Sync', 'Ground View']) {
     const tab = screen.getAllByRole('link', { name: new RegExp(`^${name}`) })[0]
     fireEvent.click(tab)
     await waitFor(() => expect(document.title).toBe(`${name} · AstroDocX Crew Console`), { timeout: 15_000 })

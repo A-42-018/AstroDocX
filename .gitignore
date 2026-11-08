@@ -4,6 +4,8 @@ dist/
 Thumbs.db
 *.log
 .env
+.env.*
+!.env.example
 .netlify/
 landing/app/
 
@@ -18,3 +20,5 @@ ex/
 proto/
 *.zip
 assets-src/
+__pycache__/
+.pytest_cache/

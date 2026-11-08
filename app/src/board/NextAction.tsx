@@ -1,4 +1,4 @@
-import { ArrowRight, CircleCheck } from 'lucide-react'
+import { ArrowRight, CircleCheck, Stethoscope } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { METRICS } from '../data/types'
 import { setStepDone } from '../engine/pipeline'
@@ -12,11 +12,12 @@ export function NextAction({ snap }: { snap: Snapshot }) {
   const alert = snap.alerts[0]
   if (!alert) {
     return (
-      <HudPanel className="next" aria-label="Next action" title="Next action" meta="All clear">
+      <HudPanel className="next" data-tour="next-action" aria-label="Next action" title="Next action" meta="All clear">
         <h3 className="next-title"><CircleCheck size={20} aria-hidden="true" /> Nothing needs doing</h3>
         <p className="next-note">Every hazard is within this person’s own baseline. A daily check-in keeps the baseline honest.</p>
         <div className="next-foot">
           <Link to="/checkin" className={buttonClass('ghost', 'sm')}>Daily check-in <ArrowRight size={15} aria-hidden="true" /></Link>
+          <Link to={`/doctor?crew=${snap.crewId}`} className={buttonClass('ghost', 'sm')}><Stethoscope size={15} aria-hidden="true" /> Ask VITA</Link>
         </div>
       </HudPanel>
     )
@@ -24,7 +25,7 @@ export function NextAction({ snap }: { snap: Snapshot }) {
   const index = alert.steps.findIndex((s) => !s.done)
   const done = alert.steps.filter((s) => s.done).length
   return (
-    <HudPanel className="next" tone={alert.status} aria-label="Next action" title="Next action" meta={`1 of ${snap.alerts.length} alert${snap.alerts.length > 1 ? 's' : ''}`}>
+    <HudPanel className="next" data-tour="next-action" tone={alert.status} aria-label="Next action" title="Next action" meta={`1 of ${snap.alerts.length} alert${snap.alerts.length > 1 ? 's' : ''}`}>
       <h3 className="next-title">{METRICS[alert.metric].label} <StatusTag status={alert.status} /></h3>
       {alert.steps.length > 0 ? (
         <ul className="next-steps">
@@ -48,6 +49,7 @@ export function NextAction({ snap }: { snap: Snapshot }) {
       {index < 0 && alert.steps.length > 0 && <p className="next-note">All steps ticked. Press Done on the alert to log it.</p>}
       <div className="next-foot">
         <span className="next-count">{done} / {alert.steps.length} done</span>
+        <Link to={`/doctor?crew=${snap.crewId}`} className={buttonClass('ghost', 'sm')}><Stethoscope size={15} aria-hidden="true" /> Ask VITA</Link>
         <Link to="/alerts" className={buttonClass('primary', 'sm')}>Open action card <ArrowRight size={15} aria-hidden="true" /></Link>
       </div>
     </HudPanel>

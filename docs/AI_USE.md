@@ -3,7 +3,7 @@
 NASA Space Apps 2026 allows AI-generated content when the reason is stated, the prompts are explained, and the team's own work is shown. This file is that record. Keep it current as the project changes; match its wording to the official Project Submission Guide when that publishes (13 November 2026).
 
 ## The short version
-- **No AI runs inside the product.** Neither the landing page nor the Crew Console calls a language model or any other AI service. Every number, alert, explanation and action step comes from deterministic code that the team can point at and test.
+- **AI only words, never computes.** Every number, alert, explanation, finding and action step comes from deterministic code that the team can point at and test. VITA, the guide (`/api/ask`) and crew doctor (`/api/doctor`), can phrase her answers with Claude: the guide only from the cited knowledge base, the doctor only from the exam the console already computed. The server drops unknown citations and rejects any number or crew member the exam does not contain; without an API key, or on any failure, she answers offline from the same data.
 - **AI helped build it.** Claude Code wrote and refactored much of the code under the team's direction. Tripo Studio generated one 3D anatomy render that we turned into the Health Twin body.
 - **The decisions are ours.** Choosing the challenge, the RIDGE framing, the personal-baseline approach, what to build and what to drop, and the visual direction all came from the team. Every AI change was reviewed, run and tested before it was committed.
 

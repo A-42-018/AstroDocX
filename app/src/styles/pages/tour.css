@@ -45,6 +45,17 @@
 .tour-btn.primary { background: var(--or); border-color: var(--or); color: var(--on-or); }
 .tour-btn.primary:hover { background: var(--or-hi); }
 .tour-btn:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
+.tour-ring {
+  position: fixed; z-index: 59; pointer-events: none; border: 2px solid var(--cy-hi); border-radius: 10px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .4), 0 0 18px var(--cy-glow), inset 0 0 14px var(--cy-soft); transition: left .3s var(--ease), top .3s var(--ease), width .3s var(--ease), height .3s var(--ease);
+  animation: tour-ring 1.6s ease-in-out infinite;
+}
+@keyframes tour-ring { 50% { box-shadow: 0 0 0 1px rgba(0, 0, 0, .4), 0 0 30px var(--cy-glow), inset 0 0 20px var(--cy-soft); } }
+.tour-gate { z-index: 80; background: rgba(2, 5, 10, .72); }
+.tour-gate-card { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.tour-gate-card .vita-avatar { margin: -18px 0 -6px; }
+.tour-gate-card .tour-end-actions { width: 100%; }
+.tour-lib { margin-top: var(--sp-2); width: 100%; }
 .tour-end-note { margin-top: var(--sp-4) !important; font-size: 12px !important; color: var(--t3) !important; }
 
 /* phones: above the bottom tab bar, chapter names shortened to their numbers */
@@ -57,4 +68,4 @@
   .tour-progress { margin: 8px -10px 0; }
   .tour-end-actions { grid-template-columns: 1fr; }
 }
-@media (prefers-reduced-motion: reduce) { .tour-bar, .tour-end { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .tour-bar, .tour-end, .tour-ring { animation: none; } }

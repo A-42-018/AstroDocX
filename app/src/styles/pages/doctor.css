@@ -1,0 +1,187 @@
+/* VITA, the crew doctor (doctor/DoctorPage.tsx), laid out after the reference AI-assistant design: crew and style on
+   the left, the hologram on its pedestal in the middle, checks and questions on the right, the consult bar and the
+   consultation below. Holo HUD tokens only: cyan for VITA and data, orange for the one primary action, status colours
+   for status. */
+@layer pages {
+  .dr { display: grid; gap: 14px; }
+  .dr > * { min-width: 0; }
+
+  .dr-head { padding: 4px 4px 0; }
+  .dr-eyebrow { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font: 600 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--cy); }
+  .dr-h1 { margin: 0 0 6px; font-family: var(--disp); font-size: clamp(28px, 3.2vw, 40px); font-weight: 600; line-height: 1.05; letter-spacing: -0.025em; }
+  .dr-h1 span { color: var(--cy-hi); text-shadow: 0 0 24px var(--cy-glow); }
+  .dr-lede { margin: 0; max-width: 62ch; font-size: 14.5px; line-height: 1.5; color: var(--t2); }
+
+  .dr-grid { display: grid; grid-template-columns: minmax(250px, 300px) minmax(0, 1fr) minmax(260px, 320px); gap: 14px; align-items: stretch; }
+  .dr-col { display: grid; gap: 14px; align-content: start; min-width: 0; }
+  .dr-col ul, .dr-consult ul, .dr-consult ol { list-style: none; margin: 0; padding: 0; }
+
+  /* pick lists: crew and report style (the reference's persona and tone lists) */
+  .dr-crew ul, .dr-style ul { display: grid; gap: 4px; }
+  .dr-pick {
+    width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 10px; text-align: left; cursor: var(--cur-pointer);
+    color: var(--t1); background: transparent; border: 1px solid transparent; border-radius: 6px; transition: background var(--dur-1), border-color var(--dur-1);
+  }
+  .dr-pick:hover { background: rgba(54, 226, 245, 0.06); }
+  .dr-pick.on { background: var(--cy-soft); border-color: var(--edge-hi); box-shadow: inset 0 0 18px -8px var(--cy-glow); }
+  .dr-pick-ic { flex: none; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 6px; color: var(--cy); background: rgba(54, 226, 245, 0.08); border: 1px solid var(--edge); }
+  .dr-ring { border-radius: 50%; font: 700 11px var(--mono); color: var(--st, var(--cy)); border: 1.5px solid var(--st, var(--cy)); background: color-mix(in srgb, var(--st, var(--cy)) 12%, transparent); }
+  .dr-pick.st-nominal .dr-ring { --st: var(--cy); }
+  .dr-pick-t { flex: 1; min-width: 0; display: grid; }
+  .dr-pick-t b { font-size: 13.5px; font-weight: 600; }
+  .dr-pick-t small { font-size: 11.5px; color: var(--t3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dr-pick-ok { flex: none; color: var(--cy); filter: drop-shadow(0 0 6px var(--cy-glow)); }
+  .dr-pick .tag { flex: none; }
+
+  /* the stage: badge, VITA's words, the hologram on its pedestal, the three badges */
+  .dr-stage { display: grid; grid-template-rows: auto 1fr auto; gap: 10px; min-height: 540px; padding-block: 18px 16px; overflow: hidden; }
+  .dr-stage::after {
+    content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(55% 45% at 40% 62%, rgba(54, 226, 245, 0.16), transparent 70%), radial-gradient(40% 30% at 70% 20%, rgba(139, 156, 255, 0.07), transparent 70%);
+  }
+  .dr-badge {
+    justify-self: start; display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 7px 14px;
+    font: 700 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--cy-hi);
+    background: rgba(5, 20, 30, 0.8); border: 1px solid var(--edge-hi); box-shadow: 0 0 22px -8px var(--cy-glow);
+  }
+  .dr-holo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(230px, 330px); grid-template-areas: 'fig bubble'; align-items: center; gap: 8px 18px; min-height: 0; }
+  .dr-figure { grid-area: fig; position: relative; display: grid; justify-items: center; align-self: end; }
+  .dr-figure .vita-avatar { position: relative; z-index: 1; margin-bottom: -104px; filter: drop-shadow(0 0 22px rgba(54, 226, 245, 0.55)); }
+  /* the 3D doctor, thighs to head: she rises out of the pedestal's beam, her lower edge fading into it and her hands
+     softening at the sides when she gestures wide (the canvas sits low over the pedestal, whose disc is 80% down it) */
+  .dr-figure .dr-doctor {
+    position: relative; z-index: 1; display: block; width: 360px; height: 420px; margin-bottom: -150px; filter: drop-shadow(0 0 18px rgba(54, 226, 245, 0.35));
+    --fade: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent), linear-gradient(to bottom, #000 50%, rgba(0, 0, 0, 0.55) 64%, rgba(0, 0, 0, 0.18) 74%, transparent 84%);
+    -webkit-mask-image: var(--fade); -webkit-mask-composite: source-in;
+    mask-image: var(--fade); mask-composite: intersect;
+  }
+  .dr-figure::after {
+    /* holographic scan lines over the figure */
+    content: ''; position: absolute; inset: 0 15% 30%; z-index: 2; pointer-events: none; opacity: .35; mix-blend-mode: screen;
+    background: repeating-linear-gradient(0deg, rgba(159, 244, 255, 0.16) 0 1px, transparent 1px 4px);
+    mask-image: radial-gradient(closest-side, #000 55%, transparent);
+  }
+  .dr-pedestal { display: block; max-width: 100%; height: auto !important; }
+
+  .dr-bubble {
+    grid-area: bubble; position: relative; align-self: center; max-height: 340px; overflow-y: auto; padding: 14px 16px 10px; overscroll-behavior: contain;
+    background: rgba(6, 20, 30, 0.88); border: 1px solid var(--edge-hi); border-radius: 12px; box-shadow: 0 0 34px -12px var(--cy-glow), inset 0 0 22px -14px var(--cy-glow);
+    font-size: 13.5px; line-height: 1.55; color: var(--t1);
+  }
+  .dr-bubble p { margin: 0 0 8px; }
+  .dr-bubble b { color: var(--cy-hi); font-weight: 600; }
+  .dr-bubble em { font-style: normal; color: var(--cy-hi); }
+  .dr-q { font-size: 12.5px; color: var(--t3); font-style: italic; }
+  .dr-thinking { display: flex; align-items: center; gap: 10px; color: var(--t2); }
+  .dr-cites { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dr-cites a { font: 600 11px var(--mono); color: var(--cy); text-decoration: none; padding: 2px 8px; border: 1px solid var(--edge); border-radius: 999px; }
+  .dr-cites a:hover { border-color: var(--edge-hi); }
+  .dr-src { margin: 4px 0 0 !important; font: 500 10.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--t3); }
+
+  .dr-badges { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+  .dr-badges li {
+    display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; font: 700 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--t2);
+    background: rgba(5, 18, 28, 0.82); border: 1px solid var(--edge); border-radius: 8px;
+  }
+  .dr-badges svg { color: var(--cy); }
+
+  /* right column: what I check, ask me */
+  .dr-checks ul { display: grid; gap: 4px; }
+  .dr-checks li { display: flex; align-items: center; gap: 10px; padding: 7px 4px; border-bottom: 1px solid rgba(70, 225, 245, 0.08); }
+  .dr-checks li:last-child { border-bottom: 0; }
+  .dr-chk-ic { flex: none; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 6px; color: var(--st); background: color-mix(in srgb, var(--st) 12%, transparent); border: 1px solid color-mix(in srgb, var(--st) 35%, transparent); }
+  .dr-checks li.st-nominal .dr-chk-ic { color: var(--cy); background: rgba(54, 226, 245, 0.08); border-color: var(--edge); }
+  .dr-chk-t { flex: 1; min-width: 0; display: grid; }
+  .dr-chk-t b { font-size: 13px; font-weight: 600; }
+  .dr-chk-t small { font-size: 11.5px; line-height: 1.35; color: var(--t3); }
+  .dr-asks ul { display: grid; gap: 6px; }
+  .dr-asks button {
+    width: 100%; padding: 9px 12px; text-align: left; font-size: 13px; line-height: 1.35; color: var(--t1); cursor: var(--cur-pointer);
+    background: rgba(54, 226, 245, 0.05); border: 1px solid var(--edge); border-radius: 6px; transition: border-color var(--dur-1), background var(--dur-1);
+  }
+  .dr-asks button:hover:not(:disabled) { border-color: var(--edge-hi); background: var(--cy-soft); }
+  .dr-asks button:disabled { opacity: .55; }
+
+  /* the consult bar (the reference's "personalize" bar) */
+  .dr-ask { display: grid; gap: 8px; padding: 14px 20px; }
+  .dr-ask-h { margin: 0; font: 700 12px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--t2); }
+  .dr-ask-row { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
+  .dr-field { flex: 1 1 320px; display: grid; gap: 4px; min-width: 0; }
+  .dr-field span { font: 500 11px var(--ui); color: var(--t3); }
+  .dr-field input {
+    height: 42px; padding: 0 12px; font: 14px var(--ui); color: var(--t1); cursor: var(--cur-text);
+    background: rgba(2, 10, 16, 0.85); border: 1px solid var(--edge); border-radius: 6px;
+  }
+  .dr-field input:focus-visible { outline: none; border-color: var(--cy); box-shadow: 0 0 0 1px var(--cy), 0 0 18px -6px var(--cy-glow); }
+  .dr-icon {
+    flex: none; width: 42px; height: 42px; display: grid; place-items: center; cursor: var(--cur-pointer); color: var(--cy);
+    background: rgba(54, 226, 245, 0.06); border: 1px solid var(--edge); border-radius: 6px;
+  }
+  .dr-icon:hover:not(:disabled) { border-color: var(--edge-hi); background: var(--cy-soft); }
+  .dr-icon:disabled { opacity: .45; }
+  .dr-icon.listening { color: var(--act); border-color: var(--act); animation: dr-pulse 1s infinite; }
+  @keyframes dr-pulse { 50% { box-shadow: 0 0 0 4px rgba(255, 77, 106, 0.18); } }
+  .dr-ask-sep { width: 1px; height: 30px; align-self: center; background: var(--edge); }
+  .dr-ask-note { margin: 0; font-size: 12px; color: var(--t3); }
+
+  /* the consultation */
+  .dr-consult { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 0.9fr); gap: 14px; align-items: start; }
+  .dr-empty { margin: 0; font-size: 13px; color: var(--t3); }
+  .dr-findings ol { display: grid; gap: 10px; }
+  .dr-findings li { padding: 10px 12px; border-left: 2px solid var(--st, var(--edge-hi)); background: rgba(2, 10, 16, 0.5); }
+  .dr-findings li.dr-watch { --st: var(--data-2); opacity: .9; }
+  .dr-f-t { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 13.5px; }
+  .dr-f-why { margin: 0 0 4px; font-size: 13px; line-height: 1.5; color: var(--t2); }
+  .dr-f-m { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; font: 500 11px var(--mono); color: var(--t3); }
+  .dr-chip { padding: 1px 7px; font: 700 10px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--cy-hi); border: 1px solid var(--edge-hi); border-radius: 999px; }
+  .dr-watch .dr-chip { color: var(--data-2); border-color: color-mix(in srgb, var(--data-2) 55%, transparent); }
+
+  .dr-adv + .dr-adv { margin-top: 12px; }
+  .dr-adv h3 { margin: 0 0 6px; font: 700 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--t3); }
+  .dr-adv-now h3 { color: var(--or); }
+  .dr-adv ul { display: grid; gap: 6px; }
+  .dr-adv li { display: grid; gap: 1px; padding: 7px 10px; background: rgba(2, 10, 16, 0.5); border: 1px solid rgba(70, 225, 245, 0.1); border-radius: 4px; }
+  .dr-adv-now li { border-color: rgba(255, 138, 61, 0.35); }
+  .dr-adv li b { font-size: 13px; font-weight: 600; line-height: 1.4; }
+  .dr-adv li small { font-size: 11.5px; color: var(--t3); }
+
+  .dr-fit ol { display: grid; gap: 6px; }
+  .dr-fit li { display: grid; grid-template-columns: minmax(0, 1fr) 70px auto; align-items: center; gap: 10px; padding: 7px 4px; border-bottom: 1px solid rgba(70, 225, 245, 0.08); }
+  .dr-fit li:last-child { border-bottom: 0; }
+  .dr-fit-n { display: grid; min-width: 0; }
+  .dr-fit-n b { font-size: 13px; font-weight: 600; color: var(--t1); }
+  .dr-fit li.st-act .dr-fit-n b, .dr-fit li.st-watch .dr-fit-n b { color: var(--st); }
+  .dr-fit-n small { font-size: 11px; line-height: 1.35; color: var(--t3); }
+  .dr-fit-r { position: relative; display: block; height: 18px; font: 700 11px/18px var(--mono); text-align: right; padding-right: 4px; color: var(--t1); background: rgba(54, 226, 245, 0.06); overflow: hidden; }
+  .dr-fit-r i { position: absolute; inset: 0 auto 0 0; z-index: -1; background: linear-gradient(90deg, rgba(54, 226, 245, 0.15), rgba(54, 226, 245, 0.45)); }
+  .dr-fit li.st-act .dr-fit-r i { background: linear-gradient(90deg, rgba(255, 77, 106, 0.15), rgba(255, 77, 106, 0.5)); }
+  .dr-fit-r { isolation: isolate; }
+  .dr-eva { font: 700 10.5px var(--mono); letter-spacing: .06em; padding: 3px 7px; border: 1px solid; border-radius: 3px; white-space: nowrap; }
+  .dr-eva.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 50%, transparent); }
+  .dr-eva.no { color: var(--act); border-color: color-mix(in srgb, var(--act) 50%, transparent); }
+
+  .dr-note { margin: 0 4px 6px; font-size: 11.5px; color: var(--t3); }
+
+  @media (max-width: 1279px) {
+    .dr-grid { grid-template-columns: minmax(240px, 280px) minmax(0, 1fr); }
+    .dr-right { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
+    .dr-holo { grid-template-columns: 1fr; grid-template-areas: 'bubble' 'fig'; }
+    .dr-consult { grid-template-columns: 1fr 1fr; }
+    .dr-fit { grid-column: 1 / -1; }
+  }
+  @media (max-width: 767px) {
+    .dr-grid, .dr-right, .dr-consult { grid-template-columns: 1fr; }
+    .dr-stage { order: -1; min-height: 0; }
+    .dr-left { order: 0; }
+    .dr-crew ul { display: flex; overflow-x: auto; gap: 6px; padding-bottom: 4px; scroll-snap-type: x proximity; }
+    .dr-crew li { flex: none; width: 200px; scroll-snap-align: start; }
+    .dr-figure .vita-avatar { width: 160px !important; height: 160px !important; margin-bottom: -70px; }
+    .dr-figure .dr-doctor { width: 250px; height: 292px; margin-bottom: -104px; }
+    .dr-holo { grid-template-areas: 'fig' 'bubble'; }
+    .dr-bubble { max-height: 260px; }
+    .dr-pedestal { width: 300px !important; }
+    .dr-ask-sep { display: none; }
+    .dr-ask-row .hbtn { flex: 1 1 auto; }
+  }
+  @media (prefers-reduced-motion: reduce) { .dr-icon.listening { animation: none; } }
+}

@@ -2,32 +2,26 @@ import { Suspense, useEffect, useRef } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { alertChime, cabinHum, navTick, uiClick, uiHover } from './audio/sfx'
 import { announce, startChatter, stopChatter } from './audio/voice'
-import BoardPage from './board/BoardPage'
 import { CabinPage } from './cabin/lazy'
 import { CabinLoader } from './cabin/CabinLoader'
 import { seedDemo } from './data/demo'
 import { Backdrop } from './shell/Backdrop'
-import { Embed, embedFromUrl } from './shell/Embed'
+import { Embed, EmbedBridge } from './shell/Embed'
+import { stickyEmbed } from './shell/embedMode'
+import { LAZY_PAGES, pageRoutes } from './shell/pages'
 import { ErrorBoundary } from './shell/ErrorBoundary'
 import { useInstallPrompt } from './shell/install'
-import { lazyPage } from './shell/lazyPage'
 import { BottomTabs, StatusBar, TopBar } from './shell/Chrome'
 import { routeFor } from './shell/nav'
 import { ShellDataContext, useShellData, type ShellData } from './shell/useShellData'
 import { useSplashHandoff } from './shell/splash'
 import { StateView } from './ui/StateView'
 import { Tour } from './tour/Tour'
+import { VitaDock } from './vita/VitaDock'
 
 // The board is the landing screen and loads eagerly; every other screen (Trends carries the chart
 // library) is its own chunk. The service worker precaches all chunks, so they still work offline;
 // lazyPage reloads once if a chunk is gone after a redeploy.
-const AlertsPage = lazyPage(() => import('./alerts/AlertsPage'))
-const TrendsPage = lazyPage(() => import('./trends/TrendsPage'))
-const CheckInPage = lazyPage(() => import('./checkin/CheckInPage'))
-const SimulatorPage = lazyPage(() => import('./sim/SimulatorPage'))
-const SyncPage = lazyPage(() => import('./sync/SyncPage'))
-const GroundPage = lazyPage(() => import('./ground/GroundPage'))
-const NasaPage = lazyPage(() => import('./nasa/NasaPage'))
 import { useBootDemo } from './board/hooks'
 import { useBoard } from './board/store'
 
@@ -36,8 +30,7 @@ function usePreloadPages() {
   const ready = useBoard((s) => s.boot.state === 'ready')
   useEffect(() => {
     if (!ready) return
-    const pages = [AlertsPage, TrendsPage, CheckInPage, SimulatorPage, SyncPage, GroundPage, NasaPage]
-    const warm = () => pages.forEach((p) => p.preload())
+    const warm = () => LAZY_PAGES.forEach((p) => p.preload())
     if ('requestIdleCallback' in window) {
       const id = requestIdleCallback(warm, { timeout: 3000 })
       return () => cancelIdleCallback(id)
@@ -108,10 +101,11 @@ export default function App() {
   const shell = useShellData()
   const { pathname, search } = useLocation()
   // A single screen without the frame, for the 3D cabin's wall screens.
-  const embed = embedFromUrl(search)
+  const embed = stickyEmbed(search)
   useShellSounds(shell, !!embed || pathname.startsWith('/cabin'))
   if (embed) return (
     <ShellDataContext.Provider value={shell}>
+      <EmbedBridge />
       <ErrorBoundary key={pathname} onReset={() => seedDemo().then(() => undefined)}><Embed {...embed} /></ErrorBoundary>
     </ShellDataContext.Provider>
   )
@@ -122,6 +116,7 @@ export default function App() {
         <Suspense fallback={<CabinLoader />}><CabinPage /></Suspense>
       </ErrorBoundary>
       <Tour />
+      <VitaDock />
     </ShellDataContext.Provider>
   )
   return (
@@ -137,15 +132,7 @@ export default function App() {
         <Suspense fallback={<StateView kind="loading" label="Loading screen" />}>
         <Routes>
           <Route path="/" element={<Navigate to="/board" replace />} />
-          <Route path="/board" element={<BoardPage />} />
-          <Route path="/alerts" element={<AlertsPage />} />
-          <Route path="/trends" element={<TrendsPage />} />
-          <Route path="/checkin" element={<CheckInPage />} />
-          <Route path="/simulator" element={<SimulatorPage />} />
-          <Route path="/sync" element={<SyncPage />} />
-          <Route path="/ground" element={<GroundPage />} />
-          <Route path="/nasa" element={<NasaPage />} />
-          <Route path="*" element={<Navigate to="/board" replace />} />
+          {pageRoutes()}
         </Routes>
         </Suspense>
         </ErrorBoundary>
@@ -154,6 +141,7 @@ export default function App() {
       </div>
       <BottomTabs alerts={shell?.crew.find((c) => c.id === shell.crewId)?.alerts ?? 0} />
       <Tour />
+      <VitaDock />
     </div>
     </ShellDataContext.Provider>
   )

@@ -120,3 +120,23 @@ export interface CheckIn {
   symptoms: string[]
   reactionMs?: number
 }
+
+/**
+ * One experimental webcam face scan (rPPG). Kept apart from `Reading`: a webcam reads differently from the
+ * wearable, so scans never enter the engine's baselines or raise alerts.
+ */
+export interface FaceScan {
+  id?: number
+  crewId: string
+  ts: Timestamp
+  /** Beats per minute. */
+  hr: number
+  /** Rough RMSSD in ms, or null when there were too few clean beats. */
+  hrv: number | null
+  /** Breaths per minute, or null when no clear rhythm. */
+  resp: number | null
+  /** Signal quality 0 to 1. */
+  quality: number
+  /** Seconds of continuous clean video behind the numbers. */
+  seconds: number
+}

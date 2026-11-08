@@ -1,6 +1,6 @@
 /* AstroDocX launch screen — shown between the landing page and the Crew Console while the console boots.
    Plain script (no bundler) so it runs before the React bundle has even downloaded. Everything moving is drawn
-   live: a procedural nebula, twinkling stars and constellations, and a rotating night-lit Earth wrapped in a
+   live: the landing page's dawn sky, twinkling stars and constellations, and a rotating night-lit Earth wrapped in a
    network of comms arcs. Progress is real: the app reports each boot stage through window.adxSplash
    (see src/shell/splash.ts); the screen never waits on anything else, and a hard timeout always lets the crew in. */
 (function () {
@@ -93,37 +93,19 @@
   var W = 0, H = 0, DPR = 1, nebula = null, stars = [], earth = null
   function rng(seed) { return function () { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; var t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296 } }
 
+  // The landing page's dawn: a deep blue-black sky warming to an orange glow low on the right, with a cool haze above the horizon.
   function buildNebula() {
     var s = 0.5, c = document.createElement('canvas')
     c.width = Math.max(1, Math.round(W * s)); c.height = Math.max(1, Math.round(H * s))
-    var g = c.getContext('2d'), r = rng(7), m = Math.min(c.width, c.height), i, a
-    g.globalCompositeOperation = 'lighter'
-    function blob(x, y, rad, rgb, al) {
-      var gr = g.createRadialGradient(x, y, 0, x, y, rad)
-      gr.addColorStop(0, 'rgba(' + rgb + ',' + al + ')'); gr.addColorStop(1, 'rgba(' + rgb + ',0)')
-      g.fillStyle = gr; g.beginPath(); g.arc(x, y, rad, 0, 6.2832); g.fill()
-    }
-    // left: a swirling teal/violet vortex
-    var cx = c.width * 0.27, cy = c.height * 0.48
-    for (i = 0; i < 90; i++) {
-      a = i / 90 * 9.5
-      var rr = m * (0.04 + 0.034 * a) * (0.85 + r() * 0.3)
-      var x = cx + Math.cos(a) * rr * 1.25, y = cy + Math.sin(a) * rr
-      blob(x, y, m * (0.03 + r() * 0.09), r() < 0.55 ? '40,150,170' : (r() < 0.6 ? '90,85,170' : '60,95,160'), 0.13 + r() * 0.13)
-    }
-    // right: a long diagonal stream of violet, teal and gold filaments
-    for (i = 0; i < 110; i++) {
-      var t = r(), w = Math.sin(t * 9 + 1.3) * 0.06
-      var bx = c.width * (0.6 + 0.38 * t + w), by = c.height * (0.95 - 0.95 * t + w * 0.6)
-      var pick = r()
-      blob(bx + (r() - 0.5) * m * 0.12, by + (r() - 0.5) * m * 0.12, m * (0.025 + r() * 0.08),
-        pick < 0.35 ? '95,85,175' : pick < 0.7 ? '40,155,170' : pick < 0.9 ? '190,120,60' : '120,90,160', 0.12 + r() * 0.13)
-    }
-    // a faint bridge between the two so the sky reads as one field
-    for (i = 0; i < 26; i++) blob(c.width * (0.35 + r() * 0.3), c.height * (0.1 + r() * 0.8), m * (0.05 + r() * 0.12), r() < 0.5 ? '60,60,130' : '30,100,120', 0.03 + r() * 0.03)
-    // grain the gas a little with darker pockets
-    g.globalCompositeOperation = 'destination-out'
-    for (i = 0; i < 60; i++) blob(r() * c.width, r() * c.height, m * (0.015 + r() * 0.05), '0,0,0', 0.15 + r() * 0.2)
+    var g = c.getContext('2d'), sg = g.createLinearGradient(0, 0, 0, c.height)
+    sg.addColorStop(0, '#050608'); sg.addColorStop(0.6, '#0a0f1a'); sg.addColorStop(1, '#0d1a2c')
+    g.fillStyle = sg; g.fillRect(0, 0, c.width, c.height)
+    var sun = g.createRadialGradient(c.width * 0.72, c.height * 1.04, 0, c.width * 0.72, c.height * 1.04, c.width * 0.6)
+    sun.addColorStop(0, 'rgba(255,140,70,.38)'); sun.addColorStop(0.5, 'rgba(255,120,60,.12)'); sun.addColorStop(1, 'rgba(255,140,70,0)')
+    g.fillStyle = sun; g.fillRect(0, 0, c.width, c.height)
+    var haze = g.createRadialGradient(c.width * 0.5, c.height * 1.1, 0, c.width * 0.5, c.height * 1.1, c.width * 0.7)
+    haze.addColorStop(0, 'rgba(54,226,245,.16)'); haze.addColorStop(1, 'rgba(54,226,245,0)')
+    g.fillStyle = haze; g.fillRect(0, 0, c.width, c.height)
     nebula = c
   }
 
@@ -209,9 +191,9 @@
     }
     ctx.restore()
 
-    // particles: day-side land bright ice-white, night-side land as sparse amber city lights, oceans a faint cyan haze
+    // particles: day-side land in the landing page's green, night-side land as sparse orange city lights, oceans a faint cyan haze
     var i, lit, f, sz = Math.max(1, R / 320)
-    ctx.fillStyle = '#dcf2ff'
+    ctx.fillStyle = '#3ddc97'
     for (i = 0; i < earth.land.length; i++) {
       q = rot(earth.land[i], ry, tilt)
       if (q[2] <= 0) continue
@@ -221,7 +203,7 @@
       ctx.globalAlpha = Math.min(1, (0.2 + lit * 0.85) * f)
       ctx.fillRect(cx + q[0] * R, cy - q[1] * R, sz, sz)
     }
-    ctx.fillStyle = '#ffb870'
+    ctx.fillStyle = '#ff8a3d'
     for (i = 0; i < earth.land.length; i += 3) {
       q = rot(earth.land[i], ry, tilt)
       if (q[2] <= 0) continue
@@ -230,7 +212,7 @@
       ctx.globalAlpha = (0.25 + 0.55 * Math.abs(Math.sin(i * 12.9898 + t * 0.0015))) * Math.min(1, q[2] * 3)
       ctx.fillRect(cx + q[0] * R, cy - q[1] * R, sz * 1.2, sz * 1.2)
     }
-    ctx.fillStyle = '#5ab4dc'
+    ctx.fillStyle = '#36e2f5'
     for (i = 0; i < earth.sea.length; i++) {
       q = rot(earth.sea[i], ry, tilt)
       if (q[2] <= 0) continue
@@ -241,7 +223,7 @@
     ctx.globalAlpha = 1
     // crisp lit rim
     var rg = ctx.createLinearGradient(cx - R, cy - R, cx + R * 0.4, cy + R * 0.4)
-    rg.addColorStop(0, 'rgba(140,230,255,.7)'); rg.addColorStop(1, 'rgba(140,230,255,.04)')
+    rg.addColorStop(0, 'rgba(54,226,245,.75)'); rg.addColorStop(1, 'rgba(54,226,245,.04)')
     ctx.strokeStyle = rg; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 6.2832); ctx.stroke()
 
     // comms network: arcs lifted off the surface with data packets travelling along them
@@ -271,27 +253,25 @@
       q = rot(earth.nodes[i], ry, tilt)
       if (q[2] < 0.05) continue
       var pr = 2 + Math.sin(t * 0.004 + i) * 0.8
-      ctx.fillStyle = 'rgba(45,212,232,.25)'; ctx.beginPath(); ctx.arc(cx + q[0] * R, cy - q[1] * R, pr * 2.4, 0, 6.2832); ctx.fill()
+      ctx.fillStyle = 'rgba(54,226,245,.25)'; ctx.beginPath(); ctx.arc(cx + q[0] * R, cy - q[1] * R, pr * 2.4, 0, 6.2832); ctx.fill()
       ctx.fillStyle = '#c9fbff'; ctx.beginPath(); ctx.arc(cx + q[0] * R, cy - q[1] * R, pr * 0.7, 0, 6.2832); ctx.fill()
     }
   }
 
   function draw(t) {
-    ctx.fillStyle = '#02030a'; ctx.fillRect(0, 0, W, H)
+    ctx.fillStyle = '#02050a'; ctx.fillRect(0, 0, W, H)
     var vg = ctx.createRadialGradient(W * 0.5, H * 0.45, 0, W * 0.5, H * 0.45, Math.max(W, H) * 0.7)
-    vg.addColorStop(0, '#080a12'); vg.addColorStop(1, '#02030a')
+    vg.addColorStop(0, '#080a12'); vg.addColorStop(1, '#02050a')
     ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H)
     // nebula drifts and breathes slowly
     var wp = warp0 ? Math.min(1, (t - warp0) / 900) : 0, we = wp * wp
-    var dx = Math.sin(t * 0.00009) * 14, dy = Math.cos(t * 0.00007) * 10, sc = 1.06 + Math.sin(t * 0.00011) * 0.02
-    ctx.globalAlpha = 0.42 * (1 - we)
-    ctx.globalCompositeOperation = 'lighter'
+    var dx = Math.sin(t * 0.00009) * 8, dy = Math.cos(t * 0.00007) * 5, sc = 1.04 + Math.sin(t * 0.00011) * 0.01
+    ctx.globalAlpha = 1 - we
     ctx.drawImage(nebula, (W - W * sc) / 2 + dx, (H - H * sc) / 2 + dy, W * sc, H * sc)
     ctx.globalAlpha = 1
-    ctx.globalCompositeOperation = 'source-over'
     // stars
     var i, s, a
-    if (wp) { drawEarth(t); ctx.fillStyle = 'rgba(2,3,10,' + Math.min(1, we * 1.4) + ')'; ctx.fillRect(0, 0, W, H); drawWarp(we); return }
+    if (wp) { drawEarth(t); ctx.fillStyle = 'rgba(2,5,10,' + Math.min(1, we * 1.4) + ')'; ctx.fillRect(0, 0, W, H); drawWarp(we); return }
     for (i = 0; i < stars.length; i++) {
       s = stars[i]; a = s.a * (0.55 + 0.45 * Math.sin(t * 0.001 * s.s + s.p))
       ctx.fillStyle = s.warm ? 'rgba(255,225,190,' + a + ')' : 'rgba(225,240,255,' + a + ')'
@@ -320,7 +300,7 @@
       ctx.beginPath(); ctx.moveTo(warpX + dx * (1 + e * 0.35), warpY + dy * (1 + e * 0.35)); ctx.lineTo(warpX + dx * (1 + e * 2.6), warpY + dy * (1 + e * 2.6)); ctx.stroke()
     }
     var fl = ctx.createRadialGradient(warpX, warpY, 0, warpX, warpY, Math.max(W, H) * (0.15 + e * 0.5))
-    fl.addColorStop(0, 'rgba(210,250,255,' + 0.55 * e + ')'); fl.addColorStop(0.35, 'rgba(45,212,232,' + 0.18 * e + ')'); fl.addColorStop(1, 'rgba(45,212,232,0)')
+    fl.addColorStop(0, 'rgba(210,250,255,' + 0.55 * e + ')'); fl.addColorStop(0.35, 'rgba(54,226,245,' + 0.18 * e + ')'); fl.addColorStop(1, 'rgba(54,226,245,0)')
     ctx.fillStyle = fl; ctx.fillRect(0, 0, W, H)
   }
 

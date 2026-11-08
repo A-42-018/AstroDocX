@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   ASTRODOCX — LANDING MAIN SCRIPT
+   ASTRODOCX — STORY PAGE MAIN SCRIPT (story.html)
    The page is one particle journey (#journey: #universe intro →
    #twin Health Twin → #astrodocx) → footer. The journey and the
    tour have their own files; this one holds the shared bits: nav,

@@ -3,10 +3,10 @@
 **Astronaut + Doctor + X** — an offline-first health co-pilot for astronauts on long-duration missions.
 
 > NASA Space Apps Challenge 2026 · Challenge: *Create Health Monitoring Software for Astronauts on Space Missions*
-> Team AstroDocX · Dhaka, Bangladesh
+> Team AstroDocX · Mymensingh, Bangladesh
 
 ### ▶ [Take the 1-click tour (2 min)](https://astrodocx.vercel.app/?tour=full)
-No time to click around? This link plays the whole project by itself: the landing page, the Crew Console's main screens with a live CO₂ fault demo, and the 3D cabin out to the astronaut on EVA. Pause, skip or exit any time from the bar at the bottom.
+No time to click around? This link plays the whole project by itself: VITA's mission briefing on the homepage, the Crew Console's main screens with a live CO₂ fault demo, and the 3D cabin out to the astronaut on EVA. Pause, skip or exit any time from the bar at the bottom.
 
 ![AstroDocX Health Twin: a real human shape made of particles, with the brain, heart, lungs, skeleton and arteries inside](docs/screenshots/health-twin.jpg)
 
@@ -33,18 +33,19 @@ AstroDocX learns each astronaut's **personal baseline**, spots drift early, and 
 | Explainable alerts | Each alert says what changed, by how much, against whose baseline and since when, and links the published NASA evidence behind it (OSDR studies with DOIs, Human Research Program reports on NTRS); context, never a diagnosis |
 | Action cards | Checkable countermeasure steps with progress and Done; open → escalate → ease → resolve lifecycle, all logged |
 | Status Board | Five RIDGE tiles, crew readiness score, crew overview, next action, live vitals strip (ECG-style waves, heart pulse) |
+| Crew Doctor (VITA) | VITA reads every crew member's alerts, baselines, readiness, dose and the ground link together: one cabin-wide finding when the same CO₂ or dose alert hits two or more crew, fatigue clusters, triage order and an EVA screen per person, with steps grouped now / today / next link window. Brief, clinical or SBAR ground-handoff wording, read aloud, added to the ground log; an optional live layer (Claude, `/api/doctor`) only re-words that exam, and the server rejects any number or crew member the exam does not contain. In the 3D cabin the VITA robot speaks the same brief |
 | Health Twin (console) | A 3D particle body (the same baked human as the landing page) turning gently: the heart beats with the live ECG, a pulse runs down the arteries, and each hazard colours its own part (brain, lungs, legs, skin, transmitter arm) amber or red |
 | Trends | 11 charts with the personal baseline band, alert markers, 24 h / 7 d / 30 d |
 | Daily Check-in | Mood, sleep quality, hours slept, 8 symptom chips and a 5-tap reaction test (PVT-style); symptoms and sleep quality raise alerts |
 | Mission Simulator | Mission clock, fast-forward, 4 injectable scenarios (solar event, CO₂ fault, insomnia, deconditioning); watch the engine react |
 | Ground Sync | Delay-tolerant outbox: link windows, 12-minute delay, blackout, auto-sync, CSV log export |
 | Ground View | Flight-surgeon view rebuilt only from synced entries (shows what Earth knows, and when); each crew card shows the 3D body in its status colour |
-| NASA Data | The NASA basis of the console in one screen: for each of NASA's five hazards, what AstroDocX monitors, the NASA-STD-3001 limit it checks and the NASA studies cited; every alert and Status Board tile carries a NASA source tag |
+| NASA Data | The NASA basis of the console in one screen: for each of NASA's five hazards, what AstroDocX monitors, the NASA-STD-3001 limit it checks and the NASA studies cited; every alert and Status Board tile carries a NASA source tag. Also a **Real crew data** panel: measured blood counts, metabolic and inflammation markers from the four SpaceX Inspiration4 crew (NASA OSDR OSD-569 and OSD-575), each person charted against their own pre-flight baseline and the lab reference range |
 | Platform | Offline-first installable PWA, IndexedDB on the device, 4-crew 30-day demo mission preloaded |
 
 **Not built yet (Roadmap):** wearable sensor integration, a real Supabase ground backend with proper policies, vision/SANS self-tests, blood pressure, bone density, a multi-device ground station.
 
-> **Status:** the landing page and the **Crew Console** (`app/`) are built and run the full loop on synthetic data. AstroDocX is a prototype, **not a medical device**; all thresholds not cited in the code are illustrative.
+> **Status:** the landing page and the **Crew Console** (`app/`) are built and run the full loop on synthetic data. AstroDocX is a prototype, **not a medical device**; all thresholds not cited in the code are illustrative. The only measured astronaut data in the app is the Inspiration4 lab panel on the NASA Data screen; live vitals, cabin readings and the demo mission are synthetic.
 
 ## Screenshots
 **Landing page:** one scroll-driven journey made of the same 24,000 particles: stardust, a planet, an astronaut saluting the flag on the Moon, Orion, a relay satellite and Earth, which then becomes the Health Twin and finally the AstroDocX wordmark.
@@ -76,8 +77,10 @@ AstroDocX learns each astronaut's **personal baseline**, spots drift early, and 
 The live waves on the board (ECG, pulse oximeter, breathing) are **simulated telemetry** built around the latest real readings; they never change alerts.
 
 ## Try it
-- **1-click tour:** press *1-Click Tour* on the landing page (or open [`/?tour=full`](https://astrodocx.vercel.app/?tour=full)) for a guided two-minute run through the landing page, the console and the 3D cabin. Space pauses, Esc exits, a scroll or click pauses so you can look closer.
-- **Health Twin:** scroll through the section. The scan runs head to feet, six system panels appear, Crew Readiness counts up, then the Pilot's real Act alert from the demo mission appears as an action card. Panel values are the demo mission's latest readings.
+- **Mission briefing (homepage):** the site opens in a single-screen briefing room hosted by **VITA**, our guide. She gives a 30-second intro (once per visit, with Skip), then answers questions about astronaut health from NASA sources, with citations. Three doors lead to the Crew Console (`/app/`), the 3D Cabin (`/app/cabin`) and the NASA library. It works offline (built-in answers) and with reduced motion.
+- **The story:** the original scroll journey (stardust to Earth, the Health Twin, the AstroDocX reveal) is at [`/story.html`](https://astrodocx.vercel.app/story.html), linked as *Watch the story*.
+- **1-click tour:** press *1-click tour* on the homepage (or open [`/?tour=full`](https://astrodocx.vercel.app/?tour=full)) for a guided two-minute run: VITA's briefing, then the console and the 3D cabin. Space pauses, Esc exits, a scroll or click pauses so you can look closer.
+- **Health Twin (story page):** scroll through the section. The scan runs head to feet, six system panels appear, Crew Readiness counts up, then the Pilot's real Act alert from the demo mission appears as an action card. Panel values are the demo mission's latest readings.
 - **Run demo (Crew Console):** press *Run demo* in the top bar's `⋯` menu to inject a CO₂ scrubber fault and watch the board, twin and alerts react (about 20 s); *Reset demo* restores the mission data.
 - **Mission Simulator (Crew Console, `/app/simulator`):** inject a scenario (solar particle event, CO₂ scrubber fault, insomnia streak, skipped exercise) for one crew member or the whole crew, then tick the action-card steps on Alerts and sync the log from Ground Sync in the next link window.
 
@@ -98,7 +101,7 @@ npm test         # 180+ tests (engine, UI, DB)
 npm run build && npm run preview   # production build with the service worker, to test install and offline
 ```
 
-**Landing page** is a static site with no build step.
+**Landing site** (the briefing homepage and the story page) is static, with no build step.
 
 ```bash
 cd landing
@@ -110,7 +113,7 @@ python3 -m http.server 8000
 By default Ground Sync is simulated and nothing leaves the device. To upload synced log entries to a real server, create a Supabase project, run [`docs/supabase.sql`](docs/supabase.sql), copy `app/.env.example` to `app/.env.local` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, then rebuild. Uploads happen only in link windows; a failed upload keeps entries queued like a blackout. The Ground View then reads from the server, so a flight surgeon can open `/app/ground` on another computer. **The provided policies are demo-grade (anonymous insert and read) and only suitable for synthetic data**; see the notes in the SQL file.
 
 ## Record the project video (tour mode)
-Open the landing page with `?tour=1` (for example `http://localhost:8000/?tour=1`) and it plays the journey by itself, pausing on every scene and Health Twin stage, so a screen recording is smooth. The cursor and back-to-top button are hidden. Options: `&speed=1.25` (faster), `&delay=5` (lead-in seconds). Keys: Space pause, R restart, Esc stop; any mouse wheel or touch also stops it. Check the Space Apps video length rules; hold times per scene are `tour` in `landing/universe/scenes.js`.
+Open the story page with `?tour=1` (for example `http://localhost:8000/story.html?tour=1`; `/?tour=1` forwards there) and it plays the journey by itself, pausing on every scene and Health Twin stage, so a screen recording is smooth. The cursor and back-to-top button are hidden. Options: `&speed=1.25` (faster), `&delay=5` (lead-in seconds). Keys: Space pause, R restart, Esc stop; any mouse wheel or touch also stops it. Check the Space Apps video length rules; hold times per scene are `tour` in `landing/universe/scenes.js`.
 
 ## Deploy (Netlify)
 `netlify.toml` builds the console (`cd app && npm ci && npm run build`), copies it to `landing/app/`, and publishes `landing/`. So one site serves the landing page at `/` and the Crew Console PWA at `/app/` (with an SPA fallback). Connect the repo in Netlify and deploy.
@@ -126,11 +129,14 @@ Open the landing page with `?tour=1` (for example `http://localhost:8000/?tour=1
 ## Project structure
 ```
 AstroDocX/
-├── landing/        # landing page (static)
-│   ├── index.html
-│   ├── styles.css
-│   ├── script.js   # nav, typewriter, back-to-top
-│   ├── tour.js     # 1-click tour (landing chapter) and ?tour=1 video mode
+├── landing/        # landing site (static)
+│   ├── index.html  # Mission Briefing homepage: VITA, the chat and three doors
+│   ├── briefing/   # briefing.css (console Holo HUD theme), briefing.js (intro, chat, doors, library overlay),
+│   │               #   vita.js (procedural backdrop, VITA drone, door previews), sound.js (Web Audio)
+│   ├── story.html  # the scroll story: intro -> Health Twin -> AstroDocX
+│   ├── styles.css  # story page styles
+│   ├── script.js   # story page: nav, typewriter, back-to-top
+│   ├── tour.js     # 1-click tour (chapter 1 on either page) and ?tour=1 video mode (story page)
 │   ├── universe/   # the particle journey: one canvas for intro -> Health Twin -> AstroDocX
 │   │               #   scenes.js (copy + chapter lengths), engine.js (8 shapes), universe.js (director),
 │   │               #   health-twin.js, reveal.js (chapter UI), stars.js, camera.js, fx.js, sound.js, universe.css
@@ -145,7 +151,7 @@ AstroDocX/
 ```
 
 ## Use of AI
-No AI runs inside the product: every number, alert and explanation comes from tested, deterministic code. Claude Code helped write the code, and Tripo Studio generated the anatomy render behind the Health Twin body. Tools, prompts and the team's own work: [`docs/AI_USE.md`](docs/AI_USE.md).
+Every number, alert, finding and step comes from tested, deterministic code. VITA (the guide and crew doctor) can word her answers live with Claude through `/api/ask` and `/api/doctor`, but only from cited sources or the console's own exam, checked server-side; without a key she answers offline from the same data. Claude Code helped write the code, and Tripo Studio generated the anatomy render behind the Health Twin body. Tools, prompts and the team's own work: [`docs/AI_USE.md`](docs/AI_USE.md).
 
 ## NASA data used
 AstroDocX is built on NASA science. The console's **NASA Data** screen (`/app/nasa`) lists all of it, hazard by hazard, and every alert names its NASA basis. All of it comes from [`app/src/engine/nasa.ts`](app/src/engine/nasa.ts) and [`app/src/engine/evidence.ts`](app/src/engine/evidence.ts).

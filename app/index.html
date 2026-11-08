@@ -7,7 +7,7 @@
     <link rel="preload" href="%BASE_URL%fonts/Inter-var.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="%BASE_URL%fonts/JetBrainsMono-var.woff2" as="font" type="font/woff2" crossorigin />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#070612" />
+    <meta name="theme-color" content="#02050a" />
     <meta name="description" content="AstroDocX Crew Console: offline-first astronaut health co-pilot. Prototype, not a medical device." />
     <title>AstroDocX Crew Console</title>
     <!-- Launch screen: critical CSS inline so it paints before the console bundle arrives. public/splash.js drives it;
@@ -16,34 +16,45 @@
     <noscript><style>#adx-splash{display:none !important}</style></noscript>
     <style>
       html.adx-embed #adx-splash{display:none !important}
-      html.adx-launching{background:#02030a}
+      html.adx-launching{background:#02050a}
       html.adx-launching,html.adx-launching body{overflow:hidden !important}
-      #adx-splash{position:fixed;inset:0;z-index:10000;background:#02030a;color:#f4f5f7;overflow:hidden;
+      #adx-splash{position:fixed;inset:0;z-index:10000;background:#02050a;color:#f4f5f7;overflow:hidden;
         font-family:'Inter',system-ui,-apple-system,sans-serif;transition:opacity .7s cubic-bezier(.2,.8,.2,1),visibility 0s linear .7s}
       #adx-splash canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-      /* spaceship viewport: rounded window with a dark bevel around it */
-      .sp-window{position:absolute;inset:clamp(8px,1.6vw,22px);border-radius:clamp(18px,3vw,44px);pointer-events:none;
-        box-shadow:0 0 0 60px #02030a,inset 0 0 0 1px rgba(160,200,255,.14),inset 0 0 60px 10px rgba(0,0,0,.75),0 0 0 2px rgba(120,160,220,.06)}
-      .sp-window::before,.sp-window::after{content:'';position:absolute;top:50%;width:4px;height:70px;margin-top:-35px;border-radius:4px;background:rgba(150,190,255,.12)}
-      .sp-window::before{left:-9px}.sp-window::after{right:-9px}
+      /* HUD frame: corner brackets and a tag line, like the cabin loader and the briefing page */
+      .sp-frame{position:absolute;inset:clamp(14px,2.4vw,28px);z-index:1;pointer-events:none}
+      .sp-frame i{position:absolute;width:22px;height:22px;border:2px solid #36e2f5;opacity:.85;filter:drop-shadow(0 0 6px rgba(54,226,245,.55))}
+      .sp-frame i:nth-child(1){top:0;left:0;border-right:0;border-bottom:0}.sp-frame i:nth-child(2){top:0;right:0;border-left:0;border-bottom:0}
+      .sp-frame i:nth-child(3){bottom:0;left:0;border-right:0;border-top:0}.sp-frame i:nth-child(4){bottom:0;right:0;border-left:0;border-top:0}
+      .sp-frame b{position:absolute;top:4px;left:34px;font:600 10px 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.2em;color:#9ff4ff;text-shadow:0 0 8px rgba(0,0,0,.9)}
+      /* the boot checklist sits in a chamfered panel with a header rule (the briefing page's .hp / .ph) */
+      .sp-panel{--cut:14px;position:relative;isolation:isolate;width:min(420px,100%);padding:12px 18px 14px;text-align:left;
+        clip-path:polygon(0 var(--cut),var(--cut) 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%);
+        background:linear-gradient(160deg,rgba(70,225,245,.55),rgba(70,225,245,.22) 30%,rgba(70,225,245,.22) 70%,rgba(70,225,245,.55))}
+      .sp-panel::before{content:'';position:absolute;inset:1px;z-index:-1;
+        clip-path:polygon(0 calc(var(--cut) - .5px),calc(var(--cut) - .5px) 0,100% 0,100% calc(100% - var(--cut) + .5px),calc(100% - var(--cut) + .5px) 100%,0 100%);
+        background:linear-gradient(180deg,rgba(54,226,245,.06),transparent 40%),rgba(5,14,22,.78)}
+      .sp-ph{display:flex;align-items:center;gap:10px;margin-bottom:10px;font:600 11px/1.4 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:#36e2f5}
+      .sp-ph::before{content:'';flex:none;width:6px;height:6px;background:#36e2f5;box-shadow:0 0 8px #36e2f5;transform:rotate(45deg)}
+      .sp-ph::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(54,226,245,.55),transparent)}
       .sp-stage{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
         gap:clamp(10px,2.2vh,22px);padding:clamp(28px,6vh,64px) 24px;text-align:center;transition:transform .7s cubic-bezier(.5,0,.75,0),filter .7s,opacity .6s ease-in}
       /* brand first: the wordmark is the headline, the event credit lives in the footer */
       .sp-brand{margin:0;display:flex;flex-direction:column;align-items:center;gap:clamp(4px,1vh,10px)}
       .sp-mark{font-family:'Space Grotesk','Inter',sans-serif;font-weight:600;font-size:clamp(2.2rem,6.4vw,4.4rem);letter-spacing:-.02em;line-height:1;
-        color:#f4f5f7;text-shadow:0 0 28px rgba(45,212,232,.35)}
-      .sp-sub{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-weight:500;font-size:clamp(.72rem,1.4vw,.95rem);letter-spacing:.32em;text-transform:uppercase;color:#7fe6f2}
-      .sp-mark .sp-br{color:#2dd4e8}.sp-mark .sp-x{color:#ff7a2f}
+        color:#f4f5f7;text-shadow:0 0 28px rgba(54,226,245,.35)}
+      .sp-sub{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-weight:500;font-size:clamp(.72rem,1.4vw,.95rem);letter-spacing:.32em;text-transform:uppercase;color:#9ff4ff}
+      .sp-mark .sp-br{color:#36e2f5}.sp-mark .sp-x{color:#ff8a3d}
       /* reactor orb: segmented progress ring around a plasma core with a live ECG trace */
       .sp-orb{position:relative;width:clamp(150px,22vh,210px);aspect-ratio:1}
       .sp-orb svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-      .sp-track{fill:none;stroke:rgba(45,212,232,.16);stroke-width:7}
-      .sp-fill{fill:none;stroke:#2dd4e8;stroke-width:7;stroke-dasharray:100;stroke-dashoffset:100;filter:drop-shadow(0 0 6px rgba(45,212,232,.9))}
-      .sp-inner{fill:none;stroke:rgba(45,212,232,.55);stroke-width:1.2;stroke-dasharray:22 9 3 9;transform-origin:50% 50%;animation:spSpin 9s linear infinite}
-      .sp-halo{position:absolute;inset:-18%;border-radius:50%;background:radial-gradient(circle,rgba(45,212,232,.22),rgba(45,212,232,0) 62%);animation:spBreathe 3s ease-in-out infinite}
+      .sp-track{fill:none;stroke:rgba(54,226,245,.16);stroke-width:7}
+      .sp-fill{fill:none;stroke:#36e2f5;stroke-width:7;stroke-dasharray:100;stroke-dashoffset:100;filter:drop-shadow(0 0 6px rgba(54,226,245,.9))}
+      .sp-inner{fill:none;stroke:rgba(54,226,245,.55);stroke-width:1.2;stroke-dasharray:22 9 3 9;transform-origin:50% 50%;animation:spSpin 9s linear infinite}
+      .sp-halo{position:absolute;inset:-18%;border-radius:50%;background:radial-gradient(circle,rgba(54,226,245,.22),rgba(54,226,245,0) 62%);animation:spBreathe 3s ease-in-out infinite}
       .sp-core{position:absolute;inset:21%;border-radius:50%;overflow:hidden;
         background:radial-gradient(circle at 50% 50%,#ffd59a 0%,#ff9440 18%,#b2410f 42%,#2a0d05 70%,#07040a 100%);
-        box-shadow:0 0 0 1.5px rgba(45,212,232,.6),0 0 24px rgba(45,212,232,.45),inset 0 0 22px rgba(0,0,0,.8)}
+        box-shadow:0 0 0 1.5px rgba(54,226,245,.6),0 0 24px rgba(54,226,245,.45),inset 0 0 22px rgba(0,0,0,.8)}
       .sp-core i{position:absolute;inset:-30%;border-radius:50%;mix-blend-mode:screen;filter:blur(5px)}
       .sp-core i:nth-child(1){background:conic-gradient(from 0deg,transparent,rgba(255,170,80,.7),transparent 20%,rgba(255,110,40,.6) 38%,transparent 50%,rgba(255,200,120,.55) 70%,transparent 84%);animation:spSpin 7s linear infinite}
       .sp-core i:nth-child(2){background:conic-gradient(from 90deg,transparent,rgba(120,190,255,.35),transparent 18%,rgba(255,140,60,.5) 46%,transparent 60%,rgba(80,160,255,.3) 80%,transparent);animation:spSpin 11s linear infinite reverse}
@@ -51,28 +62,28 @@
       .sp-ecg{position:absolute;inset:0}
       .sp-ecg path{fill:none;stroke-linecap:round;stroke-linejoin:round}
       .sp-ecg .base{stroke:rgba(180,250,255,.25);stroke-width:1.4}
-      .sp-ecg .beat{stroke:#c9fbff;stroke-width:2;stroke-dasharray:34 66;filter:drop-shadow(0 0 3px #2dd4e8) drop-shadow(0 0 6px #2dd4e8);animation:spEcg 1.8s linear infinite}
+      .sp-ecg .beat{stroke:#c9fbff;stroke-width:2;stroke-dasharray:34 66;filter:drop-shadow(0 0 3px #36e2f5) drop-shadow(0 0 6px #36e2f5);animation:spEcg 1.8s linear infinite}
       /* boot checklist */
-      .sp-steps{list-style:none;margin:clamp(4px,1vh,10px) 0 0;padding:0;display:grid;gap:clamp(4px,1vh,9px);text-align:left;
+      .sp-steps{list-style:none;margin:0;padding:0;display:grid;gap:clamp(4px,1vh,9px);
         font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-size:clamp(.72rem,1.5vw,.95rem);letter-spacing:.1em;text-transform:uppercase;color:#cfe9ee}
       .sp-steps li{display:flex;align-items:center;gap:.8em;opacity:.38;transition:opacity .35s}
       .sp-steps li::before{content:'';flex:none;width:1.05em;height:1.05em;border:1.5px solid currentColor;border-radius:3px;box-sizing:border-box;
         background:center/72% no-repeat}
       .sp-steps li.ok,.sp-steps li.on{opacity:1}
-      .sp-steps li.ok::before{border-color:#2dd4e8;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6.4 4.8 9 10 3' fill='none' stroke='%232dd4e8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
-      .sp-steps li.on::before{border-color:#2dd4e8;background-image:radial-gradient(circle,#2dd4e8 0 28%,transparent 32%);background-size:100%;animation:spPulse 1s ease-in-out infinite}
+      .sp-steps li.ok::before{border-color:#36e2f5;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6.4 4.8 9 10 3' fill='none' stroke='%232dd4e8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+      .sp-steps li.on::before{border-color:#36e2f5;background-image:radial-gradient(circle,#36e2f5 0 28%,transparent 32%);background-size:100%;animation:spPulse 1s ease-in-out infinite}
       .sp-steps .dots{display:inline-flex;gap:.25em;margin-left:.2em;visibility:hidden}
       .sp-steps li.on .dots{visibility:visible}
-      .sp-dots i{width:.32em;height:.32em;border-radius:50%;background:#2dd4e8;animation:spDot 1.2s ease-in-out infinite}
+      .sp-dots i{width:.32em;height:.32em;border-radius:50%;background:#36e2f5;animation:spDot 1.2s ease-in-out infinite}
       .sp-dots i:nth-child(2){animation-delay:.15s}.sp-dots i:nth-child(3){animation-delay:.3s}
       .sp-launch{margin:clamp(6px,1.6vh,18px) 0 0;display:flex;white-space:nowrap;align-items:baseline;gap:.08em;font-family:'Space Grotesk','Inter',sans-serif;font-weight:600;
-        font-size:clamp(1.6rem,4.4vw,3.1rem);letter-spacing:.08em;color:#7fe6f2;text-shadow:0 0 22px rgba(45,212,232,.5)}
+        font-size:clamp(1.6rem,4.4vw,3.1rem);letter-spacing:.08em;color:#9ff4ff;text-shadow:0 0 22px rgba(54,226,245,.5)}
       .sp-launch .sp-dots{display:inline-flex;gap:.18em;margin-left:.15em}
       .sp-launch .sp-dots i{width:.14em;height:.14em}
       .sp-pct{position:absolute;left:0;right:0;top:63%;text-align:center;font-family:'JetBrains Mono',ui-monospace,monospace;font-weight:600;
         font-size:clamp(.66rem,1.3vh,.8rem);letter-spacing:.14em;color:#f4fdff;text-shadow:0 0 6px rgba(0,0,0,.9),0 0 12px rgba(0,0,0,.7)}
       .sp-foot{position:absolute;z-index:1;bottom:clamp(18px,3.4vw,40px);left:0;right:0;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;
-        padding:0 clamp(28px,5vw,72px);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:clamp(.6rem,1.1vw,.75rem);letter-spacing:.14em;text-transform:uppercase;color:rgba(207,233,238,.72);text-shadow:0 0 6px #02030a,0 0 12px #02030a}
+        padding:0 clamp(28px,5vw,72px);font-family:'JetBrains Mono',ui-monospace,monospace;font-size:clamp(.6rem,1.1vw,.75rem);letter-spacing:.14em;text-transform:uppercase;color:rgba(207,233,238,.72);text-shadow:0 0 6px #02050a,0 0 12px #02050a}
       .sp-foot p{margin:0}.sp-foot p+p{text-align:right}
       /* exit: the core flares, the stage pushes forward and the whole window dissolves into the console */
       .sp-foot{transition:opacity .4s}
@@ -83,11 +94,11 @@
       @keyframes spSpin{to{transform:rotate(360deg)}}
       @keyframes spBreathe{0%,100%{transform:scale(.92);opacity:.75}50%{transform:scale(1.05);opacity:1}}
       @keyframes spEcg{from{stroke-dashoffset:34}to{stroke-dashoffset:-100}}
-      @keyframes spPulse{0%,100%{box-shadow:0 0 0 0 rgba(45,212,232,.5)}50%{box-shadow:0 0 0 4px rgba(45,212,232,0)}}
+      @keyframes spPulse{0%,100%{box-shadow:0 0 0 0 rgba(54,226,245,.5)}50%{box-shadow:0 0 0 4px rgba(54,226,245,0)}}
       @keyframes spDot{0%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-.15em)}}
-      @keyframes spFlare{to{box-shadow:0 0 0 2px #c9fbff,0 0 80px 30px rgba(45,212,232,.7),inset 0 0 0 rgba(0,0,0,0);filter:brightness(1.8)}}
+      @keyframes spFlare{to{box-shadow:0 0 0 2px #c9fbff,0 0 80px 30px rgba(54,226,245,.7),inset 0 0 0 rgba(0,0,0,0);filter:brightness(1.8)}}
       @media (max-width:560px){.sp-foot p+p{display:none}.sp-foot{justify-content:center;text-align:center}}
-      @media (max-height:620px){.sp-steps{display:none}}
+      @media (max-height:620px){.sp-panel{display:none}}
       @media (prefers-reduced-motion:reduce){
         #adx-splash *,#adx-splash *::before{animation:none !important;transition:none !important}
         .sp-ecg .beat{stroke-dasharray:none}
@@ -99,7 +110,7 @@
   <body>
     <div id="adx-splash" role="status" aria-live="polite" aria-label="Launching the AstroDocX Crew Console">
       <canvas aria-hidden="true"></canvas>
-      <div class="sp-window" aria-hidden="true"></div>
+      <div class="sp-frame" aria-hidden="true"><i></i><i></i><i></i><i></i><b>ASTRODOCX · CREW CONSOLE · BOOT</b></div>
       <div class="sp-stage" aria-hidden="true">
         <h1 class="sp-brand">
           <span class="sp-mark"><span class="sp-br">&lt;</span>astrodoc<span class="sp-x">X</span><span class="sp-br">/&gt;</span></span>
@@ -128,12 +139,13 @@
           </div>
           <div class="sp-pct">000%</div>
         </div>
+        <div class="sp-panel"><p class="sp-ph">Boot sequence</p>
         <ul class="sp-steps">
           <li data-step="systems">Console systems loaded<span class="dots sp-dots"><i></i><i></i><i></i></span></li>
           <li data-step="data">Crew health records seeded<span class="dots sp-dots"><i></i><i></i><i></i></span></li>
           <li data-step="telemetry">Telemetry streams converged<span class="dots sp-dots"><i></i><i></i><i></i></span></li>
           <li data-step="deploy">Final mission deployment<span class="dots sp-dots"><i></i><i></i><i></i></span></li>
-        </ul>
+        </ul></div>
         <p class="sp-launch"><span class="sp-word">INITIALIZING</span><span class="sp-dots"><i></i><i></i><i></i></span></p>
       </div>
       <div class="sp-foot" aria-hidden="true">
@@ -143,6 +155,12 @@
     </div>
     <script src="%BASE_URL%splash.js"></script>
     <div id="root"></div>
+    <script type="module">
+      if (import.meta.env.DEV) {
+        document.getElementById('adx-splash')?.remove()
+        document.documentElement.classList.remove('adx-launching')
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

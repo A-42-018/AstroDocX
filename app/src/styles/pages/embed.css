@@ -1,12 +1,38 @@
 /* One console screen without the frame (shell/Embed.tsx), shown on the 3D cabin's wall screens. */
 @layer pages {
   html.adx-embed, html.adx-embed body { overflow: hidden; background: radial-gradient(120% 90% at 50% 0%, #0a1a26, #03080e 70%); }
-  main.embed { height: 100dvh; max-width: none; padding: 16px 20px; overflow: hidden; }
+  .embed-shell { display: grid; grid-template-columns: auto minmax(0, 1fr); height: 100dvh; }
+  main.embed { height: 100dvh; max-width: none; padding: 16px 20px; overflow: hidden; touch-action: pan-y; overscroll-behavior: contain; }
   main.embed > * { animation: none; }
+  /* stepped up to the screen: the page scrolls like it does in the console */
+  html.adx-engaged main.embed { overflow-y: auto; scrollbar-width: thin; }
   .embed-board .board { height: 100%; grid-template-rows: minmax(0, 1fr) 176px; }
+  html.adx-engaged .embed-board .board { height: auto; min-height: 100%; }
   .embed-board .bay { min-height: 0; }
   .em-vitals { height: 100%; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 14px; }
   .em-vitals .em-title { grid-column: 1 / -1; margin: 0; font-family: var(--disp); font-size: 26px; }
   .em-title span { color: var(--cy); font-weight: 500; }
   .em-vitals > :not(.em-title) { min-height: 0; }
+
+  /* the page rail: icons across the hall, names and thumb-sized targets when used */
+  .screen-rail { display: flex; flex-direction: column; justify-content: safe center; gap: 4px; overflow-y: auto; scrollbar-width: none; padding: 10px 6px; width: 58px; box-sizing: border-box; background: rgba(4, 12, 20, .78); border-right: 1px solid var(--edge, rgba(120, 200, 230, .18)); transition: width .25s; }
+  .sr-tab { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 48px; border-radius: 10px; color: var(--t2, #8aa4b4); text-decoration: none; font: 600 10px/1.1 var(--ui, system-ui); letter-spacing: .02em; }
+  .sr-tab span { display: none; white-space: nowrap; }
+  .sr-tab:hover { color: var(--cy-hi, #7fe3ff); background: rgba(80, 200, 255, .08); }
+  .sr-tab.active { color: #04121b; background: var(--cy, #38d0ff); }
+  html.adx-engaged .screen-rail { width: 92px; }
+  html.adx-engaged .sr-tab span { display: block; }
+  html.adx-engaged .sr-tab { min-height: 56px; }
+
+  /* a screen laid out narrow (a phone held upright, the screen filling the window): one column, icon-only rail */
+  @media (max-width: 700px) {
+    main.embed { padding: 12px 12px 20px; }
+    html.adx-engaged .screen-rail { width: 54px; }
+    html.adx-engaged .sr-tab span { display: none; }
+    .screen-rail { width: 54px; padding: 8px 4px; }
+    .em-vitals { display: flex; flex-direction: column; height: auto; gap: 12px; }
+    .em-vitals > :not(.em-title) { flex: none; min-height: 280px; }
+    .em-vitals .em-title { font-size: 20px; }
+    .embed-board .board { height: auto; grid-template-rows: none; }
+  }
 }

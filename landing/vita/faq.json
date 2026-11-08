@@ -1,0 +1,1329 @@
+{
+  "_note": "Offline answers for VITA. Every citation url must exist in knowledge/chunks.json (tools/vita/test checks). Edit by hand.",
+  "fallback": {
+    "text": "I don't have a sourced answer for that offline. I can cover astronaut health (bone and muscle loss, radiation, sleep, isolation, CO₂, vision, immune changes), NASA research, and how AstroDocX works. Try one of those, or take the tour.",
+    "citations": [
+      {
+        "label": "AstroDocX README",
+        "url": "https://github.com/A-42-018/AstroDocX"
+      }
+    ],
+    "actions": [
+      {
+        "label": "Take the guided tour",
+        "kind": "tour",
+        "target": ""
+      },
+      {
+        "label": "See the NASA Data screen",
+        "kind": "console",
+        "target": "/nasa"
+      }
+    ]
+  },
+  "faq": [
+    {
+      "id": "greeting",
+      "patterns": [
+        "^\\s*(hi|hello|hey|yo|hola|namaste|salaam)\\b",
+        "who are you",
+        "what are you",
+        "your name",
+        "are you (a )?(bot|ai|human|real)"
+      ],
+      "text": "I'm VITA, the guide here. I answer questions about astronaut health, NASA research and the AstroDocX project, using only sources I can cite. In the console I'm also the crew doctor: I read the crew's data and suggest next steps, but I never diagnose. Try asking about bone loss, radiation, CO₂, or how AstroDocX spots trouble early.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Take the guided tour",
+          "kind": "tour",
+          "target": ""
+        },
+        {
+          "label": "Open the Status Board",
+          "kind": "console",
+          "target": "/board"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "id": "what-is-astrodocx",
+      "patterns": [
+        "what is astrodocx",
+        "what (does|do) (astrodocx|this|it) do",
+        "tell me about (astrodocx|this project|the project)",
+        "about (astrodocx|the project)",
+        "what is this",
+        "explain (the )?(project|astrodocx)",
+        "astrodocx"
+      ],
+      "text": "AstroDocX is an offline-first health co-pilot for astronauts on long missions. It learns each person's own baseline, spots drift early, and turns every alert into a clear action: <em>Detect, Explain, Act, Log, Sync later</em>. It's a student prototype on synthetic data, and not a medical device.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        },
+        {
+          "label": "AstroDocX Crew Console",
+          "url": "https://astrodocx.vercel.app/app/"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Take the guided tour",
+          "kind": "tour",
+          "target": ""
+        },
+        {
+          "label": "Open the Status Board",
+          "kind": "console",
+          "target": "/board"
+        }
+      ],
+      "weight": 0.6
+    },
+    {
+      "id": "how-detection",
+      "patterns": [
+        "how (does|do) (it |astrodocx )?(detect|work|spot|find|catch)",
+        "detection",
+        "how.*(alert|anomal|drift).*(work|fire|trigger|raised|detected)",
+        "z-?score",
+        "algorithm",
+        "welford",
+        "ewma",
+        "hysteresis"
+      ],
+      "text": "For each crew member AstroDocX learns a personal baseline from 11 metrics, using running statistics, and only learns while things look nominal so slow drift isn't learned away. Smoothed z-scores plus cited absolute limits then give Nominal, Watch or Act, usually needing 2 readings in a row. Each alert says what changed, against whose baseline, and links NASA evidence.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        },
+        {
+          "label": "AstroDocX alerts",
+          "url": "https://astrodocx.vercel.app/app/alerts"
+        }
+      ],
+      "actions": [
+        {
+          "label": "See the alerts",
+          "kind": "console",
+          "target": "/alerts"
+        },
+        {
+          "label": "Open the Simulator",
+          "kind": "console",
+          "target": "/simulator"
+        }
+      ],
+      "weight": 0.35
+    },
+    {
+      "id": "baseline",
+      "patterns": [
+        "baseline",
+        "personal (normal|baseline)",
+        "own normal"
+      ],
+      "text": "A baseline is each astronaut's own normal for a metric, such as heart rate or sleep. AstroDocX learns it for 11 metrics and only learns while the status is nominal, so a slow decline isn't absorbed as 'normal'. Alerts compare you against your own baseline, not a population average.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        }
+      ],
+      "actions": [
+        {
+          "label": "See the trends",
+          "kind": "console",
+          "target": "/trends"
+        },
+        {
+          "label": "See the alerts",
+          "kind": "console",
+          "target": "/alerts"
+        }
+      ]
+    },
+    {
+      "id": "alert-status",
+      "patterns": [
+        "watch (and|or|vs) act",
+        "what (does|do) (watch|act|nominal)",
+        "status (levels?|colou?rs?)",
+        "alert levels?",
+        "explainable",
+        "why did (an |the )?alert",
+        "why this fired"
+      ],
+      "text": "Every metric is Nominal, Watch or Act. Each alert explains what changed, by how much, against whose baseline and since when, and links the published NASA evidence behind it. It gives context for what a change can mean, never a diagnosis, and comes with checkable action-card steps.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        },
+        {
+          "label": "AstroDocX alerts",
+          "url": "https://astrodocx.vercel.app/app/alerts"
+        }
+      ],
+      "actions": [
+        {
+          "label": "See the alerts",
+          "kind": "console",
+          "target": "/alerts"
+        },
+        {
+          "label": "Open the Simulator",
+          "kind": "console",
+          "target": "/simulator"
+        }
+      ]
+    },
+    {
+      "id": "co2",
+      "patterns": [
+        "co2|co₂|co 2",
+        "carbon dioxide",
+        "air quality",
+        "scrubber",
+        "cabin air",
+        "breath(e|ing) (air|in space)",
+        "life support"
+      ],
+      "text": "NASA-STD-3001 limits the average 1-hour habitat CO₂ to <em>3 mmHg</em>. AstroDocX raises Watch after 3 hours in a row over that, and Act after 6. On the ISS, NASA found each 1 mmHg rise in CO₂ doubled the odds a crew member reported congestion, with headaches following.",
+      "citations": [
+        {
+          "label": "STD-3001 V2 · 6004 (CO₂)",
+          "url": "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-004-carbon-dioxide.pdf"
+        },
+        {
+          "label": "NTRS · CO₂ and headaches on the ISS",
+          "url": "https://ntrs.nasa.gov/citations/20160012725"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Open the Simulator",
+          "kind": "console",
+          "target": "/simulator"
+        },
+        {
+          "label": "NASA life-support media",
+          "kind": "library",
+          "target": "life-support"
+        }
+      ]
+    },
+    {
+      "id": "radiation",
+      "patterns": [
+        "radiation",
+        "cosmic ray",
+        "msv|sievert",
+        "dose",
+        "cancer"
+      ],
+      "text": "Beyond Earth's protection, galactic cosmic rays and solar storms raise cancer risk and can damage the central nervous system; astronauts can't see or feel it. NASA-STD-3001 caps career effective dose at <em>600 mSv</em> and a solar particle event at <em>250 mSv</em>. AstroDocX tracks a rolling 24-hour dose against the event limit.",
+      "citations": [
+        {
+          "label": "NASA HRP · space radiation",
+          "url": "https://www.nasa.gov/hrp/hazard-space-radiation/"
+        },
+        {
+          "label": "STD-3001 V1 (radiation)",
+          "url": "https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf"
+        }
+      ],
+      "actions": [
+        {
+          "label": "NASA radiation media",
+          "kind": "library",
+          "target": "radiation"
+        },
+        {
+          "label": "Open the Simulator",
+          "kind": "console",
+          "target": "/simulator"
+        }
+      ]
+    },
+    {
+      "id": "solar-event",
+      "patterns": [
+        "solar (particle )?(event|storm|flare)",
+        "coronal mass",
+        "space weather",
+        "spe\\b"
+      ],
+      "text": "A solar particle event is a burst of radiation from a solar storm. NASA-STD-3001 limits effective dose to <em>250 mSv per event</em>. AstroDocX watches a rolling 24-hour dose: Watch at 125 mSv, Act at 250 mSv. The Simulator can inject one so you can watch the console react.",
+      "citations": [
+        {
+          "label": "STD-3001 V1 (radiation)",
+          "url": "https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf"
+        },
+        {
+          "label": "NASA HRP · space radiation",
+          "url": "https://www.nasa.gov/hrp/hazard-space-radiation/"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Open the Simulator",
+          "kind": "console",
+          "target": "/simulator"
+        },
+        {
+          "label": "NASA radiation media",
+          "kind": "library",
+          "target": "radiation"
+        }
+      ]
+    },
+    {
+      "id": "bone",
+      "patterns": [
+        "bone",
+        "osteo",
+        "skeleton",
+        "fracture",
+        "calcium"
+      ],
+      "text": "In space, weight-bearing bones become roughly <em>1% less dense per month</em>, because bone-building cells slow down while the cells that break down bone keep working. Crews counter this with about two hours of exercise a day, including the ARED weightlifting device.",
+      "citations": [
+        {
+          "label": "NASA · bone and muscle loss",
+          "url": "https://www.nasa.gov/missions/station/iss-research/counteracting-bone-and-muscle-loss-in-microgravity/"
+        },
+        {
+          "label": "NASA · astronaut exercise",
+          "url": "https://www.nasa.gov/missions/station/iss-research/astronaut-exercise/"
+        }
+      ],
+      "actions": [
+        {
+          "label": "NASA bone and muscle media",
+          "kind": "library",
+          "target": "bone-muscle"
+        },
+        {
+          "label": "See the trends",
+          "kind": "console",
+          "target": "/trends"
+        }
+      ]
+    },
+    {
+      "id": "muscle",
+      "patterns": [
+        "muscle",
+        "atroph",
+        "strength",
+        "weak(en|ness)",
+        "deconditioning"
+      ],
+      "text": "Muscles weaken in weightlessness because they no longer need to work as hard, and researchers saw lower expression of muscle-growth genes. Astronauts exercise about two hours daily to limit it. AstroDocX tracks exercise load against each person's baseline and can simulate skipped exercise.",
+      "citations": [
+        {
+          "label": "NASA · bone and muscle loss",
+          "url": "https://www.nasa.gov/missions/station/iss-research/counteracting-bone-and-muscle-loss-in-microgravity/"
+        },
+        {
+          "label": "NASA · astronaut exercise",
+          "url": "https://www.nasa.gov/missions/station/iss-research/astronaut-exercise/"
+        },
+        {
+          "label": "OSDR · OSD-942",
+          "url": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-942"
+        }
+      ],
+      "actions": [
+        {
+          "label": "NASA bone and muscle media",
+          "kind": "library",
+          "target": "bone-muscle"
+        },
+        {
+          "label": "Open the Simulator",
+          "kind": "console",
+          "target": "/simulator"
+        }
+      ]
+    },
+    {
+      "id": "exercise",
+      "patterns": [
+        "exercis",
+        "workout",
+        "treadmill",
+        "ared\\b",
+        "gym",
+        "fitness",
+        "train(ing)? in space"
+      ],
+      "text": "Astronauts average about <em>two hours of exercise a day</em>. Gear includes ARED (a piston and flywheel weightlifting machine), the T2 treadmill, and the CEVIS cycle. NASA found high-intensity, low-volume exercise more effective than long, gentle sessions, and it saves crew time.",
+      "citations": [
+        {
+          "label": "NASA · astronaut exercise",
+          "url": "https://www.nasa.gov/missions/station/iss-research/astronaut-exercise/"
+        },
+        {
+          "label": "NASA · bone and muscle loss",
+          "url": "https://www.nasa.gov/missions/station/iss-research/counteracting-bone-and-muscle-loss-in-microgravity/"
+        }
+      ],
+      "actions": [
+        {
+          "label": "NASA exercise media",
+          "kind": "library",
+          "target": "bone-muscle"
+        },
+        {
+          "label": "See the trends",
+          "kind": "console",
+          "target": "/trends"
+        }
+      ]
+    },
+    {
+      "id": "sans",
+      "patterns": [
+        "vision",
+        "eyes?\\b",
+        "sans\\b",
+        "eyesight",
+        "optic",
+        "retina",
+        "blind"
+      ],
+      "text": "SANS is a set of eye and brain changes linked to weightlessness: fluid shifts toward the head, which can swell the optic nerve and flatten the back of the eye. About 70% of ISS astronauts show some swelling at the back of the eye. Long-term effects are still being studied. AstroDocX has no vision tests yet; they're on the roadmap.",
+      "citations": [
+        {
+          "label": "NASA · SANS",
+          "url": "https://www.nasa.gov/reference/risk-of-spaceflight-associated-neuro-ocular-syndrome-sans/"
+        }
+      ],
+      "actions": [
+        {
+          "label": "See the NASA Data screen",
+          "kind": "console",
+          "target": "/nasa"
+        },
+        {
+          "label": "Take the guided tour",
+          "kind": "tour",
+          "target": ""
+        }
+      ]
+    },
+    {
+      "id": "sleep",
+      "patterns": [
+        "sleep",
+        "insomnia",
+        "circadian",
+        "tired",
+        "fatigue",
+        "rest\\b"
+      ],
+      "text": "NASA reports astronauts consistently get less sleep in space than on the ground, which is likely to impair performance and health. The causes aren't yet known. AstroDocX watches sleep and reaction time against your baseline, and flags the two together as a combined signal.",
+      "citations": [
+        {
+          "label": "NTRS · sleep loss",
+          "url": "https://ntrs.nasa.gov/citations/20160003864"
+        },
+        {
+          "label": "NASA HRP · isolation",
+          "url": "https://www.nasa.gov/hrp/hazard-isolation-and-confinement/"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Try the check-in",
+          "kind": "console",
+          "target": "/checkin"
+        },
+        {
+          "label": "NASA sleep and isolation media",
+          "kind": "library",
+          "target": "sleep-isolation"
+        }
+      ]
+    },
+    {
+      "id": "isolation",
+      "patterns": [
+        "isolat",
+        "confine",
+        "mental",
+        "psycholog",
+        "mood",
+        "lonel",
+        "stress",
+        "behaviou?r",
+        "anxiety",
+        "depress",
+        "crew (conflict|dynamics)",
+        "mars (trip|mission)"
+      ],
+      "text": "Long missions in a small crew far from Earth strain sleep, mood and performance. NASA says the chance of an adverse behavioural condition rises with mission length, though no severe emergencies have been documented so far. NASA uses careful crew selection and analog habitats such as HERA and CHAPEA. AstroDocX tracks mood, sleep and reaction time.",
+      "citations": [
+        {
+          "label": "NASA HRP · isolation",
+          "url": "https://www.nasa.gov/hrp/hazard-isolation-and-confinement/"
+        },
+        {
+          "label": "NTRS · behavioural health",
+          "url": "https://ntrs.nasa.gov/citations/20160004365"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Try the check-in",
+          "kind": "console",
+          "target": "/checkin"
+        },
+        {
+          "label": "NASA sleep and isolation media",
+          "kind": "library",
+          "target": "sleep-isolation"
+        }
+      ]
+    },
+    {
+      "id": "immune",
+      "patterns": [
+        "immun",
+        "infection",
+        "vaccin",
+        "dna repair",
+        "telomere",
+        "genes?\\b",
+        "gene expression"
+      ],
+      "text": "In NASA's Twins Study the flu vaccine given in space worked as it does on Earth, so the immune system responded properly. Most gene-expression changes returned to normal within six months of landing, but a small percentage of immune and DNA-repair genes did not return to baseline.",
+      "citations": [
+        {
+          "label": "NASA · Twins Study",
+          "url": "https://www.nasa.gov/news-release/nasas-landmark-twins-study-reveals-resilience-of-human-body-in-space/"
+        }
+      ],
+      "actions": [
+        {
+          "label": "NASA Twins Study media",
+          "kind": "library",
+          "target": "twins-study"
+        }
+      ]
+    },
+    {
+      "id": "twins",
+      "patterns": [
+        "twins?\\b",
+        "scott kelly",
+        "mark kelly",
+        "year in space",
+        "identical"
+      ],
+      "text": "NASA's Twins Study compared astronaut Scott Kelly, nearly a year on the ISS, with his identical twin on Earth. His telomeres unexpectedly lengthened in space then shortened after landing, and most changes reversed within six months. A small share of immune and DNA-repair genes stayed changed.",
+      "citations": [
+        {
+          "label": "NASA · Twins Study",
+          "url": "https://www.nasa.gov/news-release/nasas-landmark-twins-study-reveals-resilience-of-human-body-in-space/"
+        }
+      ],
+      "actions": [
+        {
+          "label": "NASA Twins Study media",
+          "kind": "library",
+          "target": "twins-study"
+        }
+      ]
+    },
+    {
+      "id": "heart",
+      "patterns": [
+        "heart",
+        "cardi",
+        "hrv",
+        "pulse",
+        "ecg",
+        "blood pressure"
+      ],
+      "text": "NASA's Human Research Program has evidence on heart rate and rhythm changes in flight, and an OSDR study found astronaut blood after flight changes gene expression in human heart cells. AstroDocX tracks heart rate and HRV against each person's baseline. It does not track blood pressure yet.",
+      "citations": [
+        {
+          "label": "NTRS · cardiac rhythm",
+          "url": "https://ntrs.nasa.gov/citations/20170005625"
+        },
+        {
+          "label": "OSDR · OSD-484",
+          "url": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-484"
+        }
+      ],
+      "actions": [
+        {
+          "label": "See the trends",
+          "kind": "console",
+          "target": "/trends"
+        },
+        {
+          "label": "Open the Status Board",
+          "kind": "console",
+          "target": "/board"
+        }
+      ]
+    },
+    {
+      "id": "microgravity",
+      "patterns": [
+        "microgravity",
+        "weightless",
+        "zero.?g",
+        "gravity",
+        "fluid shift",
+        "inner ear"
+      ],
+      "text": "NASA lists Gravity Fields as a hazard because astronauts' muscles, bones, inner ear and organs must all adjust to new gravity. Weightlessness unloads bone and muscle and shifts fluid toward the head. AstroDocX tracks exercise load, heart rate and HRV for this hazard.",
+      "citations": [
+        {
+          "label": "NASA HRP · five hazards",
+          "url": "https://www.nasa.gov/hrp/hazards/"
+        },
+        {
+          "label": "NASA · bone and muscle loss",
+          "url": "https://www.nasa.gov/missions/station/iss-research/counteracting-bone-and-muscle-loss-in-microgravity/"
+        }
+      ],
+      "actions": [
+        {
+          "label": "NASA bone and muscle media",
+          "kind": "library",
+          "target": "bone-muscle"
+        },
+        {
+          "label": "Open the Status Board",
+          "kind": "console",
+          "target": "/board"
+        }
+      ]
+    },
+    {
+      "id": "distance",
+      "patterns": [
+        "distance from earth",
+        "delay",
+        "latency",
+        "communicat",
+        "ground (link|sync|control|station)",
+        "blackout",
+        "offline",
+        "no internet",
+        "sync"
+      ],
+      "text": "Far from Earth, help and supplies are hard to get, so the crew must handle problems on board. AstroDocX works fully offline; action cards guide the crew, and Ground Sync is a delay-tolerant outbox. Unsent data goes Watch at 24 hours and Act at 72 hours without sync, which is AstroDocX's own design, not a NASA value.",
+      "citations": [
+        {
+          "label": "NASA HRP · five hazards",
+          "url": "https://www.nasa.gov/hrp/hazards/"
+        },
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Open Ground Sync",
+          "kind": "console",
+          "target": "/sync"
+        },
+        {
+          "label": "Open Ground View",
+          "kind": "console",
+          "target": "/ground"
+        }
+      ]
+    },
+    {
+      "id": "five-hazards",
+      "patterns": [
+        "five hazards",
+        "ridge",
+        "hazards?\\b",
+        "risks? of (human )?spaceflight"
+      ],
+      "text": "NASA groups spaceflight risk into five hazards, remembered as <em>RIDGE</em>: Radiation, Isolation and confinement, Distance from Earth, Gravity fields, and Hostile/closed Environments. The Status Board has one tile for each.",
+      "citations": [
+        {
+          "label": "NASA HRP · five hazards",
+          "url": "https://www.nasa.gov/hrp/hazards/"
+        }
+      ],
+      "actions": [
+        {
+          "label": "See the NASA Data screen",
+          "kind": "console",
+          "target": "/nasa"
+        },
+        {
+          "label": "Open the Status Board",
+          "kind": "console",
+          "target": "/board"
+        }
+      ]
+    },
+    {
+      "id": "evidence",
+      "patterns": [
+        "evidence",
+        "sources?\\b",
+        "citation",
+        "cited",
+        "osdr",
+        "ntrs",
+        "studies",
+        "research (do you|did you) use",
+        "doi",
+        "where (does|do).*(data|info)"
+      ],
+      "text": "Alerts link published NASA work: OSDR studies with DOIs (such as OSD-993 on radiation and OSD-942 on exercise) and Human Research Program reports on NTRS covering sleep, behaviour, heart rhythm and CO₂. The NASA Data screen lists them hazard by hazard.",
+      "citations": [
+        {
+          "label": "NASA OSDR",
+          "url": "https://osdr.nasa.gov/bio/"
+        },
+        {
+          "label": "NASA NTRS",
+          "url": "https://ntrs.nasa.gov/"
+        },
+        {
+          "label": "OSDR · OSD-993",
+          "url": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-993"
+        }
+      ],
+      "actions": [
+        {
+          "label": "See the NASA Data screen",
+          "kind": "console",
+          "target": "/nasa"
+        },
+        {
+          "label": "See the alerts",
+          "kind": "console",
+          "target": "/alerts"
+        }
+      ]
+    },
+    {
+      "id": "limits",
+      "patterns": [
+        "limits?\\b",
+        "threshold",
+        "nasa.?std",
+        "std.?3001",
+        "standard"
+      ],
+      "text": "Two limits are cited from NASA-STD-3001: habitat CO₂ at <em>3 mmHg</em> (1-hour average) and radiation at <em>600 mSv</em> career and <em>250 mSv</em> per solar particle event. Every other threshold in AstroDocX is illustrative and labelled that way.",
+      "citations": [
+        {
+          "label": "STD-3001 V2 · 6004 (CO₂)",
+          "url": "https://www.nasa.gov/wp-content/uploads/2023/12/ochmo-tb-004-carbon-dioxide.pdf"
+        },
+        {
+          "label": "STD-3001 V1 (radiation)",
+          "url": "https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf"
+        },
+        {
+          "label": "NASA OCHMO",
+          "url": "https://www.nasa.gov/ochmo/"
+        }
+      ],
+      "actions": [
+        {
+          "label": "See the NASA Data screen",
+          "kind": "console",
+          "target": "/nasa"
+        },
+        {
+          "label": "Open the Simulator",
+          "kind": "console",
+          "target": "/simulator"
+        }
+      ]
+    },
+    {
+      "id": "screens",
+      "patterns": [
+        "screens?\\b",
+        "pages?\\b",
+        "features?\\b",
+        "what can (i|you) (do|see|try)",
+        "console",
+        "crew console",
+        "menu"
+      ],
+      "text": "The Crew Console has nine screens: Status Board, Crew Doctor, Alerts, Trends, Check-in, Simulator, Ground Sync, Ground View and NASA Data. It's an installable offline-first app with a 4-crew, 30-day demo mission preloaded.",
+      "citations": [
+        {
+          "label": "AstroDocX Crew Console",
+          "url": "https://astrodocx.vercel.app/app/"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Open the Status Board",
+          "kind": "console",
+          "target": "/board"
+        },
+        {
+          "label": "Take the guided tour",
+          "kind": "tour",
+          "target": ""
+        }
+      ]
+    },
+    {
+      "id": "board",
+      "patterns": [
+        "status board",
+        "dashboard",
+        "readiness",
+        "health twin",
+        "digital twin",
+        "body"
+      ],
+      "text": "The Status Board shows five RIDGE tiles, a crew readiness score, the next action and live vitals. Its Health Twin is a 3D particle body where each hazard colours its own part amber or red. The live waves are simulated telemetry and never change alerts.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        },
+        {
+          "label": "AstroDocX Status Board",
+          "url": "https://astrodocx.vercel.app/app/board"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Open the Status Board",
+          "kind": "console",
+          "target": "/board"
+        }
+      ]
+    },
+    {
+      "id": "crew-doctor",
+      "patterns": [
+        "crew doctor",
+        "ai doctor",
+        "\\bdoctor\\b",
+        "analy[sz]e (the |all )?(crew|astronauts?)",
+        "(crew|team) (health )?(summary|report|status|exam)",
+        "who needs (attention|help)",
+        "fit for (eva|a spacewalk)",
+        "flight surgeon (report|handoff)"
+      ],
+      "text": "In the console I'm also the crew doctor. On the Crew Doctor screen I read every crew member's alerts, baselines, readiness, dose and the ground link together: who needs attention first, problems shared by the whole cabin, who is cleared for EVA, and the steps for now, today and the next link window. I advise; the flight surgeon decides.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Open the Crew Doctor",
+          "kind": "console",
+          "target": "/doctor"
+        },
+        {
+          "label": "Open the Status Board",
+          "kind": "console",
+          "target": "/board"
+        }
+      ],
+      "weight": 1
+    },
+    {
+      "id": "trends",
+      "patterns": [
+        "trends?\\b",
+        "charts?\\b",
+        "graphs?\\b"
+      ],
+      "text": "Trends has 11 charts, one per metric, each with the personal baseline band and alert markers, over 24 hours, 7 days or 30 days.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        },
+        {
+          "label": "AstroDocX Trends",
+          "url": "https://astrodocx.vercel.app/app/trends"
+        }
+      ],
+      "actions": [
+        {
+          "label": "See the trends",
+          "kind": "console",
+          "target": "/trends"
+        }
+      ]
+    },
+    {
+      "id": "checkin",
+      "patterns": [
+        "check.?in",
+        "questionnaire",
+        "reaction (test|time)",
+        "pvt",
+        "symptom"
+      ],
+      "text": "The Daily Check-in takes mood, sleep quality, hours slept, eight symptom chips and a 5-tap reaction test in the style of the psychomotor vigilance test. Symptoms and sleep quality can raise alerts. It's a monitoring prompt, not a diagnosis.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        },
+        {
+          "label": "AstroDocX Check-in",
+          "url": "https://astrodocx.vercel.app/app/checkin"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Try the check-in",
+          "kind": "console",
+          "target": "/checkin"
+        }
+      ]
+    },
+    {
+      "id": "simulator",
+      "patterns": [
+        "simulat",
+        "scenario",
+        "inject",
+        "demo",
+        "try it",
+        "fast.?forward"
+      ],
+      "text": "The Mission Simulator has a mission clock, fast-forward and four injectable scenarios: solar event, CO₂ fault, insomnia and deconditioning. Inject one and watch the engine react, then tick the action-card steps on Alerts.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        },
+        {
+          "label": "AstroDocX Simulator",
+          "url": "https://astrodocx.vercel.app/app/simulator"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Open the Simulator",
+          "kind": "console",
+          "target": "/simulator"
+        },
+        {
+          "label": "See the alerts",
+          "kind": "console",
+          "target": "/alerts"
+        }
+      ]
+    },
+    {
+      "id": "ground-view",
+      "patterns": [
+        "ground view",
+        "flight surgeon",
+        "earth sees",
+        "mission control"
+      ],
+      "text": "Ground View is the flight-surgeon view, rebuilt only from entries that have synced, so it shows what Earth knows and when. Each crew card shows the 3D body in its status colour.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        },
+        {
+          "label": "AstroDocX Ground View",
+          "url": "https://astrodocx.vercel.app/app/ground"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Open Ground View",
+          "kind": "console",
+          "target": "/ground"
+        },
+        {
+          "label": "Open Ground Sync",
+          "kind": "console",
+          "target": "/sync"
+        }
+      ]
+    },
+    {
+      "id": "nasa-data",
+      "patterns": [
+        "nasa data",
+        "nasa basis",
+        "where.*nasa"
+      ],
+      "text": "The NASA Data screen puts the NASA basis in one place: for each of the five hazards, what AstroDocX monitors, the NASA-STD-3001 limit it checks and the NASA studies it cites.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        },
+        {
+          "label": "AstroDocX NASA Data",
+          "url": "https://astrodocx.vercel.app/app/nasa"
+        }
+      ],
+      "actions": [
+        {
+          "label": "See the NASA Data screen",
+          "kind": "console",
+          "target": "/nasa"
+        }
+      ]
+    },
+    {
+      "id": "cabin",
+      "patterns": [
+        "cabin",
+        "3d\\b",
+        "station tour",
+        "inside the (station|ship)",
+        "hall\\b",
+        "explore",
+        "helmet",
+        "hud\\b"
+      ],
+      "text": "The 3D cabin is a scroll-driven tour of a station hall. It starts inside an astronaut's helmet with a visor display wired to AstroDocX, passes four wall screens running the real console with crew floating beside them, and ends outside with a crew member on a spacewalk.",
+      "citations": [
+        {
+          "label": "AstroDocX 3D cabin",
+          "url": "https://astrodocx.vercel.app/app/cabin"
+        },
+        {
+          "label": "AstroDocX Crew Console",
+          "url": "https://astrodocx.vercel.app/app/"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Board the 3D cabin",
+          "kind": "cabin",
+          "target": ""
+        },
+        {
+          "label": "Go to the spacewalk shot",
+          "kind": "cabin",
+          "target": "eva"
+        }
+      ]
+    },
+    {
+      "id": "eva",
+      "patterns": [
+        "eva\\b",
+        "spacewalk",
+        "space walk",
+        "spacesuit",
+        "suit\\b",
+        "visor"
+      ],
+      "text": "A spacewalk, or EVA, is work outside the station in a suit. The cabin tour ends with a crew member on EVA beside the station, after starting inside a helmet with a visor display of readiness, hazards, the ground link and the next action.",
+      "citations": [
+        {
+          "label": "AstroDocX 3D cabin",
+          "url": "https://astrodocx.vercel.app/app/cabin"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Go to the spacewalk shot",
+          "kind": "cabin",
+          "target": "eva"
+        },
+        {
+          "label": "NASA spacewalk media",
+          "kind": "library",
+          "target": "spacewalks"
+        }
+      ]
+    },
+    {
+      "id": "tour",
+      "patterns": [
+        "tour\\b",
+        "guided",
+        "walk me through",
+        "show me around",
+        "demo video",
+        "video"
+      ],
+      "text": "The guided tour plays the whole project by itself in about two minutes: the landing page, the console's main screens with a live CO₂ fault demo, and the 3D cabin out to the astronaut on EVA. You can pause or exit any time.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Take the guided tour",
+          "kind": "tour",
+          "target": ""
+        },
+        {
+          "label": "Board the 3D cabin",
+          "kind": "cabin",
+          "target": ""
+        }
+      ]
+    },
+    {
+      "id": "library",
+      "patterns": [
+        "library",
+        "photos?\\b",
+        "images?\\b",
+        "pictures?\\b",
+        "videos?\\b",
+        "media\\b",
+        "footage"
+      ],
+      "text": "The NASA library collects NASA images and video on the topics people ask about most, such as bone and muscle, radiation, sleep and isolation, the Twins Study, life support and spacewalks.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Spacewalk media",
+          "kind": "library",
+          "target": "spacewalks"
+        },
+        {
+          "label": "Radiation media",
+          "kind": "library",
+          "target": "radiation"
+        }
+      ]
+    },
+    {
+      "id": "not-medical",
+      "patterns": [
+        "medical device",
+        "safe to use",
+        "trust",
+        "accurate",
+        "reliable",
+        "real data",
+        "synthetic",
+        "fake",
+        "prototype",
+        "privacy",
+        "my data",
+        "is (it|this) real"
+      ],
+      "text": "AstroDocX is a prototype and not a medical device. It runs on synthetic demo data, and every number, alert and explanation comes from tested deterministic code; my live answers only put it into words. Only the CO₂ and radiation limits are NASA-cited; other thresholds are illustrative and labelled.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        }
+      ],
+      "actions": [
+        {
+          "label": "See the NASA Data screen",
+          "kind": "console",
+          "target": "/nasa"
+        },
+        {
+          "label": "Take the guided tour",
+          "kind": "tour",
+          "target": ""
+        }
+      ]
+    },
+    {
+      "id": "nasa-affiliation",
+      "patterns": [
+        "affiliat",
+        "endors",
+        "official",
+        "is (it|this) (by|from) nasa",
+        "nasa (made|built|approve)",
+        "partner"
+      ],
+      "text": "No. AstroDocX is an independent Space Apps project that uses NASA open data. It is not affiliated with or endorsed by NASA.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        }
+      ],
+      "actions": [
+        {
+          "label": "See the NASA Data screen",
+          "kind": "console",
+          "target": "/nasa"
+        }
+      ],
+      "weight": 3
+    },
+    {
+      "id": "team",
+      "patterns": [
+        "who (built|made|created|developed)",
+        "team\\b",
+        "hackathon",
+        "space apps",
+        "bangladesh",
+        "dhaka",
+        "challenge"
+      ],
+      "text": "AstroDocX was built by Team AstroDocX in Dhaka, Bangladesh, for the NASA Space Apps Challenge 2026 challenge 'Create Health Monitoring Software for Astronauts on Space Missions'.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Take the guided tour",
+          "kind": "tour",
+          "target": ""
+        }
+      ]
+    },
+    {
+      "id": "roadmap",
+      "patterns": [
+        "roadmap",
+        "not built",
+        "future",
+        "wearable",
+        "coming soon",
+        "next steps?",
+        "missing"
+      ],
+      "text": "Not built yet: wearable sensor integration, a real ground backend with proper policies, vision and SANS self-tests, blood pressure, bone density and a multi-device ground station.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Open the Status Board",
+          "kind": "console",
+          "target": "/board"
+        }
+      ]
+    },
+    {
+      "id": "pwa",
+      "patterns": [
+        "install",
+        "pwa\\b",
+        "mobile",
+        "phone",
+        "works offline",
+        "without internet"
+      ],
+      "text": "The Crew Console is an installable offline-first app that keeps its data on the device in IndexedDB, with a 4-crew, 30-day demo mission preloaded. Optional ground upload uses Supabase, off by default.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        },
+        {
+          "label": "AstroDocX Crew Console",
+          "url": "https://astrodocx.vercel.app/app/"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Open the Status Board",
+          "kind": "console",
+          "target": "/board"
+        }
+      ],
+      "weight": 2
+    },
+    {
+      "id": "diagnosis",
+      "patterns": [
+        "diagnos",
+        "do i have",
+        "wrong with me",
+        "i have (a |an |some |been )?(head|chest|back|stomach|pain|fever|cough|rash|dizz|nause|cramp)",
+        "should i (take|see|worry)",
+        "what (medicine|medication|pills?|drugs?) (should|can) i",
+        "my (symptoms?|headache|pain|chest|heart|blood)",
+        "i (feel|have been feeling|am feeling|keep) ",
+        "treat (me|my)",
+        "am i (sick|ill|ok|healthy)",
+        "prescri"
+      ],
+      "text": "I can't diagnose or give personal medical advice, and AstroDocX isn't a medical device. For anything about your own health, please talk to a doctor. I'm happy to explain what NASA's research says about astronaut health in general.",
+      "citations": [],
+      "actions": [
+        {
+          "label": "Take the guided tour",
+          "kind": "tour",
+          "target": ""
+        }
+      ],
+      "weight": 50
+    },
+    {
+      "id": "help",
+      "patterns": [
+        "help\\b",
+        "what can i ask",
+        "what do you know",
+        "topics?\\b",
+        "how (do|to) (i )?use"
+      ],
+      "text": "Ask me about astronaut health (bone and muscle loss, radiation, sleep, isolation, CO₂, vision, immune changes), about NASA research like the Twins Study, or about how AstroDocX works and what each screen does.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Take the guided tour",
+          "kind": "tour",
+          "target": ""
+        },
+        {
+          "label": "See the NASA Data screen",
+          "kind": "console",
+          "target": "/nasa"
+        }
+      ],
+      "weight": 1
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NASA Library · AstroDocX</title>
+<meta name="description" content="NASA's own images, video and audio on keeping astronauts healthy: bone and muscle, radiation, sleep, the Twins Study, life support and spacewalks.">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./library.css">
+<style>
+  html,body{height:100%;margin:0;background:#02050a}
+  #lib{position:fixed;inset:0}
+  noscript{display:block;padding:24px;color:#eef8ff;font:14px Inter,system-ui,sans-serif}
+</style>
+</head>
+<body>
+<div id="lib"></div>
+<noscript>The NASA Library needs JavaScript. You can browse NASA's media directly at <a href="https://images.nasa.gov/" style="color:#36e2f5">images.nasa.gov</a>. This site is not affiliated with or endorsed by NASA.</noscript>
+<script type="module">
+  import { mountLibrary } from './library.js'
+  const p = new URLSearchParams(location.search)
+  mountLibrary(document.getElementById('lib'), {
+    collection: p.get('c') || undefined,
+    query: p.get('q') || undefined,
+    onClose: () => { location.href = '/' },
+  })
+</script>
+</body>
+</html>
