@@ -95,8 +95,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
             <span class="sr-only">Mic</span>
           </button>
+          <button type="button" class="hbtn ghost" id="voiceMode" aria-pressed="false" aria-label="Voice mode: keep listening for commands" title="Voice mode: say 'open alerts', 'walk the station'… (Alt+V for one command)" aria-keyshortcuts="Alt+V" hidden>Voice</button>
           <button type="submit" class="hbtn" id="askBtn">Ask</button>
         </form>
+        <p class="voice-chip" id="voiceChip" role="status" aria-live="polite" hidden></p>
       </div>
     </section>
   </main>

@@ -19,6 +19,7 @@ import { useSplashHandoff } from './shell/splash'
 import { StateView } from './ui/StateView'
 import { Tour } from './tour/Tour'
 import { VitaDock } from './vita/VitaDock'
+import { VoiceNav } from './voice/VoiceNav'
 
 // The board is the landing screen and loads eagerly; every other screen (Trends carries the chart
 // library) is its own chunk. The service worker precaches all chunks, so they still work offline;
@@ -133,6 +134,7 @@ export default function App() {
       </ErrorBoundary>
       <Tour />
       <VitaDock />
+      <VoiceNav />
     </ShellDataContext.Provider>
   )
   return (
@@ -158,6 +160,7 @@ export default function App() {
       <BottomTabs alerts={shell?.crew.find((c) => c.id === shell.crewId)?.alerts ?? 0} />
       <Tour />
       <VitaDock />
+      <VoiceNav />
     </div>
     </ShellDataContext.Provider>
   )

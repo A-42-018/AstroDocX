@@ -1324,6 +1324,38 @@
         }
       ],
       "weight": 1
+    },
+    {
+      "id": "voice",
+      "patterns": [
+        "voice (command|navigation|mode|control)",
+        "what can i say",
+        "talk to (you|nova|vita)",
+        "speak to",
+        "microphone",
+        "hands[- ]free",
+        "by voice"
+      ],
+      "text": "You can steer the whole site by voice. Tap the mic, or turn on Voice mode to keep listening, and say things like “open alerts”, “walk the station”, “open the radiation library”, “go back”, “scroll down” or “take the tour”. Anything that is not a command, I answer as a question. Say “stop listening” to turn the mic off. It needs a browser with speech recognition, such as Chrome, Edge or Safari.",
+      "citations": [
+        {
+          "label": "AstroDocX README",
+          "url": "https://github.com/A-42-018/AstroDocX"
+        }
+      ],
+      "actions": [
+        {
+          "label": "Open the Crew Console",
+          "kind": "console",
+          "target": "/board"
+        },
+        {
+          "label": "Board the 3D cabin",
+          "kind": "cabin",
+          "target": ""
+        }
+      ],
+      "weight": 1
     }
   ]
 }

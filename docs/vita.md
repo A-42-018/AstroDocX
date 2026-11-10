@@ -108,6 +108,16 @@ It reads `app/src/engine/{limits,nasa,evidence}.ts`, `app/src/data/types.ts`, th
 
 `landing/vita/faq.json` is also hand-written; a test checks that every offline citation URL exists in the knowledge base and every action target is valid. Edit the offline answers whenever the knowledge base changes meaningfully.
 
+## Voice navigation
+
+One grammar and one recognizer, shared by NOVA and VITA (plain JS in `landing/vita/`, no build step):
+
+- `commands.js`: `parseCommand(text, { where })` turns a phrase into an action (`console | cabin | library | tour`, the same shape as an answer's buttons, so `go()` in `landing/briefing/briefing.js` and `runAction()` in `app/src/vita/store.ts` run it unchanged) or a local command (back, scroll, stop, sound, tour controls, "yes" to run the last answer's first button, "stop listening"). Questions return `null` and go to `ask()`.
+- `listen.js`: `createListener()` wraps `SpeechRecognition` (one phrase, or hands-free with restart), pauses while the guide speaks so the mic never hears her, and remembers Voice mode in `sessionStorage` (`adx-voice`) for the visit only.
+- Homepage: `landing/briefing/briefing.js` (mic, Voice button, `Alt+V`). Console and cabin: `app/src/voice/` (`VoiceNav.tsx` is mounted next to `VitaDock`). Story page: `landing/universe/voice.js`.
+- Adding a screen: add its aliases to `SCREENS` in `commands.js`. `tools/vita/test/commands.test.mjs` fails if `SCREENS`, `CABIN_STOPS` or `LIBRARY` drift from `nav.ts`, `CabinPage.tsx` or `ask.js`.
+- Not covered: languages other than English, and the Crew Doctor page's own mic still dictates into its question box.
+
 ## Tests
 
 ```bash
