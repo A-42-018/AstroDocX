@@ -36,7 +36,12 @@ export default defineConfig({
       workbox: {
         navigateFallback: '/app/index.html',
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,bin}'],
-        runtimeCaching: [{ urlPattern: /\/(models\/[^/]+\.glb|textures\/[^/]+\.webp)$/, handler: 'NetworkFirst', options: { cacheName: 'cabin-models', networkTimeoutSeconds: 4 } }],
+        globIgnores: ['xray/**'], // XRAY: the mirror's files load on its first start, not at install
+        runtimeCaching: [
+          { urlPattern: /\/(models\/[^/]+\.glb|textures\/[^/]+\.webp)$/, handler: 'NetworkFirst', options: { cacheName: 'cabin-models', networkTimeoutSeconds: 4 } },
+          // XRAY: the X-Ray Mirror's trackers and anatomy (about 30 MB), cached on its first start (remove with src/xray)
+          { urlPattern: /\/xray\/(mediapipe|models)\/[^/]+$/, handler: 'CacheFirst', options: { cacheName: 'xray', expiration: { maxEntries: 10 } } },
+        ],
       },
     }),
   ],

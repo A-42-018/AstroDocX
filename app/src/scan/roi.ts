@@ -38,10 +38,10 @@ export function isSkin(r: number, g: number, b: number): boolean {
   return cb >= 77 && cb <= 127 && cr >= 133 && cr <= 173
 }
 
-/** Read the patches and the face area from RGBA pixels (a small canvas, 128 x 96 is plenty). */
-export function measureFrame(rgba: Uint8ClampedArray | Uint8Array, w: number, h: number): FrameMeasure {
+/** Read the patches and the face area from RGBA pixels (a small canvas, 128 x 96 is plenty). `rois` and `area` default to the Face Scan's fixed oval; the X-ray mirror passes ones placed from face landmarks. */
+export function measureFrame(rgba: Uint8ClampedArray | Uint8Array, w: number, h: number, rois: readonly Rect[] = ROIS, area: Rect = FACE_AREA): FrameMeasure {
   let sr = 0, sg = 0, sb = 0, skinN = 0, total = 0, lumaSum = 0, clipN = 0
-  for (const roi of ROIS) {
+  for (const roi of rois) {
     const x0 = Math.floor(roi.x0 * w), x1 = Math.ceil(roi.x1 * w), y0 = Math.floor(roi.y0 * h), y1 = Math.ceil(roi.y1 * h)
     for (let y = y0; y < y1; y++) {
       for (let x = x0; x < x1; x++) {
@@ -56,7 +56,7 @@ export function measureFrame(rgba: Uint8ClampedArray | Uint8Array, w: number, h:
     }
   }
   let mx = 0, my = 0, mn = 0
-  const fx0 = Math.floor(FACE_AREA.x0 * w), fx1 = Math.ceil(FACE_AREA.x1 * w), fy0 = Math.floor(FACE_AREA.y0 * h), fy1 = Math.ceil(FACE_AREA.y1 * h)
+  const fx0 = Math.floor(area.x0 * w), fx1 = Math.ceil(area.x1 * w), fy0 = Math.floor(area.y0 * h), fy1 = Math.ceil(area.y1 * h)
   for (let y = fy0; y < fy1; y++) {
     for (let x = fx0; x < fx1; x++) {
       const i = (y * w + x) * 4

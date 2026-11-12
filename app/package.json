@@ -12,6 +12,7 @@
     "demo:snapshot": "UPDATE_DEMO_SNAPSHOT=1 vitest run src/data/demo.snapshot.test.ts"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^1.2.2",
     "dexie": "^4.4.6",
     "lucide-react": "^1.52.0",
     "react": "^19.2.8",
