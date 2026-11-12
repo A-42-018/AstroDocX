@@ -13,11 +13,27 @@
   .us-empty, .us-note { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--t3); }
   .us-note { margin-top: 10px; }
 
-  .us-body { display: block; width: 100%; max-width: 150px; height: auto; margin: 4px auto 8px; }
-  .us-fig { stroke: rgba(160, 210, 230, 0.4); stroke-width: 1.3; }
-  .us-site { fill: rgba(54, 226, 245, 0.28); stroke: var(--cy); stroke-width: 1; cursor: pointer; }
+  .us-body {
+    position: relative; width: 100%; max-width: 270px; aspect-ratio: 300 / 660; margin: 4px auto 8px;
+    background: radial-gradient(ellipse 60% 45% at 50% 42%, rgba(54, 226, 245, 0.08), transparent 70%);
+  }
+  .us-body-cv, .us-body-svg, .us-body-sites { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .us-body-cv { pointer-events: none; }
+  .us-skin { fill: rgba(54, 226, 245, 0.07); stroke: rgba(127, 232, 255, 0.45); stroke-width: 1.6; }
+  .us-org { fill: rgba(127, 232, 255, 0.14); stroke: rgba(127, 232, 255, 0.4); stroke-width: 1; }
+  .us-org.brain { fill: rgba(255, 140, 200, 0.16); stroke: rgba(255, 140, 200, 0.45); }
+  .us-org.soft { fill: rgba(150, 190, 230, 0.08); stroke: rgba(150, 190, 230, 0.25); }
+  .us-org.on { fill: color-mix(in srgb, var(--watch) 30%, transparent); stroke: var(--watch); }
+  .us-bone { fill: none; stroke: rgba(230, 242, 255, 0.5); stroke-width: 1.4; }
+  .us-bone rect { fill: rgba(230, 242, 255, 0.25); stroke: none; }
+  .us-bone .on { stroke: var(--watch); }
+  .us-art { fill: none; stroke: rgba(255, 77, 94, 0.45); stroke-width: 1.4; }
+  .us-art.on { stroke: var(--watch); stroke-width: 2; }
+  .us-heart { fill: #ff4d5e; opacity: 0.8; }
+  .us-heart.on { fill: var(--watch); opacity: 1; }
+  .us-site { fill: rgba(54, 226, 245, 0.3); stroke: var(--cy); stroke-width: 2.4; cursor: pointer; }
   .us-site.on { fill: var(--watch); stroke: #fff; }
-  .us-ping { fill: none; stroke: var(--watch); stroke-width: 1; opacity: 0.7; }
+  .us-ping { fill: none; stroke: var(--watch); stroke-width: 2.4; opacity: 0.7; }
   @media (prefers-reduced-motion: no-preference) {
     .us-ping { animation: us-ping 1.8s ease-out infinite; transform-box: fill-box; transform-origin: center; }
   }
