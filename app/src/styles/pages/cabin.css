@@ -172,27 +172,49 @@
 .cabin-nogl h1 { margin: 0 0 var(--sp-2); font: 700 20px var(--ui); color: var(--t1); }
 .cabin-nogl p { margin: 0 0 var(--sp-4); }
 
-/* phones: smaller caption, HUD corners closer in, stop labels hidden */
+/* the caption's "More" only exists where the text is clamped (phones) */
+.cap-more { display: none; }
+
+/*
+ * phones: the bottom edge is one row of controls (Credits, the voice pill, VITA's drone) and the caption card sits on top of
+ * that row, its text clamped to three lines. The visor HUD keeps the middle of the view clear: readiness at the top, the
+ * vitals and the crew link as straight compact blocks along the sides, the environment just above the caption (--cap-top,
+ * measured by CabinPage). The helmet keeps its round shape (VisorHud slices it), so the blocks align to the screen's edges.
+ */
 @media (max-width: 767px) {
-  .cabin-caption { left: var(--sp-3); bottom: 32px; width: calc(100% - 64px); padding: var(--sp-3) var(--sp-4); } /* clear of the Credits button */
-  .cabin-caption h1 { font-size: 17px; }
-  .cabin-caption p { font-size: 12.5px; }
+  .cabin-caption { left: var(--sp-3); right: 44px; bottom: 76px; width: auto; padding: var(--sp-3) var(--sp-4); }
+  .cabin-caption h1 { margin: 4px 0; font-size: 17px; }
+  .cabin-caption p { font-size: 12.5px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
+  .cabin-caption.is-open p { display: block; -webkit-line-clamp: unset; line-clamp: none; }
+  .cap-more { all: unset; box-sizing: border-box; display: inline-block; margin: 4px 14px 0 0; padding: 4px 0; cursor: var(--cur-pointer); font: 600 12px var(--ui); letter-spacing: .04em; color: var(--cy-hi); text-decoration: underline dotted; text-underline-offset: 3px; }
+  .cap-more:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
+  .cabin-caption .cap-use { margin-top: 8px; min-height: 38px; }
+  .cabin-caption .cap-use kbd { display: none; }
   .cabin-stops { right: 12px; gap: 12px; }
   .cabin-stops span { display: none; }
   .cabin-card { right: var(--sp-3); left: var(--sp-3); width: auto; bottom: auto; top: 64px; }
-  .vz-hud { font-size: 10px; }
-  .vz small { font-size: 9.5px; }
+
+  .vz-hud { font-size: 10px; letter-spacing: .06em; }
+  .vz { gap: 3px; }
+  .vz small { font-size: 9px; letter-spacing: .14em; }
   .vz .big { font-size: 14px; }
-  .vz-tl, .vz-bl { left: 8vw; } .vz-tr, .vz-br { right: 8vw; }
-  .vz-tl, .vz-tr { top: max(25vh, 190px); } /* below the readiness gauge */
+  .vz::before { inset: -10px -16px; }
+  .vz-tc { top: 64px; }
+  .vz-tc .huge { font-size: 26px; }
+  .vz-tc .state { font-size: 10px; }
+  .vz-gauge { width: 170px; }
+  .vz-tl, .vz-tr, .vz-bl, .vz-br { transform: none; }
+  .vz-tl, .vz-tr { top: 186px; }
+  .vz-tl, .vz-bl { left: 14px; } .vz-tr, .vz-br { right: 54px; } /* clear of the stop list */
   .vz-tl .big, .vz-tr .vz-segs { display: none; }
-  .vz-bl, .vz-br { bottom: auto; top: 58vh; }
-  .vz-tc { top: 64px; } .vz-gauge { width: 200px; }
-  .vz-ecg { width: 96px; }
+  .vz-bl, .vz-br { top: auto; bottom: calc(var(--cap-top, 230px) + 16px); }
+  .vz-bl .big, .vz-br .big { font-size: 13px; }
+  .vz-ecg { width: 88px; height: 22px; }
   .vz.ladder, .vz-bar, .vz-motto, .prompt { display: none; } /* the caption already says to scroll */
-  .vz-reticle { width: 150px; height: 150px; margin: -75px 0 0 -75px; }
-  .cabin-credits { right: var(--sp-3); }
-  .cabin-credits-list { font-size: 10.5px; width: calc(100vw - 24px); }
+  .vz-reticle { width: 110px; height: 110px; margin: -55px 0 0 -55px; opacity: .7; }
+
+  .cabin-credits { left: var(--sp-3); right: auto; bottom: 22px; }
+  .cabin-credits-list { left: 0; right: auto; font-size: 10.5px; width: calc(100vw - 24px); max-height: 50vh; overflow-y: auto; }
 }
 @media (prefers-reduced-motion: reduce) { .cabin-visor.booting :is(.vz, .vz-reticle, .vz-bar, .vz-motto, .prompt) { animation: none; } .prompt span, .vz-reticle .spin, .vz-heart.beat { animation: none; } .vz-gauge .needle { transition: none; } }
 
@@ -236,7 +258,7 @@
 }
 .cabin-vita-sub b { flex: none; font: 700 11px var(--mono); letter-spacing: .16em; color: var(--cy-hi); }
 @keyframes vita-sub-in { from { opacity: 0; translate: -50% 6px; } }
-@media (max-width: 767px) { .cabin-vita-sub { bottom: 190px; font-size: 13.5px; } }
+@media (max-width: 767px) { .cabin-vita-sub { bottom: calc(var(--cap-top, 230px) + 10px); width: calc(100% - 24px); font-size: 13.5px; } .cabin.is-using .cabin-vita-sub { bottom: 84px; } }
 @media (prefers-reduced-motion: reduce) { .cabin-vita-sub { animation: none; } }
 
 /* using a wall screen (scene.ts useScreen): a slim bar over the top to step back, the page's name, and a way out to the full console */

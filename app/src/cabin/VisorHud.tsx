@@ -30,9 +30,29 @@ function opening(scale = 1) {
 }
 const EDGE = opening(), SEAMS = [opening(1.075), opening(1.17)]
 
+/** True while the window is taller than it is wide (a phone held upright). */
+function usePortrait() {
+  const q = '(max-aspect-ratio: 1/1)'
+  const [on, setOn] = useState(() => typeof window !== 'undefined' && !!window.matchMedia?.(q).matches)
+  useEffect(() => {
+    const m = window.matchMedia?.(q)
+    if (!m) return
+    const f = () => setOn(m.matches)
+    m.addEventListener?.('change', f)
+    return () => m.removeEventListener?.('change', f)
+  }, [])
+  return on
+}
+
+/**
+ * Stretched to a tall window the round helmet became a narrow pill that ate the sides of the view. Upright, it keeps its
+ * shape at the window's height instead (slice): the sides of the opening fall past the screen's edges, as they would
+ * past the eye, and only the brow and chin of the rim show.
+ */
 function Helmet() {
+  const portrait = usePortrait()
   return (
-    <svg className="visor-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+    <svg className="visor-svg" viewBox="0 0 1000 1000" preserveAspectRatio={portrait ? 'xMidYMid slice' : 'none'}>
       <defs>
         <radialGradient id="vz-glass" cx="50%" cy="46%" r="62%">
           <stop offset="0.55" stopColor="#06121c" stopOpacity="0.06" />
