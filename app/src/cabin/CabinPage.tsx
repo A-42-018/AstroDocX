@@ -275,7 +275,7 @@ export default function CabinPage() {
   useEffect(() => {
     if (state === 'unsupported') { useTour.getState().set({ cabinFailed: true }); return }
     if (state !== 'ready' || loader !== 'gone' || intro !== 'off') return
-    useTour.getState().set({ cabin: { goTo: (i) => scene.current?.goTo(i), spoken: (i) => spokenStops(dataRef.current)[i] ?? '' } })
+    useTour.getState().set({ cabin: { goTo: (i) => scene.current?.goTo(i), spoken: (i) => spokenStops(dataRef.current)[i] ?? '', step: (d) => scene.current?.goTo(Math.max(0, Math.min(STOP_COUNT - 1, lastStop.current + d))) } })
     return () => useTour.getState().set({ cabin: null })
   }, [state, loader, intro])
   // /cabin?shot=eva (from VITA's answers) opens on that stop once the arrival is over

@@ -27,6 +27,20 @@ const skipBtn = $('#skip'), phase = $('#phase'), steps = [...$('#steps').childre
 const vitaId = $('#vitaId'), vitaState = $('#vitaState')
 const doors = [...document.querySelectorAll('.door')]
 
+/* the NOVA dock: a slim bar by default; Expand lifts the whole conversation over the page */
+const dock = $('.dock'), dockX = $('#dockX'), stage = $('.stage')
+function setDock(open) {
+  if (open === dock.classList.contains('open')) return
+  if (open) stage.style.minHeight = stage.offsetHeight + 'px'   // keep the bar's room so the page doesn't jump
+  dock.classList.toggle('open', open)
+  if (!open) stage.style.minHeight = ''
+  dockX.setAttribute('aria-expanded', String(open)); dockX.textContent = open ? 'Collapse' : 'Expand'
+  thread.scrollTop = thread.scrollHeight
+}
+dockX.addEventListener('click', () => setDock(!dock.classList.contains('open')))
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && dock.classList.contains('open') && !document.querySelector('#czReveal:not([hidden])')) { setDock(false); dockX.focus() } })
+addEventListener('pointerdown', (e) => { if (dock.classList.contains('open') && !dock.contains(e.target)) setDock(false) })
+
 /* the blobs, line art and hazard facts: facts come from the same faq.json VITA answers from */
 let faqData = null
 function getFact(id) {
@@ -156,7 +170,10 @@ async function say(item, { instant = false, quiet = false } = {}) {
   $('.sr-only', d).textContent = 'NOVA: ' + text
   // NOVA speaks while the line types out (only with Sound on); the line ends when she stops talking
   const spoken = quiet ? null : voice.speak(text)
-  if (spoken) { scene.talk(true); vitaId.classList.add('busy'); vitaState.textContent = 'Speaking' }
+  if (spoken) {
+    scene.talk(true); vitaId.classList.add('busy'); vitaState.textContent = 'Speaking'
+    if (listener) { listener.pause('speaking'); spoken.then(() => listener.resume('speaking'), () => listener.resume('speaking')) }   // the mic must not hear NOVA
+  }
   if (instant || REDUCED) {
     body.innerHTML = html
   } else {
@@ -288,6 +305,7 @@ async function ask(q) {
   if (!q || (busy && ready)) return
   if (!ready) skipIntro({ quiet: true })   // the answer is coming; don't start reading the intro out
   dropHover()
+  if (!TOUR_INTENT.test(q)) setDock(true)   // an answer needs room to be read: lift the conversation up
   addMine(q)
   chatLog.push({ role: 'user', text: q })
   const tok = ++token
@@ -307,6 +325,7 @@ async function ask(q) {
   if (tok !== token) return
   setLink(r.source)
   chatLog.push({ role: 'assistant', text: plain(r.text) })
+  lastActions = r.actions || []
   await say(r)
 }
 
@@ -329,30 +348,97 @@ function setLink(source) {
 addEventListener('online', () => setLink()); addEventListener('offline', () => setLink())
 setLink('live')
 
-/* mic: the browser's own speech recognition, where there is one */
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition
-const mic = $('#mic')
-if (SR && mic) {
-  mic.hidden = false
-  let rec = null
-  mic.addEventListener('click', () => {
-    if (rec) { rec.stop(); return }
-    voice.cancel()   // don't let the mic hear NOVA
-    rec = new SR(); rec.lang = 'en-US'; rec.interimResults = true; rec.maxAlternatives = 1
-    mic.classList.add('listening'); mic.setAttribute('aria-label', 'Stop listening')
-    rec.onresult = (e) => {
-      const r = e.results[e.results.length - 1]
-      input.value = r[0].transcript
-      if (r.isFinal) { rec.stop(); form.requestSubmit() }
-    }
-    rec.onend = rec.onerror = () => { rec = null; mic.classList.remove('listening'); mic.setAttribute('aria-label', 'Speak your question') }
-    try { rec.start() } catch { rec = null }
-  })
+/* ───────────────────────── voice: push-to-talk and voice mode ─────────────────────────
+   One recognizer (vita/listen.js). A phrase is first tried as a command (vita/commands.js: "open alerts", "walk the
+   station", "go back"…); anything else is a question and goes to ask() as it always did. Voice mode keeps listening. */
+const mic = $('#mic'), modeBtn = $('#voiceMode'), chip = $('#voiceChip')
+let lastActions = []      // the last answer's buttons, so "yes" / "open it" can run the first one
+const listenMod = import(new URL('../vita/listen.js', import.meta.url).href).catch(() => null)
+const cmdMod = import(new URL('../vita/commands.js', import.meta.url).href).catch(() => null)
+
+const GUIDE = { help: 'You can say: open alerts, walk the station, open the radiation library, take the tour, go back, scroll down, or stop listening. Anything else, I will answer.' }
+function note(text, idle = false) { chip.hidden = !text; chip.textContent = text || ''; chip.classList.toggle('idle', idle) }
+
+function runCommand(c) {
+  if (c.type === 'action') { go(c.action); return }
+  switch (c.name) {
+    case 'skip-intro': case 'tour-skip': if (!ready) skipIntro(); else if (window.ADX_TOUR) window.ADX_TOUR.start(); break
+    case 'close': if (!$('#lib').hidden) closeLibrary(); break
+    case 'back': history.back(); break
+    case 'forward': history.forward(); break
+    case 'scroll-down': case 'scroll-up': thread.scrollBy({ top: (c.name === 'scroll-down' ? 1 : -1) * thread.clientHeight * .8, behavior: REDUCED ? 'auto' : 'smooth' }); break
+    case 'scroll-top': thread.scrollTo({ top: 0 }); break
+    case 'scroll-bottom': scrollDown(); break
+    case 'stop-talking': token++; voice.cancel(); scene.talk(false); setBusy(false); break
+    case 'sound-on': if (sound.available) { sound.set(true); voice.set(true); voice.unlock(); showSound(); say({ text: 'Sound on.' }) } break
+    case 'sound-off': sound.set(false); voice.set(false); voice.cancel(); showSound(); break
+    case 'story': location.href = '/story.html'; break
+    case 'tour-pause': window.ADX_BRIEFING?.setPaused(true); break
+    case 'tour-resume': window.ADX_BRIEFING?.setPaused(false); break
+    case 'tour-exit': window.ADX_BRIEFING?.endTour(); break
+    case 'voice-off': setVoiceMode(false); break
+    case 'follow': if (lastActions[0]) go(lastActions[0]); else say({ text: 'Tell me where to go: for example, open alerts, or walk the station.' }); break
+    case 'help': say({ text: GUIDE.help }); break
+    case 'home': say({ text: 'You are on the home page already.' }); break
+    default: say({ text: GUIDE.help })
+  }
 }
+
+async function heard(text) {
+  const mod = await cmdMod
+  const c = mod?.parseCommand(text, { where: 'home' })
+  if (!c) { input.value = text; form.requestSubmit(); return }
+  input.value = ''
+  note(`Heard: “${text}”`, true)
+  if (c.say && c.type === 'local' && c.name !== 'help') say({ text: c.say }, { instant: true })
+  runCommand(c)
+}
+
+let listener = null
+async function setupVoice() {
+  const m = await listenMod
+  if (!m) return
+  listener = m.createListener({
+    onInterim: (t) => { input.value = t; note(`Listening… ${t}`) },
+    onFinal: (t) => { input.value = ''; heard(t) },
+    onState: (s) => {
+      const on = s === 'listening' || s === 'paused'
+      mic.classList.toggle('listening', s === 'listening')
+      mic.setAttribute('aria-label', s === 'listening' ? 'Stop listening' : 'Speak a command or question')
+      modeBtn.setAttribute('aria-pressed', String(listener.handsFree))
+      if (s === 'listening') note(listener.handsFree ? 'Voice mode on. Listening…' : 'Listening…')
+      else if (s === 'paused') note('Voice mode on. Waiting while I talk…', true)
+      else if (s === 'denied') { note('Microphone blocked. Allow it in the browser, then try again.', true); m.voiceModePref.set(false) }
+      else if (!on && !chip.textContent.startsWith('Heard')) note('')
+    },
+    onError: (code) => { if (code !== 'not-allowed' && code !== 'service-not-allowed') note('I could not hear that. Try again.', true) },
+  })
+  if (!listener.supported) return
+  mic.hidden = false; modeBtn.hidden = false
+  mic.addEventListener('click', () => {
+    if (listener.state === 'listening') { listener.handsFree ? setVoiceMode(false) : listener.stop(); return }
+    voice.cancel()   // don't let the mic hear NOVA
+    listener.once()
+  })
+  modeBtn.addEventListener('click', () => setVoiceMode(!listener.handsFree))
+  addEventListener('keydown', (e) => {
+    if (e.altKey && e.code === 'KeyV' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); mic.click() }
+  })
+  if (m.voiceModePref.get()) setVoiceMode(true)   // arrived with voice mode on; a browser that needs a tap shows 'denied' or waits
+  voiceReady = m
+}
+let voiceReady = null
+function setVoiceMode(on) {
+  if (!listener) return
+  voiceReady?.voiceModePref.set(on)
+  if (on) { voice.cancel(); listener.setHandsFree(true); say({ text: 'Voice mode on. Say a command, like open alerts.' }, { instant: true }) }
+  else { listener.setHandsFree(false); note('Voice mode off.', true) }
+}
+setupVoice()
 
 /* NOVA herself: a nudge */
 const bot = $('#bot')
-function poke() { if (ready && !busy) say({ text: 'Still here. Ask me something, or pick a door below.' }) }
+function poke() { if (ready && !busy) say({ text: 'Still here. Ask me something, or pick a door above.' }) }
 bot.addEventListener('click', poke)
 bot.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); poke() } })
 

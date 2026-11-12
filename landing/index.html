@@ -68,22 +68,50 @@
     </nav>
   </header>
 
-  <main class="stage" id="main">
-    <section class="guide" aria-label="NOVA, the mission guide">
-      <h1 class="guide-headline">Health support for deep-space missions.</h1>
-      <canvas id="bot" width="680" height="680" tabindex="0" role="img" aria-label="NOVA, the AstroDocX mission guide: a particle drone with a visor. Press Enter for a hint."></canvas>
-      <div class="meta">
-        <div class="id" id="vitaId"><span class="lamp" aria-hidden="true"></span><b>NOVA</b><span class="mono" id="vitaState">Mission guide</span></div>
-        <span class="mono note">Answers from NASA sources &middot; works offline</span>
-      </div>
-    </section>
+  <section class="hero" aria-labelledby="heroTitle">
+    <h1 class="guide-headline" id="heroTitle">Health support for deep-space missions.</h1>
+    <p class="hero-sub mono">Three ways in &middot; <b>start with the Crew Console</b></p>
+    <nav class="doors" aria-label="Three ways in">
+      <a class="hp door" data-door="console" href="/app/">
+        <span class="br br-tl" aria-hidden="true"></span><span class="br br-br" aria-hidden="true"></span>
+        <canvas width="192" height="88" aria-hidden="true"></canvas>
+        <div class="ph"><span class="ph-dot" aria-hidden="true"></span><span class="ph-title">Door 1</span><span class="ph-meta">Crew console · start here</span></div>
+        <h3>Run the mission</h3><p>Live vitals, personal baselines, and alerts that turn into actions.</p>
+        <div class="go">Enter console <span aria-hidden="true">&rsaquo;</span></div>
+      </a>
+      <a class="hp door" data-door="cabin" href="/app/cabin">
+        <span class="br br-tl" aria-hidden="true"></span><span class="br br-br" aria-hidden="true"></span>
+        <canvas width="192" height="88" aria-hidden="true"></canvas>
+        <div class="ph"><span class="ph-dot" aria-hidden="true"></span><span class="ph-title">Door 2</span><span class="ph-meta">3D cabin</span></div>
+        <h3>Walk the station</h3><p>A guided tour of the hall, the crew, and the astronaut on EVA.</p>
+        <div class="go">Board the cabin <span aria-hidden="true">&rsaquo;</span></div>
+      </a>
+      <a class="hp door" data-door="library" href="#library" aria-haspopup="dialog">
+        <span class="br br-tl" aria-hidden="true"></span><span class="br br-br" aria-hidden="true"></span>
+        <canvas width="192" height="88" aria-hidden="true"></canvas>
+        <div class="ph"><span class="ph-dot" aria-hidden="true"></span><span class="ph-title">Door 3</span><span class="ph-meta">NASA library</span></div>
+        <h3>See the science</h3><p>NASA images, video, and audio on keeping astronauts healthy.</p>
+        <div class="go">Open library <span aria-hidden="true">&rsaquo;</span></div>
+      </a>
+    </nav>
+  </section>
 
-    <section class="hp chat" aria-labelledby="phase">
+  <main class="stage" id="main">
+    <section class="hp chat dock" aria-labelledby="phase">
       <span class="br br-tl" aria-hidden="true"></span><span class="br br-br" aria-hidden="true"></span>
+      <div class="guide" role="group" aria-label="NOVA, the mission guide">
+        <canvas id="bot" width="680" height="680" tabindex="0" role="img" aria-label="NOVA, the AstroDocX mission guide: a particle drone with a visor. Press Enter for a hint."></canvas>
+        <div class="meta">
+          <div class="id" id="vitaId"><span class="lamp" aria-hidden="true"></span><b>NOVA</b><span class="mono" id="vitaState">Mission guide</span></div>
+          <span class="mono note">Answers from NASA sources &middot; works offline</span>
+        </div>
+      </div>
+      <div class="dock-main">
       <div class="ph">
         <span class="ph-dot" aria-hidden="true"></span><h2 class="ph-title" id="phase">Briefing &middot; 1 of 4</h2><span class="ph-rule" aria-hidden="true"></span>
         <div class="steps" id="steps" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
         <button type="button" class="skip" id="skip">Skip intro</button>
+        <button type="button" class="dock-x" id="dockX" aria-expanded="false" aria-controls="thread" title="Show the whole conversation">Expand</button>
       </div>
       <div class="thread" id="thread" role="log" aria-live="polite" aria-relevant="additions" aria-label="Conversation with NOVA" tabindex="0"></div>
       <div class="composer">
@@ -95,35 +123,15 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
             <span class="sr-only">Mic</span>
           </button>
+          <button type="button" class="hbtn ghost" id="voiceMode" aria-pressed="false" aria-label="Voice mode: keep listening for commands" title="Voice mode: say 'open alerts', 'walk the station'… (Alt+V for one command)" aria-keyshortcuts="Alt+V" hidden>Voice</button>
           <button type="submit" class="hbtn" id="askBtn">Ask</button>
         </form>
+        <p class="voice-chip" id="voiceChip" role="status" aria-live="polite" hidden></p>
+      </div>
       </div>
     </section>
   </main>
 
-  <nav class="doors" aria-label="Three doors">
-    <a class="hp door" data-door="console" href="/app/">
-      <span class="br br-tl" aria-hidden="true"></span><span class="br br-br" aria-hidden="true"></span>
-      <canvas width="192" height="88" aria-hidden="true"></canvas>
-      <div class="ph"><span class="ph-dot" aria-hidden="true"></span><span class="ph-title">Door 1</span><span class="ph-meta">Crew console · start here</span></div>
-      <h3>Run the mission</h3><p>Live vitals, personal baselines, and alerts that turn into actions.</p>
-      <div class="go">Enter console <span aria-hidden="true">&rsaquo;</span></div>
-    </a>
-    <a class="hp door" data-door="cabin" href="/app/cabin">
-      <span class="br br-tl" aria-hidden="true"></span><span class="br br-br" aria-hidden="true"></span>
-      <canvas width="192" height="88" aria-hidden="true"></canvas>
-      <div class="ph"><span class="ph-dot" aria-hidden="true"></span><span class="ph-title">Door 2</span><span class="ph-meta">3D cabin</span></div>
-      <h3>Walk the station</h3><p>A guided tour of the hall, the crew, and the astronaut on EVA.</p>
-      <div class="go">Board the cabin <span aria-hidden="true">&rsaquo;</span></div>
-    </a>
-    <a class="hp door" data-door="library" href="#library" aria-haspopup="dialog">
-      <span class="br br-tl" aria-hidden="true"></span><span class="br br-br" aria-hidden="true"></span>
-      <canvas width="192" height="88" aria-hidden="true"></canvas>
-      <div class="ph"><span class="ph-dot" aria-hidden="true"></span><span class="ph-title">Door 3</span><span class="ph-meta">NASA library</span></div>
-      <h3>See the science</h3><p>NASA images, video, and audio on keeping astronauts healthy.</p>
-      <div class="go">Open library <span aria-hidden="true">&rsaquo;</span></div>
-    </a>
-  </nav>
 
   <footer class="statusbar">
     <span class="ok" id="vitaLink"><span class="lamp" aria-hidden="true"></span><span id="vitaLinkTxt">NOVA online</span></span>
