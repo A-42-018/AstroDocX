@@ -39,7 +39,7 @@ describe('RfPage', () => {
 
   it('a breathing pause raises a suggestion that links to the lung scan', () => {
     open()
-    expect(screen.queryByRole('status', { name: '' })).toBeNull()
+    expect(screen.queryByRole('link', { name: /Start lung scan/ })).toBeNull() // nothing suggested while breathing is normal
     fireEvent.click(screen.getByRole('button', { name: 'Breathing pause' }))
     expect(screen.getByText('Breathing movement has stopped')).toBeTruthy()
     const link = screen.getByRole('link', { name: /Start lung scan/ })
@@ -49,5 +49,13 @@ describe('RfPage', () => {
   it('never claims a heart rate from Wi-Fi alone', () => {
     open()
     expect(screen.getByText('needs watch')).toBeTruthy()
+  })
+
+  it('offers the 3D cabin and the plan view, and does not build the 3D scene until it is near the screen', () => {
+    open()
+    expect(screen.getByRole('button', { name: '3D cabin' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByText('3D cabin loads when you scroll here')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Plan view' }))
+    expect(screen.getByText(/How the scan works, from above/)).toBeTruthy()
   })
 })

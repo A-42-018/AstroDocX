@@ -1,6 +1,6 @@
 import '../styles/pages/rf.css'
 import { ArrowRight, Radio, Router, User, Wifi } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSnapshot } from '../board/hooks'
 import { useBoard } from '../board/store'
@@ -11,6 +11,10 @@ import { StateView } from '../ui/StateView'
 import { CSI_HZ, SITUATIONS, type Situation } from './csi'
 import { RfFeed, type Recommendation } from './feed'
 import { MIN_S } from './dsp'
+import { CabinScan } from './CabinScan'
+
+// three.js and the cabin models are their own chunk, fetched only when the panel scrolls into view
+const CabinWifi3D = lazy(() => import('./CabinWifi3D'))
 import { RfScope } from './RfScope'
 
 const fmt = (n: number | null | undefined, dec = 0) => (n === null || n === undefined || !Number.isFinite(n) ? '—' : n.toFixed(dec))
@@ -39,6 +43,48 @@ export default function RfPage() {
   }
   if (snap === null) return <StateView kind="empty" label="No crew data yet." />
   return <RfView key={snap.crewId} crewId={snap.crewId} name={snap.crew.find((c) => c.id === snap.crewId)?.name ?? ''} />
+}
+
+/** The cabin sweep: the 3D cabin as Wi-Fi sensing would show it, or the plan view that shows how the scan works. */
+function SweepPanel() {
+  const [view, setView] = useState<'3d' | 'plan'>('3d')
+  const [near, setNear] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
+  // fetch and build the 3D scene only once the panel is close to the screen
+  useEffect(() => {
+    const el = box.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver((e) => { if (e[0]?.isIntersecting) { setNear(true); io.disconnect() } }, { rootMargin: '200px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  const noGl = useCallback(() => setView('plan'), [])
+  return (
+    <HudPanel title="Cabin sweep" meta="Simulated · 3 routers · 8 plan nodes" className="rf-sweep">
+      <div ref={box}>
+        <Segmented label="Cabin view" value={view} onChange={setView} className="rf-sweep-seg" options={[{ id: '3d', label: '3D cabin' }, { id: 'plan', label: 'Plan view' }]} />
+        {view === '3d' ? (
+          <>
+            <p className="rf-sweep-intro">
+              The cabin, as Wi-Fi sensing would show it. The walls and furniture are drawn from a stored scan of the empty cabin (Wi-Fi cannot see them); the
+              crew are placed from the routers' signals and drawn as heat shapes, with their breathing rate read from the same signals. All of it is simulated.
+            </p>
+            {near ? <Suspense fallback={<p className="rf-3d-none" role="status">Loading the 3D cabin…</p>}><CabinWifi3D onUnsupported={noGl} /></Suspense>
+              : <div className="rf-3d rf-3d-wait"><span role="status">3D cabin loads when you scroll here</span></div>}
+          </>
+        ) : (
+          <>
+            <p className="rf-sweep-intro">
+              How the scan works, from above. With several Wi-Fi nodes around a cabin, every pair is a link. A person near a link disturbs it, and the harder they move the more
+              it changes. The scanner paints a heat map from all links, finds the people in it, follows them and reads what each is doing from how fast and how hard they
+              move. It cannot tell who is who; resolution is about a metre, and two people close together can blur into one.
+            </p>
+            <CabinScan />
+          </>
+        )}
+      </div>
+    </HudPanel>
+  )
 }
 
 function RfView({ crewId, name }: { crewId: string; name: string }) {
@@ -125,6 +171,8 @@ function RfView({ crewId, name }: { crewId: string; name: string }) {
           </div>
         )}
       </HudPanel>
+
+      <SweepPanel />
 
       <HudPanel title="Why microgravity is hard" meta="Open research" className="rf-hard">
         <dl className="rf-challenges">
