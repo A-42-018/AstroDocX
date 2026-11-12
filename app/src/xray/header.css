@@ -1,0 +1,11 @@
+/* The top bar's X-Ray button (src/xray/XrayButton.tsx). It borrows the 3D Cabin button's look (.tb-cabin) and stays on phones as an icon. */
+@layer layout {
+  .tb-xr { position: relative; flex: none; display: flex; }
+  .tb-xray { margin-left: 0; animation: none; }
+  @media (max-width: 767px) {
+    /* first row, after the mission clock, so the second row keeps its room */
+    .tb-xr { order: 2; margin-left: 8px; }
+    .tb-xr .tb-cabin-l { display: none; }
+    .tb-xr .tb-xray { width: 40px; height: 40px; padding: 0; margin: 0; justify-content: center; }
+  }
+}

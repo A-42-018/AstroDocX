@@ -19,6 +19,7 @@ import { useSplashHandoff } from './shell/splash'
 import { StateView } from './ui/StateView'
 import { Tour } from './tour/Tour'
 import { VitaDock } from './vita/VitaDock'
+import { XrayPage } from './xray/lazy' // XRAY: the X-Ray Mirror (remove with src/xray)
 
 // The board is the landing screen and loads eagerly; every other screen (Trends carries the chart
 // library) is its own chunk. The service worker precaches all chunks, so they still work offline;
@@ -46,7 +47,7 @@ function useRouteAnnounce(main: React.RefObject<HTMLElement | null>) {
   const { pathname } = useLocation()
   const first = useRef(true)
   useEffect(() => {
-    const label = pathname.startsWith('/cabin') ? '3D Cabin' : routeFor(pathname)?.label
+    const label = pathname.startsWith('/cabin') ? '3D Cabin' : pathname.startsWith('/xray') ? 'X-Ray Mirror' /* XRAY */ : routeFor(pathname)?.label
     document.title = label ? `${label} · AstroDocX Crew Console` : 'AstroDocX Crew Console'
     if (first.current) { first.current = false; return }
     main.current?.focus()
@@ -117,13 +118,19 @@ export default function App() {
   const { pathname, search } = useLocation()
   // A single screen without the frame, for the 3D cabin's wall screens.
   const embed = stickyEmbed(search)
-  useShellSounds(shell, !!embed || pathname.startsWith('/cabin'))
+  useShellSounds(shell, !!embed || pathname.startsWith('/cabin') || pathname.startsWith('/xray') /* XRAY */)
   useMusicArea(shell, !!embed)
   if (embed) return (
     <ShellDataContext.Provider value={shell}>
       <EmbedBridge />
       <ErrorBoundary key={pathname} onReset={() => seedDemo().then(() => undefined)}><Embed {...embed} /></ErrorBoundary>
     </ShellDataContext.Provider>
+  )
+  // XRAY: the X-Ray Mirror is full screen too (remove this block with src/xray)
+  if (pathname.startsWith('/xray')) return (
+    <ErrorBoundary key={pathname}>
+      <Suspense fallback={<StateView kind="loading" label="Loading the X-ray mirror" />}><XrayPage /></Suspense>
+    </ErrorBoundary>
   )
   // 3D mode is full screen: no console frame or animated backdrop drawing behind it.
   if (pathname.startsWith('/cabin')) return (

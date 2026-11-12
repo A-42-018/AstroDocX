@@ -8,6 +8,7 @@ import { useBoard } from '../board/store'
 import { CabinPage } from '../cabin/lazy'
 import { CabinHint } from './CabinHint'
 import { markCabinSeen } from './cabinSeen'
+import { XrayButton } from '../xray/XrayButton' // XRAY
 import { met } from '../engine/actions'
 import { DEMO_MAX_STEPS, resetDemo, runDemo, useDemo } from '../sim/demoRun'
 import { linkAt, type LinkInfo } from '../sync/link'
@@ -149,6 +150,7 @@ export function TopBar({ data, install }: { data: ShellData | null; install: (()
             </Link>
             <CabinHint />
           </span>
+          <XrayButton />{/* XRAY: the X-Ray Mirror's button (remove with src/xray) */}
           <Link to="/alerts" className={`tb-icon bell st-${who.status}`} aria-label={open ? `${open} open alert${open > 1 ? 's' : ''} for ${who.name}` : `No open alerts for ${who.name}`}>
             <Bell size={20} strokeWidth={1.9} aria-hidden="true" />
             {open > 0 && <b aria-hidden="true">{open}</b>}
