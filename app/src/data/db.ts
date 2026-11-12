@@ -1,7 +1,7 @@
 import Dexie, { type EntityTable, type Table } from 'dexie'
 import type {
   ActionLogEntry, Alert, Baseline, CheckIn, CrewMember, FaceScan, MetricId, Reading, Timestamp,
-  WearableKind, WearableSample,
+  UsScan, WearableKind, WearableSample,
 } from './types'
 
 export class ConsoleDB extends Dexie {
@@ -13,6 +13,7 @@ export class ConsoleDB extends Dexie {
   checkIns!: EntityTable<CheckIn, 'id'>
   scans!: EntityTable<FaceScan, 'id'>
   wearables!: EntityTable<WearableSample, 'id'>
+  usScans!: EntityTable<UsScan, 'id'>
 
   constructor(name = 'astrodocx-console') {
     super(name)
@@ -28,6 +29,8 @@ export class ConsoleDB extends Dexie {
     this.version(2).stores({ scans: '++id, crewId, ts' })
     // opt-in consumer wearable data (Haylou Solar 5); shadow mode only, never feeds alerts
     this.version(3).stores({ wearables: '++id, [kind+ts], kind, ts' })
+    // guided ultrasound scans (simulated imagery); logged for Ground, never feeds alerts
+    this.version(4).stores({ usScans: '++id, crewId, [crewId+exam], ts' })
   }
 }
 

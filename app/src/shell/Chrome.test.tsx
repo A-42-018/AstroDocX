@@ -18,10 +18,10 @@ const data: ShellData = {
 }
 
 describe('navigation', () => {
-  it('top tabs link to all nine screens in two groups and mark the current one', () => {
+  it('top tabs link to all eleven screens in two groups and mark the current one', () => {
     render(<MemoryRouter initialEntries={['/trends']}><TopTabs alerts={3} /></MemoryRouter>)
     const nav = screen.getByRole('navigation', { name: 'Crew Console' })
-    expect(within(nav).getAllByRole('link').map((l) => l.getAttribute('href'))).toEqual(['/board', '/doctor', '/alerts', '/trends', '/checkin', '/simulator', '/sync', '/ground', '/nasa'])
+    expect(within(nav).getAllByRole('link').map((l) => l.getAttribute('href'))).toEqual(['/board', '/doctor', '/alerts', '/trends', '/checkin', '/rf', '/ultrasound', '/simulator', '/sync', '/ground', '/nasa'])
     expect(within(nav).getByRole('link', { name: 'Trends' }).getAttribute('aria-current')).toBe('page')
     expect(within(nav).getByRole('link', { name: 'Ground Sync' }).textContent).toBe('Sync')
     expect(within(nav).getByRole('link', { name: 'Alerts' }).textContent).toBe('Alerts3')
@@ -37,10 +37,10 @@ describe('navigation', () => {
     fireEvent.click(more)
     expect(more.getAttribute('aria-expanded')).toBe('true')
     const sheet = screen.getByRole('dialog', { name: 'More screens' })
-    expect(within(sheet).getAllByRole('link').map((l) => l.textContent)).toEqual(['Trends', 'Simulator', 'Ground Sync', 'Ground View', 'NASA Data'])
+    expect(within(sheet).getAllByRole('link').map((l) => l.textContent)).toEqual(['Trends', 'Wi-Fi Sensing', 'Ultrasound', 'Simulator', 'Ground Sync', 'Ground View', 'NASA Data'])
     expect(document.activeElement).toBe(within(sheet).getAllByRole('link')[0])
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' })
-    expect(document.activeElement?.textContent).toBe('Simulator')
+    expect(document.activeElement?.textContent).toBe('Wi-Fi Sensing')
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(screen.getAllByRole('link')).toHaveLength(4)
     expect(document.activeElement).toBe(more)

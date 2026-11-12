@@ -171,6 +171,8 @@ The heart of AstroDocX at `/app/`: an installable, offline-first PWA for a crew 
 
 ![NASA Data: built on NASA science, the five hazards with monitors, limits and cited NTRS and OSDR studies](docs/screenshots/console-nasa.jpg)
 
+**Wi-Fi Sensing and Ultrasound (simulated).** Two contactless and imaging ideas from the research notes, built as working prototypes on simulated signals. *Wi-Fi Sensing* (`/app/rf`) models what a two-antenna receiver would see as a crew member breathes (52 subcarriers, random phase offsets, a static room far stronger than the breath) and runs the real pipeline on it: conjugate-ratio, Hampel filter, subcarrier merge, spectral peak. It reads breathing rate, presence and breathing pauses, and **holds back with a reason** when a crewmate is moving or the body is drifting. A sustained change suggests the right ultrasound exam. *Ultrasound* (`/app/ultrasound`) is a guided scan of the heart, neck vessels, lungs, thigh muscle and eye: a procedural B-mode picture, a probe you steer toward a good view (arrow keys, or the assisted hand), automatic capture once the view holds, then measurements against the person's own preflight values. Both are labelled simulated, log plain-words entries for Ground and never raise alerts or change baselines.
+
 The live waves on the board (ECG, pulse oximeter, breathing) are **simulated telemetry** built around the latest real readings; they never change alerts.
 
 ### VITA, the AI crew doctor
@@ -210,6 +212,8 @@ AstroDocX takes real measurements from hardware you already have. Everything run
 |---|---|---|---|
 | **Webcam** (face scan) | `getUserMedia`, video never leaves the device | Heart rate, breathing rate and a rough HRV from the colour change of facial skin (rPPG, POS method), each with a signal-quality score | Logged as check-in context for the ground; never raises alerts or changes baselines |
 | **Haylou Solar 5 smartwatch** | **Web Bluetooth** (Chrome or Edge, desktop or Android) with our own frame decoder; access limited to the watch's one data service | Live heart rate and SpO₂, plus its stored stress and sleep-stage history | The live heart-rate card, and (only if you switch on *Save watch data on this device*) the on-device ML insights; exportable as CSV or JSON, erasable in one click |
+| **Wi-Fi CSI** (not connected) | A browser cannot read Channel State Information. An ESP32 or Raspberry Pi that exposes CSI could feed `estimate()` in `src/rf/dsp.ts`, which is written to take real frames | Breathing, presence and movement without a worn sensor; simulated today | Shown on the Wi-Fi Sensing screen; never raises alerts |
+| **Ultrasound probe** (not connected) | A real probe would deliver frames through its vendor SDK or DICOM; `src/ultrasound/render.ts` is the part it would replace | Heart, vessels, lungs, muscle and optic nerve sheath; simulated today | Saved scans and a log entry for Ground; never raises alerts |
 | **Ground server** (optional) | Supabase over HTTPS, only inside link windows | The synced crew log | Ground View on any other computer, for a flight surgeon on Earth |
 
 The watch is linked to one crew member when saving is on, and its data lives in its own IndexedDB store that the alert engine never reads, so a wrist artefact cannot raise a medical alert.
@@ -359,6 +363,7 @@ AstroDocX/
 │   ├── src/doctor/   # VITA the crew doctor: exam rules, report wording, 3D doctor and lip sync
 │   ├── src/cabin/    # the 3D Cabin: hall, crew, robots, EVA, camera shots, wall screens, visor HUD
 │   ├── src/scan/     # face scan (rPPG)       src/watch/   # Haylou Solar 5 over Web Bluetooth + history store
+│   ├── src/rf/       # Wi-Fi CSI sensing (simulated)   src/ultrasound/  # guided ultrasound (simulated)
 │   ├── src/ml/       # on-device wearable insights (shadow mode)
 │   ├── src/audio/    # synthesised effects, score and voices        src/tour/, src/vita/   # guided tour, VITA dock
 │   └── public/models/  # glTF models loaded on demand
