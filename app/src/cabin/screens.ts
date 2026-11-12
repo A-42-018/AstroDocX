@@ -21,6 +21,8 @@ interface Screen {
   flatTop: number | null
   /** The "Tap to use" chip under it, where it hangs, and how far it has faded in. */
   chipEl: HTMLButtonElement; chipAt: THREE.Vector3; chipShown: number
+  /** The page it should load once the camera comes near (each screen is a whole console app), and not before when. */
+  pending: string | null; notBefore: number
 }
 export interface ScreenEvents {
   /** The chip under screen `i` was tapped. */
@@ -73,7 +75,7 @@ export function createScreens(host: HTMLElement, base: string, events: ScreenEve
     el.append(frame, chipEl)
     const s: Screen = {
       frame, pos: new THREE.Vector3(), rotY: 0, normal: new THREE.Vector3(0, 0, 1), w, h, loaded: false, shown: 0, off: null, view: spec.view, crew: undefined,
-      px: spec.px, cur: [...spec.px], engaged: false, path: homeOf(spec.view), label: '', flatTop: null, chipEl, chipAt: new THREE.Vector3(), chipShown: 0,
+      px: spec.px, cur: [...spec.px], engaged: false, path: homeOf(spec.view), label: '', flatTop: null, chipEl, chipAt: new THREE.Vector3(), chipShown: 0, pending: null, notBefore: 0,
     }
     const index = list.length
     chipEl.addEventListener('click', (e) => { e.stopPropagation(); events.onUse?.(index) })
@@ -96,7 +98,21 @@ export function createScreens(host: HTMLElement, base: string, events: ScreenEve
     s.crew = crew; s.loaded = false
     const url = `${base}${s.view}?embed=${s.view}${crew ? `&crew=${encodeURIComponent(crew)}` : ''}`
     s.path = homeOf(s.view); s.label = ''
+    // a screen that has never loaded waits for the camera to come near it (render below): four console apps booting at
+    // once, before anyone has walked to them, is what made the cabin stutter on slower laptops
+    if (!s.frame.src) { s.pending = url; s.notBefore = performance.now() + delay; return }
     setTimeout(() => { s.frame.src = url }, delay)
+  }
+  /** Starts the waiting load of a screen the camera is near, one at a time (LOAD_GAP apart). */
+  let nextLoad = 0
+  const LOAD_GAP = 1200, LOAD_NEAR = 9
+  function startLoads(cam: THREE.Vector3) {
+    const now = performance.now()
+    if (now < nextLoad) return
+    const s = list.filter((x) => x.pending && now >= x.notBefore && (x.engaged || x.pos.distanceTo(cam) < LOAD_NEAR))
+      .sort((a, b) => a.pos.distanceTo(cam) - b.pos.distanceTo(cam))[0]
+    if (!s) return
+    s.frame.src = s.pending!; s.pending = null; nextLoad = now + LOAD_GAP
   }
 
   /** Is anyone (spheres of radius r around `blockers`) between the camera and the screen? */
@@ -123,6 +139,7 @@ export function createScreens(host: HTMLElement, base: string, events: ScreenEve
 
   function render(camera: THREE.PerspectiveCamera, blockers: THREE.Vector3[], dt: number) {
     camera.updateMatrixWorld()
+    startLoads(camera.position)
     for (const s of list) {
       toCam.copy(camera.position).sub(s.pos)
       const dist = toCam.length(), facing = toCam.divideScalar(dist).dot(s.normal)

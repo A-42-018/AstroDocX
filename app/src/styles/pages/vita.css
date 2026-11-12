@@ -79,7 +79,8 @@ body:has(.cabin-loader:not(.is-leaving)) .vita-dock { opacity: 0; pointer-events
 /* phones: above the bottom tab bar */
 @media (max-width: 767px) {
   .vita-dock { bottom: 80px; right: 8px; }
-  .vita-dock.in-cabin { bottom: 14px; }
+  .vita-dock.in-cabin { bottom: 8px; right: 4px; }
+  .vita-dock.in-cabin .vita-fab { scale: .72; transform-origin: 100% 100%; } /* a row with the voice pill and Credits, under the caption */
   body:has(.float-pad) .vita-dock.in-cabin { bottom: 190px; } /* clear of the float-mode stick */
   .vita-panel { max-height: calc(100dvh - 210px); }
 }

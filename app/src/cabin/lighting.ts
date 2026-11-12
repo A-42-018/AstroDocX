@@ -8,6 +8,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { glowTexture } from './earth'
 import { FLOOR, SUN_LAYER, TOP, WIN } from './hall'
 import { C } from './panels'
+import { startTier } from '../shell/perf'
 
 /*
  * One light story, after the golden helmet-view reference: a golden sun through the forward window (hard shadows, a
@@ -43,12 +44,8 @@ export function windowEnvironment() {
   return env
 }
 
-/** A first guess from the device; the scene steps down a tier if the first seconds run slow. */
-export function pickQuality(): Quality {
-  const cores = navigator.hardwareConcurrency || 4
-  if (innerWidth < 768 || matchMedia('(pointer: coarse)').matches || cores <= 4) return 'low'
-  return devicePixelRatio > 1.5 && cores < 8 ? 'mid' : 'high'
-}
+/** A first guess from the device (its GPU, shell/perf.ts); the scene steps down further if frames run slow. */
+export function pickQuality(): Quality { return startTier() }
 
 /** The sunlight's direction into the hall: down and a little to the left, so it lands on the forward floor. */
 export const BEAM_DIR = new THREE.Vector3(-0.25, -0.45, 1).normalize()
@@ -106,9 +103,10 @@ export function addLights(scene: THREE.Scene, quality: Quality) {
   // The references are lit from the window, not the ceiling: a near-neutral, low fill keeps the shaded walls metal grey
   // with deep shadows in the pipework, and the gold comes from the sun and its bounce (low: less, since nothing
   // darkens the crevices there and the sun pool must stand out)
-  scene.add(new THREE.HemisphereLight('#f4eee6', '#1e1c1a', quality === 'low' ? 0.3 : 0.4))
-  // ceiling lamps, warm white and kept low: they glint on the pipes but must not out-light the window
-  for (const z of [11, 4, -3, -9]) {
+  scene.add(new THREE.HemisphereLight('#f4eee6', '#1e1c1a', quality === 'low' ? 0.34 : 0.4))
+  // ceiling lamps, warm white and kept low: they glint on the pipes but must not out-light the window (not on low:
+  // every point light is paid for in every lit pixel, and these four only add glints)
+  if (quality !== 'low') for (const z of [11, 4, -3, -9]) {
     const l = new THREE.PointLight('#fff4ea', 0.3, 8, 2); l.position.set(0, TOP - 0.6, z); scene.add(l)
   }
   // warm bounce off the sunlit floor, carried down the hall (the seam and the floor plate carry the deeper gold)
@@ -137,7 +135,14 @@ export function addLights(scene: THREE.Scene, quality: Quality) {
   scene.add(alarm)
   const crewKey = new THREE.SpotLight('#ffffff', CREW_KEY, 6.5, 0.36, 0.7, 1.2)
   scene.add(crewKey, crewKey.target)
-  return { alarm, sun, crewKey, sunPool: sunPoolLow }
+  /** Halves the sun's shadow map (down to 1024); false once it is there or there are no shadows. */
+  const shrinkShadow = () => {
+    if (!sun.castShadow || sun.shadow.mapSize.x <= 1024) return false
+    sun.shadow.mapSize.setScalar(sun.shadow.mapSize.x / 2)
+    sun.shadow.map?.dispose(); sun.shadow.map = null // re-made at the new size on the next shadow update
+    return true
+  }
+  return { alarm, sun, crewKey, sunPool: sunPoolLow, shrinkShadow }
 }
 
 const beamVert = /* glsl */ `
@@ -241,7 +246,8 @@ export function createPost(renderer: THREE.WebGLRenderer, scene: THREE.Scene, ca
     composer.addPass(gtao)
   }
   // a high threshold: the bright hall and screens stay crisp, only the sun and strips glow
-  composer.addPass(new UnrealBloomPass(new THREE.Vector2(w, h), 0.5, 0.5, 1.25))
+  const bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.5, 0.5, 1.25)
+  composer.addPass(bloom)
   for (const o of overlays) composer.addPass(o)
   const lens = new ShaderPass(LensShader)
   composer.addPass(lens)
@@ -249,7 +255,15 @@ export function createPost(renderer: THREE.WebGLRenderer, scene: THREE.Scene, ca
   return {
     composer,
     /** Drops ambient occlusion when the device turns out slower than guessed; false if it is already off. */
-    downgrade() { if (gtao?.enabled) { gtao.enabled = false; return true } return false },
+    dropOcclusion() { if (gtao?.enabled) { gtao.enabled = false; return true } return false },
+    /** Drops the composer's 4x MSAA (the grating crawls a little more, the fill cost falls by most of half); false if already off. */
+    dropAntialias() {
+      if (!composer.renderTarget1.samples) return false
+      for (const t of [composer.renderTarget1, composer.renderTarget2]) { t.samples = 0; t.dispose() } // re-made without samples on next use
+      return true
+    },
+    /** Drops bloom (its mip chain is several full-screen passes); false if already off. */
+    dropBloom() { if (bloom.enabled) { bloom.enabled = false; return true } return false },
     update(t: number, still: number) { lens.uniforms.time.value = t * still; lens.uniforms.grain.value = 0.035 * (still || 0.4) },
     /** The helmet visor's glass: how much of it is in view (0 = none) and how far down it has slid (1 = fully down). */
     setVisor(amount: number, down: number) { lens.uniforms.visor.value = amount; lens.uniforms.wipe.value = down },

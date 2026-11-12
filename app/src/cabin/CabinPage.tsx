@@ -107,6 +107,12 @@ export default function CabinPage() {
   const visor = useRef<HTMLDivElement>(null)
   const flash = useRef<HTMLDivElement>(null)
   const mist = useRef<HTMLDivElement>(null)
+  const root = useRef<HTMLDivElement>(null)
+  const captionEl = useRef<HTMLElement>(null)
+  /** On a phone the caption shows three lines; "More" opens the rest. Closed again at each stop. */
+  const [capOpen, setCapOpen] = useState(false)
+  /** Whether the caption's text is cut short, so "More" has something to open. */
+  const [capClamped, setCapClamped] = useState(false)
   const [intro, setIntro] = useState<IntroPhase>('off')
   const scene = useRef<CabinScene | null>(null)
   const [state, setState] = useState<'loading' | 'ready' | 'unsupported'>(() => (webglAvailable() ? 'loading' : 'unsupported'))
@@ -217,6 +223,20 @@ export default function CabinPage() {
   }, [reduced])
 
   useEffect(() => { if (data) scene.current?.update(data) }, [data, state])
+  useEffect(() => { setCapOpen(false) }, [stop])
+  // how far up from the bottom the caption card reaches (--cap-top): the visor's lower HUD and VITA's subtitle sit above it, never under it
+  useEffect(() => {
+    const el = captionEl.current, host = root.current
+    if (!el || !host || typeof ResizeObserver === 'undefined') return
+    const put = () => {
+      const r = el.getBoundingClientRect(), p = el.querySelector('p')
+      host.style.setProperty('--cap-top', `${r.height ? Math.round(host.clientHeight - r.top) : 0}px`)
+      if (p && !el.classList.contains('is-open')) setCapClamped(p.scrollHeight > p.clientHeight + 1)
+    }
+    const ro = new ResizeObserver(put); ro.observe(el); ro.observe(host); put()
+    const mo = new MutationObserver(put); mo.observe(el, { childList: true, subtree: true, characterData: true }) // a new stop's text, same card size
+    return () => { ro.disconnect(); mo.disconnect() }
+  }, [])
   // her robot pulses its face and stops to face you whenever VITA speaks: the brief, the dock's answers, the tour
   useEffect(() => { scene.current?.vitaTalk(vitaSpeaking) }, [vitaSpeaking, state])
   useEffect(() => () => window.clearTimeout(captionTimer.current), [])
@@ -322,7 +342,7 @@ export default function CabinPage() {
   }
 
   return (
-    <div className={`${intro === 'off' ? 'cabin' : 'cabin is-arriving'}${floating ? ' is-floating' : ''}${screen ? ' is-using' : ''}`}>
+    <div ref={root} className={`${intro === 'off' ? 'cabin' : 'cabin is-arriving'}${floating ? ' is-floating' : ''}${screen ? ' is-using' : ''}`}>
       <canvas ref={canvas} className="cabin-gl" role="img" aria-label="3D crew module. Scroll, use the arrow keys or the stop list to move through the tour. Press Enter at a wall screen to use it." />
 
       <div ref={mist} className="cabin-mist" aria-hidden="true" />
@@ -367,10 +387,11 @@ export default function CabinPage() {
       {floating && !screen && <FloatHint touch={touch} />}
       {floating && !screen && touch && <FloatPad onMove={(x, y, v) => scene.current?.move(x, y, v)} />}
 
-      <section className="cabin-caption cabin-panel" aria-live="polite" hidden={!!screen}>
+      <section ref={captionEl} className={`cabin-caption cabin-panel${capOpen ? ' is-open' : ''}`} aria-live="polite" hidden={!!screen}>
         <div className="cap-step">{String(stop + 1).padStart(2, '0')} / {String(STOP_COUNT).padStart(2, '0')}</div>
         <h1>{caps[stop]?.title}</h1>
-        <p>{caps[stop]?.text}</p>
+        <p id="cabin-cap-text">{caps[stop]?.text}</p>
+        {(capClamped || capOpen) && <button type="button" className="cap-more" aria-expanded={capOpen} aria-controls="cabin-cap-text" onClick={() => setCapOpen((o) => !o)}>{capOpen ? 'Less' : 'More'}</button>}
         {stepIn !== undefined && !floating && state === 'ready' && intro === 'off' && (
           <button type="button" className="cap-use" onClick={() => scene.current?.stepUp(stepIn)} aria-keyshortcuts="Enter">Use this screen ▸ <kbd>Enter</kbd></button>
         )}

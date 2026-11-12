@@ -29,7 +29,7 @@ describe('layout', () => {
 })
 
 describe('screen stops hold the screen and the astronaut in frame', () => {
-  for (const aspect of [16 / 9, 4 / 3, 9 / 16]) it(`at ${aspect.toFixed(2)}:1`, () => {
+  for (const aspect of [16 / 9, 4 / 3]) it(`at ${aspect.toFixed(2)}:1`, () => {
     const { stops } = layout(screens(), 8)
     for (const i of SCREEN_STOPS) {
       const stop = fitStop(stops[i], aspect)
@@ -61,9 +61,37 @@ describe('fitStop', () => {
     const stop = layout(screens(), 8).stops[3]
     expect(fitStop(stop, 16 / 9)).toBe(stop)
   })
-  it('backs the camera off in a portrait window instead of widening the lens past 66 degrees', () => {
-    const stop = layout(screens(), 8).stops[3], fitted = fitStop(stop, 9 / 16)
+  it('backs the camera off in a narrow window instead of widening the lens past 66 degrees', () => {
+    const stop = layout(screens(), 8).stops[3], fitted = fitStop(stop, 0.9)
     expect(fitted.pos.distanceTo(stop.pos)).toBeGreaterThan(0.3)
-    expect(fovFor(fitted, 9 / 16)).toBeLessThan(fovFor(stop, 9 / 16) + 0.01)
+    expect(fovFor(fitted, 0.9)).toBeLessThan(fovFor(stop, 0.9) + 0.01)
+  })
+})
+
+describe('on a phone held upright', () => {
+  for (const aspect of [9 / 16, 375 / 812]) it(`each wall screen fills most of the width, above the caption, at ${aspect.toFixed(2)}:1`, () => {
+    const { stops } = layout(screens(), 8)
+    for (const i of SCREEN_STOPS) {
+      const stop = fitStop(stops[i], aspect)
+      expect(stop.pos.distanceTo(stop.look)).toBeCloseTo(LOOK_D, 4)
+      const p = stop.core!.map((q) => ndc(stop, aspect, q))
+      const xs = p.map((q) => q.x), ys = p.map((q) => q.y)
+      for (const q of p) { expect(Math.abs(q.x), `stop ${i} x`).toBeLessThan(0.99); expect(q.z).toBeLessThan(1) }
+      expect(Math.max(...xs) - Math.min(...xs), `stop ${i} width`).toBeGreaterThan(1.4) // over 70% of the window across
+      expect((Math.max(...ys) + Math.min(...ys)) / 2, `stop ${i} sits above the middle`).toBeGreaterThan(0.05)
+      expect(Math.min(...ys), `stop ${i} clear of the caption`).toBeGreaterThan(-0.4)
+    }
+  })
+  it('the close-up holds the whole astronaut between the top bar and the caption', () => {
+    const aspect = 375 / 812, stop = fitStop(layout(screens(), 8).stops[4], aspect)
+    for (const q of stop.core!) {
+      const p = ndc(stop, aspect, q)
+      expect(Math.abs(p.x)).toBeLessThan(0.99); expect(p.y).toBeLessThan(0.88); expect(p.y).toBeGreaterThan(-0.45)
+    }
+  })
+  it('the fixed stops open the lens up so a phone sees more of the hall', () => {
+    const helmet = layout(screens(), 8).stops[0]
+    expect(fovFor(helmet, 16 / 9)).toBe(helmet.fov)
+    expect(fovFor(helmet, 375 / 812)).toBeGreaterThan(helmet.fov + 5)
   })
 })

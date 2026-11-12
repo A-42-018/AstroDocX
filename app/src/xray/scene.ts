@@ -12,6 +12,7 @@
  * lit, depth-sorted bone. A mask in the shader can show only a half, the top, the lower face, or a circle at a fingertip.
  */
 import * as THREE from 'three'
+import { startTier } from '../shell/perf'
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import type { NormalizedLandmark } from '@mediapipe/tasks-vision'
@@ -119,8 +120,9 @@ function holder(node: THREE.Object3D, material: THREE.Material) {
 }
 
 export async function createXray(canvas: HTMLCanvasElement): Promise<XrayScene> {
-  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, premultipliedAlpha: true })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
+  const low = startTier() === 'low'
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: !low, premultipliedAlpha: true })
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, low ? 1 : 2))
   renderer.setClearColor(0x000000, 0)
   const scene = new THREE.Scene()
   const camera = new THREE.OrthographicCamera(0, 1, 1, 0, 1, 40000)

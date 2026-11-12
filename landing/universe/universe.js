@@ -143,8 +143,10 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   /* ── 4. WebGL: one renderer, starfield, particle engine, intro effects ── */
+  /* the first guess reads the GPU (perf.js): a 16 GB laptop on Intel graphics is not a high-end device */
+  const PERF = window.ADX_PERF || null;
   const lowEnd = (navigator.deviceMemory && navigator.deviceMemory <= 4) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
-  let tier = (small() || lowEnd) ? 'low' : 'high';
+  let tier = (small() || lowEnd) ? 'low' : PERF ? PERF.tier : 'high';
   const DPR = { high: 1.75, mid: 1.5, low: 1.25 };
   const NEXT_TIER = { high: 'mid', mid: 'low' };
 
@@ -156,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function setTier(t) {
-    tier = t; if (stars) stars.setTier(t);
+    tier = t; if (PERF) PERF.learn(t); if (stars) stars.setTier(t);
     if (engine) engine.setTier(t);
     resize();
   }
@@ -262,6 +264,8 @@ document.addEventListener('DOMContentLoaded', function () {
   function frame(time) {
     if (!onScreen || document.hidden || staticMode) { running = false; return; }
     requestAnimationFrame(frame);
+    /* at most 60 frames a second: a 120/144 Hz screen would otherwise draw two or more times as many */
+    if (lastT && time - lastT < 1000 / 60 - 3.5) return;
     const dt = lastT ? Math.min(100, time - lastT) : 16; lastT = time;
     /* adaptive tier: frame time above 22 ms (smoothed) for 2 s drops one tier (high -> mid -> low), never back up */
     if (++frames > 45 && NEXT_TIER[tier]) {

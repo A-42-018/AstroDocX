@@ -18,6 +18,8 @@ export interface Stop {
   pos: THREE.Vector3; look: THREE.Vector3; fov: number; span?: [number, number]
   /** What the shot holds in frame (screen corners, the crew), and the screen it is aimed at: lets `fitStop` back the camera off where the window is narrow. */
   pts?: THREE.Vector3[]; ref?: THREE.Vector3
+  /** The one subject a phone held upright must show big (a screen's corners, the close-up's astronaut): `fitStop` frames only this there. */
+  core?: THREE.Vector3[]
 }
 export interface ScreenAt { pos: THREE.Vector3; normal: THREE.Vector3; w: number; h: number }
 /** The two walls' depth maps: left (-1) and right (+1). */
@@ -41,10 +43,18 @@ const bodyPts = (c: THREE.Vector3, side: THREE.Vector3) => [
 const FIT_FOV = 66
 /** Room left round the subjects at the frame's edges, degrees. */
 const MARGIN = 8
+/** Narrower than this (width / height) is a phone held upright: the stops frame their `core` alone, big, and above the caption. */
+export const PORTRAIT = 0.85
+/**
+ * In portrait: the lens a core subject is framed for and the room round it (degrees). The subject is held in the open band
+ * between the top bar and the caption card: BAND of the frame's height, its middle LIFT of the half-frame above the centre.
+ */
+const PORTRAIT_FOV = 66, PORTRAIT_MARGIN = 2.5, PORTRAIT_BAND = 0.62, PORTRAIT_LIFT = 0.22
 
 /** The vertical field of view a stop needs at `aspect` (width / height). */
 export function fovFor(s: Stop, aspect: number) {
-  if (!s.span) return s.fov
+  // a fixed lens (the helmet, the overview, the window) opens up as the window narrows, so a phone sees more than a slot of the hall
+  if (!s.span) return aspect < 1 ? Math.min(72, s.fov + (1 - aspect) * 16) : s.fov
   const fromW = 2 * Math.atan(Math.tan((s.span[0] * DEG) / 2) / aspect) / DEG
   return THREE.MathUtils.clamp(Math.max(s.fov, fromW, s.span[1]), 30, 72)
 }
@@ -81,7 +91,7 @@ function toSegment(p: THREE.Vector3, a: THREE.Vector3, b: THREE.Vector3) {
  * Aims a camera at `cam` to hold all of `pts` in frame: the look sits in the middle of their spread across and up,
  * and the span is that spread plus a margin each side.
  */
-function frame(cam: THREE.Vector3, ref: THREE.Vector3, pts: THREE.Vector3[]): Pick<Stop, 'look' | 'span'> {
+function frame(cam: THREE.Vector3, ref: THREE.Vector3, pts: THREE.Vector3[], margin = MARGIN): Pick<Stop, 'look' | 'span'> {
   const yaw0 = Math.atan2(ref.x - cam.x, ref.z - cam.z)
   let y0 = Infinity, y1 = -Infinity, p0 = Infinity, p1 = -Infinity
   for (const q of pts) {
@@ -92,7 +102,7 @@ function frame(cam: THREE.Vector3, ref: THREE.Vector3, pts: THREE.Vector3[]): Pi
   }
   const yaw = yaw0 + (y0 + y1) / 2, pitch = (p0 + p1) / 2
   const look = cam.clone().add(new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch)).multiplyScalar(5))
-  return { look, span: [(y1 - y0) / DEG + MARGIN * 2, (p1 - p0) / DEG + MARGIN * 2] }
+  return { look, span: [(y1 - y0) / DEG + margin * 2, (p1 - p0) / DEG + margin * 2] }
 }
 
 /**
@@ -127,9 +137,9 @@ function screenShot(s: ScreenAt, withCrew: boolean, walls: Walls | null): { stop
       }
     }
     const shot = (): { stop: Stop; crew: Slot | null } => {
-      if (!best) return { stop: { pos: cam, ...frame(cam, s.pos, corners), fov: 44, pts: corners, ref: s.pos }, crew: null }
+      if (!best) return { stop: { pos: cam, ...frame(cam, s.pos, corners), fov: 44, pts: corners, ref: s.pos, core: corners }, crew: null }
       const c = best.c, face = Math.atan2(cam.x - c.x, cam.z - c.z)
-      return { stop: { pos: cam, ...best.f, fov: 44, pts: best.pts, ref: s.pos }, crew: { pos: c.toArray() as V3, rot: [0.1, face + 0.45, 0.07] } }
+      return { stop: { pos: cam, ...best.f, fov: 44, pts: best.pts, ref: s.pos, core: corners }, crew: { pos: c.toArray() as V3, rot: [0.1, face + 0.45, 0.07] } }
     }
     if (!fallback) fallback = shot()
     if (sees && (best || !withCrew)) return shot()
@@ -150,7 +160,7 @@ export function closeShot(c: THREE.Vector3, s: ScreenAt, walls: Walls | null): {
     s.pos.clone().addScaledVector(right, x * s.w).add(new THREE.Vector3(0, y * s.h, 0)))
   const corners = [-1, 1].flatMap((x) => [-1, 1].map((y) =>
     s.pos.clone().addScaledVector(right, x * (s.w / 2 + 0.08)).add(new THREE.Vector3(0, y * (s.h / 2 + 0.08), 0))))
-  let best: { score: number; dir: THREE.Vector3; pos: THREE.Vector3; f: ReturnType<typeof frame>; pts: THREE.Vector3[] } | null = null
+  let best: { score: number; dir: THREE.Vector3; pos: THREE.Vector3; f: ReturnType<typeof frame>; pts: THREE.Vector3[]; body: THREE.Vector3[] } | null = null
   for (const turn of [0, 0.25, -0.25, 0.5, -0.5, 0.8, -0.8]) for (const d of [3.4, 4.0, 4.6]) {
     const dir = home.clone().applyAxisAngle(UP, turn), pos = c.clone().addScaledVector(dir, d).setY(c.y + 0.45)
     if (walls && (Math.abs(pos.x) > reach(walls, pos) - 0.4 || Math.abs(pos.z) > 13.6)) continue // outside the hall
@@ -158,17 +168,17 @@ export function closeShot(c: THREE.Vector3, s: ScreenAt, walls: Walls | null): {
     const seesScreen = !samples.some((q) => cuts(walls, pos, q))
     const clear = !samples.some((q) => toSegment(c, pos, q) < CLEAR) // the astronaut does not stand in front of the live view
     const side2 = new THREE.Vector3().crossVectors(UP, c.clone().sub(pos)).normalize().multiplyScalar(BODY_R)
-    const pts = [...corners, ...bodyPts(c, side2)]
+    const body = bodyPts(c, side2), pts = [...corners, ...body]
     const f = frame(pos, c, pts)
     const fwd = f.look.clone().sub(pos).setY(0).normalize()
     const onRight = c.clone().sub(f.look).setY(0).dot(new THREE.Vector3().crossVectors(fwd, UP)) // + when the astronaut is right of centre
     const score = f.span![0] + (seesScreen ? 0 : 60) + (clear ? 0 : 18) + (onRight > 0 ? 0 : 12) + Math.abs(turn) * 4
-    if (!best || score < best.score) best = { score, dir, pos, f, pts }
+    if (!best || score < best.score) best = { score, dir, pos, f, pts, body }
   }
   // no clean angle: the old straight close-up from the hall side
   const dir = best?.dir ?? home, pos = best?.pos ?? c.clone().addScaledVector(home, 4.2).setY(c.y + 0.45)
   const f = best?.f ?? { look: c.clone().setY(c.y + 0.6).addScaledVector(new THREE.Vector3().crossVectors(home, UP).normalize(), 0.75), span: undefined }
-  return { stop: { pos, look: f.look, fov: 46, span: f.span, pts: best?.pts, ref: s.pos }, rot: [0.06, Math.atan2(dir.x, dir.z) - 0.4, 0.05] }
+  return { stop: { pos, look: f.look, fov: 46, span: f.span, pts: best?.pts, ref: s.pos, core: best?.body }, rot: [0.06, Math.atan2(dir.x, dir.z) - 0.4, 0.05] }
 }
 
 /** The look, set LOOK_D ahead of the camera along the same line, so a path through the stops' looks turns the view at an even rate. */
@@ -182,6 +192,7 @@ function evenLook(s: Stop): Stop {
  * rather than the lens widening past what looks natural and cutting the subjects off.
  */
 export function fitStop(s: Stop, aspect: number, walls: Walls | null = null): Stop {
+  if (aspect < PORTRAIT && s.core && s.ref) return portraitStop(s, aspect, walls)
   if (!s.pts || !s.ref || !s.span || fovFor(s, aspect) <= FIT_FOV) return s
   const back = s.pos.clone().sub(s.look).normalize()
   let best = s
@@ -194,6 +205,34 @@ export function fitStop(s: Stop, aspect: number, walls: Walls | null = null): St
     if (fovFor(best, aspect) <= FIT_FOV) break
   }
   return best
+}
+
+/**
+ * A stop for a phone held upright. Holding the screen and the astronaut beside it across a window that narrow leaves the
+ * screen a sliver, so the shot keeps only its `core` (the screen, or the close-up's astronaut) with a slim margin: the camera
+ * slides along its line of sight to the nearest place, in the hall and with a clear view, where the core fits the lens, then
+ * tips down a little so the subject sits in the open space above the caption card instead of behind it.
+ */
+function portraitStop(s: Stop, aspect: number, walls: Walls | null): Stop {
+  const core = s.core!, ref = s.ref!, fwd = s.look.clone().sub(s.pos).normalize()
+  /** The framed stop with a lens tall enough for the subject to fit the band, tipped down so the band's middle is on it. */
+  const lifted = (f: Stop) => {
+    const tall: Stop = { ...f, span: [f.span![0], f.span![1] / PORTRAIT_BAND] }
+    const drop = Math.atan(PORTRAIT_LIFT * Math.tan((fovFor(tall, aspect) * DEG) / 2))
+    const dir = f.look.clone().sub(f.pos).normalize()
+    dir.applyAxisAngle(new THREE.Vector3().crossVectors(dir, UP).normalize(), -drop)
+    return evenLook({ ...tall, look: f.pos.clone().add(dir) })
+  }
+  let pick: Stop | null = null
+  for (let k = -12; k <= 18; k++) { // from 2.4 m nearer to 3.6 m further back, nearest first: the first fit is the biggest view
+    const pos = s.pos.clone().addScaledVector(fwd, -k * 0.2)
+    if (core.some((q) => pos.distanceTo(q) < 1.2)) continue
+    if (walls && (Math.abs(pos.x) > reach(walls, pos) - 0.4 || Math.abs(pos.z) > 13.6 || pos.y > 3.4 || pos.y < -2.2)) continue
+    if (walls && core.some((q) => cuts(walls, pos, q))) continue
+    pick = lifted({ ...s, pos, ...frame(pos, ref, core, PORTRAIT_MARGIN) })
+    if (fovFor(pick, aspect) <= PORTRAIT_FOV) break
+  }
+  return pick ?? s
 }
 
 /**

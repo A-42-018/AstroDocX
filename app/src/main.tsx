@@ -4,8 +4,10 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
 import './styles/index.css'
 import { markSystemsLoaded } from './shell/splash'
+import { markDocument } from './shell/perf'
 
 markSystemsLoaded()
+markDocument()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

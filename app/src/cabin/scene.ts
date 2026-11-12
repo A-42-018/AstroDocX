@@ -16,6 +16,7 @@ import { BOOST, PITCH_MAX, SPEED, anglesOf, constrain, dirOf, wanted, type HallB
 import { dampQuat, smoothDamp, smoothDampV, type Spring } from './motion'
 import { LOOK_D as LOOK_AHEAD, closeShot, fitStop, fovFor, layout, type ScreenAt, type Stop, type Walls } from './shots'
 import { wallMap, wallProbe } from './wall'
+import { learn } from '../shell/perf'
 
 /*
  * The 3D cabin: the hall (hall.ts, lighting.ts) with its working consoles (consoles.ts), four wall screens running the real console (screens.ts), the crew
@@ -125,12 +126,13 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const quality = pickQuality()
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: quality !== 'low', powerPreference: 'high-performance' })
   const size = () => [canvas.clientWidth || innerWidth, canvas.clientHeight || innerHeight] as const
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)) // with 4x MSAA, 2x on a Retina screen looks the same and costs ~1.8x the pixels
+  // with 4x MSAA, 2x on a Retina screen looks the same and costs ~1.8x the pixels; below high, one pixel per CSS pixel
+  renderer.setPixelRatio(Math.min(devicePixelRatio, quality === 'high' ? 1.5 : 1))
   renderer.setSize(...size(), false)
   renderer.toneMapping = THREE.ACESFilmicToneMapping
   renderer.toneMappingExposure = exposureAt(0)
   renderer.shadowMap.enabled = quality !== 'low'
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap
+  renderer.shadowMap.type = quality === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap // soft filtering samples the map many times a pixel
   renderer.shadowMap.autoUpdate = false // the hall is static and the crew drift slowly: refreshed every few frames in the loop
   const scene = new THREE.Scene()
   scene.background = new THREE.Color('#05080d')
@@ -143,7 +145,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const { composer } = post
 
   /* ---------- lighting and the hall ---------- */
-  const { alarm, crewKey, sunPool } = addLights(scene, quality)
+  const { alarm, crewKey, sunPool, shrinkShadow } = addLights(scene, quality)
   const space = createSpace(scene, TEXTURES, quality !== 'low' && renderer.capabilities.maxTextureSize >= 4096, quality !== 'low')
   const beam = createSunBeam(scene)
   // the loaders all report to three's default manager; files keep joining the queue, so the loader never lets the bar go back
@@ -597,8 +599,14 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const frustum = new THREE.Frustum(), viewProj = new THREE.Matrix4()
   const seen = (o: THREE.Object3D) => frustum.intersectsObject(o)
   let frameNo = 0
-  const frame = () => {
+  // at most 60 frames a second (30 once the governor gives up on 60): a 120 or 144 Hz laptop screen would otherwise
+  // have the cabin draw two or more times the frames for no visible gain
+  let cap = 60, lastFrame = -Infinity
+  const frame = (now = performance.now()) => {
     raf = requestAnimationFrame(frame)
+    const iv = 1000 / cap
+    if (now - lastFrame < iv - 3.5) return
+    lastFrame = Math.max(lastFrame + iv, now - iv) // on the beat, so 144 Hz still averages 60 rather than 48
     const raw = clock.getDelta(), dt = Math.min(raw, 0.05), t = clock.elapsedTime, still = reduced ? 0 : 1
     govern(raw, t)
     if (arriving()) { arrive(t, dt); finishFrame(t, dt, still); return }
@@ -761,20 +769,33 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     screens.render(camera, crew.holders().filter((h) => h.visible).map((h) => h.getWorldPosition(new THREE.Vector3())), dt)
   }
   /**
-   * Steps down while frames stay slow, a second at a time: ambient occlusion off first, then the resolution, down to
-   * 0.75 of the screen's. Frame times count from a few seconds after the hall is ready (the screens load then), and
-   * long stalls (a tab switch, a screen loading) are not the steady rate.
+   * Steps down while frames stay slow (under ~50 fps over about a second): ambient occlusion off, the Retina extra
+   * pixels, a smaller shadow map, bloom, antialiasing, then the resolution down to 0.7 of the screen's, and at last a
+   * steady 30 fps rather than a jittery 40. Frame times count from a couple of seconds after the hall is ready, and
+   * long stalls (a tab switch, a screen loading) are not the steady rate. How far it got is remembered (shell/perf.ts),
+   * so the next visit starts there.
    */
-  const gov = { n: 0, sum: 0, pr: renderer.getPixelRatio() }
+  const gov = { n: 0, sum: 0, pr: renderer.getPixelRatio(), done: false }
+  const setPr = (pr: number) => { gov.pr = pr; renderer.setPixelRatio(pr); composer.setPixelRatio(pr) }
+  const ladder: (() => boolean)[] = [
+    () => post.dropOcclusion() && (learn('mid'), true),
+    () => gov.pr > 1 && (setPr(1), true),
+    () => shrinkShadow(),
+    () => post.dropBloom() && (learn('low'), true),
+    () => post.dropAntialias() && (learn('low'), true),
+    () => gov.pr > 0.85 && (setPr(0.85), true),
+    () => gov.pr > 0.7 && (setPr(0.7), true),
+  ]
   function govern(raw: number, t: number) {
-    if (!ready || t - readyAt < 3 || document.hidden || raw > 0.25) return
+    if (gov.done || !ready || t - readyAt < 2 || document.hidden || raw > 0.25) return
     gov.n++; gov.sum += raw
-    if (gov.n < 60) return
+    if (gov.n < 45) return
     const avg = gov.sum / gov.n
     gov.n = gov.sum = 0
-    if (avg < 1 / 45 || post.downgrade() || gov.pr <= 0.75) return
-    gov.pr = Math.max(0.75, gov.pr - 0.25)
-    renderer.setPixelRatio(gov.pr); composer.setPixelRatio(gov.pr)
+    if (avg < 1 / 50) return
+    for (const step of ladder) if (step()) { renderer.shadowMap.needsUpdate = true; return }
+    if (avg > 1 / 40) { cap = 30; learn('low') }
+    gov.done = true
   }
   if (opts.intro) setIntro('fly', 0)
   frame()

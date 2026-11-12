@@ -1,4 +1,7 @@
 /* Utilities win over every other layer, so keep them single-purpose. */
 @layer utilities {
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* Slower devices (shell/perf.ts marks <html data-perf="low">): frosted glass over an animated sky or the 3D cabin is
+     re-blurred every frame, so it goes; the panels' own dark fill keeps them readable. */
+  [data-perf="low"] *, [data-perf="low"] *::before, [data-perf="low"] *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 }
