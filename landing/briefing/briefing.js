@@ -27,6 +27,20 @@ const skipBtn = $('#skip'), phase = $('#phase'), steps = [...$('#steps').childre
 const vitaId = $('#vitaId'), vitaState = $('#vitaState')
 const doors = [...document.querySelectorAll('.door')]
 
+/* the NOVA dock: a slim bar by default; Expand lifts the whole conversation over the page */
+const dock = $('.dock'), dockX = $('#dockX'), stage = $('.stage')
+function setDock(open) {
+  if (open === dock.classList.contains('open')) return
+  if (open) stage.style.minHeight = stage.offsetHeight + 'px'   // keep the bar's room so the page doesn't jump
+  dock.classList.toggle('open', open)
+  if (!open) stage.style.minHeight = ''
+  dockX.setAttribute('aria-expanded', String(open)); dockX.textContent = open ? 'Collapse' : 'Expand'
+  thread.scrollTop = thread.scrollHeight
+}
+dockX.addEventListener('click', () => setDock(!dock.classList.contains('open')))
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && dock.classList.contains('open') && !document.querySelector('#czReveal:not([hidden])')) { setDock(false); dockX.focus() } })
+addEventListener('pointerdown', (e) => { if (dock.classList.contains('open') && !dock.contains(e.target)) setDock(false) })
+
 /* the blobs, line art and hazard facts: facts come from the same faq.json VITA answers from */
 let faqData = null
 function getFact(id) {
@@ -291,6 +305,7 @@ async function ask(q) {
   if (!q || (busy && ready)) return
   if (!ready) skipIntro({ quiet: true })   // the answer is coming; don't start reading the intro out
   dropHover()
+  if (!TOUR_INTENT.test(q)) setDock(true)   // an answer needs room to be read: lift the conversation up
   addMine(q)
   chatLog.push({ role: 'user', text: q })
   const tok = ++token
@@ -423,7 +438,7 @@ setupVoice()
 
 /* NOVA herself: a nudge */
 const bot = $('#bot')
-function poke() { if (ready && !busy) say({ text: 'Still here. Ask me something, or pick a door below.' }) }
+function poke() { if (ready && !busy) say({ text: 'Still here. Ask me something, or pick a door above.' }) }
 bot.addEventListener('click', poke)
 bot.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); poke() } })
 
