@@ -141,6 +141,25 @@ export interface FaceScan {
   seconds: number
 }
 
+/**
+ * One guided ultrasound scan (simulated imagery). Kept apart from `Reading`: like face scans, ultrasound results are
+ * logged for Ground but never enter the engine's baselines or raise alerts.
+ */
+export interface UsScan {
+  id?: number
+  crewId: string
+  ts: Timestamp
+  /** Exam id: cardiac, vascular, lung, muscle or ocular. */
+  exam: string
+  values: { id: string; value: number; baseline: number; status: Status }[]
+  /** Worst status among the values. */
+  status: Status
+  /** Image quality 0 to 1 at the moment of capture. */
+  quality: number
+  /** The flight surgeon was asked to look at it. */
+  flagged: boolean
+}
+
 export type WearableKind = 'hr' | 'spo2' | 'stress' | 'sleep'
 
 /**

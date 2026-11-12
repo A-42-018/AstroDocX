@@ -1,0 +1,79 @@
+/* Wi-Fi sensing (simulated CSI): the live channel pictures, the DSP readout and the research notes. */
+@layer pages {
+  .rf { display: grid; gap: 14px; grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr); align-items: start; }
+  .rf-head, .rf-live { grid-column: 1; }
+  .rf-read { grid-column: 2; grid-row: 1 / span 2; }
+  .rf-hard, .rf-sweep { grid-column: 1 / -1; }
+  .rf-eb { margin: 0; font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--t3); }
+  .rf-h1 { margin: 6px 0 8px; font-family: var(--disp); font-size: 30px; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
+  .rf-intro { margin: 0 0 14px; max-width: 70ch; font-size: 13.5px; line-height: 1.55; color: var(--t2); }
+  .rf-intro b { color: var(--watch); font-weight: 600; }
+
+  .rf-flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .rf-flow li { position: relative; display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--edge); background: var(--cy-soft); font-size: 12px; color: var(--t3); }
+  .rf-flow li:not(:last-child)::after { content: '›'; position: absolute; right: -9px; top: 50%; transform: translateY(-50%); color: var(--cy); font-size: 18px; line-height: 1; z-index: 1; }
+  .rf-flow svg { color: var(--cy); }
+  .rf-flow b { font-family: var(--disp); font-size: 14px; color: var(--t1); font-weight: 600; }
+
+  .rf-seg { flex-wrap: wrap; }
+  .rf-blurb { margin: 8px 0 12px; font-size: 13px; color: var(--t3); min-height: 2.6em; }
+
+  .rf-scope { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr) 150px; }
+  .rf-fig { margin: 0; min-width: 0; }
+  .rf-fig-full { grid-column: 1 / -1; }
+  .rf-fig figcaption { margin-bottom: 4px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--t3); }
+  .rf-cv { display: block; width: 100%; background: #03090f; border: 1px solid var(--edge); }
+
+  .rf-meter { position: relative; height: 22px; margin: 6px 0 14px; border: 1px solid var(--edge); background: #03090f; overflow: hidden; }
+  .rf-meter span { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, rgba(54, 226, 245, 0.25), rgba(54, 226, 245, 0.6)); transition: width var(--dur-3) var(--ease); }
+  .rf-meter em { position: relative; display: block; padding: 0 8px; font: 600 11px/22px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; font-style: normal; color: var(--t1); }
+  .rf-note { margin: 12px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--t3); }
+  .rf-note a { color: var(--cy-hi); }
+  .rf-note code { font-family: var(--mono); font-size: 11.5px; color: var(--t2); }
+
+  .rf-rec { display: grid; gap: 8px; margin-top: 14px; padding: 12px; border: 1px solid color-mix(in srgb, var(--watch) 60%, transparent); background: color-mix(in srgb, var(--watch) 8%, transparent); }
+  .rf-rec p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--t2); }
+  .rf-rec .hbtn { justify-self: start; display: inline-flex; gap: 6px; align-items: center; }
+
+  .rf-challenges { margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .rf-challenges dt { font-family: var(--disp); font-size: 14px; font-weight: 600; color: var(--t1); margin-bottom: 3px; }
+  .rf-challenges dd { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--t3); }
+
+  .rf-sweep-intro { margin: 0 0 12px; max-width: 90ch; font-size: 13px; line-height: 1.55; color: var(--t2); }
+  .rf-sweep-seg { margin-bottom: 12px; }
+  .rf-3d { position: relative; width: 100%; aspect-ratio: 16 / 9; min-height: 320px; max-height: 78vh; overflow: hidden; background: #020611; border: 1px solid var(--edge-hi); }
+  .rf-3d-cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .rf-3d-load, .rf-3d-wait { position: absolute; inset: 0; display: grid; place-items: center; font: 600 12px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--cy-hi); background: rgba(2, 6, 17, 0.75); }
+  .rf-3d-wait { background: #020611; }
+  .rf-3d-none { margin: 0; padding: 24px; font-size: 13px; color: var(--t3); border: 1px solid var(--edge); }
+  /* the Wi-Fi view's HUD, laid out for a panel instead of the full screen */
+  .rf-3d .wifi-top { top: 10px; }
+  .rf-3d .wifi-count { left: 12px; bottom: 12px; padding: 8px 14px; }
+  .rf-3d .wifi-count b { font-size: clamp(15px, 2vw, 24px); }
+  .rf-3d .wifi-count span { font-size: clamp(11px, 1.2vw, 14px); }
+  .rf-3d .wifi-cards { right: 12px; bottom: 12px; width: min(250px, 36%); max-height: calc(100% - 60px); }
+  .rf-3d .wifi-note { display: none; }
+  .rf-cabin { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr) 300px; align-items: start; }
+  .rf-cabin-cv { display: block; width: 100%; aspect-ratio: 2 / 1; background: #03090f; border: 1px solid var(--edge-hi); }
+  .rf-cabin-side { display: grid; gap: 12px; min-width: 0; }
+  .rf-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--t2); }
+  .rf-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 50%; }
+  .rf-found { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .rf-found li { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--edge); font-size: 13px; color: var(--t3); }
+  .rf-found b { font-family: var(--disp); font-weight: 600; }
+  .rf-found-empty { color: var(--t3); }
+
+  @media (max-width: 1000px) {
+    .rf-cabin { grid-template-columns: minmax(0, 1fr); }
+    .rf { grid-template-columns: minmax(0, 1fr); }
+    .rf-head, .rf-live, .rf-read, .rf-hard, .rf-sweep { grid-column: 1; grid-row: auto; }
+    .rf-challenges { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 600px) {
+    .rf-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .rf-flow li::after { display: none; }
+    .rf-scope { grid-template-columns: minmax(0, 1fr); }
+    .rf-challenges { grid-template-columns: minmax(0, 1fr); }
+    .rf-h1 { font-size: 24px; }
+  }
+}

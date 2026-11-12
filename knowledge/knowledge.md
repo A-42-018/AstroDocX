@@ -42,6 +42,18 @@ Daily Check-in: Opens on an optional face scan (below), then mood, sleep quality
 URL: https://github.com/A-42-018/AstroDocX
 Face scan (experimental): A 30-second webcam scan estimates heart rate, breathing and a rough HRV from the tiny colour change of facial skin (remote photoplethysmography, POS method), each with a quality score. The video never leaves the device and only the numbers are kept. A webcam is not a medical sensor: scans are context, never a diagnosis
 
+## [adx-x-ray-mirror] AstroDocX: X-Ray Mirror
+URL: https://github.com/A-42-018/AstroDocX
+X-Ray Mirror: A full-screen camera mirror at /app/xray: face and hand tracking (MediaPipe, on device) drive a 3D overlay of skull, jaw, brain, face muscles and hand bones, with layers, look and fit settings, anatomy name tags and a snapshot. A vitals card reads heart rate, HRV and breathing from the same video with the face-scan pipeline and can save the reading
+
+## [adx-wi-fi-sensing-simulated] AstroDocX: Wi-Fi Sensing (simulated)
+URL: https://github.com/A-42-018/AstroDocX
+Wi-Fi Sensing (simulated): /app/rf: a simulated two-antenna Wi-Fi CSI receiver and the real pipeline on it (conjugate ratio, Hampel filter, subcarrier merge, spectral peak) read breathing rate, presence and pauses, and hold back with a reason when a crewmate moves. A cabin sweep maps simulated link disturbances to a plan-view heat map with tracked crew, and a 3D Wi-Fi sensing view shows the hall as a dot cloud. Logged for Ground, never raises alerts
+
+## [adx-ultrasound-simulated] AstroDocX: Ultrasound (simulated)
+URL: https://github.com/A-42-018/AstroDocX
+Ultrasound (simulated): /app/ultrasound: five guided exams (heart, neck vessels, lungs, thigh muscle, eye) with a procedural B-mode picture, a steerable probe, automatic capture, measurements against the person's preflight values, scan history, and a flag for the flight surgeon. Probe sites are pinned on the 3D anatomical body. Never raises alerts
+
 ## [adx-watch-experimental] AstroDocX: Watch (experimental)
 URL: https://github.com/A-42-018/AstroDocX
 Watch (experimental): Connect a Haylou Solar 5 smartwatch over Web Bluetooth (Chrome or Edge) for live heart rate and SpO₂, plus its stored stress and sleep history. Nothing is saved unless you switch on *Save watch data on this device*; saved data is linked to one crew member, exportable as CSV or JSON and erasable in one click
@@ -84,7 +96,7 @@ NASA Data: The NASA basis of the console in one screen: for each of NASA's five 
 
 ## [adx-platform] AstroDocX: Platform
 URL: https://github.com/A-42-018/AstroDocX
-Platform: Offline-first installable PWA, IndexedDB on the device, 6-crew 30-day demo mission preloaded
+Platform: Offline-first installable PWA that adapts its quality to slower devices and phones, IndexedDB on the device, 6-crew 30-day demo mission preloaded
 
 ## [adx-roadmap] AstroDocX roadmap (README)
 URL: https://github.com/A-42-018/AstroDocX
@@ -92,7 +104,7 @@ Not built yet (Roadmap): support for more wearables than the one watch, wearable
 
 ## [adx-screens] AstroDocX Crew Console screens
 URL: https://astrodocx.vercel.app/app/
-The Crew Console at /app/ has 9 screens: Status Board (/board), Crew Doctor (/doctor), Alerts (/alerts), Trends (/trends), Check-in (/checkin), Simulator (/simulator), Ground Sync (/sync), Ground View (/ground), NASA Data (/nasa). It is an offline-first installable PWA.
+The Crew Console at /app/ has 11 screens: Status Board (/board), Crew Doctor (/doctor), Alerts (/alerts), Trends (/trends), Check-in (/checkin), Wi-Fi Sensing (/rf), Ultrasound (/ultrasound), Simulator (/simulator), Ground Sync (/sync), Ground View (/ground), NASA Data (/nasa). It is an offline-first installable PWA.
 
 ## [adx-cabin] AstroDocX 3D cabin
 URL: https://astrodocx.vercel.app/app/cabin

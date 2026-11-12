@@ -123,6 +123,7 @@ export default function CabinPage() {
   const [picked, setPicked] = useState<string | null>(null)
   /** Float mode: drifting freely through the hall instead of following the tour. */
   const [floating, setFloating] = useState(false)
+  const [wifi, setWifi] = useState(false)
   const [creditsOpen, setCreditsOpen] = useState(false)
   /** A wall screen stepped up to: which, and the console page it is showing (the frame reports it). */
   const [screen, setScreen] = useState<{ i: number; path: string; label: string } | null>(null)
@@ -342,7 +343,7 @@ export default function CabinPage() {
   }
 
   return (
-    <div ref={root} className={`${intro === 'off' ? 'cabin' : 'cabin is-arriving'}${floating ? ' is-floating' : ''}${screen ? ' is-using' : ''}`}>
+    <div ref={root} className={`${intro === 'off' ? 'cabin' : 'cabin is-arriving'}${floating ? ' is-floating' : ''}${screen ? ' is-using' : ''}${wifi ? ' is-wifi' : ''}`}>
       <canvas ref={canvas} className="cabin-gl" role="img" aria-label="3D crew module. Scroll, use the arrow keys or the stop list to move through the tour. Press Enter at a wall screen to use it." />
 
       <div ref={mist} className="cabin-mist" aria-hidden="true" />
@@ -365,7 +366,12 @@ export default function CabinPage() {
           onClick={() => scene.current?.setFloat(!floating)} title={floating ? 'Fly back to the tour (F or Esc)' : 'Drift freely through the module (F)'}>
           {floating ? '↩ Back to tour' : '✥ Explore'}
         </button>
-        <button type="button" className="cabin-replay" onClick={() => scene.current?.replayIntro()}>↺ Replay arrival</button>
+        <button type="button" className="cabin-explore cabin-wifi" aria-pressed={wifi} disabled={state !== 'ready' || intro !== 'off' || !!screen}
+          onClick={() => { const on = !wifi; setWifi(on); scene.current?.setWifi(on); if (on && stop === 0) scene.current?.goTo(1) }}
+          title={wifi ? 'Back to the normal view' : 'See the cabin as Wi-Fi sensing would (simulated)'}>
+          {wifi ? '↩ Normal view' : '📡 Wi-Fi view'}
+        </button>
+        <button type="button" className="cabin-replay" onClick={() => { if (wifi) { setWifi(false); scene.current?.setWifi(false) } scene.current?.replayIntro() }}>↺ Replay arrival</button>
       </header>
 
       {screen && (

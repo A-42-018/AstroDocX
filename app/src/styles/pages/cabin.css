@@ -287,3 +287,34 @@
 .cabin.is-using .cabin-brand, .cabin.is-using .cabin-sound, .cabin.is-using .cabin-explore, .cabin.is-using .cabin-replay { visibility: hidden; }
 
 .cabin.is-using .cabin-credits { display: none; }
+
+/* Wi-Fi sensing view (cabin/wifi.ts): the HUD over the point-cloud cabin. The ordinary tour panels step aside. */
+.is-wifi .cabin-caption, .is-wifi .cabin-visor, .is-wifi .cabin-card, .is-wifi .cabin-mist { opacity: 0; pointer-events: none; }
+.wifi-ui { position: absolute; inset: 0; z-index: 4; pointer-events: none; font-family: var(--ui); }
+.wifi-ui[hidden] { display: none; }
+.wifi-top { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; align-items: center; padding: 6px 14px; background: rgba(2, 8, 14, .78); border: 1px solid var(--edge-hi); font: 600 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--t2); white-space: nowrap; }
+.wifi-top b { color: var(--cy-hi); }
+.wifi-top em { font-style: normal; color: #000; background: var(--watch); padding: 1px 8px; }
+.wifi-count { position: absolute; left: var(--sp-5); bottom: var(--sp-5); display: grid; gap: 4px; padding: 12px 18px; background: rgba(2, 8, 14, .72); border-left: 3px solid var(--cy); }
+.wifi-count b { font: 700 clamp(18px, 2.4vw, 30px) var(--ui); color: #fff; letter-spacing: .01em; }
+.wifi-count span { font: 500 clamp(12px, 1.4vw, 17px) var(--ui); color: var(--cy-hi); }
+.wifi-cards { position: absolute; right: var(--sp-5); bottom: 84px; width: min(270px, 44vw); margin: 0; padding: 0; list-style: none; display: grid; gap: 5px; max-height: 60vh; overflow: hidden; }
+.wifi-cards li { display: grid; grid-template-columns: 1fr auto; gap: 1px 10px; padding: 6px 10px; background: rgba(2, 10, 16, .82); border: 1px solid var(--cy); border-radius: 6px; }
+.wifi-cards li[data-state="Active"] { border-color: var(--watch); }
+.wifi-cards li[data-state="Elevated breathing"] { border-color: var(--act); }
+.wifi-cards b { font: 700 13px var(--ui); color: #fff; }
+.wifi-cards span { grid-column: 1; font: 500 11.5px var(--ui); color: var(--t2); }
+.wifi-bars { grid-column: 2; grid-row: 1 / span 2; align-self: center; display: inline-flex; align-items: flex-end; gap: 2px; height: 16px; }
+.wifi-bars u { display: block; width: 4px; background: rgba(160, 210, 230, .25); }
+.wifi-bars u:nth-child(1) { height: 25%; } .wifi-bars u:nth-child(2) { height: 50%; } .wifi-bars u:nth-child(3) { height: 75%; } .wifi-bars u:nth-child(4) { height: 100%; }
+.wifi-bars[data-bars="1"] u:nth-child(-n+1), .wifi-bars[data-bars="2"] u:nth-child(-n+2), .wifi-bars[data-bars="3"] u:nth-child(-n+3), .wifi-bars[data-bars="4"] u { background: var(--cy-hi); }
+.wifi-note { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); margin: 0; font: 500 10.5px var(--mono); letter-spacing: .06em; color: var(--t3); text-align: center; max-width: 46vw; }
+.wifi-chips { position: absolute; inset: 0; overflow: hidden; }
+.wifi-chip { position: absolute; left: 0; top: 0; padding: 2px 8px; font: 600 10.5px var(--mono); letter-spacing: .04em; color: #fff; background: rgba(2, 10, 16, .72); border: 1px solid var(--cy); white-space: nowrap; will-change: transform; }
+.wifi-chip[data-state="Active"] { border-color: var(--watch); }
+.wifi-chip[data-state="Elevated breathing"] { border-color: var(--act); }
+@media (max-width: 760px) {
+  .wifi-top span { display: none; }
+  .wifi-cards { width: min(220px, 52vw); max-height: 34vh; }
+  .wifi-note { display: none; }
+}

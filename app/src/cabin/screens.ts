@@ -222,6 +222,8 @@ export function createScreens(host: HTMLElement, base: string, events: ScreenEve
     /** How far screen `i`'s live view has faded in (1 = fully covering the panel beneath). */
     shown: (i: number) => list[i].shown,
     setSize: (w: number, h: number) => { vw = w; vh = h },
+    /** Hide the live screens while another view (the Wi-Fi sensing view) is on. */
+    hide: (h: boolean) => { el.style.display = h ? 'none' : '' },
     dispose: () => { window.removeEventListener('message', onMessage); for (const s of list) s.frame.src = 'about:blank'; el.remove() },
   }
 }

@@ -1,4 +1,4 @@
-import { ChartLine, ClipboardCheck, Stethoscope, Ellipsis, EllipsisVertical, Globe, LayoutDashboard, Library, Radio, Rocket, Siren, type LucideIcon } from 'lucide-react'
+import { ChartLine, ClipboardCheck, Stethoscope, Ellipsis, EllipsisVertical, Globe, LayoutDashboard, Library, Radio, Rocket, ScanHeart, Siren, Wifi, type LucideIcon } from 'lucide-react'
 
 export interface NavRoute {
   path: string
@@ -21,6 +21,8 @@ export const ROUTES: readonly NavRoute[] = [
   { path: '/alerts', label: 'Alerts', tab: 'Alerts', icon: Siren, primary: true, group: 'crew' },
   { path: '/trends', label: 'Trends', tab: 'Trends', icon: ChartLine, primary: false, group: 'crew' },
   { path: '/checkin', label: 'Check-in', tab: 'Check-in', mini: 'Check', icon: ClipboardCheck, primary: true, group: 'crew' },
+  { path: '/rf', label: 'Wi-Fi Sensing', tab: 'RF Sense', mini: 'RF', icon: Wifi, primary: false, group: 'crew' },
+  { path: '/ultrasound', label: 'Ultrasound', tab: 'Ultrasound', mini: 'Echo', icon: ScanHeart, primary: false, group: 'crew' },
   { path: '/simulator', label: 'Simulator', tab: 'Simulator', icon: Rocket, primary: false, group: 'mission' },
   { path: '/sync', label: 'Ground Sync', tab: 'Sync', icon: Radio, primary: false, group: 'mission' },
   { path: '/ground', label: 'Ground View', tab: 'Ground', icon: Globe, primary: false, group: 'mission' },

@@ -16,6 +16,7 @@ import { BOOST, PITCH_MAX, SPEED, anglesOf, constrain, dirOf, wanted, type HallB
 import { dampQuat, smoothDamp, smoothDampV, type Spring } from './motion'
 import { LOOK_D as LOOK_AHEAD, closeShot, fitStop, fovFor, layout, type ScreenAt, type Stop, type Walls } from './shots'
 import { wallMap, wallProbe } from './wall'
+import { createWifiView } from './wifi'
 import { learn } from '../shell/perf'
 
 /*
@@ -28,6 +29,12 @@ export const STOP_COUNT = 10
 /** The arrival: flying in from space (`fly`), holding out there while the hall loads (`wait`), the glare (`lock`), the visor clearing (`clear`). */
 export type IntroPhase = 'fly' | 'wait' | 'lock' | 'clear' | 'off'
 export interface CabinOptions {
+  /**
+   * Embedded in a console screen for the Wi-Fi sensing view only: the camera starts at the crew overview and stays there, no input is
+   * taken (the page keeps its scroll), the wall screens are not loaded, and `isPaused` can stop drawing while it is off screen.
+   */
+  wifiOnly?: boolean
+  isPaused?: () => boolean
   reducedMotion: boolean
   /** Play the arrival from space before the tour; otherwise the tour starts in the helmet. */
   intro: boolean
@@ -71,6 +78,8 @@ export interface CabinScene {
   replayIntro: () => void
   /** Play the helmet going on at the first stop: the visor slides down, then the HUD boots. */
   lowerVisor: () => void
+  /** The Wi-Fi sensing view: the cabin as a point cloud, the crew as heat shapes, the routers and their waves. */
+  setWifi: (on: boolean) => void
   /** VITA is speaking (her face pulses, she stops and faces the camera), or has stopped (she walks on a moment later). */
   vitaTalk: (on: boolean) => void
   dispose: () => void
@@ -226,6 +235,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const eva = createEva(scene, loader, MODELS)
   const consoles = createConsoles(scene, loader, MODELS)
   const robots = createRobots(scene, loader, MODELS)
+  const wifi = createWifiView(scene, camera, renderer, crew, canvas.parentElement ?? document.body, opts.reducedMotion)
   let placedKey = ''
   function place() {
     if (!data) return
@@ -272,6 +282,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const camPos = posCurve.getPoint(0), camLook = lookCurve.getPoint(0)
   /* the tour's springs: progress along the path, and the camera's position and look (so every move eases in and out) */
   const pSpring: Spring = { x: 0, v: 0 }, posVel = new THREE.Vector3(), lookVel = new THREE.Vector3()
+  if (opts.wifiOnly) { p = pTarget = pSpring.x = 1; camPos.copy(posCurve.getPoint(1 / (N - 1))); camLook.copy(lookCurve.getPoint(1 / (N - 1))) }
   const aimM = new THREE.Matrix4(), aimQ = new THREE.Quaternion(), rollQ = new THREE.Quaternion(), zAxis = new THREE.Vector3(0, 0, 1), origin = new THREE.Vector3()
   let aimed = false
   /** Turns the camera toward `dir` (rolled by `roll`), eased by time so a change of look never whips; `snap` cuts straight there. */
@@ -302,6 +313,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   const arriving = () => intro !== 'off'
   /* the visor: 'raised' (glass up, HUD off), 'dropping', 'booting', then 'down'; raised with no rim until the page lowers it */
   type VisorPhase = 'raised' | 'dropping' | 'booting' | 'down'
+  let wifiOn = false // the Wi-Fi sensing view is up: no helmet glass over it
   const visor = { phase: (reduced ? 'down' : 'raised') as VisorPhase, away: false, t0: 0, rimIn: false, rim: reduced ? 1 : 0, drop: reduced ? 1 : 0, shown: 1 }
   const visorClass = (ph: VisorPhase) => { for (const c of ['raised', 'dropping', 'booting']) opts.visor?.classList.toggle(c, c === ph); opts.onVisor?.(ph) }
   const raiseVisor = (away: boolean) => { visor.away = away; if (reduced || visor.phase === 'raised') return; visor.phase = 'raised'; visor.drop = 0; visorClass('raised') }
@@ -318,7 +330,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
       if (k >= VISOR_AT + VISOR_S) { visor.phase = 'booting'; visor.t0 = t; visorClass('booting') }
     } else if (visor.phase === 'booting' && k >= BOOT_S) { visor.phase = 'down'; visorClass('down') }
     opts.visor?.style.setProperty('--drop', visor.drop.toFixed(3))
-    post.setVisor(visor.shown * visor.rim, visor.drop)
+    post.setVisor(wifiOn ? 0 : visor.shown * visor.rim, wifiOn ? 0 : visor.drop)
   }
   /** Any input during the flight asks to be let in: the glare starts once the hall is ready. */
   const skipIntro = () => { if (intro === 'fly' || intro === 'wait') skipAsked = true }
@@ -580,13 +592,15 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     if (using && !using.leaving) { const pose = screenPose(using.i); using.pos = pose.pos; using.look = pose.look; using.fov = pose.fov; using.width = pose.width; using.flat = pose.flat; if (using.ready) screens.engage(using.i, pose.width, pose.flat) }
     renderer.setSize(w, hh, false); composer.setSize(w, hh); screens.setSize(w, hh)
   }
-  canvas.addEventListener('wheel', onWheel, { passive: false })
-  canvas.addEventListener('pointerdown', onDown)
-  window.addEventListener('pointerup', onUp)
-  window.addEventListener('pointermove', onMove)
-  window.addEventListener('keydown', onKey)
-  window.addEventListener('keyup', onKeyUp)
-  window.addEventListener('blur', onBlur)
+  if (!opts.wifiOnly) { // an embedded view takes no input: the page keeps its scroll and its keys
+    canvas.addEventListener('wheel', onWheel, { passive: false })
+    canvas.addEventListener('pointerdown', onDown)
+    window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('keyup', onKeyUp)
+    window.addEventListener('blur', onBlur)
+  }
   window.addEventListener('resize', onResize)
 
   /* ---------- loop ---------- */
@@ -604,6 +618,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   let cap = 60, lastFrame = -Infinity
   const frame = (now = performance.now()) => {
     raf = requestAnimationFrame(frame)
+    if (opts.isPaused?.()) { lastFrame = -Infinity; clock.getDelta(); return } // off screen: no drawing, and no jump when it returns
     const iv = 1000 / cap
     if (now - lastFrame < iv - 3.5) return
     lastFrame = Math.max(lastFrame + iv, now - iv) // on the beat, so 144 Hz still averages 60 rather than 48
@@ -761,6 +776,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
       decor?.draw(data, t, seen)
       crew.drawTags(live, t)
     }
+    wifi.update(t, dt, live)
     if (p > 5 || arriving()) eva.load()
     // the station shows from the forward window on, and all through the arrival
     decor?.update(t, still); consoles.update(t, still); robots.update(dt, still, t); space.update(t, still); beam.show(!arriving() || intro === 'clear'); beam.update(t, still); post.update(t, still); stepVisor(t); eva.update(still, arriving() && intro !== 'clear' ? N - 1 : p); flare.update(reduced)
@@ -823,7 +839,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   })
   /** The console views follow the cabin: your own board, and vitals, alerts and trends for the focus crew member. */
   function loadScreens() {
-    if (!ready || !data) return
+    if (!ready || !data || opts.wifiOnly) return
     const crewFor = [data.selfId, data.focusId, data.focusId, data.focusId]
     PANELS.forEach((_, i) => screens.load(i, crewFor[i] ?? null, i * 1200))
   }
@@ -839,6 +855,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
     skipIntro,
     replayIntro() { endUse(); leaveFloat(); unfocus(); skipAsked = false; setIntro('fly', clock.elapsedTime) },
     lowerVisor() { if (!arriving() && pTarget < 0.5) lowerVisor(clock.elapsedTime, true) },
+    setWifi(on) { wifiOn = on; wifi.setOn(on); screens.hide(on) },
     vitaTalk(on) { vitaTalking = on; robots.vita.talk(on); if (!on) vitaHold = Math.max(vitaHold, clock.elapsedTime + 1.2) },
     dispose() {
       disposed = true
@@ -858,6 +875,7 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
         m.geometry?.dispose()
         for (const mat of ([] as THREE.Material[]).concat(m.material ?? [])) { (mat as THREE.MeshBasicMaterial).map?.dispose(); mat.dispose() }
       })
+      wifi.dispose()
       scene.environment?.dispose(); sunPool?.dispose(); pmrem.dispose(); composer.dispose(); renderer.dispose(); screens.dispose()
     },
   }
