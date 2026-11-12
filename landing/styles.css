@@ -876,3 +876,6 @@ ul { list-style:none; }
 .team-card.is-placeholder .team-avatar { opacity:.6; }
 @media (max-width:900px) { .team-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:560px) { .team-grid { grid-template-columns:1fr; } }
+
+/* Slower devices (perf.js marks <html data-perf="low">): glass blur over the moving universe is re-blurred every frame. */
+[data-perf="low"] * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }

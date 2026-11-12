@@ -391,3 +391,8 @@ body:has(#czReveal:not([hidden])) { overflow:hidden; }
   .hp { border:1px solid CanvasText; }
   .hbtn { border:1px solid ButtonText; }
 }
+
+/* Slower devices (perf.js marks <html data-perf="low">): glass blur over the animated sky is re-blurred every frame,
+   and an animated drop-shadow filter repaints the figure each frame; the same look without them. */
+[data-perf="low"] .topbar, [data-perf="low"] .lib-ov, [data-perf="low"] * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+[data-perf="low"] .cz-fig svg { filter: none !important; }

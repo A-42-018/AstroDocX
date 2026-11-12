@@ -115,6 +115,8 @@ const httpUrl = (u) => { try { const x = new URL(u); return x.protocol === 'http
 export function createCosmos({ artLayer, spotLayer, revealCanvas, dock, frame, reduced = false, sound, onAsk, getFact }) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
   const rc = revealCanvas.getContext('2d')
+  // slower devices (perf.js): the reveal's rim draws without its canvas glow, the costliest part of it
+  if ((window.ADX_PERF || {}).tier === 'low') Object.defineProperty(rc, 'shadowBlur', { configurable: true, get: () => 0, set: () => {} })
   const NS = 'http://www.w3.org/2000/svg'
   let W = innerWidth, H = innerHeight, u = 10, phone = false
 

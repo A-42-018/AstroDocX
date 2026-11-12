@@ -16,9 +16,17 @@ const ICE = '#f2fbff', ICEFAR = '#a9c4d4'   // NOVA's shell: ice-white so it nev
 const CY = '#36e2f5', CYHI = '#9ff4ff', OK = '#3ddc97', OR = '#ff8a3d'
 
 export function createScene({ bg, bot, doors = [], reduced = false, under = null }) {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  // how much this device can draw (perf.js): the backdrop's resolution, particle count and frame rate follow it
+  const perf = window.ADX_PERF || { tier: 'high', fps: 60, learn() {} }
+  const DPR_MAX = { high: 2, mid: 1.5, low: 1 }
+  let dpr = Math.min(window.devicePixelRatio || 1, DPR_MAX[perf.tier] || 2)
   const g = bg.getContext('2d'), b = bot.getContext('2d')
   const dc = doors.map((c) => c.getContext('2d'))
+  /* Canvas glow (shadowBlur) blurs every glowing stroke each frame and is the costliest thing drawn here: slower
+     devices draw the same lines without it. */
+  const noGlow = (x) => Object.defineProperty(x, 'shadowBlur', { configurable: true, get: () => 0, set: () => {} })
+  let glow = perf.tier !== 'low'
+  if (!glow) [g, b, ...dc].forEach(noGlow)
 
   /* ── backdrop ── */
   let W = 0, H = 0, stars = [], earth = [], sky = null, sun = null
@@ -27,7 +35,7 @@ export function createScene({ bg, bot, doors = [], reduced = false, under = null
     const n = Math.round(Math.min(260, (innerWidth * innerHeight) / 5200))
     stars = Array.from({ length: n }, () => ({ x: Math.random() * W, y: Math.random() * H * 0.8, r: (0.4 + Math.random()) * dpr, t: Math.random() * 6 }))
     earth = []
-    const m = innerWidth < 760 ? 1600 : 2800
+    const m = innerWidth < 760 || perf.tier === 'low' ? 1400 : 2800
     for (let i = 0; i < m; i++) {
       const u = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2
       earth.push({ u, th, land: Math.sin(th * 3 + u * 4) + Math.cos(th * 5 - u * 2) > 0.5 })
@@ -138,6 +146,11 @@ export function createScene({ bg, bot, doors = [], reduced = false, under = null
     if (reduced) drawDoors(2600)
   }
   if ('ResizeObserver' in window) { const ro = new ResizeObserver(sizeDoors); doors.forEach((c) => ro.observe(c)) }
+  const doorSeen = doors.map(() => true)
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((es) => es.forEach((e) => { doorSeen[doors.indexOf(e.target)] = e.isIntersecting }))
+    doors.forEach((c) => io.observe(c))
+  }
 
   function heart(x, cx, cy, s) {
     x.beginPath(); x.moveTo(cx, cy + s * 0.9)
@@ -236,7 +249,7 @@ export function createScene({ bg, bot, doors = [], reduced = false, under = null
     const tt = reduced ? 2600 : t, scenes = [sceneConsole, sceneCabin, sceneLibrary]
     dc.forEach((x, k) => {
       const { w, h } = dsz[k]
-      if (!w) return
+      if (!w || !doorSeen[k]) return   // a door scrolled out of view is not drawn
       x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, h)
       x.save(); scenes[k](x, w, h, tt); x.restore(); x.globalAlpha = 1; x.shadowBlur = 0
     })
@@ -248,7 +261,31 @@ export function createScene({ bg, bot, doors = [], reduced = false, under = null
     if (all || !reduced) { drawBg(t); drawDoors(t) }
     drawBot(t)
   }
-  function loop(t) { frame(t); raf = requestAnimationFrame(loop) }
+  /* At most perf.fps frames a second. While frames stay slow (over ~24 ms on average across a second and a half) it
+     steps down: the glow off, then one pixel per CSS pixel, then 30 fps; and perf.js remembers it for the next visit. */
+  let fps = perf.fps, lastT = -Infinity, prevT = 0, n = 0, sum = 0, startT = 0
+  const ladder = [
+    () => glow && (glow = false, [g, b, ...dc].forEach(noGlow), perf.learn('mid'), true),
+    () => dpr > 1 && (dpr = 1, size(), sizeDoors(), perf.learn('low'), true),
+    () => fps > 30 && (fps = 30, perf.learn('low'), true),
+  ]
+  function govern(t) {
+    const dt = t - prevT; prevT = t
+    if (!startT) startT = t
+    if (t - startT < 2500 || dt > 250 || document.hidden) return   // the first seconds (fonts, layout) and stalls do not count
+    n++; sum += dt
+    if (n < 90) return
+    const avg = sum / n; n = sum = 0
+    if (avg > 1000 / Math.min(fps, 42)) for (const step of ladder) if (step()) return
+  }
+  function loop(t) {
+    raf = requestAnimationFrame(loop)
+    const iv = 1000 / fps
+    if (t - lastT < iv - 3.5) return
+    lastT = Math.max(lastT + iv, t - iv)
+    govern(t)
+    frame(t)
+  }
   function queue() { if (!reduced || queued) return; queued = true; requestAnimationFrame((t) => { queued = false; drawBot(t) }) }
 
   let rs = 0

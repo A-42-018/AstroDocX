@@ -6,6 +6,7 @@ import type { Status } from '../data/types'
 import { useBoard } from '../board/store'
 import { COMPOSITE, SURFACE, VERT } from './backdropShaders'
 import { backdropFor, useBackdropStore } from './backdropStore'
+import { startTier } from './perf'
 
 /** The selected crew member (the first one until someone is picked) and their worst open alert (one indexed read). */
 function useCrewStatus(): { id: string | undefined; status: Status } {
@@ -37,6 +38,8 @@ const MAX_DPR = 1
 const MAX_PIXELS = 1920 * 1200
 const SURFACE_SCALE = 0.5
 const FPS = 30
+/** Slower devices: the sky still moves, at a lower frame rate and resolution (it sits under a scrim, the softness never shows). */
+const LOW = { fps: 20, maxPixels: 1280 * 800 }
 /** Start mid-sunrise so the first frame already looks good. */
 const START = 40
 /** Hold the sky still while the page scrolls or changes screen, until this long after the last scroll or navigation. */
@@ -167,10 +170,11 @@ export function Backdrop() {
       gl.enableVertexAttribArray(0)
       gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
 
+      const low = startTier() === 'low', fps = low ? LOW.fps : FPS, maxPixels = low ? LOW.maxPixels : MAX_PIXELS
       const resize = () => {
         let dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR)
         let w = el.clientWidth * dpr, h = el.clientHeight * dpr
-        const over = Math.sqrt((w * h) / MAX_PIXELS)
+        const over = Math.sqrt((w * h) / maxPixels)
         if (over > 1) { w /= over; h /= over; dpr /= over }
         el.width = Math.max(1, Math.round(w))
         el.height = Math.max(1, Math.round(h))
@@ -204,7 +208,7 @@ export function Backdrop() {
       const loop = (now: number) => {
         raf = requestAnimationFrame(loop)
         if (document.hidden || now < quietUntil.current) { last = now; return }
-        if (now - last < 1000 / FPS - 2) return
+        if (now - last < 1000 / fps - 2) return
         sceneT += Math.min(now - last, 100) / 1000
         last = now
         draw(sceneT)
