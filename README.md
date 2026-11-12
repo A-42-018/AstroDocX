@@ -68,10 +68,10 @@ AstroDocX learns each astronaut's **personal baseline**, spots drift early, and 
 | 🩺 **Crew Console** | An installable, offline PWA: Status Board, alerts with action cards, trends, daily check-in, simulator, delay-tolerant ground sync, a flight-surgeon view and the NASA basis of every check |
 | 🤖 **VITA** | The AI crew doctor: a 3D doctor with lip sync who examines the whole crew, triages, clears people for EVA and writes the ground handoff, plus a chat dock on every console page |
 | 🚀 **3D Cabin** | A walk through an ISS-style module driven by live data: a visor HUD, six crew with live name tags, robots, wall screens that run the real console, and an EVA outside |
-| ⌚ **Sensors / IoT** | A webcam face scan (rPPG) and a Haylou Solar 5 smartwatch over Web Bluetooth, plus an optional Supabase ground server |
+| ⌚ **Sensors / IoT** | A webcam face scan (rPPG), the X-Ray Mirror, a Haylou Solar 5 smartwatch over Web Bluetooth, simulated Wi-Fi sensing and ultrasound, plus an optional Supabase ground server |
 | 🧠 **On-device ML** | Isolation Forest anomalies, a Holt-Winters heart-rate band, a readiness score and watch-vs-webcam agreement, all in the browser and kept out of the alert engine |
 
-> **Status (8 Nov 2026):** the homepage with its guide NOVA, the **Crew Console** (`app/`) with its 3D Cabin, VITA the crew doctor, face scan, watch link and on-device insights, and the NASA Library are all built and run the full loop. The console passes 496 tests (81 files). AstroDocX is a prototype, **not a medical device**; all thresholds not cited in the code are illustrative. The measured data in the app is the Inspiration4 lab panel on the NASA Data screen, plus whatever you record yourself with the face scan or a connected watch (kept on your device); live vitals, cabin readings and the demo mission are synthetic.
+> **Status (12 Nov 2026):** the homepage with its guide NOVA, the **Crew Console** (`app/`) with its 3D Cabin, VITA the crew doctor, face scan, X-Ray Mirror, watch link, on-device insights, voice navigation, the simulated Wi-Fi Sensing and Ultrasound screens, and the NASA Library are all built and run the full loop. The console passes 578 tests (89 files). AstroDocX is a prototype, **not a medical device**; all thresholds not cited in the code are illustrative. The measured data in the app is the Inspiration4 lab panel on the NASA Data screen, plus whatever you record yourself with the face scan or a connected watch (kept on your device); live vitals, cabin readings and the demo mission are synthetic.
 
 **Two guides, two names.** **NOVA** hosts the homepage briefing and the NASA Library. **VITA** is the crew doctor inside the console and the 3D cabin. **MEDI** is VITA's silent robot helper in the cabin.
 
@@ -171,7 +171,9 @@ The heart of AstroDocX at `/app/`: an installable, offline-first PWA for a crew 
 
 ![NASA Data: built on NASA science, the five hazards with monitors, limits and cited NTRS and OSDR studies](docs/screenshots/console-nasa.jpg)
 
-**Wi-Fi Sensing and Ultrasound (simulated).** Two contactless and imaging ideas from the research notes, built as working prototypes on simulated signals. *Wi-Fi Sensing* (`/app/rf`) models what a two-antenna receiver would see as a crew member breathes (52 subcarriers, random phase offsets, a static room far stronger than the breath) and runs the real pipeline on it: conjugate-ratio, Hampel filter, subcarrier merge, spectral peak. It reads breathing rate, presence and breathing pauses, and **holds back with a reason** when a crewmate is moving or the body is drifting. A sustained change suggests the right ultrasound exam. *Ultrasound* (`/app/ultrasound`) is a guided scan of the heart, neck vessels, lungs, thigh muscle and eye: a procedural B-mode picture, a probe you steer toward a good view (arrow keys, or the assisted hand), automatic capture once the view holds, then measurements against the person's own preflight values. Both are labelled simulated, log plain-words entries for Ground and never raise alerts or change baselines.
+**Wi-Fi Sensing and Ultrasound (simulated).** Two contactless and imaging ideas from the research notes, built as working prototypes on simulated signals. *Wi-Fi Sensing* (`/app/rf`) models what a two-antenna receiver would see as a crew member breathes (52 subcarriers, random phase offsets, a static room far stronger than the breath) and runs the real pipeline on it: conjugate-ratio, Hampel filter, subcarrier merge, spectral peak. It reads breathing rate, presence and breathing pauses, and **holds back with a reason** when a crewmate is moving or the body is drifting. A sustained change suggests the right ultrasound exam. A **cabin sweep** extends this to the whole module: simulated link disturbances between routers are turned into a plan-view heat map by tomography, with tracked crew and plain-words activity labels. The same data drives a **3D Wi-Fi sensing view** (a dot-cloud hall, heat-shape crew, routers and waves, and a detection HUD), embedded in the Wi-Fi Sensing page and available from the 3D cabin. *Ultrasound* (`/app/ultrasound`) is a guided scan of the heart, neck vessels, lungs, thigh muscle and eye: a procedural B-mode picture, a probe you steer toward a good view (arrow keys, or the assisted hand), automatic capture once the view holds, then measurements against the person's own preflight values. The probe sites are pinned in 3D on the health twin's anatomical body (skeleton, organs, arteries, beating heart) that turns gently, and the scanned organ lights up (an SVG anatomy stands in without WebGL). Both are labelled simulated, log plain-words entries for Ground and never raise alerts or change baselines.
+
+**X-Ray Mirror** (`/app/xray`). A full-screen camera mirror: MediaPipe face and hand tracking drive a 3D overlay of the skull, jaw, brain, face muscles and hand bones that follows you live. A settings drawer controls layers, look, fit and tracking; anatomy name tags label what you see and you can take a snapshot. A vitals card reads heart rate, HRV and breathing from the same video with the Face Scan's rPPG pipeline (skin patches placed from the face landmarks), and a finished reading can be saved to the Face Scan store. Everything runs on the device; the trackers and models are cached on first start and kept out of the service-worker precache.
 
 The live waves on the board (ECG, pulse oximeter, breathing) are **simulated telemetry** built around the latest real readings; they never change alerts.
 
@@ -198,6 +200,7 @@ A walk through a lived-in ISS-style module at `/app/cabin`, driven by the consol
 - **Four wall screens running the real console.** Press *Use this screen* to work the Status Board, vitals, alerts or trends inside the 3D scene.
 - **The robots VITA and MEDI** patrol the hall; VITA's robot turns to face you and speaks the doctor's brief.
 - NASA Visible Earth through the window, touch and float-mode controls, synthesised cabin hum and a score.
+- **Works on phones and slower devices.** Portrait camera stops frame the wall screen or astronaut large above the caption, the visor HUD becomes compact blocks, and the caption clamps with a *More* button. Quality is picked from the GPU's name, frames are capped at 60 fps, and the cabin steps down (ambient occlusion, Retina pixels, shadows, bloom, antialiasing, resolution, then 30 fps) while frames stay slow, remembering the tier for next time. Wall-screen iframes load only when the camera comes near. The landing page and console adapt the same way.
 
 | Crew overview | A wall screen running the console |
 |---|---|
@@ -211,6 +214,7 @@ AstroDocX takes real measurements from hardware you already have. Everything run
 | Device | Link | What it measures | Where it goes |
 |---|---|---|---|
 | **Webcam** (face scan) | `getUserMedia`, video never leaves the device | Heart rate, breathing rate and a rough HRV from the colour change of facial skin (rPPG, POS method), each with a signal-quality score | Logged as check-in context for the ground; never raises alerts or changes baselines |
+| **Webcam** (X-Ray Mirror) | `getUserMedia` plus MediaPipe face and hand landmarkers, all on device | A live 3D anatomy overlay, and the same rPPG heart rate, HRV and breathing as the face scan | Optionally saved to the Face Scan store; never raises alerts |
 | **Haylou Solar 5 smartwatch** | **Web Bluetooth** (Chrome or Edge, desktop or Android) with our own frame decoder; access limited to the watch's one data service | Live heart rate and SpO₂, plus its stored stress and sleep-stage history | The live heart-rate card, and (only if you switch on *Save watch data on this device*) the on-device ML insights; exportable as CSV or JSON, erasable in one click |
 | **Wi-Fi CSI** (not connected) | A browser cannot read Channel State Information. An ESP32 or Raspberry Pi that exposes CSI could feed `estimate()` in `src/rf/dsp.ts`, which is written to take real frames | Breathing, presence and movement without a worn sensor; simulated today | Shown on the Wi-Fi Sensing screen; never raises alerts |
 | **Ultrasound probe** (not connected) | A real probe would deliver frames through its vendor SDK or DICOM; `src/ultrasound/render.ts` is the part it would replace | Heart, vessels, lungs, muscle and optic nerve sheath; simulated today | Saved scans and a log entry for Ground; never raises alerts |
@@ -251,6 +255,9 @@ The complete list of what the console does today. (NOVA's and VITA's knowledge b
 | Trends | 11 charts with the personal baseline band, alert markers, 24 h / 7 d / 30 d |
 | Daily Check-in | Opens on an optional face scan (below), then mood, sleep quality, hours slept, 8 symptom chips and a 5-tap reaction test (PVT-style); symptoms and sleep quality raise alerts |
 | Face scan (experimental) | A 30-second webcam scan estimates heart rate, breathing and a rough HRV from the tiny colour change of facial skin (remote photoplethysmography, POS method), each with a quality score. The video never leaves the device and only the numbers are kept. A webcam is not a medical sensor: scans are context, never a diagnosis |
+| X-Ray Mirror | A full-screen camera mirror at `/app/xray`: face and hand tracking (MediaPipe, on device) drive a 3D overlay of skull, jaw, brain, face muscles and hand bones, with layers, look and fit settings, anatomy name tags and a snapshot. A vitals card reads heart rate, HRV and breathing from the same video with the face-scan pipeline and can save the reading |
+| Wi-Fi Sensing (simulated) | `/app/rf`: a simulated two-antenna Wi-Fi CSI receiver and the real pipeline on it (conjugate ratio, Hampel filter, subcarrier merge, spectral peak) read breathing rate, presence and pauses, and hold back with a reason when a crewmate moves. A cabin sweep maps simulated link disturbances to a plan-view heat map with tracked crew, and a 3D Wi-Fi sensing view shows the hall as a dot cloud. Logged for Ground, never raises alerts |
+| Ultrasound (simulated) | `/app/ultrasound`: five guided exams (heart, neck vessels, lungs, thigh muscle, eye) with a procedural B-mode picture, a steerable probe, automatic capture, measurements against the person's preflight values, scan history, and a flag for the flight surgeon. Probe sites are pinned on the 3D anatomical body. Never raises alerts |
 | Watch (experimental) | Connect a Haylou Solar 5 smartwatch over Web Bluetooth (Chrome or Edge) for live heart rate and SpO₂, plus its stored stress and sleep history. Nothing is saved unless you switch on *Save watch data on this device*; saved data is linked to one crew member, exportable as CSV or JSON and erasable in one click |
 | On-device insights (shadow mode) | From saved watch data, in the Trends screen: a personal anomaly detector (Isolation Forest plus robust z-scores, scored walk-forward), a 24-hour heart-rate forecast band (Holt-Winters), a transparent readiness score and a watch-vs-face-scan agreement check. All of it runs in the browser and is **never wired into the alert engine**, so a wrist artefact cannot raise a medical alert. See the [model card](docs/ml-model-card.md) |
 | 3D Cabin | A walk through a lived-in ISS-style module at `/app/cabin`, from the helmet view out to the astronaut on EVA, driven by the console's live data: a crew of six with name tags, the robots VITA and MEDI patrolling the hall, wall screens that run real console pages, a helmet-visor HUD tied to the health monitor, NASA Visible Earth in the window, touch and float-mode controls |
@@ -261,7 +268,7 @@ The complete list of what the console does today. (NOVA's and VITA's knowledge b
 | Ground Sync | Delay-tolerant outbox: link windows, 12-minute delay, blackout, auto-sync, CSV log export |
 | Ground View | Flight-surgeon view rebuilt only from synced entries (shows what Earth knows, and when); each crew card shows the 3D body in its status colour |
 | NASA Data | The NASA basis of the console in one screen: for each of NASA's five hazards, what AstroDocX monitors, the NASA-STD-3001 limit it checks and the NASA studies cited; every alert and Status Board tile carries a NASA source tag. Also a **Real crew data** panel: measured blood counts, metabolic and inflammation markers from the four SpaceX Inspiration4 crew (NASA OSDR OSD-569 and OSD-575), each person charted against their own pre-flight baseline and the lab reference range |
-| Platform | Offline-first installable PWA, IndexedDB on the device, 6-crew 30-day demo mission preloaded |
+| Platform | Offline-first installable PWA that adapts its quality to slower devices and phones, IndexedDB on the device, 6-crew 30-day demo mission preloaded |
 
 **Not built yet (Roadmap):** support for more wearables than the one watch, wearable data feeding the alert engine (today it stays in shadow mode), a real Supabase ground backend with proper policies, vision/SANS self-tests, blood pressure, bone density, a multi-device ground station.
 
@@ -288,7 +295,7 @@ The complete list of what the console does today. (NOVA's and VITA's knowledge b
 cd app
 npm install
 npm run dev      # http://localhost:5173/app/
-npm test         # 496 tests in 81 files (engine, ML, UI, DB, cabin, doctor)
+npm test         # 578 tests in 89 files (engine, ML, UI, DB, cabin, doctor, rf, ultrasound, xray, voice)
 npm run lint     # oxlint
 npm run build && npm run preview   # production build with the service worker, to test install and offline
 ```
@@ -330,6 +337,7 @@ NOVA's and VITA's knowledge base (`knowledge/`) is generated from the engine, th
 | Landing site | HTML, CSS and vanilla JavaScript; one WebGL particle system ([Three.js r128](https://threejs.org/)) for the whole story page, Health Twin included; [GSAP 3.12 + ScrollTrigger](https://gsap.com/) for the pinned scroll |
 | 3D point clouds | Baked offline by dependency-free Node scripts in `tools/`: the Crew scene from the NASA Z2 spacesuit model (right arm re-posed into a salute), the human body carved from a 360° turntable video (visual hull) |
 | Crew Console | React 19 + TypeScript + Vite PWA, IndexedDB (Dexie), Zustand, Recharts, Vitest; its Health Twin draws the same baked body with plain WebGL |
+| X-Ray Mirror | [MediaPipe Tasks Vision](https://ai.google.dev/edge/mediapipe) face and hand landmarkers (WASM, run on device) driving a three.js skull and hand-bone overlay |
 | 3D Cabin and crew doctor | [three.js](https://threejs.org/) r170 with glTF models loaded on demand (cabin, crew, robots, a Microsoft Rocketbox doctor with script-timed lip sync) |
 | Sensors / IoT | Webcam face scan (own rPPG pipeline: POS projection, band-pass, spectral peak); Haylou Solar 5 over the Web Bluetooth API (own frame decoder); optional Supabase ground server |
 | On-device ML | Isolation Forest, Holt-Winters forecast, ridge regression and Bland-Altman agreement in plain TypeScript with a seeded PRNG; no ML runtime, no network ([model card](docs/ml-model-card.md)) |
@@ -362,6 +370,7 @@ AstroDocX/
 │   ├── src/board, alerts, trends, checkin, sim, sync, ground, nasa/   # the screens
 │   ├── src/doctor/   # VITA the crew doctor: exam rules, report wording, 3D doctor and lip sync
 │   ├── src/cabin/    # the 3D Cabin: hall, crew, robots, EVA, camera shots, wall screens, visor HUD
+│   ├── src/xray/     # X-Ray Mirror: MediaPipe tracking, 3D skull and hand overlay, live vitals
 │   ├── src/scan/     # face scan (rPPG)       src/watch/   # Haylou Solar 5 over Web Bluetooth + history store
 │   ├── src/rf/       # Wi-Fi CSI sensing (simulated)   src/ultrasound/  # guided ultrasound (simulated)
 │   ├── src/ml/       # on-device wearable insights (shadow mode)
@@ -371,7 +380,8 @@ AstroDocX/
 ├── knowledge/      # generated knowledge base for NOVA and VITA (from the engine, this README and general.json)
 ├── tools/          # bakers (bake-moon, bake-body, bake-cabin, bake-doctor, bake-i4-labs, bake-particles, undraco),
 │   │               #   landing-server.py (local host with the console's SPA fallback)
-│   └── vita/       # build-knowledge.mjs and the guide tests
+│   ├── vita/       # build-knowledge.mjs and the guide tests
+│   └── xray/       # bake-xray.mjs (X-Ray Mirror models)
 ├── docs/           # screenshots, AI_USE.md, DATASETS.md, vita.md, ml-model-card.md, supabase.sql
 ├── vercel.json     # live deploy (static site + Python functions)
 └── netlify.toml    # static-only alternative

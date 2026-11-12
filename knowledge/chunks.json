@@ -84,6 +84,27 @@
     "text": "Face scan (experimental): A 30-second webcam scan estimates heart rate, breathing and a rough HRV from the tiny colour change of facial skin (remote photoplethysmography, POS method), each with a quality score. The video never leaves the device and only the numbers are kept. A webcam is not a medical sensor: scans are context, never a diagnosis"
   },
   {
+    "id": "adx-x-ray-mirror",
+    "topic": "astrodocx",
+    "label": "AstroDocX: X-Ray Mirror",
+    "url": "https://github.com/A-42-018/AstroDocX",
+    "text": "X-Ray Mirror: A full-screen camera mirror at /app/xray: face and hand tracking (MediaPipe, on device) drive a 3D overlay of skull, jaw, brain, face muscles and hand bones, with layers, look and fit settings, anatomy name tags and a snapshot. A vitals card reads heart rate, HRV and breathing from the same video with the face-scan pipeline and can save the reading"
+  },
+  {
+    "id": "adx-wi-fi-sensing-simulated",
+    "topic": "astrodocx",
+    "label": "AstroDocX: Wi-Fi Sensing (simulated)",
+    "url": "https://github.com/A-42-018/AstroDocX",
+    "text": "Wi-Fi Sensing (simulated): /app/rf: a simulated two-antenna Wi-Fi CSI receiver and the real pipeline on it (conjugate ratio, Hampel filter, subcarrier merge, spectral peak) read breathing rate, presence and pauses, and hold back with a reason when a crewmate moves. A cabin sweep maps simulated link disturbances to a plan-view heat map with tracked crew, and a 3D Wi-Fi sensing view shows the hall as a dot cloud. Logged for Ground, never raises alerts"
+  },
+  {
+    "id": "adx-ultrasound-simulated",
+    "topic": "astrodocx",
+    "label": "AstroDocX: Ultrasound (simulated)",
+    "url": "https://github.com/A-42-018/AstroDocX",
+    "text": "Ultrasound (simulated): /app/ultrasound: five guided exams (heart, neck vessels, lungs, thigh muscle, eye) with a procedural B-mode picture, a steerable probe, automatic capture, measurements against the person's preflight values, scan history, and a flag for the flight surgeon. Probe sites are pinned on the 3D anatomical body. Never raises alerts"
+  },
+  {
     "id": "adx-watch-experimental",
     "topic": "astrodocx",
     "label": "AstroDocX: Watch (experimental)",
@@ -162,7 +183,7 @@
     "topic": "astrodocx",
     "label": "AstroDocX: Platform",
     "url": "https://github.com/A-42-018/AstroDocX",
-    "text": "Platform: Offline-first installable PWA, IndexedDB on the device, 6-crew 30-day demo mission preloaded"
+    "text": "Platform: Offline-first installable PWA that adapts its quality to slower devices and phones, IndexedDB on the device, 6-crew 30-day demo mission preloaded"
   },
   {
     "id": "adx-roadmap",
@@ -176,13 +197,15 @@
     "topic": "astrodocx",
     "label": "AstroDocX Crew Console screens",
     "url": "https://astrodocx.vercel.app/app/",
-    "text": "The Crew Console at /app/ has 9 screens: Status Board (/board), Crew Doctor (/doctor), Alerts (/alerts), Trends (/trends), Check-in (/checkin), Simulator (/simulator), Ground Sync (/sync), Ground View (/ground), NASA Data (/nasa). It is an offline-first installable PWA.",
+    "text": "The Crew Console at /app/ has 11 screens: Status Board (/board), Crew Doctor (/doctor), Alerts (/alerts), Trends (/trends), Check-in (/checkin), Wi-Fi Sensing (/rf), Ultrasound (/ultrasound), Simulator (/simulator), Ground Sync (/sync), Ground View (/ground), NASA Data (/nasa). It is an offline-first installable PWA.",
     "routes": [
       "/board",
       "/doctor",
       "/alerts",
       "/trends",
       "/checkin",
+      "/rf",
+      "/ultrasound",
       "/simulator",
       "/sync",
       "/ground",
