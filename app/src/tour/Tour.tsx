@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useSound } from '../audio/sfx'
 import { vitaPrime } from '../audio/voice'
-import { askedMode } from '../vita/handoff'
+import { askedMode, readHandoff } from '../vita/handoff'
 import { VitaAvatar } from '../vita/VitaAvatar'
-import { exitTour, runTour, skipChapter } from './director'
+import { exitTour, runTour, skipChapter, soundOnForTour } from './director'
 import { CHAPTERS, useTour } from './store'
 
 const REPO = 'https://github.com/A-42-018/AstroDocX'
@@ -22,6 +22,22 @@ let started = false
 function Spotlight({ name }: { name: string }) {
   const [box, setBox] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
   useEffect(() => {
+    // bring the panel into view when most of it is off screen or under the tour bar (on a laptop the hazard row is below the fold)
+    let tries = 0
+    const reveal = () => {
+      const el = document.querySelector(`[data-tour="${name}"]`)
+      const r = el?.getBoundingClientRect()
+      if (!el || !r || r.height === 0) { if (++tries < 10) timer = window.setTimeout(reveal, 300); return }
+      const bar = document.querySelector('.tour-bar')?.getBoundingClientRect()
+      const under = bar && bar.left < r.right && bar.right > r.left
+      const bottom = Math.min(innerHeight, under ? bar.top - 8 : innerHeight)
+      const seen = Math.max(0, Math.min(r.bottom, bottom) - Math.max(r.top, 0))
+      if (seen / Math.min(r.height, bottom) < 0.85) {
+        const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches
+        window.scrollTo({ top: Math.max(0, scrollY + r.top - Math.max(12, (bottom - r.height) / 2)), behavior: smooth ? 'smooth' : 'auto' })
+      }
+    }
+    let timer = window.setTimeout(reveal, 0)
     const find = () => {
       const r = document.querySelector(`[data-tour="${name}"]`)?.getBoundingClientRect()
       const next = r && r.width > 0 ? { x: r.left, y: r.top, w: r.width, h: r.height } : null
@@ -30,7 +46,8 @@ function Spotlight({ name }: { name: string }) {
     find()
     const id = window.setInterval(find, 400)
     window.addEventListener('resize', find)
-    return () => { window.clearInterval(id); window.removeEventListener('resize', find) }
+    window.addEventListener('scroll', find, { passive: true })
+    return () => { window.clearTimeout(timer); window.clearInterval(id); window.removeEventListener('resize', find); window.removeEventListener('scroll', find) }
   }, [name])
   if (!box) return null
   return <div className="tour-ring" aria-hidden="true" style={{ left: box.x - 6, top: box.y - 6, width: box.w + 12, height: box.h + 12 }} />
@@ -50,6 +67,9 @@ export function Tour() {
   useEffect(() => {
     if (started || !ASKED) return
     started = true
+    // VITA narrates by default. The one exception: the landing page's tour handing over with Sound muted during it.
+    const h = readHandoff()
+    if (!(h.tour && h.sound === false)) soundOnForTour()
     // Browsers refuse speech until the visitor has touched this page. Arriving from the landing page they have not, so
     // with Sound on a card asks for one click first (it also unlocks the audio); without sound the tour just starts.
     const silent = !useSound.getState().on || typeof speechSynthesis === 'undefined'

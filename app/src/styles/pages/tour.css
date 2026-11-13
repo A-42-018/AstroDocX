@@ -7,6 +7,14 @@
   overflow: hidden; animation: tour-in .4s var(--ease);
 }
 .tour-bar.in-cabin { bottom: auto; top: 64px; }
+/* in the console, the voice controls (right 120px, about 150px wide) and VITA share the bottom edge: centred when there is
+   room, otherwise slid left so the caption is never under them */
+@media (min-width: 768px) {
+  .tour-bar:not(.in-cabin) {
+    width: min(620px, calc(100% - 302px)); transform: none;
+    left: clamp(12px, calc(50% - 310px), calc(100% - 290px - min(620px, calc(100% - 302px))));
+  }
+}
 @keyframes tour-in { from { opacity: 0; translate: 0 12px; } }
 
 .tour-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
@@ -62,6 +70,8 @@
 @media (max-width: 767px) {
   .tour-bar { bottom: 84px; padding: 8px 10px 0; }
   .tour-bar.in-cabin { top: 56px; }
+  /* no room beside the bar on a phone: the voice controls step aside while the tour plays (its own bar has the controls) */
+  body:has(.tour-bar:not(.in-cabin)) .voice-nav { display: none; }
   .tour-chapters li:not([aria-current]) { font-size: 0; gap: 0; }
   .tour-icon span { display: none; }
   .tour-caption { font-size: 12.5px; }

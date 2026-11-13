@@ -1,5 +1,6 @@
 import { stinger } from '../audio/music'
 import { hushChatter, vitaPause, vitaResume, vitaSay, vitaStop } from '../audio/voice'
+import { useSound } from '../audio/sfx'
 import { useBoard } from '../board/store'
 import { runDemo } from '../sim/demoRun'
 import { BOARD, CABIN_ENTER, CABIN_MIN_MS, FINISH, LIBRARY_LINE, lineFor, readMs, stepsFor, type TourMode } from './script'
@@ -19,6 +20,8 @@ export type Go = (path: string) => void
 const DEMO_MIN_MS = 8000
 /** The cabin's loading screen and arrival from space, roughly; only used to pace the progress bar. */
 const CABIN_LOAD_MS = 8000
+/** The longest the tour waits for the cabin's camera to reach a stop before speaking anyway. */
+const CABIN_ARRIVE_MAX_MS = 6000
 
 let token = 0
 let skip = false
@@ -95,6 +98,14 @@ export async function narrate(mine: number, text: string, ms: number, opts: { un
 
 const splashUp = () => !!document.getElementById('adx-splash')
 
+/**
+ * The tour is narrated, so starting one turns Sound on: for this visit only (the remembered choice is left alone), and the
+ * Sound button still mutes it mid-tour. Callers decide when a tour is being started rather than continued from the landing page.
+ */
+export function soundOnForTour() {
+  if (!useSound.getState().on) useSound.setState({ on: true })
+}
+
 export async function runTour(go: Go, mode: TourMode = 'quick') {
   const mine = ++token
   skip = false
@@ -121,6 +132,7 @@ export async function runTour(go: Go, mode: TourMode = 'quick') {
   for (const s of steps) {
     if (!live(mine) || skip) break
     go(s.path)
+    window.scrollTo(0, 0) // the board may have been scrolled to a panel; each screen starts at its top
     await narrate(mine, lineFor(s, mode), s.ms)
   }
   if (!live(mine)) return
@@ -143,7 +155,10 @@ export async function runTour(go: Go, mode: TourMode = 'quick') {
     for (let i = 0; i < CABIN_MIN_MS.length; i++) {
       if (!live(mine) || skip) break
       cabin.goTo(i)
-      // the cabin's own caption card shows the same stop; ours stays out of its way while the camera moves
+      // VITA describes a stop once the camera is there, so the words, the view and the cabin's own card agree
+      // (the flight takes about two seconds, more on the way outside; paused time does not count against the limit)
+      if (cabin.arrived) await wait(mine, CABIN_ARRIVE_MAX_MS, () => cabin.arrived!(i))
+      if (!live(mine) || skip) break
       await narrate(mine, cabin.spoken(i), CABIN_MIN_MS[i])
     }
   }

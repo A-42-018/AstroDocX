@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { ask, type AskAction, type AskCitation } from '../../../landing/vita/ask.js'
 import { vitaSay, vitaStop } from '../audio/voice'
-import { exitTour, runTour } from '../tour/director'
+import { exitTour, runTour, soundOnForTour } from '../tour/director'
 import { useTour } from '../tour/store'
 import { readHandoff, writeHandoff } from './handoff'
 import { TOUR_REPLY, wantsTour } from './intent'
@@ -43,6 +43,7 @@ export type Go = (path: string) => void
 /** Start a guided tour from inside the console (the dock's button or a "tour" answer). */
 export function startGuide(go: Go, mode: 'quick' | 'full' = 'full') {
   useVita.setState({ open: false })
+  soundOnForTour() // asked for from the dock (a click or a key), so speech is allowed
   void runTour((p) => go(p), mode)
 }
 

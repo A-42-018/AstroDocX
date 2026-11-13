@@ -163,6 +163,9 @@
     try {
       var old = JSON.parse(sessionStorage.getItem('adx-vita') || 'null') || {};
       old.tour = guide;
+      /* the console's guide speaks by default. From the homepage, briefing.js writes the Sound state as the page closes
+         (still on unless the visitor muted it during the tour); the story page has no narrator of its own, so it says on. */
+      if (!BRIEF) old.sound = true;
       sessionStorage.setItem('adx-vita', JSON.stringify(old));
     } catch (e) { /* private mode: the address says it too */ }
   }
@@ -284,6 +287,7 @@
     if (BRIEF) {
       if (!window.ADX_BRIEFING) { setTimeout(function () { startOneClick(opts); }, 150); return; }   // briefing.js is a module: give it a moment
       cfg = { speed: 1, holdScale: 0.5, oneClick: true };
+      if (ADX_BRIEFING.voiceOn) ADX_BRIEFING.voiceOn();   // the tour is narrated: NOVA speaks by default (the Sound button still mutes her)
       document.documentElement.classList.add('tour-1click');
       if (!bar) makeBar();
       setPaused(false); lastCap = ''; caption('briefing'); showProgress();

@@ -235,7 +235,6 @@ export function VisorHud({ data, reduced }: { data: CabinData | null; reduced: b
           <span className="next">NEXT: {next}</span>
         </div>
         <div className="vz-motto">SENSE · EXPLAIN · ACT</div>
-        <div className="prompt">Scroll to float forward <span>↓</span></div>
         <Reticle />
       </div>
     </>
