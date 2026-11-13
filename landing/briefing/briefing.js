@@ -589,6 +589,18 @@ window.ADX_BRIEFING = {
     await say({ text: "First stop: the <em>Crew Console</em>. I'll meet you in the cabin later.", door: 'console' })
     return sleep(1200, tok)
   },
+  /** The tour is narrated, so it starts with the voice on: for this visit only (the remembered Sound choice is left alone),
+      and the Sound button still mutes it. Called from the tour button's click, the gesture browsers want before they speak;
+      opened from a link with no click yet, the sound wakes at the visitor's first click or key. */
+  voiceOn() {
+    if (sound.available && !sound.on) sound.set(true, false)
+    if (!voice.on) { voice.set(true); voice.unlock() }
+    showSound()
+    if (navigator.userActivation && !navigator.userActivation.hasBeenActive) {
+      const wake = () => { if (sound.on) sound.set(true, false); if (voice.on) voice.unlock() }
+      addEventListener('pointerdown', wake, { once: true }); addEventListener('keydown', wake, { once: true })
+    }
+  },
   setPaused(v) { paused = !!v; scene.talk(!paused && busy); paused ? voice.pause() : voice.resume() },
   /** The tour was exited: give the visitor the room. */
   endTour() { paused = false; if (!ready) skipIntro() },

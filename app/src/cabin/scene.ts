@@ -63,6 +63,8 @@ export interface CabinOptions {
 export interface CabinScene {
   update: (d: CabinData) => void
   goTo: (i: number) => void
+  /** Has the camera come to rest at tour stop `i` (out of the arrival, not floating, at no screen or crew member)? */
+  arrived: (i: number) => boolean
   /** Float mode: drift freely through the hall, kept inside it. Off flies back to the nearest stop. */
   setFloat: (on: boolean) => void
   /** Step up to wall screen `i` (0 Status Board, 1 Live Vitals, 2 Alerts, 3 Trends): the camera comes head-on and the screen takes touch, the wheel and keys. */
@@ -847,6 +849,8 @@ export function createCabin(canvas: HTMLCanvasElement, opts: CabinOptions): Cabi
   return {
     update(d) { data = d; place(); loadScreens() },
     goTo,
+    arrived: (i) => ready && !arriving() && !fl.on && !focus && !using && Math.round(pTarget) === i
+      && Math.abs(p - pTarget) < 0.04 && camPos.distanceTo(posCurve.getPoint(pTarget / (N - 1))) < 0.25,
     stepUp,
     leaveScreen,
     screenNav: (i, path) => screens.nav(i, path),

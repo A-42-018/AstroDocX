@@ -16,7 +16,7 @@ interface TourState {
   paused: boolean
   /** The cabin tells the tour when its camera can be steered (loaded, arrival over), and whether it can draw at all.
    *  `spoken(i)` is what VITA says at stop i (the live crew names are known there). */
-  cabin: { goTo: (i: number) => void; spoken: (i: number) => string; step?: (d: 1 | -1) => void } | null
+  cabin: { goTo: (i: number) => void; arrived?: (i: number) => boolean; spoken: (i: number) => string; step?: (d: 1 | -1) => void } | null
   cabinFailed: boolean
   /** What to point at: the `data-tour` name of the panel VITA is talking about (optional spotlight ring). */
   focus: string | null

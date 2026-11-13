@@ -59,8 +59,9 @@ const GLASS = [1568, 1760, 2093, 2349]
 export const sound = {
   available: !!AC,
   get on() { return on },
-  set(v) {
-    on = !!v && !!AC; store.set(on ? 'on' : 'off')
+  /** `keep: false` changes it for this visit only and leaves the remembered choice alone (the tour turns sound on this way). */
+  set(v, keep = true) {
+    on = !!v && !!AC; if (keep) store.set(on ? 'on' : 'off')
     if (on) { boot(); ctx.resume?.(); ramp(1) } else ramp(0, 0.3)
     return on
   },
