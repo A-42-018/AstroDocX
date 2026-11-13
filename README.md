@@ -10,7 +10,7 @@ Team AstroDocX · Mymensingh, Bangladesh
 ![Offline-first PWA](https://img.shields.io/badge/PWA-offline--first-22d3ee)
 ![React 19](https://img.shields.io/badge/React-19-61dafb)
 ![three.js](https://img.shields.io/badge/three.js-r170-white)
-![Tests](https://img.shields.io/badge/tests-496%20passing-34d399)
+![Tests](https://img.shields.io/badge/tests-578%20passing-34d399)
 ![On-device ML](https://img.shields.io/badge/ML-on--device-a78bfa)
 ![Web Bluetooth](https://img.shields.io/badge/IoT-Web%20Bluetooth-3b82f6)
 ![Not a medical device](https://img.shields.io/badge/prototype-not%20a%20medical%20device-f59e0b)
@@ -382,13 +382,14 @@ AstroDocX/
 │   │               #   landing-server.py (local host with the console's SPA fallback)
 │   ├── vita/       # build-knowledge.mjs and the guide tests
 │   └── xray/       # bake-xray.mjs (X-Ray Mirror models)
-├── docs/           # screenshots, AI_USE.md, DATASETS.md, vita.md, ml-model-card.md, supabase.sql
+├── docs/           # screenshots, AI_USE.md (pointer), DATASETS.md, vita.md, ml-model-card.md, supabase.sql
+├── AIuse.md        # how AI was used: in the product, to build it, and what it did not do
 ├── vercel.json     # live deploy (static site + Python functions)
 └── netlify.toml    # static-only alternative
 ```
 
 ## Use of AI
-Every number, alert, finding and step comes from tested, deterministic code, and so do the face-scan and watch readings and the on-device ML insights (no learned model from outside, no cloud inference). NOVA (the homepage guide) and VITA (the crew doctor) can word their answers live with Claude through `/api/ask` and `/api/doctor`, but only from cited sources or the console's own exam, checked server-side; without a key they answer offline from the same data. Claude Code helped write the code, and Tripo Studio generated the anatomy render behind the Health Twin body. Tools, prompts and the team's own work: [`docs/AI_USE.md`](docs/AI_USE.md).
+Every number, alert, finding and step comes from tested, deterministic code, and so do the face-scan and watch readings and the on-device ML insights (no learned model from outside, no cloud inference). NOVA (the homepage guide) and VITA (the crew doctor) can word their answers live with Claude through `/api/ask` and `/api/doctor`, but only from cited sources or the console's own exam, checked server-side; without a key they answer offline from the same data. Claude Code helped write the code, and Tripo Studio generated the anatomy render behind the Health Twin body. Tools, prompts and the team's own work: [`AIuse.md`](AIuse.md).
 
 ## NASA data used
 AstroDocX is built on NASA science. The console's **NASA Data** screen (`/app/nasa`) lists all of it, hazard by hazard, and every alert names its NASA basis. All of it comes from [`app/src/engine/nasa.ts`](app/src/engine/nasa.ts) and [`app/src/engine/evidence.ts`](app/src/engine/evidence.ts).

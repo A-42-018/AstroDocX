@@ -22,3 +22,11 @@ proto/
 assets-src/
 __pycache__/
 .pytest_cache/
+
+# Pitch video work, rival research and local tooling: local only
+tools/pitch/
+tools/pitch-kit/
+reports/
+research_notes/
+.claude/
+docs/pitch/
