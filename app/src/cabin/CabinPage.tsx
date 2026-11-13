@@ -9,6 +9,7 @@ import { createCabin, STOP_COUNT, type CabinScene, type IntroPhase } from './sce
 import { useCabinData } from './useCabinData'
 import { FloatHint, FloatPad } from './FloatPad'
 import { VisorHud } from './VisorHud'
+import { ScrollCue, showScrollCue } from './ScrollCue'
 import { CabinLoader, loaderShownMs } from './CabinLoader'
 import { useTour } from '../tour/store'
 import * as sfx from '../audio/sfx'
@@ -123,7 +124,10 @@ export default function CabinPage() {
   const [picked, setPicked] = useState<string | null>(null)
   /** Float mode: drifting freely through the hall instead of following the tour. */
   const [floating, setFloating] = useState(false)
-  const [wifi, setWifi] = useState(false)
+  /** The visor glass is down and the HUD booted (scene.ts says so), which is when the scroll cue can come up. */
+  const [visorDown, setVisorDown] = useState(false)
+  /** The scroll cue is for the first move: once the visitor has moved off the helmet stop it is gone for this visit. */
+  const [moved, setMoved] = useState(false)
   const [creditsOpen, setCreditsOpen] = useState(false)
   /** A wall screen stepped up to: which, and the console page it is showing (the frame reports it). */
   const [screen, setScreen] = useState<{ i: number; path: string; label: string } | null>(null)
@@ -192,6 +196,7 @@ export default function CabinPage() {
           else if (ph === 'booting') sfx.hudBoot()
           else if (ph === 'raised' && visorWas.current !== 'raised') sfx.visorOpen()
           visorWas.current = ph
+          setVisorDown(ph === 'down')
         },
         onFloat: (on) => {
           setFloating(on)
@@ -245,6 +250,20 @@ export default function CabinPage() {
   useEffect(() => { setCrewStatus(() => reportRef.current?.headline ?? 'All crew are within their baselines, Commander.') }, [])
   // once per visit, after the arrival: who she is and the one line that matters (only if she can be heard)
   const settled = state === 'ready' && loader === 'gone' && intro === 'off'
+  // The scroll cue: on arriving at the helmet, the one thing to do is scroll. The guided tour moves the camera itself, so it waits.
+  const tourPhase = useTour((s) => s.phase)
+  const cueOn = showScrollCue({ settled, visorDown, stop, moved, floating, busy: !!screen || !!picked, touring: tourPhase === 'running' || tourPhase === 'gate' })
+  // leaving the helmet any way at all (also a deep link to a stop) means the visitor needs no nudge
+  useEffect(() => { if (stop !== 0) setMoved(true) }, [stop])
+  // the first scroll (or the key that moves on) while the cue is up dismisses it at once, not when the camera is half way
+  useEffect(() => {
+    if (!cueOn) return
+    const go = () => setMoved(true)
+    const key = (e: KeyboardEvent) => { if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') go() }
+    window.addEventListener('wheel', go, { passive: true })
+    window.addEventListener('keydown', key)
+    return () => { window.removeEventListener('wheel', go); window.removeEventListener('keydown', key) }
+  }, [cueOn])
   useEffect(() => {
     if (!settled || !report || hasGreeted()) return
     const hello = window.setTimeout(() => {
@@ -343,7 +362,7 @@ export default function CabinPage() {
   }
 
   return (
-    <div ref={root} className={`${intro === 'off' ? 'cabin' : 'cabin is-arriving'}${floating ? ' is-floating' : ''}${screen ? ' is-using' : ''}${wifi ? ' is-wifi' : ''}`}>
+    <div ref={root} className={`${intro === 'off' ? 'cabin' : 'cabin is-arriving'}${floating ? ' is-floating' : ''}${screen ? ' is-using' : ''}${cueOn ? ' has-cue' : ''}`}>
       <canvas ref={canvas} className="cabin-gl" role="img" aria-label="3D crew module. Scroll, use the arrow keys or the stop list to move through the tour. Press Enter at a wall screen to use it." />
 
       <div ref={mist} className="cabin-mist" aria-hidden="true" />
@@ -362,17 +381,9 @@ export default function CabinPage() {
         <button type="button" className="cabin-back" onClick={leave}>← Console</button>
         <div className="cabin-brand">AstroDocX <span>· 3D Cabin</span></div>
         <SoundToggle className="cabin-sound" music />
-        <button type="button" className="cabin-explore" aria-pressed={floating} aria-keyshortcuts="F" disabled={state !== 'ready' || intro !== 'off' || !!screen}
-          onClick={() => scene.current?.setFloat(!floating)} title={floating ? 'Fly back to the tour (F or Esc)' : 'Drift freely through the module (F)'}>
-          {floating ? '↩ Back to tour' : '✥ Explore'}
-        </button>
-        <button type="button" className="cabin-explore cabin-wifi" aria-pressed={wifi} disabled={state !== 'ready' || intro !== 'off' || !!screen}
-          onClick={() => { const on = !wifi; setWifi(on); scene.current?.setWifi(on); if (on && stop === 0) scene.current?.goTo(1) }}
-          title={wifi ? 'Back to the normal view' : 'See the cabin as Wi-Fi sensing would (simulated)'}>
-          {wifi ? '↩ Normal view' : '📡 Wi-Fi view'}
-        </button>
-        <button type="button" className="cabin-replay" onClick={() => { if (wifi) { setWifi(false); scene.current?.setWifi(false) } scene.current?.replayIntro() }}>↺ Replay arrival</button>
       </header>
+
+      {cueOn && <ScrollCue touch={touch} onGo={() => scene.current?.goTo(1)} />}
 
       {screen && (
         <div className="cabin-use cabin-panel" role="group" aria-label="Using a wall screen">

@@ -127,9 +127,34 @@
 .vz-reticle .spin { animation: vz-spin 60s linear infinite; }
 @keyframes vz-spin { to { transform: rotate(360deg); } }
 .vz-reticle { filter: drop-shadow(0 0 1px rgba(0, 8, 14, .9)); }
-.prompt { position: absolute; left: 50%; bottom: max(4.2vh, 118px); transform: translateX(-50%); font: 600 11px var(--ui); letter-spacing: .2em; text-transform: uppercase; color: var(--cy); white-space: nowrap; }
-.prompt span { display: inline-block; animation: cabin-bob 1.4s ease-in-out infinite; }
 @keyframes cabin-bob { 50% { transform: translateY(4px); } }
+
+/* The scroll cue (cabin/ScrollCue.tsx): the one thing to do on arriving in the helmet, so it is the brightest thing at the bottom.
+   Orange is the app's "do this" colour, against the cyan HUD. A mouse only sees it (no pointer events: the wheel passes through
+   to the cabin); a touch screen has no wheel, so there it is tapped to float forward. The glow animates opacity, not box-shadow. */
+.cabin-scroll-cue {
+  all: unset; box-sizing: border-box; position: absolute; z-index: 6; left: 0; right: 0; bottom: 28px; margin: 0 auto; width: max-content;
+  display: flex; align-items: center; gap: 12px; padding: 9px 18px 9px 16px; border-radius: 999px;
+  font: 700 12px var(--ui); letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; color: var(--or-hi);
+  background: rgba(24, 10, 2, .84); border: 1.5px solid var(--or); box-shadow: 0 0 22px -4px rgba(255, 138, 61, .7), inset 0 0 14px rgba(255, 138, 61, .16);
+  pointer-events: none; animation: cue-in .7s var(--ease) both;
+}
+.cabin-scroll-cue::before { content: ''; position: absolute; inset: -1.5px; border-radius: inherit; box-shadow: 0 0 36px 2px rgba(255, 138, 61, .85); opacity: .25; pointer-events: none; animation: cue-glow 2.4s ease-in-out .7s infinite; }
+.cabin-scroll-cue:focus-visible { outline: 2px solid var(--cy-hi); outline-offset: 3px; }
+.cue-mouse { position: relative; flex: none; width: 18px; height: 28px; border: 2px solid currentColor; border-radius: 10px; }
+.cue-mouse::after { content: ''; position: absolute; left: 50%; top: 5px; width: 3px; height: 6px; margin-left: -1.5px; border-radius: 2px; background: currentColor; animation: cue-wheel 1.7s ease-in-out infinite; }
+.cue-arrows { flex: none; animation: cabin-bob 1.4s ease-in-out infinite; }
+@keyframes cue-in { from { opacity: 0; translate: 0 12px; } }
+@keyframes cue-glow { 50% { opacity: 1; } }
+@keyframes cue-wheel { 0% { opacity: 0; transform: translateY(-3px); } 25% { opacity: 1; } 75%, 100% { opacity: 0; transform: translateY(9px); } }
+@media (pointer: coarse) { .cabin-scroll-cue { pointer-events: auto; cursor: var(--cur-pointer); } }
+/* where the caption card would run under the centred cue (it is 420 px wide), the cue sits just above the card instead */
+@media (max-width: 1179px) { .cabin-scroll-cue { left: var(--sp-5); right: auto; margin: 0; bottom: calc(var(--cap-top, 230px) + 12px); } }
+@media (max-width: 767px) {
+  .cabin-scroll-cue { left: var(--sp-3); gap: 10px; padding: 8px 14px 8px 12px; font-size: 11.5px; letter-spacing: .08em; }
+  .cabin.has-cue { --cue-h: 56px; } /* the HUD blocks and VITA's subtitle that sit above the caption card make room for it */
+}
+@media (prefers-reduced-motion: reduce) { .cabin-scroll-cue, .cabin-scroll-cue::before, .cue-mouse::after, .cue-arrows { animation: none; } .cabin-scroll-cue::before { opacity: .6; } }
 
 /* the arrival from space: glare over everything, mist on the visor glass under the HUD, the tour UI out of the way */
 .cabin-flash { position: absolute; inset: 0; z-index: 7; pointer-events: none; opacity: 0;
@@ -146,25 +171,18 @@
 .cabin-sound-group { pointer-events: auto; margin-left: auto; display: inline-flex; }
 .cabin-sound-group .cabin-sound { margin-left: 0; }
 .cabin-sound-group .cabin-sound + .cabin-sound { border-left: 0; padding: 6px 10px; }
-.cabin-sound-group + .cabin-replay, .cabin-sound + .cabin-replay, .cabin-sound + .cabin-sound { margin-left: 0; }
+.cabin-sound + .cabin-sound { margin-left: 0; }
 .cabin-sound:hover { background: var(--cy-soft); }
 .cabin-sound:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
-.ca-skip:hover, .cabin-replay:hover { background: var(--cy-soft); }
-.ca-skip:focus-visible, .cabin-replay:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
-.cabin-explore { pointer-events: auto; font: 500 12px var(--ui); color: var(--cy-hi); background: transparent; border: 1px solid var(--edge-hi); padding: 6px 12px; cursor: var(--cur-pointer); letter-spacing: .04em; }
-.cabin-explore:hover:not(:disabled) { background: var(--cy-soft); }
-.cabin-explore:disabled { opacity: .45; cursor: default; }
-.cabin-explore[aria-pressed="true"] { color: var(--bg); background: var(--or); border-color: var(--or); }
-.cabin-explore:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
-.cabin-explore + .cabin-replay { margin-left: 0; }
-.cabin-replay { pointer-events: auto; margin-left: auto; font: 500 12px var(--ui); color: var(--t2); background: transparent; border: 1px solid var(--edge); padding: 6px 12px; cursor: var(--cur-pointer); letter-spacing: .04em; }
+.ca-skip:hover { background: var(--cy-soft); }
+.ca-skip:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
 /* the HUD boots panel by panel once the visor is down (scene.ts holds 'booting' for 1 s) */
-.cabin-visor.booting :is(.vz, .vz-reticle, .vz-bar, .vz-motto, .prompt) { animation: vzBoot .45s ease-out both; }
+.cabin-visor.booting :is(.vz, .vz-reticle, .vz-bar, .vz-motto) { animation: vzBoot .45s ease-out both; }
 .cabin-visor.booting :is(.vz-tl, .vz-tr) { animation-delay: .1s; }
 .cabin-visor.booting :is(.ladder, .vz-reticle) { animation-delay: .2s; }
 .cabin-visor.booting :is(.vz-bl, .vz-br) { animation-delay: .3s; }
 .cabin-visor.booting .vz-bar { animation-delay: .4s; }
-.cabin-visor.booting :is(.vz-motto, .prompt) { animation-delay: .5s; }
+.cabin-visor.booting .vz-motto { animation-delay: .5s; }
 @keyframes vzBoot { 0% { opacity: 0; filter: brightness(2.2) blur(2px); } 30% { opacity: .9; } 45% { opacity: .2; } 100% { opacity: 1; filter: none; } }
 
 .cabin-loading { position: absolute; inset: 0; display: grid; place-items: center; font: 600 14px var(--mono); letter-spacing: .2em; color: var(--cy); background: var(--bg); z-index: 10; }
@@ -207,16 +225,16 @@
   .vz-tl, .vz-tr { top: 186px; }
   .vz-tl, .vz-bl { left: 14px; } .vz-tr, .vz-br { right: 54px; } /* clear of the stop list */
   .vz-tl .big, .vz-tr .vz-segs { display: none; }
-  .vz-bl, .vz-br { top: auto; bottom: calc(var(--cap-top, 230px) + 16px); }
+  .vz-bl, .vz-br { top: auto; bottom: calc(var(--cap-top, 230px) + 16px + var(--cue-h, 0px)); }
   .vz-bl .big, .vz-br .big { font-size: 13px; }
   .vz-ecg { width: 88px; height: 22px; }
-  .vz.ladder, .vz-bar, .vz-motto, .prompt { display: none; } /* the caption already says to scroll */
+  .vz.ladder, .vz-bar, .vz-motto { display: none; }
   .vz-reticle { width: 110px; height: 110px; margin: -55px 0 0 -55px; opacity: .7; }
 
   .cabin-credits { left: var(--sp-3); right: auto; bottom: 22px; }
   .cabin-credits-list { left: 0; right: auto; font-size: 10.5px; width: calc(100vw - 24px); max-height: 50vh; overflow-y: auto; }
 }
-@media (prefers-reduced-motion: reduce) { .cabin-visor.booting :is(.vz, .vz-reticle, .vz-bar, .vz-motto, .prompt) { animation: none; } .prompt span, .vz-reticle .spin, .vz-heart.beat { animation: none; } .vz-gauge .needle { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .cabin-visor.booting :is(.vz, .vz-reticle, .vz-bar, .vz-motto) { animation: none; } .vz-reticle .spin, .vz-heart.beat { animation: none; } .vz-gauge .needle { transition: none; } }
 
 /* the real console on the wall screens (cabin/screens.ts): above the canvas, below the HUD, never takes input */
 .cabin-screens { position: absolute !important; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
@@ -224,7 +242,7 @@
 .cabin-screens iframe { position: absolute; left: 0; top: 0; transform-origin: 0 0; display: block; border: 0; background: #03080e; pointer-events: none; opacity: 0; visibility: hidden; }
 
 /* float mode (cabin/FloatPad.tsx): the tour's caption makes way for the controls */
-.cabin.is-floating .cabin-caption, .cabin.is-floating .cabin-visor .prompt { opacity: 0; pointer-events: none; }
+.cabin.is-floating .cabin-caption { opacity: 0; pointer-events: none; }
 .cabin-float { position: absolute; left: 50%; bottom: var(--sp-5); translate: -50% 0; width: min(640px, calc(100% - 40px)); padding: var(--sp-3) var(--sp-5) 14px; z-index: 5; pointer-events: none; animation: cl-in .35s var(--ease); }
 .cabin-float p { margin: 4px 0 0; font: 400 13px/1.7 var(--ui); color: var(--t2); }
 .cabin-float kbd { display: inline-block; min-width: 20px; margin: 0 2px; padding: 0 5px; text-align: center; font: 600 11px/18px var(--mono); color: var(--cy-hi); border: 1px solid var(--edge-hi); border-radius: 4px; background: rgba(0, 0, 0, .35); }
@@ -236,16 +254,15 @@
 .float-lift { pointer-events: auto; display: flex; flex-direction: column; gap: 10px; }
 .float-lift button { touch-action: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; color: var(--cy-hi); background: var(--panel); border: 1px solid var(--edge-hi); }
 .float-lift button:active { background: var(--cy-soft); }
-@media (max-width: 767px) { .float-pad { order: 2; } .cabin-float { bottom: 150px; } .cabin-explore { padding: 6px 9px; } }
+@media (max-width: 767px) { .float-pad { order: 2; } .cabin-float { bottom: 150px; } }
 @media (prefers-reduced-motion: reduce) { .cabin-float { animation: none; } }
 
-/* phones: room for the controls that matter (back, sound, explore); the title and the arrival replay step aside */
+/* phones: room for the controls that matter (back, sound); the title steps aside */
 @media (max-width: 767px) {
   .cabin-top { gap: var(--sp-2); }
-  .cabin-brand, .cabin-replay { display: none; }
+  .cabin-brand { display: none; }
   .cabin-sound-group { margin-left: auto; }
   .cabin-sound-group .cabin-sound:first-child span { display: none; }
-  .cabin-explore { margin-left: 0; }
 }
 
 /* VITA's subtitle: what the robot crew doctor is saying, centred low, above the tour caption's line */
@@ -258,7 +275,7 @@
 }
 .cabin-vita-sub b { flex: none; font: 700 11px var(--mono); letter-spacing: .16em; color: var(--cy-hi); }
 @keyframes vita-sub-in { from { opacity: 0; translate: -50% 6px; } }
-@media (max-width: 767px) { .cabin-vita-sub { bottom: calc(var(--cap-top, 230px) + 10px); width: calc(100% - 24px); font-size: 13.5px; } .cabin.is-using .cabin-vita-sub { bottom: 84px; } }
+@media (max-width: 767px) { .cabin-vita-sub { bottom: calc(var(--cap-top, 230px) + 10px + var(--cue-h, 0px)); width: calc(100% - 24px); font-size: 13.5px; } .cabin.is-using .cabin-vita-sub { bottom: 84px; } }
 @media (prefers-reduced-motion: reduce) { .cabin-vita-sub { animation: none; } }
 
 /* using a wall screen (scene.ts useScreen): a slim bar over the top to step back, the page's name, and a way out to the full console */
@@ -271,7 +288,6 @@
 .cu-title { min-width: 120px; text-align: center; font: 700 14px var(--ui); letter-spacing: .1em; text-transform: uppercase; color: var(--t1); }
 .cap-use { all: unset; box-sizing: border-box; cursor: var(--cur-pointer); display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; min-height: 40px; padding: 0 14px; font: 600 13px var(--ui); color: var(--cy-hi); border: 1px solid var(--edge-hi); background: var(--cy-soft); }
 .cap-use:hover { background: rgba(80, 220, 255, .22); }
-.cabin-top .cabin-explore:disabled { opacity: .45; }
 .cabin-caption[hidden], .cabin-stops[hidden] { display: none; }
 @media (max-width: 640px) {
   .cabin-use { width: calc(100% - 16px); top: 6px; justify-content: space-between; gap: 6px; box-sizing: border-box; }
@@ -284,12 +300,11 @@
 .screen-chip:hover { background: rgba(20, 70, 90, .9); }
 
 /* using a screen: the header keeps only the way back to the console, so the bar has the room */
-.cabin.is-using .cabin-brand, .cabin.is-using .cabin-sound, .cabin.is-using .cabin-explore, .cabin.is-using .cabin-replay { visibility: hidden; }
+.cabin.is-using .cabin-brand, .cabin.is-using .cabin-sound { visibility: hidden; }
 
 .cabin.is-using .cabin-credits { display: none; }
 
-/* Wi-Fi sensing view (cabin/wifi.ts): the HUD over the point-cloud cabin. The ordinary tour panels step aside. */
-.is-wifi .cabin-caption, .is-wifi .cabin-visor, .is-wifi .cabin-card, .is-wifi .cabin-mist { opacity: 0; pointer-events: none; }
+/* Wi-Fi sensing view (cabin/wifi.ts): the HUD over the point-cloud cabin, shown on the console's RF page (rf/CabinWifi3D.tsx). */
 .wifi-ui { position: absolute; inset: 0; z-index: 4; pointer-events: none; font-family: var(--ui); }
 .wifi-ui[hidden] { display: none; }
 .wifi-top { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; align-items: center; padding: 6px 14px; background: rgba(2, 8, 14, .78); border: 1px solid var(--edge-hi); font: 600 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--t2); white-space: nowrap; }
