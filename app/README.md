@@ -11,4 +11,6 @@ npm test         # unit, component and DB tests
 npm run demo:snapshot   # after changing the engine or the data generator: regenerate the demo's precomputed output
 ```
 
-Build phases: C12 Ground View (`src/ground`); C11 ship (served under `/app/`); C10 Ground sync (`src/sync`); C9 Simulator (`src/sim`); C8 Check-in (`src/checkin`); C7 Trends (`src/trends`); C6 Alerts + Action card (`src/alerts`); C5 Status Board (`src/board`). Demo mission seeds on first run.
+Source layout and the full feature tour are in the [root README](../README.md). The demo mission seeds on first run; all data is synthetic unless you record it yourself with the face scan or a connected watch.
+
+Needs Node 22. Not a medical device.

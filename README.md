@@ -10,7 +10,7 @@ Team AstroDocX · Mymensingh, Bangladesh
 ![Offline-first PWA](https://img.shields.io/badge/PWA-offline--first-22d3ee)
 ![React 19](https://img.shields.io/badge/React-19-61dafb)
 ![three.js](https://img.shields.io/badge/three.js-r170-white)
-![Tests](https://img.shields.io/badge/tests-496%20passing-34d399)
+![Tests](https://img.shields.io/badge/tests-578%20passing-34d399)
 ![On-device ML](https://img.shields.io/badge/ML-on--device-a78bfa)
 ![Web Bluetooth](https://img.shields.io/badge/IoT-Web%20Bluetooth-3b82f6)
 ![Not a medical device](https://img.shields.io/badge/prototype-not%20a%20medical%20device-f59e0b)
